@@ -31,9 +31,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class SableSubLevelCompat implements Service {
-    private static final double SAT_EPSILON = 1E-7;
-    private static final double SKY_COLUMN_EPSILON = 1E-4;
-    private static final double SKY_RAY_EPSILON = 1E-4;
+    private static final double SAT_EPSILON = 1.0E-7;
+    private static final double SKY_COLUMN_EPSILON = 1.0E-4;
+    private static final double SKY_RAY_EPSILON = 1.0E-4;
     private static final Vec3 X_AXIS = new Vec3(1, 0, 0);
     private static final Vec3 Y_AXIS = new Vec3(0, 1, 0);
     private static final Vec3 Z_AXIS = new Vec3(0, 0, 1);

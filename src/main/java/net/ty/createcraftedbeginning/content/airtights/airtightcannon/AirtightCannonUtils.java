@@ -56,6 +56,8 @@ public final class AirtightCannonUtils {
     private static final int SHOT_COOLDOWN = 15;
     private static final float MIN_CHARGED_RATIO = 0.33333334f;
     private static final float POWER_MULTIPLIER_PER_LEVEL = 0.125f;
+    private static final double MIN_RAY_OFFSET_LENGTH_SQR = 1.0E-8;
+    private static final double RAY_START_OFFSET = 1.0E-4;
 
     private AirtightCannonUtils() {
     }
@@ -194,7 +196,7 @@ public final class AirtightCannonUtils {
 
     private static boolean isRayClear(Level level, Vec3 sourcePos, Vec3 targetPos, Entity source) {
         Vec3 rayOffset = targetPos.subtract(sourcePos);
-        Vec3 rayStart = rayOffset.lengthSqr() > 1E-8 ? sourcePos.add(rayOffset.normalize().scale(1E-4)) : sourcePos;
+        Vec3 rayStart = rayOffset.lengthSqr() > MIN_RAY_OFFSET_LENGTH_SQR ? sourcePos.add(rayOffset.normalize().scale(RAY_START_OFFSET)) : sourcePos;
         ClipContext clipContext = new ClipContext(rayStart, targetPos, Block.COLLIDER, Fluid.NONE, source);
         return level.clip(clipContext).getType() == Type.MISS;
     }

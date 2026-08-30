@@ -25,6 +25,10 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class LaserBehaviour extends BlockEntityBehaviour {
+    private static final double MIN_PROJECTED_RAY_LENGTH_SQR = 1.0E-12;
+    private static final double TRACE_START_OFFSET = 1.0E-4;
+    private static final double TRACE_END_OFFSET = 2.0E-4;
+
     public static final int MAX_RANGE = 32;
     public static final BehaviourType<LaserBehaviour> TYPE = new BehaviourType<>();
 
@@ -63,7 +67,7 @@ public final class LaserBehaviour extends BlockEntityBehaviour {
         RayProjection projectedRay = SubLevelBridge.projectRay(level, localStart, localStart.add(Vec3.atLowerCornerOf(laserDirection.getNormal()).scale(MAX_RANGE)));
         Vec3 worldStart = projectedRay.worldStart();
         Vec3 projectedDirection = projectedRay.worldEnd().subtract(worldStart);
-        if (projectedDirection.lengthSqr() < 1E-12) {
+        if (projectedDirection.lengthSqr() < MIN_PROJECTED_RAY_LENGTH_SQR) {
             clearTrace();
             return;
         }
@@ -75,8 +79,8 @@ public final class LaserBehaviour extends BlockEntityBehaviour {
             return;
         }
 
-        Vec3 traceStart = worldStart.add(worldDirection.scale(1E-4));
-        ClipContext clipContext = new ClipContext(traceStart, traceStart.add(worldDirection.scale(Math.max(0, loadedRange - 2E-4))), Block.COLLIDER, Fluid.NONE, CollisionContext.empty());
+        Vec3 traceStart = worldStart.add(worldDirection.scale(TRACE_START_OFFSET));
+        ClipContext clipContext = new ClipContext(traceStart, traceStart.add(worldDirection.scale(Math.max(0, loadedRange - TRACE_END_OFFSET))), Block.COLLIDER, Fluid.NONE, CollisionContext.empty());
         BlockHitResult result = level.clip(clipContext);
         hitResult = result.getType() == Type.MISS ? null : result;
         if (hitResult == null) {

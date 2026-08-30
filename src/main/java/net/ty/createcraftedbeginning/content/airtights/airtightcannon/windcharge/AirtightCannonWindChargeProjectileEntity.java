@@ -44,7 +44,7 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
     private static final String COMPOUND_KEY_INIT_MOTION = "InitMotion";
     private static final float DEFAULT_SIZE = 0.3125f;
     private static final int MOTION_CHECK_INTERVAL = 5;
-    private static final double MIN_INITIAL_MOTION_SQR = 1E-8;
+    private static final double MIN_INITIAL_MOTION_SQR = 1.0E-8;
     private static final double EXTERNAL_IMPULSE_THRESHOLD = 0.05;
     private static final double EXTERNAL_IMPULSE_THRESHOLD_SQR = EXTERNAL_IMPULSE_THRESHOLD * EXTERNAL_IMPULSE_THRESHOLD;
 

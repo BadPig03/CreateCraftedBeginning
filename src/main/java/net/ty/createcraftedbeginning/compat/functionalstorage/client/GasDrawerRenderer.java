@@ -35,6 +35,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlockEntity> {
+    private static final float AMOUNT_TEXT_SCALE = 0.007f;
+
     public GasDrawerRenderer(Context ignoredContext) {
     }
 
@@ -82,7 +84,7 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
         }
 
         String amountText = renderGas.filterOnly() ? "0" : drawer.isCreative() ? "∞" : GasAmounts.formatCompact(renderGas.stack().getAmount());
-        DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amountText).withStyle(ChatFormatting.WHITE), Direction.NORTH, 0.007f);
+        DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amountText).withStyle(ChatFormatting.WHITE), Direction.NORTH, AMOUNT_TEXT_SCALE);
         poseStack.popPose();
     }
 
@@ -115,7 +117,7 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
                 poseStack.translate(-0.25, 0, 0);
             }
             String amountText = creative ? "∞" : GasAmounts.formatCompact(stack.getAmount());
-            DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amountText).withStyle(ChatFormatting.WHITE), Direction.NORTH, 0.007f);
+            DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amountText).withStyle(ChatFormatting.WHITE), Direction.NORTH, AMOUNT_TEXT_SCALE);
             poseStack.popPose();
         }
 

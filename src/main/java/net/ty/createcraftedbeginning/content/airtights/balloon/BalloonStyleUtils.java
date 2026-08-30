@@ -39,6 +39,7 @@ public final class BalloonStyleUtils {
 
     private static final Random RANDOM = new Random();
     private static final int RARE_CHANCE = 2003;
+    private static final double TRAVEL_DIRECTION_LENGTH_SQR_EPSILON = 1.0E-6;
 
     private BalloonStyleUtils() {
     }
@@ -85,7 +86,7 @@ public final class BalloonStyleUtils {
     }
 
     public static Vec3 getPackageOffset(Vec3 travelVector, float itemDistance, boolean isDepositing) {
-        Vec3 travelDirection = travelVector.lengthSqr() < 1E-6 ? Vec3.ZERO : travelVector.normalize();
+        Vec3 travelDirection = travelVector.lengthSqr() < TRAVEL_DIRECTION_LENGTH_SQR_EPSILON ? Vec3.ZERO : travelVector.normalize();
         Vec3 offset = travelDirection.scale(itemDistance);
         if (!isDepositing) {
             return offset;

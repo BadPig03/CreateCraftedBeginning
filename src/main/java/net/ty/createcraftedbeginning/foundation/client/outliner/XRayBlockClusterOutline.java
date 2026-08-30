@@ -34,6 +34,8 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class XRayBlockClusterOutline extends CCBOutline {
+    private static final double DIRECTION_LENGTH_SQR_EPSILON = 1.0E-12;
+
     protected final Vector3f pos0Temp = new Vector3f();
     protected final Vector3f pos1Temp = new Vector3f();
     protected final Vector3f pos2Temp = new Vector3f();
@@ -123,7 +125,7 @@ public class XRayBlockClusterOutline extends CCBOutline {
 
     protected static Vec3 normalizeOrFallback(Vec3 vector, Vec3 fallback) {
         double lengthSqr = vector.lengthSqr();
-        if (lengthSqr <= 1E-12) {
+        if (lengthSqr <= DIRECTION_LENGTH_SQR_EPSILON) {
             return fallback;
         }
         return vector.scale(1 / Math.sqrt(lengthSqr));
@@ -247,7 +249,7 @@ public class XRayBlockClusterOutline extends CCBOutline {
         Vec3 worldStart = transform.transformPosition(localStart).subtract(camera);
         Vec3 worldEnd = transform.transformPosition(localStart.add(localDirection)).subtract(camera);
         Vec3 lineDirection = worldEnd.subtract(worldStart);
-        if (lineDirection.lengthSqr() <= 1E-12) {
+        if (lineDirection.lengthSqr() <= DIRECTION_LENGTH_SQR_EPSILON) {
             return;
         }
 

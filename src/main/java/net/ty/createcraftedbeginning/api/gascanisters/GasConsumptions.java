@@ -10,7 +10,7 @@ import java.math.RoundingMode;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasConsumptions {
-    private static final double INTEGER_TOLERANCE = 1E-9;
+    private static final double INTEGER_TOLERANCE = 1.0E-9;
     private static final long MAX_SAFE_GAS_COST = 92233720368547757L;
     private static final int DISPLAY_SCALE = 2;
 

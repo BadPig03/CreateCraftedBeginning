@@ -25,6 +25,10 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class BalloonUtils {
+    private static final double BASE_WATER_LIFT = 0.003;
+    private static final double GAS_WATER_LIFT_SCALE = 0.007;
+    private static final double MIN_TRAIL_MOTION_LENGTH_SQR = 1.0E-4;
+
     private BalloonUtils() {
     }
 
@@ -115,7 +119,7 @@ public final class BalloonUtils {
         long capacity = getCapacity();
         double fillRatio = capacity <= 0 ? 0 : CCBMathUtils.clampUnit(contents.totalAmount() / (double) capacity);
         Vec3 currentMovement = balloon.getDeltaMovement();
-        balloon.setDeltaMovement(currentMovement.x * 0.85, currentMovement.y + 0.003 + 0.007 * Math.sqrt(fillRatio), currentMovement.z * 0.85);
+        balloon.setDeltaMovement(currentMovement.x * 0.85, currentMovement.y + BASE_WATER_LIFT + GAS_WATER_LIFT_SCALE * Math.sqrt(fillRatio), currentMovement.z * 0.85);
         balloon.setOnGround(false);
         balloon.hasImpulse = true;
     }
@@ -129,7 +133,7 @@ public final class BalloonUtils {
             return;
         }
 
-        if (balloon.getDeltaMovement().lengthSqr() < 1E-4 || (balloon.tickCount & 1) != 0) {
+        if (balloon.getDeltaMovement().lengthSqr() < MIN_TRAIL_MOTION_LENGTH_SQR || (balloon.tickCount & 1) != 0) {
             return;
         }
 

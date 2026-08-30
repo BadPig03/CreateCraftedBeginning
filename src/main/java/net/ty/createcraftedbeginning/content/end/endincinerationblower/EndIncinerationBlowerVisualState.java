@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 final class EndIncinerationBlowerVisualState {
     private static final int PROCESSING_PARTICLE_INTERVAL_TICKS = 10;
     private static final int MAX_PROCESSING_PARTICLE_TARGETS = 8;
+    private static final double PARTICLE_DIRECTION_LENGTH_SQR_EPSILON = 1.0E-6;
 
     private int particleCounter;
 
@@ -97,7 +98,7 @@ final class EndIncinerationBlowerVisualState {
         for (int i = 0; i < particleCount; i++) {
             Vec3 offset = VecHelper.offsetRandomly(center, level.random, range * 0.9f);
             Vec3 direction = center.subtract(offset);
-            if (direction.lengthSqr() < 1E-6) {
+            if (direction.lengthSqr() < PARTICLE_DIRECTION_LENGTH_SQR_EPSILON) {
                 continue;
             }
 

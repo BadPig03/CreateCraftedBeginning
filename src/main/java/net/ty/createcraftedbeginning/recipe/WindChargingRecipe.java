@@ -38,6 +38,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInput> {
+    private static final double EFFECT_SCORE_EPSILON = 1.0E-9;
     private static final TagKey<Item> WIND_CHARGING_EXCLUDED = ItemTags.create(CCBAPI.asResource("wind_charging_excluded"));
     private static final WindChargingData EMPTY = new WindChargingData(WindChargingAction.CHARGE, 0, 0, ItemStack.EMPTY);
 
@@ -122,7 +123,7 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
             double amplifierLevel = instance.getAmplifier() + 1;
             score += effectSign * amplifierLevel * probability * getDurationFactor(instance);
         }
-        if (Math.abs(score) < 1E-9) {
+        if (Math.abs(score) < EFFECT_SCORE_EPSILON) {
             return 0;
         }
         return score;
