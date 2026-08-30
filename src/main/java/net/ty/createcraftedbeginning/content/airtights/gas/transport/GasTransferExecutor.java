@@ -44,7 +44,8 @@ final class GasTransferExecutor {
     static GasStack executeTransferPlan(IGasHandler sourceHandler, GasStack gasType, List<PlannedTransfer> transferPlan) {
         long plannedAmount = 0;
         for (PlannedTransfer plannedTransfer : transferPlan) {
-            plannedAmount = Math.min(gasType.getAmount(), plannedAmount + plannedTransfer.amount);
+            long transferAmount = Math.max(0, plannedTransfer.amount);
+            plannedAmount = Math.min(gasType.getAmount(), CCBMathUtils.saturatedAdd(plannedAmount, transferAmount));
         }
         if (plannedAmount <= 0) {
             return GasStack.EMPTY;

@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.gas.transport;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -19,7 +20,7 @@ final class GasTransferBudget {
 
         long transferBudget = pressureRateUnits / PRESSURE_UNITS_PER_GAS;
         long remainderUnits = pressureRateUnits % PRESSURE_UNITS_PER_GAS;
-        long accumulatedCreditUnits = Math.max(0, creditUnits) + remainderUnits;
+        long accumulatedCreditUnits = CCBMathUtils.saturatedAdd(Math.max(0, creditUnits), remainderUnits);
         if (accumulatedCreditUnits >= PRESSURE_UNITS_PER_GAS) {
             transferBudget++;
             accumulatedCreditUnits -= PRESSURE_UNITS_PER_GAS;

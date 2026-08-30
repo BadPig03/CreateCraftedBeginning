@@ -19,12 +19,12 @@ public final class GasDrawerTank extends GasTank {
     }
 
     public GasStack getStoredStack() {
-        return gas;
+        return gas.copy();
     }
 
     private GasStack getVisibleStack() {
         if (gas.isEmpty() || !owner.isCreative()) {
-            return gas;
+            return gas.copy();
         }
         return gas.copyWithAmount(Long.MAX_VALUE);
     }

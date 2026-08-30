@@ -5,8 +5,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,27 +14,31 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasCollisionEvent extends Event {
-    private final Gas firstGasType;
-    private final Gas secondGasType;
+public class GasCollisionEvent extends Event implements ICancellableEvent {
+    private final GasStack firstGasStack;
+    private final GasStack secondGasStack;
     private final Level level;
     private final BlockPos pos;
 
     @Nullable
     private BlockState state;
 
-    public GasCollisionEvent(Level level, BlockPos pos, Gas firstGasType, Gas secondGasType, @Nullable BlockState state) {
+    public GasCollisionEvent(Level level, BlockPos pos, GasStack firstGasStack, GasStack secondGasStack, @Nullable BlockState state) {
         this.level = level;
-        this.pos = pos;
-        this.firstGasType = firstGasType;
-        this.secondGasType = secondGasType;
+        this.pos = pos.immutable();
+        this.firstGasStack = firstGasStack.copy();
+        this.secondGasStack = secondGasStack.copy();
         this.state = state;
     }
 
     public static void handleCollision(Level level, BlockPos pos, GasStack firstGasStack, GasStack secondGasStack) {
-        level.destroyBlock(pos, true);
-        GasCollisionEvent event = new GasCollisionEvent(level, pos, firstGasStack.getGasType(), secondGasStack.getGasType(), null);
+        GasCollisionEvent event = new GasCollisionEvent(level, pos, firstGasStack, secondGasStack, null);
         NeoForge.EVENT_BUS.post(event);
+        if (event.isCanceled()) {
+            return;
+        }
+
+        level.destroyBlock(pos, true);
         if (event.state == null) {
             return;
         }
@@ -60,12 +64,12 @@ public class GasCollisionEvent extends Event {
     }
 
     @SuppressWarnings("unused")
-    public Gas getFirstGasType() {
-        return firstGasType;
+    public GasStack getFirstGasStack() {
+        return firstGasStack.copy();
     }
 
     @SuppressWarnings("unused")
-    public Gas getSecondGasType() {
-        return secondGasType;
+    public GasStack getSecondGasStack() {
+        return secondGasStack.copy();
     }
 }

@@ -24,6 +24,7 @@ import net.minecraft.util.ExtraCodecs;
 import net.neoforged.neoforge.common.MutableDataComponentHolder;
 import net.neoforged.neoforge.common.util.DataComponentUtil;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,8 +38,6 @@ import java.util.stream.Stream;
 @MethodsReturnNonnullByDefault
 public final class GasStack implements MutableDataComponentHolder {
     public static final GasStack EMPTY = new GasStack(null);
-    public static final Codec<GasStack> CODEC = Codec.lazyInitialized(() -> RecordCodecBuilder.create(instance -> instance.group(Gas.HOLDER_CODEC.validate(gas -> gas.value().isEmpty() ? DataResult.error(() -> "Gas must not be empty") : DataResult.success(gas)).fieldOf("id").forGetter(GasStack::getGasHolder), Codec.LONG.fieldOf("amount").forGetter(GasStack::getAmount), DataComponentPatch.CODEC.optionalFieldOf("components", DataComponentPatch.EMPTY).forGetter(stack -> stack.components.asPatch())).apply(instance, GasStack::new)));
-    public static final Codec<GasStack> OPTIONAL_CODEC = ExtraCodecs.optionalEmptyMap(CODEC).xmap(optional -> optional.orElse(EMPTY), stack -> stack.isEmpty() ? Optional.empty() : Optional.of(stack));
     public static final Codec<Holder<Gas>> GAS_NON_EMPTY_CODEC = GasRegistries.GAS_REGISTRY.holderByNameCodec().validate(holder -> holder.value().isEmpty() ? DataResult.error(() -> "Gas must not be empty") : DataResult.success(holder));
     public static final StreamCodec<RegistryFriendlyByteBuf, GasStack> OPTIONAL_STREAM_CODEC = new StreamCodec<>() {
         @Override
@@ -86,7 +85,9 @@ public final class GasStack implements MutableDataComponentHolder {
             OPTIONAL_STREAM_CODEC.encode(buffer, stack);
         }
     };
-
+    private static final Codec<Long> POSITIVE_AMOUNT_CODEC = Codec.LONG.validate(amount -> amount > 0 ? DataResult.success(amount) : DataResult.error(() -> "Gas amount must be positive"));
+    public static final Codec<GasStack> CODEC = Codec.lazyInitialized(() -> RecordCodecBuilder.create(instance -> instance.group(Gas.HOLDER_CODEC.validate(gas -> gas.value().isEmpty() ? DataResult.error(() -> "Gas must not be empty") : DataResult.success(gas)).fieldOf("id").forGetter(GasStack::getGasHolder), POSITIVE_AMOUNT_CODEC.fieldOf("amount").forGetter(GasStack::getAmount), DataComponentPatch.CODEC.optionalFieldOf("components", DataComponentPatch.EMPTY).forGetter(stack -> stack.components.asPatch())).apply(instance, GasStack::new)));
+    public static final Codec<GasStack> OPTIONAL_CODEC = ExtraCodecs.optionalEmptyMap(CODEC).xmap(optional -> optional.orElse(EMPTY), stack -> stack.isEmpty() ? Optional.empty() : Optional.of(stack));
     @Nullable
     private final Holder<Gas> gasHolder;
     private final PatchedDataComponentMap components;
@@ -267,7 +268,7 @@ public final class GasStack implements MutableDataComponentHolder {
             return;
         }
 
-        grow(-amount);
+        setAmount(CCBMathUtils.saturatedSubtract(this.amount, amount));
     }
 
     public void grow(long amount) {
@@ -275,7 +276,7 @@ public final class GasStack implements MutableDataComponentHolder {
             return;
         }
 
-        setAmount(this.amount + amount);
+        setAmount(CCBMathUtils.saturatedAdd(this.amount, amount));
     }
 
     public Stream<TagKey<Gas>> getTags() {

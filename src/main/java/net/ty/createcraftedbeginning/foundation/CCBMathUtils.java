@@ -21,6 +21,17 @@ public final class CCBMathUtils {
         return first + second;
     }
 
+    public static long saturatedSubtract(long first, long second) {
+        if (second > 0 && first < Long.MIN_VALUE + second) {
+            return Long.MIN_VALUE;
+        }
+
+        if (second < 0 && first > Long.MAX_VALUE + second) {
+            return Long.MAX_VALUE;
+        }
+        return first - second;
+    }
+
     public static int clampNonNegative(int value, int maximum) {
         return Math.clamp(value, 0, maximum);
     }

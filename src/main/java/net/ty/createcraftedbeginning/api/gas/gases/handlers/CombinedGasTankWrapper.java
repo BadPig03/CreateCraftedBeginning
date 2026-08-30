@@ -5,6 +5,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -137,12 +138,13 @@ public class CombinedGasTankWrapper implements IGasHandler {
 
         long filled = 0;
         GasStack remaining = resource.copy();
-        boolean found = false;
         for (boolean searchPass : Iterate.trueAndFalse) {
             for (IGasHandler handler : gasHandlers) {
+                boolean found = false;
                 for (int tank = 0; tank < handler.getTanks(); tank++) {
-                    if (searchPass && GasStack.isSameGasSameComponents(handler.getGasInTank(tank), remaining)) {
+                    if (GasStack.isSameGasSameComponents(handler.getGasInTank(tank), remaining)) {
                         found = true;
+                        break;
                     }
                 }
 
@@ -151,8 +153,9 @@ public class CombinedGasTankWrapper implements IGasHandler {
                 }
 
                 long filledIntoCurrent = handler.fill(remaining, action);
+                filledIntoCurrent = CCBMathUtils.clampNonNegative(filledIntoCurrent, remaining.getAmount());
                 remaining.shrink(filledIntoCurrent);
-                filled += filledIntoCurrent;
+                filled = CCBMathUtils.saturatedAdd(filled, filledIntoCurrent);
                 if (remaining.isEmpty()) {
                     return filled;
                 }

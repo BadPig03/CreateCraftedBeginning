@@ -43,6 +43,7 @@ final class GasNetworkTraversal {
     private final Deque<BlockFace> frontier = new ArrayDeque<>();
     private final Set<BlockFace> frontierMembership = new HashSet<>();
     private final Set<BlockPos> visited = new HashSet<>();
+    private final Set<BlockFace> temporarilyInvalidTargets = new HashSet<>();
     private final Map<BlockFace, GasFlowSource> targets = new TreeMap<>(GasNetworkTraversal::compareBlockFaces);
     private final Map<BlockPos, WeakReference<GasTransportBehaviour>> cache = new HashMap<>();
     @Nullable
@@ -76,6 +77,28 @@ final class GasNetworkTraversal {
         return Integer.compare(first.getFace().ordinal(), second.getFace().ordinal());
     }
 
+    private static ProbeWindow claimLocations(List<BlockFace> locations, int requestedCursor, int maxTargets, Set<BlockFace> excludedLocations) {
+        if (locations.isEmpty() || maxTargets <= 0) {
+            return new ProbeWindow(Collections.emptyList(), 0);
+        }
+
+        int targetCount = locations.size();
+        int cursor = Math.floorMod(requestedCursor, targetCount);
+        int inspectedTargets = 0;
+        List<BlockFace> claimedTargets = new ArrayList<>(Math.min(maxTargets, targetCount));
+        while (inspectedTargets < targetCount && claimedTargets.size() < maxTargets) {
+            BlockFace location = locations.get(cursor);
+            cursor = (cursor + 1) % targetCount;
+            inspectedTargets++;
+            if (excludedLocations.contains(location)) {
+                continue;
+            }
+
+            claimedTargets.add(location);
+        }
+        return new ProbeWindow(claimedTargets, cursor);
+    }
+
     void reset() {
         clear();
         queued.addLast(start);
@@ -85,6 +108,7 @@ final class GasNetworkTraversal {
         frontier.clear();
         frontierMembership.clear();
         visited.clear();
+        temporarilyInvalidTargets.clear();
         targets.clear();
         cache.clear();
         queued.clear();
@@ -95,6 +119,7 @@ final class GasNetworkTraversal {
     }
 
     void tick() {
+        temporarilyInvalidTargets.clear();
         int remainingWork = TRAVERSAL_WORK_BUDGET_PER_TICK;
         Deque<BlockFace> deferredFrontier = new ArrayDeque<>();
         while (remainingWork > 0) {
@@ -137,9 +162,9 @@ final class GasNetworkTraversal {
     boolean hasTransferTargets() {
         promoteStableTopology();
         if (sharedTopology == null) {
-            return !targets.isEmpty();
+            return targets.keySet().stream().anyMatch(location -> !temporarilyInvalidTargets.contains(location));
         }
-        return !sharedTopology.isEmpty();
+        return sharedTopology.hasAvailableTargets(temporarilyInvalidTargets);
     }
 
     List<BlockFace> claimTargetProbeWindow(int maxTargets) {
@@ -149,7 +174,7 @@ final class GasNetworkTraversal {
         }
 
         if (sharedTopology != null) {
-            ProbeWindow probeWindow = sharedTopology.claim(targetProbeCursor, maxTargets);
+            ProbeWindow probeWindow = sharedTopology.claim(targetProbeCursor, maxTargets, temporarilyInvalidTargets);
             targetProbeCursor = probeWindow.nextCursor;
             return probeWindow.locations;
         }
@@ -158,26 +183,13 @@ final class GasNetworkTraversal {
             return Collections.emptyList();
         }
 
-        List<BlockFace> targetLocations = new ArrayList<>(targets.keySet());
-        int targetCount = targetLocations.size();
-        int claimCount = Math.min(maxTargets, targetCount);
-        int startIndex = Math.floorMod(targetProbeCursor, targetCount);
-        List<BlockFace> claimedTargets = new ArrayList<>(claimCount);
-        for (int offset = 0; offset < claimCount; offset++) {
-            claimedTargets.add(targetLocations.get((startIndex + offset) % targetCount));
-        }
-
-        targetProbeCursor = (startIndex + claimCount) % targetCount;
-        return claimedTargets;
+        ProbeWindow probeWindow = claimLocations(new ArrayList<>(targets.keySet()), targetProbeCursor, maxTargets, temporarilyInvalidTargets);
+        targetProbeCursor = probeWindow.nextCursor;
+        return probeWindow.locations;
     }
 
     void invalidateTarget(BlockFace location) {
-        if (sharedTopology != null) {
-            sharedTopology.invalidate(location);
-            return;
-        }
-
-        targets.remove(location);
+        temporarilyInvalidTargets.add(location);
     }
 
     @Nullable InventoryIdentifier getInventoryIdentifier(BlockFace inventoryFace) {
@@ -366,34 +378,19 @@ final class GasNetworkTraversal {
 
     private record SharedTopology(List<BlockFace> locations) {
         private SharedTopology(List<BlockFace> locations) {
-            this.locations = new ArrayList<>(locations);
+            this.locations = List.copyOf(locations);
         }
 
-        private boolean isEmpty() {
-            return locations.isEmpty();
+        private boolean hasAvailableTargets(Set<BlockFace> excludedLocations) {
+            return locations.stream().anyMatch(location -> !excludedLocations.contains(location));
         }
 
         private int size() {
             return locations.size();
         }
 
-        private ProbeWindow claim(int requestedCursor, int maxTargets) {
-            if (locations.isEmpty() || maxTargets <= 0) {
-                return new ProbeWindow(Collections.emptyList(), 0);
-            }
-
-            int targetCount = locations.size();
-            int claimCount = Math.min(maxTargets, targetCount);
-            int startIndex = Math.floorMod(requestedCursor, targetCount);
-            List<BlockFace> claimedTargets = new ArrayList<>(claimCount);
-            for (int offset = 0; offset < claimCount; offset++) {
-                claimedTargets.add(locations.get((startIndex + offset) % targetCount));
-            }
-            return new ProbeWindow(claimedTargets, (startIndex + claimCount) % targetCount);
-        }
-
-        private void invalidate(BlockFace location) {
-            locations.remove(location);
+        private ProbeWindow claim(int requestedCursor, int maxTargets, Set<BlockFace> excludedLocations) {
+            return claimLocations(locations, requestedCursor, maxTargets, excludedLocations);
         }
     }
 }

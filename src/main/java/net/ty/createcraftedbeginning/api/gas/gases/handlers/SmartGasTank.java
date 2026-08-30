@@ -19,7 +19,7 @@ public class SmartGasTank extends GasTank {
     @Override
     public void setGasStack(GasStack stack) {
         super.setGasStack(stack);
-        updateCallback.accept(stack);
+        updateCallback.accept(getGasStack());
     }
 
     @Override

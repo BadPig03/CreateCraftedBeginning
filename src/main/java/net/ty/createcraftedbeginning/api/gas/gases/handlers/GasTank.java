@@ -7,6 +7,7 @@ import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
 import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
 import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
+import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -37,11 +38,16 @@ public class GasTank implements IGasHandler, IGasTank {
     }
 
     public void read(Provider provider, CompoundTag compoundTag) {
+        gas = GasStack.EMPTY;
         if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_GAS)) {
             return;
         }
 
-        gas = GasStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_GAS));
+        GasStack loadedGas = GasStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_GAS));
+        if (!loadedGas.isEmpty() && !isGasValid(loadedGas)) {
+            return;
+        }
+        gas = loadedGas;
     }
 
     public CompoundTag write(Provider provider, CompoundTag compoundTag) {
@@ -77,7 +83,7 @@ public class GasTank implements IGasHandler, IGasTank {
 
     @Override
     public GasStack getGasInTank(int tank) {
-        return gas;
+        return gas.copy();
     }
 
     @Override
@@ -148,7 +154,7 @@ public class GasTank implements IGasHandler, IGasTank {
 
     @Override
     public GasStack getGasStack() {
-        return gas;
+        return gas.copy();
     }
 
     @Override
@@ -161,13 +167,17 @@ public class GasTank implements IGasHandler, IGasTank {
         return gas.getAmount();
     }
 
+    /**
+     * Changes the fill limit without truncating already stored gas. If the tank becomes over capacity,
+     * {@link #getSpace()} remains zero so new gas is rejected while the existing contents can still be drained.
+     */
     public GasTank setCapacity(long newCapacity) {
         capacity = Math.max(0, newCapacity);
         return this;
     }
 
     public void setGasStack(GasStack stack) {
-        gas = stack;
+        gas = stack.copy();
     }
 
     protected void onContentsChanged() {
@@ -178,6 +188,6 @@ public class GasTank implements IGasHandler, IGasTank {
     }
 
     public long getSpace() {
-        return Math.max(0, capacity - gas.getAmount());
+        return Math.max(0, CCBMathUtils.saturatedSubtract(capacity, gas.getAmount()));
     }
 }
