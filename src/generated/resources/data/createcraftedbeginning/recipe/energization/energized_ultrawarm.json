@@ -1,16 +1,19 @@
 {
   "type": "createcraftedbeginning:energization",
-  "ingredients": [
+  "gas_ingredients": [
     {
-      "type": "createcraftedbeginning:single",
       "amount": 1,
-      "gas": "createcraftedbeginning:ultrawarm_air"
+      "ingredient": {
+        "gas": "createcraftedbeginning:ultrawarm_air"
+      }
     }
   ],
-  "results": [
+  "gas_results": [
     {
       "amount": 1,
       "id": "createcraftedbeginning:energized_ultrawarm_air"
     }
-  ]
+  ],
+  "ingredients": [],
+  "results": []
 }

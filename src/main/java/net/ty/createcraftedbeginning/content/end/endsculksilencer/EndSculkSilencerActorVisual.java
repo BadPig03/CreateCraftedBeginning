@@ -11,7 +11,7 @@ import dev.engine_room.flywheel.lib.transform.Translate;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -39,6 +39,6 @@ final class EndSculkSilencerActorVisual extends ActorVisual {
 
     private void animate() {
         float angle = EndSculkSilencerMovementBehaviour.getAnimationAngle(context, AnimationTickHolder.getPartialTicks(context.world)) * Mth.DEG_TO_RAD;
-        core.setIdentityTransform().translate(context.localPos).translateY(0.5f).translate(Translate.CENTER).rotateX(angle).rotateY(angle).rotateZ(Mth.PI / 4).translateBack(Translate.CENTER).setChanged();
+        core.setIdentityTransform().translate(context.localPos).translateY(0.5F).translate(Translate.CENTER).rotateX(angle).rotateY(angle).rotateZ(Mth.PI / 4).translateBack(Translate.CENTER).setChanged();
     }
 }

@@ -9,11 +9,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class EnergizedEtherealAirDrillHandler extends EtherealAirDrillHandler {
     @Override
     public int getDamageAddition() {
-        return 2;
+        return 3;
     }
 
     @Override
     public float getConsumptionMultiplier() {
-        return 0.64f;
+        return super.getConsumptionMultiplier() * 0.75F;
     }
 }

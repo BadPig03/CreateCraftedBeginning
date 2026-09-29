@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -26,8 +27,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandlers;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HandheldDrillAttackModeButton;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
@@ -84,7 +85,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
         }
 
         int usedTicks = USE_DURATION - remainingUseDuration;
-        if (usedTicks <= 4 || usedTicks % 4 != 0) {
+        if (usedTicks <= 4 || !Mth.isMultipleOf(usedTicks, 4)) {
             return;
         }
 
@@ -94,7 +95,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
             return;
         }
 
-        AirtightHandheldDrillUtils.doDrillAttack(player, level);
+        AirtightHandheldDrillAttack.doDrillAttack(player, level);
     }
 
     @Override
@@ -108,6 +109,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
         if (player.isShiftKeyDown() || HandheldDrillAttackModeButton.INSTANCE.isActive(player, drill)) {
             return use(context.getLevel(), player, context.getHand()).getResult();
         }
+
         return InteractionResult.PASS;
     }
 
@@ -128,7 +130,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
                 return InteractionResultHolder.sidedSuccess(drill, true);
             }
 
-            player.openMenu(this, buf -> AirtightUpgradableMenu.writeOpeningData(buf, drill, InteractionHand.MAIN_HAND));
+            player.openMenu(this, buffer -> AirtightUpgradableMenu.writeOpeningData(buffer, drill, InteractionHand.MAIN_HAND));
             player.getCooldowns().addCooldown(this, 10);
             return InteractionResultHolder.sidedSuccess(drill, false);
         }
@@ -162,7 +164,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
             return false;
         }
 
-        AirtightHandheldDrillUtils.mineAreaBlocks(drill, serverLevel, state, pos, player);
+        AirtightHandheldDrillMining.mineAreaBlocks(drill, serverLevel, state, pos, player);
         return true;
     }
 
@@ -191,7 +193,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
-        AirtightDrillHandlerUtils.of(gasContent.getGasType()).appendHoverText(drill, context, tooltip, tooltipFlag);
+        AirtightDrillHandlers.resolveForEquipment(gasContent.getGasType()).appendHoverText(drill, context, tooltip, tooltipFlag);
     }
 
     @Override

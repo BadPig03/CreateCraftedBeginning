@@ -2,39 +2,33 @@ package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.turbinehandlers.AirtightTurbineHandlerUtils;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.minecraft.util.Mth;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumMap;
 import java.util.Map;
 
-import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils.LEVELS_PER_ROTOR;
-import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils.MAX_LEVEL;
+import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock.MAX_LEVEL;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 class TeslaTurbineLevelCalculator {
+    private static final int LEVELS_PER_ROTOR = 2;
     private static final String COMPOUND_KEY_SUPPLY_LEVEL = "SupplyLevel";
     private static final String COMPOUND_KEY_TYPE_LEVEL = "TypeLevel";
     private final TeslaTurbineCore core;
     private final TeslaTurbineBlockEntity turbine;
 
-    private int supplyLevel;
-    private int typeLevel;
+    private float supplyLevel;
+    private float typeLevel;
 
     TeslaTurbineLevelCalculator(TeslaTurbineCore core, TeslaTurbineBlockEntity turbine) {
         this.core = core;
         this.turbine = turbine;
     }
 
-    private static int readLevel(CompoundTag compoundTag, String key) {
-        return CCBMathUtils.clampNonNegative(CCBNbtUtils.getIntOrDefault(compoundTag, key, 0), MAX_LEVEL);
-    }
-
-    void updateSupplyLevel(int newLevel) {
+    void updateSupplyLevel(float newLevel) {
         if (!setSupplyLevel(newLevel)) {
             return;
         }
@@ -42,19 +36,27 @@ class TeslaTurbineLevelCalculator {
         core.markForClientSync();
     }
 
-    void loadSupplyLevel(int newLevel) {
+    void loadSupplyLevel(float newLevel) {
         setSupplyLevel(newLevel);
     }
 
-    void loadTypeLevel() {
-        setTypeLevel(getGasTypeLevel());
+    void updateTypeLevel(float newLevel) {
+        if (!setTypeLevel(newLevel)) {
+            return;
+        }
+
+        core.markForClientSync();
     }
 
-    Map<LevelKey, Integer> getLevels() {
-        int rotorLevel = getRotorLevel();
-        int minimumLevel = Math.min(supplyLevel, Math.min(rotorLevel, typeLevel));
-        int maximumLevel = Math.max(supplyLevel, Math.max(rotorLevel, typeLevel));
-        Map<LevelKey, Integer> levels = new EnumMap<>(LevelKey.class);
+    void loadTypeLevel(float newLevel) {
+        setTypeLevel(newLevel);
+    }
+
+    Map<LevelKey, Float> getLevels() {
+        float rotorLevel = getRotorLevel();
+        float minimumLevel = Math.min(supplyLevel, Math.min(rotorLevel, typeLevel));
+        float maximumLevel = Math.max(supplyLevel, Math.max(rotorLevel, typeLevel));
+        Map<LevelKey, Float> levels = new EnumMap<>(LevelKey.class);
         levels.put(LevelKey.SUPPLY, supplyLevel);
         levels.put(LevelKey.ROTOR, rotorLevel);
         levels.put(LevelKey.TYPE, typeLevel);
@@ -68,13 +70,13 @@ class TeslaTurbineLevelCalculator {
     }
 
     int getCurrentLevel() {
-        return Math.min(supplyLevel, Math.min(getRotorLevel(), typeLevel));
+        return Mth.floor(Math.min(supplyLevel, Math.min(getRotorLevel(), typeLevel)));
     }
 
     CompoundTag write() {
         CompoundTag compoundTag = new CompoundTag();
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_SUPPLY_LEVEL, supplyLevel);
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_TYPE_LEVEL, typeLevel);
+        compoundTag.putFloat(COMPOUND_KEY_SUPPLY_LEVEL, supplyLevel);
+        compoundTag.putFloat(COMPOUND_KEY_TYPE_LEVEL, typeLevel);
         return compoundTag;
     }
 
@@ -89,21 +91,22 @@ class TeslaTurbineLevelCalculator {
         typeLevel = readLevel(compoundTag, COMPOUND_KEY_TYPE_LEVEL);
     }
 
-    private int getGasTypeLevel() {
-        GasStack gasType = core.getFlowMeter().getGasType();
-        if (gasType.isEmpty()) {
+    private static float readLevel(CompoundTag compoundTag, String key) {
+        float level = NbtValues.getFloatOrDefault(compoundTag, key, 0);
+        if (!Float.isFinite(level)) {
             return 0;
         }
-        return AirtightTurbineHandlerUtils.of(gasType).getMaxLevel();
+
+        return Mth.clamp(level, 0, MAX_LEVEL);
     }
 
     private int getRotorLevel() {
         int rotorCount = turbine.getBlockState().getValue(TeslaTurbineBlock.ROTOR);
-        return CCBMathUtils.clampNonNegative(rotorCount * LEVELS_PER_ROTOR, MAX_LEVEL);
+        return Mth.clamp(rotorCount * LEVELS_PER_ROTOR, 0, MAX_LEVEL);
     }
 
-    private boolean setSupplyLevel(int newLevel) {
-        int clampedLevel = CCBMathUtils.clampNonNegative(newLevel, MAX_LEVEL);
+    private boolean setSupplyLevel(float newLevel) {
+        float clampedLevel = Mth.clamp(newLevel, 0, MAX_LEVEL);
         if (supplyLevel == clampedLevel) {
             return false;
         }
@@ -112,13 +115,14 @@ class TeslaTurbineLevelCalculator {
         return true;
     }
 
-    private void setTypeLevel(int newLevel) {
-        int clampedLevel = CCBMathUtils.clampNonNegative(newLevel, MAX_LEVEL);
+    private boolean setTypeLevel(float newLevel) {
+        float clampedLevel = Mth.clamp(newLevel, 0, MAX_LEVEL);
         if (typeLevel == clampedLevel) {
-            return;
+            return false;
         }
 
         typeLevel = clampedLevel;
+        return true;
     }
 
     enum LevelKey {

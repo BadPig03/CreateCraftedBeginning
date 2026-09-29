@@ -7,9 +7,13 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -21,8 +25,9 @@ public class LaserReceiverBlock extends DirectionalKineticBlock implements IBE<L
         super(properties);
     }
 
-    public static boolean canReceiveLaser(BlockState state, Direction hitFace) {
-        return state.getBlock() instanceof LaserReceiverBlock && state.getValue(FACING) == hitFace;
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return CCBShapes.LASER_RECEIVER.get(state.getValue(FACING));
     }
 
     @Override
@@ -48,5 +53,9 @@ public class LaserReceiverBlock extends DirectionalKineticBlock implements IBE<L
     @Override
     public BlockEntityType<? extends LaserReceiverBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.LASER_RECEIVER.get();
+    }
+
+    public static boolean canReceiveLaser(BlockState state, Direction hitFace) {
+        return state.getBlock() instanceof LaserReceiverBlock && state.getValue(FACING) == hitFace;
     }
 }

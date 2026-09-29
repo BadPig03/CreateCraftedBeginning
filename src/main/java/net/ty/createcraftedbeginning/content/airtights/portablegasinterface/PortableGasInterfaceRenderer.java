@@ -18,7 +18,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,6 +30,11 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
     public PortableGasInterfaceRenderer(Context ignored) {
     }
 
+    @Override
+    protected void renderSafe(PortableGasInterfaceBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay) {
+        render(blockEntity.getBlockState(), blockEntity.isConnected(), blockEntity.getExtensionDistance(partialTicks), null, buffer -> buffer.light(light).renderInto(poseStack, bufferSource.getBuffer(RenderType.solid())));
+    }
+
     static void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource bufferSource) {
         LerpedFloat connectionAnimation = PortableGasInterfaceMovement.getAnimation(context);
         boolean lit = connectionAnimation.settled();
@@ -37,6 +42,18 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
         PoseStack model = matrices.getModel();
         Consumer<SuperByteBuffer> draw = buffer -> buffer.light(LevelRenderer.getLightColor(renderWorld, context.localPos)).useLevelLight(context.world, matrices.getWorld()).renderInto(matrices.getViewProjection(), bufferSource.getBuffer(RenderType.solid()));
         render(context.state, lit, extensionProgress, model, draw);
+    }
+
+    static PartialModel getTopForState() {
+        return CCBPartialModels.PORTABLE_GAS_INTERFACE_TOP;
+    }
+
+    static PartialModel getMiddleForState(boolean lit) {
+        if (!lit) {
+            return CCBPartialModels.PORTABLE_GAS_INTERFACE_MIDDLE;
+        }
+
+        return CCBPartialModels.PORTABLE_GAS_INTERFACE_MIDDLE_POWERED;
     }
 
     private static void render(BlockState blockState, boolean lit, float extensionProgress, @Nullable PoseStack poseStack, Consumer<SuperByteBuffer> draw) {
@@ -64,21 +81,5 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
             default -> 90;
         };
         buffer.center().rotateYDegrees(AngleHelper.horizontalAngle(facing)).rotateXDegrees(xRotation).uncenter();
-    }
-
-    static PartialModel getTopForState() {
-        return CCBPartialModels.PORTABLE_GAS_INTERFACE_TOP;
-    }
-
-    static PartialModel getMiddleForState(boolean lit) {
-        if (!lit) {
-            return CCBPartialModels.PORTABLE_GAS_INTERFACE_MIDDLE;
-        }
-        return CCBPartialModels.PORTABLE_GAS_INTERFACE_MIDDLE_POWERED;
-    }
-
-    @Override
-    protected void renderSafe(PortableGasInterfaceBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay) {
-        render(blockEntity.getBlockState(), blockEntity.isConnected(), blockEntity.getExtensionDistance(partialTicks), null, buffer -> buffer.light(light).renderInto(poseStack, bufferSource.getBuffer(RenderType.solid())));
     }
 }

@@ -29,16 +29,17 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRestockController.Status;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.advancement.GasPackagingAdvancements;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRestockController.Result;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeRestockController.Status;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.VirtualGasItems;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestFormat;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 import net.ty.createcraftedbeginning.platform.client.ClientScreenBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -56,9 +57,14 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
     }
 
     private static int toGasAmount(ValueSettings settings) {
-        int row = CCBMathUtils.clampNonNegative(settings.row(), ROW_MULTIPLIERS.length - 1);
-        int settingValue = CCBMathUtils.clampNonNegative(settings.value(), BOARD_MAX_VALUE);
+        int row = Mth.clamp(settings.row(), 0, ROW_MULTIPLIERS.length - 1);
+        int settingValue = Mth.clamp(settings.value(), 0, BOARD_MAX_VALUE);
         return Math.min(settingValue * ROW_MULTIPLIERS[row], MAX_TARGET_AMOUNT);
+    }
+
+    @Override
+    public void tick() {
+        GasPackagingAdvancements.withGauge(blockEntity.getBehaviour(CCBAdvancementBehaviour.TYPE), super::tick);
     }
 
     @Override
@@ -75,7 +81,7 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
             return;
         }
 
-        List<ItemStack> gasTokens = GasVirtualUtils.getVirtualItems(heldStack);
+        List<ItemStack> gasTokens = VirtualGasItems.createVirtualItems(heldStack);
         if (gasTokens.size() != 1) {
             if (gasTokens.isEmpty()) {
                 player.displayClientMessage(CCBLang.translateDirect("gui.warnings.empty_gas_source", heldStack.getHoverName()).withStyle(ChatFormatting.RED), true);
@@ -100,9 +106,9 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
         super.read(compoundTag, provider, clientPacket);
         activeCraftingArrangement = List.of();
         upTo = true;
-        count = CCBMathUtils.clampNonNegative(count, MAX_TARGET_AMOUNT);
+        count = Mth.clamp(count, 0, MAX_TARGET_AMOUNT);
         ItemStack gasFilter = getFilter();
-        if (gasFilter.isEmpty() || GasVirtualUtils.isVirtualItem(gasFilter)) {
+        if (gasFilter.isEmpty() || VirtualGasItems.isVirtualItem(gasFilter)) {
             return;
         }
 
@@ -114,7 +120,8 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
         if (value.value() == 0) {
             return CCBLang.translateDirect("gui.gas_factory_gauge.inactive");
         }
-        return CCBLang.text(GasAmounts.formatLosslessCompact(toGasAmount(value))).component();
+
+        return CCBLang.text(GasUnitFormat.formatPrecise(toGasAmount(value))).component();
     }
 
     @Override
@@ -122,7 +129,8 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
         if (stack.isEmpty()) {
             return super.setFilter(ItemStack.EMPTY);
         }
-        return GasVirtualUtils.isVirtualItem(stack) && super.setFilter(stack.copyWithCount(1));
+
+        return VirtualGasItems.isVirtualItem(stack) && super.setFilter(stack.copyWithCount(1));
     }
 
     @Override
@@ -144,13 +152,13 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
 
     @Override
     public ValueSettingsBoard createBoard(Player player, BlockHitResult hitResult) {
-        List<Component> rowLabels = List.of(CCBLang.text("×1mB").component(), CCBLang.text("×10mB").component(), CCBLang.text("×100mB").component(), CCBLang.text("×1B").component(), CCBLang.text("×10B").component());
+        List<Component> rowLabels = List.of(CCBLang.text("×1GU").component(), CCBLang.text("×10GU").component(), CCBLang.text("×100GU").component(), CCBLang.text("×1kGU").component(), CCBLang.text("×10kGU").component());
         return new ValueSettingsBoard(CCBLang.translateDirect("gui.gas_factory_gauge.target_amount"), BOARD_MAX_VALUE, 10, rowLabels, new ValueSettingsFormatter(this::formatValue));
     }
 
     @Override
     public ValueSettings getValueSettings() {
-        int targetAmount = CCBMathUtils.clampNonNegative(count, MAX_TARGET_AMOUNT);
+        int targetAmount = Mth.clamp(count, 0, MAX_TARGET_AMOUNT);
         if (targetAmount == 0) {
             return new ValueSettings(0, 0);
         }
@@ -184,13 +192,26 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
 
         int storedAmount = getLevelInStorage();
         int promisedAmount = getPromised();
-        String storedText = GasRequestUtils.format(storedAmount, false);
+        String storedText = GasRequestFormat.format(storedAmount, false);
         if (count == 0) {
             return CCBLang.text(storedText).color(0xF1EFE8).component();
         }
 
-        int color = satisfied ? 0xD7FFA8 : promisedSatisfied ? 0xFFCD75 : 0xFFBFA8;
-        return CCBLang.text(storedText).color(color).add(CCBLang.text(promisedAmount == 0 ? "" : "⏶")).add(CCBLang.text("/").style(ChatFormatting.WHITE)).add(CCBLang.text(GasRequestUtils.format(count, false)).color(0xF1EFE8)).component();
+        int color;
+        if (satisfied) {
+            color = 0xD7FFA8;
+        }
+        else if (promisedSatisfied) {
+            color = 0xFFCD75;
+        }
+        else {
+            color = 0xFFBFA8;
+        }
+        if (promisedAmount == 0) {
+            return CCBLang.text(storedText).color(color).add(CCBLang.text("")).add(CCBLang.text("/").style(ChatFormatting.WHITE)).add(CCBLang.text(GasRequestFormat.format(count, false)).color(0xF1EFE8)).component();
+        }
+
+        return CCBLang.text(storedText).color(color).add(CCBLang.text("⏶")).add(CCBLang.text("/").style(ChatFormatting.WHITE)).add(CCBLang.text(GasRequestFormat.format(count, false)).color(0xF1EFE8)).component();
     }
 
     @Override
@@ -203,6 +224,7 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
         if (!isActive()) {
             return ItemRequirement.NONE;
         }
+
         return new ItemRequirement(ItemUseType.CONSUME, new ItemStack(CCBBlocks.GAS_FACTORY_GAUGE_BLOCK));
     }
 
@@ -213,7 +235,7 @@ public class GasFactoryGaugeBehaviour extends FactoryPanelBehaviour {
 
     public void performGasRestock() {
         ItemStack gasToken = getFilter();
-        if (!GasVirtualUtils.isVirtualItem(gasToken) || !(panelBE() instanceof GasFactoryGaugeBlockEntity gasGauge)) {
+        if (!VirtualGasItems.isVirtualItem(gasToken) || !(panelBE() instanceof GasFactoryGaugeBlockEntity gasGauge)) {
             return;
         }
 

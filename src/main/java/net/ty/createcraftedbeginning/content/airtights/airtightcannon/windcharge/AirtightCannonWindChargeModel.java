@@ -41,22 +41,32 @@ class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWindCharge
         core = bone.getChild(NAME_CORE);
     }
 
+    @Override
+    public void setupAnim(AbstractWindCharge entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+    }
+
+    @Override
+    public ModelPart root() {
+        return bone;
+    }
+
+    @SuppressWarnings("ConstantExpression")
     static LayerDefinition createLayerDefinition(CannonModelType modelType) {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
         PartDefinition bone = root.addOrReplaceChild(NAME_BONE, CubeListBuilder.create(), PartPose.offset(0, 0, 0));
         switch (modelType) {
-            case NATURAL -> {
-                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4, -1, -4, 8, 2, 8, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, 0, -0.7853982f, 0));
-                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create().texOffs(0, 9).addBox(-3, -2, -3, 6, 4, 6, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, 0, -0.7853982f, 0));
+            case WITH_WIND -> {
+                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4, -1, -4, 8, 2, 8, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, 0, -Mth.PI / 4, 0));
+                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create().texOffs(0, 9).addBox(-3, -2, -3, 6, 4, 6, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, 0, -Mth.PI / 4, 0));
             }
-            case ETHEREAL -> {
-                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4, -1, -4, 8, 2, 8, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, -0.7853982f, -0.7853982f, 0));
-                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create().texOffs(0, 9).addBox(-3, -2, -3, 6, 4, 6, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, Mth.PI / 4, -0.7853982f, 0));
+            case WITH_WIND_ROTATED -> {
+                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create().texOffs(15, 20).addBox(-4, -1, -4, 8, 2, 8, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, -Mth.PI / 4, -Mth.PI / 4, 0));
+                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create().texOffs(0, 9).addBox(-3, -2, -3, 6, 4, 6, new CubeDeformation(0)), PartPose.offsetAndRotation(0, 0, 0, Mth.PI / 4, -Mth.PI / 4, 0));
             }
             case CORE_ONLY -> {
-                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create(), PartPose.offsetAndRotation(0, 0, 0, 0, -0.7853982f, 0));
-                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create(), PartPose.offsetAndRotation(0, 0, 0, 0, -0.7853982f, 0));
+                bone.addOrReplaceChild(NAME_WIND_OUTER, CubeListBuilder.create(), PartPose.offsetAndRotation(0, 0, 0, 0, -Mth.PI / 4, 0));
+                bone.addOrReplaceChild(NAME_WIND_INNER, CubeListBuilder.create(), PartPose.offsetAndRotation(0, 0, 0, 0, -Mth.PI / 4, 0));
             }
         }
         bone.addOrReplaceChild(NAME_CORE, CubeListBuilder.create().texOffs(0, 0).addBox(-2, -2, -2, 4, 4, 4, new CubeDeformation(0)), PartPose.offset(0, 0, 0));
@@ -67,13 +77,13 @@ class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWindCharge
         resetRotations();
         float rotation = ageInTicks * rotationSpeed * Mth.DEG_TO_RAD;
         switch (animationType) {
-            case CORE_Y -> core.yRot = -rotation;
-            case NATURAL_Y -> {
+            case ONLY_CORE -> core.yRot = -rotation;
+            case WITH_WIND_Y -> {
                 core.yRot = -rotation;
                 windOuter.yRot = rotation;
                 windInner.yRot = rotation;
             }
-            case ETHEREAL_Z -> {
+            case WITH_WIND_Z -> {
                 core.yRot = -rotation;
                 windOuter.zRot = rotation;
                 windInner.zRot = rotation;
@@ -91,14 +101,5 @@ class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWindCharge
         windInner.xRot = 0;
         windInner.yRot = 0;
         windInner.zRot = 0;
-    }
-
-    @Override
-    public void setupAnim(AbstractWindCharge entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-    }
-
-    @Override
-    public ModelPart root() {
-        return bone;
     }
 }

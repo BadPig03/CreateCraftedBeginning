@@ -59,7 +59,7 @@ public class ChillingFanProcessingType implements FanProcessingType {
             return;
         }
 
-        particleAccess.spawnExtraParticle(ParticleTypes.SNOWFLAKE, 0.125f);
+        particleAccess.spawnExtraParticle(ParticleTypes.SNOWFLAKE, 0.125F);
     }
 
     @Override

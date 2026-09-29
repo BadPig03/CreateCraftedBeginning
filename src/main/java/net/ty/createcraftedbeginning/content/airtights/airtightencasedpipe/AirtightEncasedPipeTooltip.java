@@ -26,7 +26,6 @@ final class AirtightEncasedPipeTooltip {
             return false;
         }
 
-        CCBLang.translate("gui.airtight_encased_pipe").forGoggles(tooltip);
         CCBLang.translate("gui.airtight_encased_pipe.warning").style(ChatFormatting.GRAY).forGoggles(tooltip);
         for (Direction direction : invalidDirections) {
             CCBLang.translate("gui.airtight_handheld_drill.direction." + direction.getName()).style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
@@ -41,9 +40,11 @@ final class AirtightEncasedPipeTooltip {
                 continue;
             }
 
-            if (AirtightEncasedPipeBlock.hasPlacementConnection(level, pos, direction)) {
-                invalidDirections.add(direction);
+            if (!AirtightEncasedPipeBlock.hasPlacementConnection(level, pos, direction)) {
+                continue;
             }
+
+            invalidDirections.add(direction);
         }
         return invalidDirections;
     }

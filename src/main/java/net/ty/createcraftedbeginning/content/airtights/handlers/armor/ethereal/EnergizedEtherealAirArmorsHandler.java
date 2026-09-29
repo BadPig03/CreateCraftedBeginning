@@ -10,11 +10,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class EnergizedEtherealAirArmorsHandler extends EtherealAirArmorsHandler {
     @Override
     public float getConsumptionMultiplier(EquipmentSlot slot) {
-        return 0.64f;
+        return  super.getConsumptionMultiplier(slot) * 0.75F;
     }
 
     @Override
     public float getMultiplierForBoostingElytra() {
-        return super.getMultiplierForBoostingElytra() * 1.5f;
+        return super.getMultiplierForBoostingElytra() * 1.5F;
     }
 }

@@ -9,11 +9,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class EnergizedUltrawarmAirDrillHandler extends UltrawarmAirDrillHandler {
     @Override
     public int getDamageAddition() {
-        return 1;
+        return 2;
     }
 
     @Override
     public float getConsumptionMultiplier() {
-        return 0.72f;
+        return super.getConsumptionMultiplier() * 0.75F;
     }
 }

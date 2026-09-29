@@ -26,10 +26,10 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
-import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
+import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlers;
+import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorSet;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.ElytraUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.HasteUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
@@ -126,7 +126,7 @@ public class AirtightChestplateItem extends AirtightChestplateArmorItem implemen
             return;
         }
 
-        if (AirtightArmorsUtils.isEntireArmoredUp(player) && tooltipFlag.hasShiftDown()) {
+        if (AirtightArmorSet.isEntireArmoredUp(player) && tooltipFlag.hasShiftDown()) {
             tooltip.add(CCBLang.translate("gui.airtight_armors.fire_immune_condition").style(ChatFormatting.GRAY).component());
             tooltip.addAll(TooltipHelper.cutTextComponent(CCBLang.translateDirect("gui.airtight_armors.fire_immune_behaviour"), Palette.STANDARD_CREATE));
         }
@@ -136,17 +136,17 @@ public class AirtightChestplateItem extends AirtightChestplateArmorItem implemen
             return;
         }
 
-        AirtightArmorsHandler handler = AirtightArmorsHandlerUtils.of(gas.getGasType());
+        AirtightArmorsHandler handler = AirtightArmorsHandlers.resolveForEquipment(gas.getGasType());
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gas).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
 
         float consumptionMultiplier = handler.getConsumptionMultiplier(EquipmentSlot.CHEST);
-        MutableComponent advancedConsumption = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptions.format(consumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptions.formatPercent(consumptionMultiplier)).add(advancedConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        MutableComponent advancedConsumption = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionMath.format(consumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionMath.formatPercent(consumptionMultiplier)).add(advancedConsumption.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
 
         float boostMultiplier = handler.getMultiplierForBoostingElytra();
-        MutableComponent advancedBoost = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptions.format(boostMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.airtight_armors.elytra_boost", GasConsumptions.formatPercent(boostMultiplier)).add(advancedBoost.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        MutableComponent advancedBoost = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionMath.format(boostMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.airtight_armors.elytra_boost", GasConsumptionMath.formatPercent(boostMultiplier)).add(advancedBoost.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 
     @Override

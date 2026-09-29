@@ -29,13 +29,13 @@ public class CCBArmorMaterials {
 
     public static final Holder<ArmorMaterial> AIRTIGHT = register(new int[]{4, 9, 7, 4, 11}, CCBSoundEvents.AIRTIGHT_ARMOR_EQUIP.getMainEventHolder(), Ingredient::of, List.of(new Layer(AIRTIGHT_LOCATION)));
 
-    private static Holder<ArmorMaterial> register(int[] defense, Holder<SoundEvent> equipSound, Supplier<Ingredient> repairIngredient, List<Layer> layers) {
-        EnumMap<Type, Integer> enumMap = Arrays.stream(Type.values()).collect(Collectors.toMap(type -> type, type -> defense[type.ordinal()], (a, b) -> b, () -> new EnumMap<>(Type.class)));
-        return MATERIALS.register("airtight", () -> new ArmorMaterial(enumMap, 15, equipSound, repairIngredient, layers, (float) 6, (float) 0.25));
-    }
-
     @Internal
     public static void register(IEventBus eventBus) {
         MATERIALS.register(eventBus);
+    }
+
+    private static Holder<ArmorMaterial> register(int[] defense, Holder<SoundEvent> equipSound, Supplier<Ingredient> repairIngredient, List<Layer> layers) {
+        EnumMap<Type, Integer> defenseBySlot = Arrays.stream(Type.values()).collect(Collectors.toMap(type -> type, type -> defense[type.ordinal()], (existingDefense, replacementDefense) -> replacementDefense, () -> new EnumMap<>(Type.class)));
+        return MATERIALS.register("airtight", () -> new ArmorMaterial(defenseBySlot, 15, equipSound, repairIngredient, layers, 6, 0.25F));
     }
 }

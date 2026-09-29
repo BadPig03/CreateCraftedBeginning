@@ -9,8 +9,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock.VentState;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.UnaryOperator;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -19,6 +21,11 @@ public class AirVentBlockEntity extends SyncedBlockEntity {
 
     public AirVentBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+    }
+
+    @Internal
+    public static void transformLouverNbt(CompoundTag tag, UnaryOperator<BlockPos> transform) {
+        AirVentLouverState.transformNbt(tag, transform);
     }
 
     @Override

@@ -6,6 +6,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineLevelCalculator.LevelKey;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
@@ -14,7 +15,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Map;
 
-import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils.MAX_LEVEL;
+import static net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock.MAX_LEVEL;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -23,6 +24,14 @@ class TeslaTurbineTooltipBuilder {
 
     TeslaTurbineTooltipBuilder(TeslaTurbineCore core) {
         this.core = core;
+    }
+
+    void addToGoggleTooltip(List<Component> tooltip) {
+        TeslaTurbineLevelCalculator levelCalculator = core.getLevelCalculator();
+        addStatusLine(levelCalculator.getCurrentLevel(), tooltip);
+        addProgressBars(levelCalculator.getLevels(), tooltip);
+        addDetailedInfo(tooltip);
+        addKineticInfo(tooltip);
     }
 
     private static void addStatusLine(int currentLevel, List<Component> tooltip) {
@@ -39,11 +48,11 @@ class TeslaTurbineTooltipBuilder {
         CCBLang.translate("gui.tesla_turbine.status", levelText.withStyle(ChatFormatting.GREEN)).forGoggles(tooltip);
     }
 
-    private static void addProgressBars(Map<LevelKey, Integer> levels, List<Component> tooltip) {
-        int minimumLevel = levels.getOrDefault(LevelKey.MIN_VALUE, 0);
-        int maximumLevel = levels.getOrDefault(LevelKey.MAX_VALUE, MAX_LEVEL);
+    private static void addProgressBars(Map<LevelKey, Float> levels, List<Component> tooltip) {
+        float minimumLevel = levels.getOrDefault(LevelKey.MIN_VALUE, 0.0F);
+        float maximumLevel = levels.getOrDefault(LevelKey.MAX_VALUE, (float) MAX_LEVEL);
         List<MutableComponent> labels = List.of(createLabel("supply"), createLabel("rotor"), createLabel("type"));
-        List<MutableComponent> bars = List.of(createProgressBar(levels.getOrDefault(LevelKey.SUPPLY, 0), minimumLevel, maximumLevel), createProgressBar(levels.getOrDefault(LevelKey.ROTOR, 0), minimumLevel, maximumLevel), createProgressBar(levels.getOrDefault(LevelKey.TYPE, 0), minimumLevel, maximumLevel));
+        List<MutableComponent> bars = List.of(createProgressBar(levels.getOrDefault(LevelKey.SUPPLY, 0.0F), minimumLevel, maximumLevel), createProgressBar(levels.getOrDefault(LevelKey.ROTOR, 0.0F), minimumLevel, maximumLevel), createProgressBar(levels.getOrDefault(LevelKey.TYPE, 0.0F), minimumLevel, maximumLevel));
         if (ClientRenderBridge.addAlignedTooltipBars(tooltip, 1, labels, bars)) {
             return;
         }
@@ -58,26 +67,34 @@ class TeslaTurbineTooltipBuilder {
         return CCBLang.translateDirect("gui.tesla_turbine." + label).withStyle(ChatFormatting.GRAY);
     }
 
-    private static MutableComponent createProgressBar(int level, int minimumLevel, int maximumLevel) {
-        int segmentsBeforeMinimum = Math.max(0, minimumLevel - 1);
-        int minimumSegmentCount = minimumLevel > 0 ? 1 : 0;
-        int completedSegments = Math.max(0, level - minimumLevel);
-        int remainingSegments = Math.max(0, maximumLevel - level);
-        int paddingSegments = Math.max(0, Math.min(MAX_LEVEL - maximumLevel, (maximumLevel / 4 + 1) * 4 - maximumLevel));
+    private static MutableComponent createProgressBar(float level, float minimumLevel, float maximumLevel) {
+        int completedSegments = Mth.floor(level);
+        int occupiedSegments = Mth.ceil(level);
+        int minimumSegment = Mth.ceil(minimumLevel);
+        int maximumSegments = Mth.ceil(maximumLevel);
+        int totalSegments = Math.min(MAX_LEVEL, (Mth.floor(maximumLevel) / 4 + 1) * 4);
+        MutableComponent bar = Component.empty();
+        for (int segment = 1; segment <= totalSegments; segment++) {
+            ChatFormatting color;
+            if (segment > maximumSegments) {
+                color = ChatFormatting.DARK_GRAY;
+            }
+            else if (segment > occupiedSegments) {
+                color = ChatFormatting.DARK_RED;
+            }
+            else if (segment > completedSegments) {
+                color = ChatFormatting.YELLOW;
+            }
+            else if (segment == minimumSegment) {
+                color = ChatFormatting.GREEN;
+            }
+            else {
+                color = ChatFormatting.DARK_GREEN;
+            }
+            bar.append(Component.literal("|").withStyle(color));
+        }
 
-        return Component.empty().append(createBars(segmentsBeforeMinimum, ChatFormatting.DARK_GREEN)).append(createBars(minimumSegmentCount, ChatFormatting.GREEN)).append(createBars(completedSegments, ChatFormatting.DARK_GREEN)).append(createBars(remainingSegments, ChatFormatting.DARK_RED)).append(createBars(paddingSegments, ChatFormatting.DARK_GRAY));
-    }
-
-    private static MutableComponent createBars(int count, ChatFormatting formatting) {
-        return Component.literal("|".repeat(count)).withStyle(formatting);
-    }
-
-    void addToGoggleTooltip(List<Component> tooltip) {
-        TeslaTurbineLevelCalculator levelCalculator = core.getLevelCalculator();
-        addStatusLine(levelCalculator.getCurrentLevel(), tooltip);
-        addProgressBars(levelCalculator.getLevels(), tooltip);
-        addDetailedInfo(tooltip);
-        addKineticInfo(tooltip);
+        return bar;
     }
 
     private void addDetailedInfo(List<Component> tooltip) {
@@ -89,13 +106,15 @@ class TeslaTurbineTooltipBuilder {
         int nozzleCount = core.getStructureManager().getAttachedNozzle();
         if (nozzleCount == 0) {
             CCBLang.translate("gui.tesla_turbine.via_no_nozzle").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            return;
         }
-        else if (nozzleCount == 1) {
+
+        if (nozzleCount == 1) {
             CCBLang.translate("gui.tesla_turbine.via_one_nozzle").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            return;
         }
-        else {
-            CCBLang.translate("gui.tesla_turbine.via_nozzles", nozzleCount).style(ChatFormatting.GRAY).forGoggles(tooltip);
-        }
+
+        CCBLang.translate("gui.tesla_turbine.via_nozzles", nozzleCount).style(ChatFormatting.GRAY).forGoggles(tooltip);
     }
 
     private void addKineticInfo(List<Component> tooltip) {
@@ -105,7 +124,7 @@ class TeslaTurbineTooltipBuilder {
 
         tooltip.add(CommonComponents.EMPTY);
         CCBLang.translate("gui.capacity_provided").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        float stressCapacity = core.getTurbine().calculateAddedStressCapacity() * Math.abs(core.getLevelCalculator().getSpeed());
+        float stressCapacity = core.getTurbine().calculateAddedStressCapacity() * Mth.abs(core.getLevelCalculator().getSpeed());
         CCBLang.number(stressCapacity).translate("gui.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.at_current_speed").style(ChatFormatting.DARK_GRAY).component()).forGoggles(tooltip, 1);
     }
 }

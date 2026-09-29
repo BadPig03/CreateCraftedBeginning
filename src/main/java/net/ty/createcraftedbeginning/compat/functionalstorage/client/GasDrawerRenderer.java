@@ -22,11 +22,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.client.gas.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.compat.functionalstorage.GasDrawerBlockEntity;
 import net.ty.createcraftedbeginning.compat.functionalstorage.GasDrawerBlockEntity.RenderGas;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -35,9 +36,59 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlockEntity> {
-    private static final float AMOUNT_TEXT_SCALE = 0.007f;
+    private static final float AMOUNT_TEXT_SCALE = 0.007F;
 
     public GasDrawerRenderer(Context ignoredContext) {
+    }
+
+    @Override
+    public void render(GasDrawerBlockEntity drawer, float partialTick, PoseStack poseStack, MultiBufferSource buffers, int packedLight, int packedOverlay) {
+        Level level = drawer.getLevel();
+        if (level == null) {
+            return;
+        }
+
+        poseStack.pushPose();
+        applyDrawerOrientation(drawer, poseStack);
+        Direction drawerFacing = drawer.getFacingDirection();
+        packedLight = LevelRenderer.getLightColor(level, drawer.getBlockPos().relative(drawerFacing));
+        renderSlots(drawer, poseStack, buffers, packedLight, packedOverlay);
+        renderUpgrades(drawer, poseStack, buffers, packedLight, packedOverlay);
+        poseStack.popPose();
+    }
+
+    @Override
+    public int getViewDistance() {
+        return FunctionalStorageClientConfig.DRAWER_RENDER_RANGE;
+    }
+
+    public static void renderItemGas(PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, GasStack stack, DrawerOptions options, AABB bounds, boolean compact, boolean creative) {
+        if (stack.isEmpty()) {
+            return;
+        }
+
+        if (options.isActive(ConfigurationAction.TOGGLE_RENDER)) {
+            renderGasSurface(poseStack, buffers, light, overlay, stack, false, bounds);
+        }
+        if (options.isActive(ConfigurationAction.TOGGLE_NUMBERS)) {
+            poseStack.pushPose();
+            poseStack.translate(0.5, 0.84, 0.97);
+            if (compact) {
+                poseStack.translate(-0.25, 0, 0);
+            }
+            String amountText = creative ? CCBLang.translateDirect("generic.infinity_mark").getString() : GasUnitFormat.formatCompact(stack.getAmount());
+            DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amountText).withStyle(ChatFormatting.WHITE), Direction.NORTH, AMOUNT_TEXT_SCALE);
+            poseStack.popPose();
+        }
+
+        poseStack.pushPose();
+        poseStack.translate(0.5, 0.453, 0.97);
+        if (compact) {
+            poseStack.scale(0.5F, 0.65F, 0.5F);
+            poseStack.translate(-0.5, -0.18, 0);
+        }
+        DrawerRenderer.renderIndicator(poseStack, buffers, light, overlay, 1, options);
+        poseStack.popPose();
     }
 
     private static void renderSlots(GasDrawerBlockEntity drawer, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay) {
@@ -83,7 +134,16 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
             poseStack.translate(-0.25, 0, 0);
         }
 
-        String amountText = renderGas.filterOnly() ? "0" : drawer.isCreative() ? "∞" : GasAmounts.formatCompact(renderGas.stack().getAmount());
+        String amountText;
+        if (renderGas.filterOnly()) {
+            amountText = "0";
+        }
+        else if (drawer.isCreative()) {
+            amountText = CCBLang.translateDirect("generic.infinity_mark").getString();
+        }
+        else {
+            amountText = GasUnitFormat.formatCompact(renderGas.stack().getAmount());
+        }
         DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amountText).withStyle(ChatFormatting.WHITE), Direction.NORTH, AMOUNT_TEXT_SCALE);
         poseStack.popPose();
     }
@@ -92,53 +152,39 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
         poseStack.pushPose();
         poseStack.translate(0.5, 0.453, 0.97);
         if (compact) {
-            poseStack.scale(0.5f, 0.65f, 0.5f);
+            poseStack.scale(0.5F, 0.65F, 0.5F);
             poseStack.translate(-0.5, -0.18, 0);
         }
 
-        long tankCapacity = Math.max(1, drawer.getPhysicalTankCapacity());
-        float fillRatio = renderGas.filterOnly() ? 0 : drawer.isCreative() ? 1 : (float) Math.min(1, renderGas.stack().getAmount() / (double) tankCapacity);
+        long tankVolume = Math.max(1, drawer.getTankVolume());
+        float fillRatio;
+        if (renderGas.filterOnly()) {
+            fillRatio = 0;
+        }
+        else if (drawer.isCreative()) {
+            fillRatio = 1;
+        }
+        else {
+            fillRatio = (float) Math.min(1, (double) renderGas.stack().getAmount() / tankVolume);
+        }
         DrawerRenderer.renderIndicator(poseStack, buffers, light, overlay, fillRatio, options);
-        poseStack.popPose();
-    }
-
-    public static void renderItemGas(PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, GasStack stack, DrawerOptions options, AABB bounds, boolean compact, boolean creative) {
-        if (stack.isEmpty()) {
-            return;
-        }
-
-        if (options.isActive(ConfigurationAction.TOGGLE_RENDER)) {
-            renderGasSurface(poseStack, buffers, light, overlay, stack, false, bounds);
-        }
-        if (options.isActive(ConfigurationAction.TOGGLE_NUMBERS)) {
-            poseStack.pushPose();
-            poseStack.translate(0.5, 0.84, 0.97);
-            if (compact) {
-                poseStack.translate(-0.25, 0, 0);
-            }
-            String amountText = creative ? "∞" : GasAmounts.formatCompact(stack.getAmount());
-            DrawerRenderer.renderText(poseStack, buffers, overlay, Component.literal(amountText).withStyle(ChatFormatting.WHITE), Direction.NORTH, AMOUNT_TEXT_SCALE);
-            poseStack.popPose();
-        }
-
-        poseStack.pushPose();
-        poseStack.translate(0.5, 0.453, 0.97);
-        if (compact) {
-            poseStack.scale(0.5f, 0.65f, 0.5f);
-            poseStack.translate(-0.5, -0.18, 0);
-        }
-        DrawerRenderer.renderIndicator(poseStack, buffers, light, overlay, 1, options);
         poseStack.popPose();
     }
 
     private static void renderGasSurface(PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, GasStack stack, boolean filterOnly, AABB bounds) {
         TextureAtlasSprite sprite = CCBGasClientTextures.getGasTexture(stack.getGasHolder());
         int tint = stack.getHint();
-        float red = ARGB32.red(tint) / 255.0f;
-        float green = ARGB32.green(tint) / 255.0f;
-        float blue = ARGB32.blue(tint) / 255.0f;
-        float sourceAlpha = ARGB32.alpha(tint) / 255.0f;
-        float alpha = filterOnly ? 0.3f : sourceAlpha <= 0 ? 1 : sourceAlpha;
+        float red = ARGB32.red(tint) / 255.0F;
+        float green = ARGB32.green(tint) / 255.0F;
+        float blue = ARGB32.blue(tint) / 255.0F;
+        float sourceAlpha = ARGB32.alpha(tint) / 255.0F;
+        float alpha;
+        if (filterOnly) {
+            alpha = 0.3F;
+        }
+        else {
+            alpha = sourceAlpha <= 0 ? 1 : sourceAlpha;
+        }
         VertexConsumer buffer = buffers.getBuffer(RenderType.translucent());
         Matrix4f poseMatrix = poseStack.last().pose();
 
@@ -154,9 +200,9 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
         float frontMinX = minX;
         float frontMaxX = maxX;
         float frontHeight = maxY - minY;
-        if (maxX - minX > frontHeight * 1.5f) {
-            float centerX = (minX + maxX) * 0.5f;
-            float halfSize = frontHeight * 0.5f;
+        if (maxX - minX > frontHeight * 1.5F) {
+            float centerX = (minX + maxX) * 0.5F;
+            float halfSize = frontHeight * 0.5F;
             frontMinX = centerX - halfSize;
             frontMaxX = centerX + halfSize;
         }
@@ -215,29 +261,10 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
                 poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(0, 1, 0), new Vector3f(0, 0, 90), 1));
             }
         }
-        if (blockFacing == Direction.NORTH) {
-            poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(-1, 1, 0), new Vector3f(0, 0, 180), 1));
-        }
-    }
-
-    @Override
-    public void render(GasDrawerBlockEntity drawer, float partialTick, PoseStack poseStack, MultiBufferSource buffers, int packedLight, int packedOverlay) {
-        Level level = drawer.getLevel();
-        if (level == null) {
+        if (blockFacing != Direction.NORTH) {
             return;
         }
 
-        poseStack.pushPose();
-        applyDrawerOrientation(drawer, poseStack);
-        Direction drawerFacing = drawer.getFacingDirection();
-        packedLight = LevelRenderer.getLightColor(level, drawer.getBlockPos().relative(drawerFacing));
-        renderSlots(drawer, poseStack, buffers, packedLight, packedOverlay);
-        renderUpgrades(drawer, poseStack, buffers, packedLight, packedOverlay);
-        poseStack.popPose();
-    }
-
-    @Override
-    public int getViewDistance() {
-        return FunctionalStorageClientConfig.DRAWER_RENDER_RANGE;
+        poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(-1, 1, 0), new Vector3f(0, 0, 180), 1));
     }
 }

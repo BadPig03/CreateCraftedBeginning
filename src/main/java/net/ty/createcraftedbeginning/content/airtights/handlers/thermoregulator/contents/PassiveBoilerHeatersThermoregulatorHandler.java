@@ -13,6 +13,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class PassiveBoilerHeatersThermoregulatorHandler implements AirtightThermoregulatorHandler {
     @Override
     public float getHeat(Level level, BlockPos pos, BlockState state) {
-        return 0.11111111f;
+        return 0.11111111F;
     }
 }

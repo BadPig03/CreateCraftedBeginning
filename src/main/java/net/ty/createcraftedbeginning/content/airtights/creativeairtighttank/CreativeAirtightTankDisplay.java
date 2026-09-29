@@ -1,12 +1,13 @@
 package net.ty.createcraftedbeginning.content.airtights.creativeairtighttank;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasUnits;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitsTooltips;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -30,15 +31,8 @@ final class CreativeAirtightTankDisplay {
             return false;
         }
 
-        CCBLang.translate("gui.gas_container").forGoggles(tooltip);
-        GasStack gasStack = controller.getCapability().getGasInTank(0);
-        if (gasStack.isEmpty()) {
-            CCBLang.translate("gui.gas_container.empty").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-            return true;
-        }
-
-        CCBLang.gasName(gasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
-        CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+        GasStorageHandler gasHandler = controller.getCapability();
+        GasUnitsTooltips.addContainer(tooltip, gasHandler, true, controller);
         return true;
     }
 
@@ -46,7 +40,8 @@ final class CreativeAirtightTankDisplay {
         if (owner.getControllerBE() == null) {
             return 0;
         }
-        return GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
+
+        return GasUnits.toKilo(CreativeAirtightTankBlockEntity.getVolumePerBlock());
     }
 
     int getCurrentValue() {
@@ -59,10 +54,11 @@ final class CreativeAirtightTankDisplay {
         if (gasStack.isEmpty()) {
             return 0;
         }
-        return GasAmounts.toWholeBucketsClamped(CreativeAirtightTankBlockEntity.getCapacityPerTank());
+
+        return GasUnits.toKilo(CreativeAirtightTankBlockEntity.getVolumePerBlock());
     }
 
     MutableComponent format(int value) {
-        return GasAmounts.formatWholeBuckets(value);
+        return GasUnitFormat.formatKilo(value);
     }
 }

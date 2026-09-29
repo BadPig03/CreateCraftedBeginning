@@ -1,0 +1,74 @@
+package net.ty.createcraftedbeginning.recipe.gas.ingredient;
+
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public class IntersectionGasIngredient extends GasIngredient {
+    public static final MapCodec<IntersectionGasIngredient> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(LIST_CODEC_NON_EMPTY.fieldOf("children").forGetter(IntersectionGasIngredient::children)).apply(instance, IntersectionGasIngredient::new));
+    private final List<GasIngredient> children;
+
+    public IntersectionGasIngredient(List<GasIngredient> children) {
+        if (children.isEmpty()) {
+            throw new IllegalArgumentException("IntersectionGasIngredient requires at least one child; use 'GasIngredient.empty()' for an empty ingredient.");
+        }
+
+        this.children = children;
+    }
+
+    @Override
+    public boolean test(GasStack stack) {
+        return children.stream().allMatch(child -> child.test(stack));
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(children);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        return this == object || object instanceof IntersectionGasIngredient other && children.equals(other.children());
+    }
+
+    @Override
+    public boolean isSimple() {
+        return children.stream().allMatch(GasIngredient::isSimple);
+    }
+
+    @Override
+    public GasIngredientType<?> getType() {
+        return GasIngredientTypes.INTERSECTION.get();
+    }
+
+    @Override
+    public Stream<GasStack> generateStacks() {
+        return children.stream().flatMap(GasIngredient::generateStacks).filter(this);
+    }
+
+    public static GasIngredient of(GasIngredient @NotNull ... ingredients) {
+        if (ingredients.length == 0) {
+            throw new IllegalArgumentException("IntersectionGasIngredient requires at least one child; use 'GasIngredient.empty()' for an empty ingredient.");
+        }
+
+        if (ingredients.length == 1) {
+            return ingredients[0];
+        }
+
+        return new IntersectionGasIngredient(Arrays.asList(ingredients));
+    }
+
+    public List<GasIngredient> children() {
+        return children;
+    }
+}

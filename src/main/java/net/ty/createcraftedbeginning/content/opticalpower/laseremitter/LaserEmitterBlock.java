@@ -8,14 +8,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerConsumer;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetworkManager;
+import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +31,11 @@ public class LaserEmitterBlock extends DirectionalBlock implements IBE<LaserEmit
     public LaserEmitterBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(FACING, Direction.NORTH));
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return CCBShapes.LASER_EMITTER.get(state.getValue(FACING));
     }
 
     @Override

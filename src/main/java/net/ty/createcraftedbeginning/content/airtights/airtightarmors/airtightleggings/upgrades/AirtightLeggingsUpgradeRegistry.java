@@ -26,10 +26,6 @@ public final class AirtightLeggingsUpgradeRegistry {
         return REGISTRY.getById(id);
     }
 
-    public static @Nullable AirtightUpgrade getByStack(ItemStack stack) {
-        return REGISTRY.getByStack(stack);
-    }
-
     public static boolean allUpgradesEnabled(Player player) {
         ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
         return leggings.is(CCBItems.AIRTIGHT_LEGGINGS) && REGISTRY.allUpgradesEnabled(leggings);

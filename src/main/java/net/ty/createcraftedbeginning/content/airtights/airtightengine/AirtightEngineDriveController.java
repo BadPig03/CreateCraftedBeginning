@@ -8,10 +8,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
+import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -47,11 +47,6 @@ final class AirtightEngineDriveController {
     }
 
     void tickServer() {
-        if (engine.isEngineOverStressed()) {
-            lastGeneratedSpeed = Float.NaN;
-            return;
-        }
-
         refreshGeneratedRotationIfNeeded();
     }
 
@@ -61,17 +56,17 @@ final class AirtightEngineDriveController {
         }
 
         float generatedSpeed = AirtightEngineBlockEntity.BASE_ROTATION_SPEED * getSpeedModifier() * (getRotationDirection() ? 1 : -1);
-        persistedGeneratedSpeed = GasConsumptions.isFinite(generatedSpeed) ? generatedSpeed : 0;
+        persistedGeneratedSpeed = GasConsumptionMath.isFinite(generatedSpeed) ? generatedSpeed : 0;
         return persistedGeneratedSpeed;
     }
 
     void writePersistent(CompoundTag compoundTag) {
-        CCBNbtUtils.putFloat(compoundTag, COMPOUND_KEY_GENERATED_SPEED, persistedGeneratedSpeed);
+        compoundTag.putFloat(COMPOUND_KEY_GENERATED_SPEED, persistedGeneratedSpeed);
     }
 
     void readPersistent(CompoundTag compoundTag) {
-        float storedGeneratedSpeed = CCBNbtUtils.getFloatOrDefault(compoundTag, COMPOUND_KEY_GENERATED_SPEED, 0);
-        restoredGeneratedSpeed = GasConsumptions.isFinite(storedGeneratedSpeed) ? storedGeneratedSpeed : 0;
+        float storedGeneratedSpeed = NbtValues.getFloatOrDefault(compoundTag, COMPOUND_KEY_GENERATED_SPEED, 0);
+        restoredGeneratedSpeed = GasConsumptionMath.isFinite(storedGeneratedSpeed) ? storedGeneratedSpeed : 0;
         persistedGeneratedSpeed = restoredGeneratedSpeed;
     }
 
@@ -90,6 +85,7 @@ final class AirtightEngineDriveController {
         if (tankController == null) {
             return null;
         }
+
         return tankController.getCore();
     }
 
@@ -118,6 +114,7 @@ final class AirtightEngineDriveController {
         if (attachedEngines == 0) {
             return 0;
         }
+
         return (float) driverCore.getCurrentLevel() / attachedEngines;
     }
 
@@ -132,6 +129,7 @@ final class AirtightEngineDriveController {
         if (tank == null) {
             return null;
         }
+
         return tank.getControllerBE();
     }
 
@@ -162,6 +160,7 @@ final class AirtightEngineDriveController {
         if (!(blockEntity instanceof AirtightTankBlockEntity tank)) {
             return null;
         }
+
         return tank;
     }
 }

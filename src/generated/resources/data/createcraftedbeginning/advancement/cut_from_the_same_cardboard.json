@@ -1,8 +1,8 @@
 {
-  "parent": "createcraftedbeginning:bottomless_pit",
+  "parent": "createcraftedbeginning:to_void",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:cut_from_the_same_cardboard_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

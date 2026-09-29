@@ -12,7 +12,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandler;
-import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlerUtils;
+import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlers;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.CannonModelType;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -36,18 +36,18 @@ public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRend
             return;
         }
 
-        AirtightCannonVisualHandler visualHandler = AirtightCannonVisualHandlerUtils.of(windCharge.getGasHolder().value());
+        AirtightCannonVisualHandler visualHandler = AirtightCannonVisualHandlers.resolveForEquipment(windCharge.getGasHolder().value());
         AirtightCannonWindChargeModel model = models.computeIfAbsent(visualHandler.getModelType(), modelType -> new AirtightCannonWindChargeModel(AirtightCannonWindChargeModel.createLayerDefinition(modelType).bakeRoot()));
         float animationTick = windCharge.tickCount + partialTick;
         model.setupAnimation(visualHandler.getAnimationType(), visualHandler.getRotationSpeed(), animationTick);
 
-        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.breezeWind(visualHandler.getTextureLocation(), animationTick * 0.03f % 1, 0));
+        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.breezeWind(visualHandler.getTextureLocation(), animationTick * 0.03F % 1, 0));
         model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY);
         super.render(windCharge, entityYaw, partialTick, poseStack, bufferSource, light);
     }
 
     @Override
     public ResourceLocation getTextureLocation(AirtightCannonWindChargeProjectileEntity windCharge) {
-        return AirtightCannonVisualHandlerUtils.of(windCharge.getGasHolder().value()).getTextureLocation();
+        return AirtightCannonVisualHandlers.resolveForEquipment(windCharge.getGasHolder().value()).getTextureLocation();
     }
 }

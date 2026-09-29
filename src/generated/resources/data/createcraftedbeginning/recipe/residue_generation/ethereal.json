@@ -1,12 +1,14 @@
 {
   "type": "createcraftedbeginning:residue_generation",
-  "ingredients": [
+  "gas_ingredients": [
     {
-      "type": "createcraftedbeginning:single",
       "amount": 1,
-      "gas": "createcraftedbeginning:ethereal_air"
+      "ingredient": {
+        "gas": "createcraftedbeginning:ethereal_air"
+      }
     }
   ],
+  "ingredients": [],
   "results": [
     {
       "id": "createcraftedbeginning:chorus_flower_powder"

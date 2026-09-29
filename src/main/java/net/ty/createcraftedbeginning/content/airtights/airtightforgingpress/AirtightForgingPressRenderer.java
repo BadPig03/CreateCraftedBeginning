@@ -18,7 +18,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Con
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Random;
@@ -26,13 +26,22 @@ import java.util.Random;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<AirtightForgingPressBlockEntity> {
-    private static final float OUTPUT_RADIUS = 0.5f;
+    private static final float OUTPUT_RADIUS = 0.5F;
     private static final int MAX_OUTPUT_SLOTS = 8;
     private static final OutputPlacement[] OUTPUT_PLACEMENTS = createOutputPlacements();
     private static final ThreadLocal<Random> RENDER_RANDOM = ThreadLocal.withInitial(Random::new);
 
     public AirtightForgingPressRenderer(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void renderSafe(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        super.renderSafe(press, partialTicks, poseStack, buffer, light, overlay);
+        if (!VisualizationManager.supportsVisualization(press.getLevel())) {
+            renderPressHead(press, partialTicks, poseStack, buffer, light);
+        }
+        renderItems(press, partialTicks, poseStack, buffer, light, overlay);
     }
 
     private static void renderPressHead(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
@@ -129,21 +138,12 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
     private static OutputPlacement[] createOutputPlacements() {
         OutputPlacement[] placements = new OutputPlacement[MAX_OUTPUT_SLOTS];
         for (int slot = 0; slot < placements.length; slot++) {
-            float angle = 360.0f / placements.length * slot;
+            float angle = 360.0F / placements.length * slot;
             float radians = angle * Mth.DEG_TO_RAD;
             Vec3 offset = new Vec3(Mth.cos(radians) * OUTPUT_RADIUS, 0, -Mth.sin(radians) * OUTPUT_RADIUS);
             placements[slot] = new OutputPlacement(angle, offset);
         }
         return placements;
-    }
-
-    @Override
-    protected void renderSafe(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        super.renderSafe(press, partialTicks, poseStack, buffer, light, overlay);
-        if (!VisualizationManager.supportsVisualization(press.getLevel())) {
-            renderPressHead(press, partialTicks, poseStack, buffer, light);
-        }
-        renderItems(press, partialTicks, poseStack, buffer, light, overlay);
     }
 
     private record OutputPlacement(float angle, Vec3 offset) {}

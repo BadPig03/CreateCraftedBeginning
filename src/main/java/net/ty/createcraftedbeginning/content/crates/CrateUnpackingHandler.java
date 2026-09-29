@@ -23,16 +23,8 @@ public final class CrateUnpackingHandler<B extends CratesBlockEntity> implements
     private final boolean discarding;
 
     private CrateUnpackingHandler(Class<B> blockEntityClass, boolean discarding) {
-        this.blockEntityClass = Objects.requireNonNull(blockEntityClass);
+        this.blockEntityClass = Objects.requireNonNull(blockEntityClass, "Parameter 'blockEntityClass' must not be null.");
         this.discarding = discarding;
-    }
-
-    public static <B extends CratesBlockEntity> CrateUnpackingHandler<B> standard(Class<B> blockEntityClass) {
-        return new CrateUnpackingHandler<>(blockEntityClass, false);
-    }
-
-    public static <B extends CratesBlockEntity> CrateUnpackingHandler<B> discarding(Class<B> blockEntityClass) {
-        return new CrateUnpackingHandler<>(blockEntityClass, true);
     }
 
     @Override
@@ -43,7 +35,7 @@ public final class CrateUnpackingHandler<B extends CratesBlockEntity> implements
         }
 
         if (!discarding) {
-            return CrateContainersUtils.defaultUnpack(level, pos, items, simulate);
+            return CrateUnpacking.defaultUnpack(level, pos, items, simulate);
         }
 
         CrateItemStackHandler handler = blockEntityClass.cast(blockEntity).getHandler();
@@ -56,5 +48,13 @@ public final class CrateUnpackingHandler<B extends CratesBlockEntity> implements
 
             return true;
         });
+    }
+
+    public static <B extends CratesBlockEntity> CrateUnpackingHandler<B> standard(Class<B> blockEntityClass) {
+        return new CrateUnpackingHandler<>(blockEntityClass, false);
+    }
+
+    public static <B extends CratesBlockEntity> CrateUnpackingHandler<B> discarding(Class<B> blockEntityClass) {
+        return new CrateUnpackingHandler<>(blockEntityClass, true);
     }
 }

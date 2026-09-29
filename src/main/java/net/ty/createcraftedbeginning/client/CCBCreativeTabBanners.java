@@ -46,7 +46,7 @@ public final class CCBCreativeTabBanners {
 
         Matrix4f poseMatrix = poseStack.last().pose();
         Vector3f topLeft = poseMatrix.transformPosition(new Vector3f(13, bannerY + 5, 0));
-        Vector3f bottomRight = poseMatrix.transformPosition(new Vector3f(13 + font.width(title), bannerY + 5 + font.lineHeight / 1.8f, 0));
+        Vector3f bottomRight = poseMatrix.transformPosition(new Vector3f(13 + font.width(title), bannerY + 5 + font.lineHeight / 1.8F, 0));
         float guiScale = (float) window.getGuiScale();
         topLeft.mul(guiScale);
         bottomRight.mul(guiScale);

@@ -37,6 +37,26 @@ final class EndIncinerationBlowerEffectProcessor {
         targetCache = new EndIncinerationBlowerTargetCache(blower.getBlockPos());
     }
 
+    void tick(ServerLevel level) {
+        float absSpeed = Mth.abs(blower.getSpeed());
+        EndIncinerationBlowerStructuralBlockEntity structural = blower.getStructuralForEffect();
+        if (EndIncinerationBlowerRange.calculateRange(absSpeed) <= 0 || structural == null) {
+            return;
+        }
+
+        AABB effectArea = EndIncinerationBlowerRange.calculateArea(blower.getBlockPos(), absSpeed);
+        boolean effectApplied = switch (structural.getBlowerWorkingMode().get()) {
+            case SMOKING -> applyFanProcessing(level, AllFanProcessingTypes.SMOKING, effectArea);
+            case BLASTING -> applyFanProcessing(level, AllFanProcessingTypes.BLASTING, effectArea);
+            case IGNITION -> shouldApplyIgnition(level) && applyIgnition(level, effectArea);
+        };
+        if (!effectApplied) {
+            return;
+        }
+
+        blower.awardPrimaryEffectAdvancement();
+    }
+
     private static boolean applyFanProcessing(ServerLevel level, FanProcessingType processingType, AABB effectArea, EntityArea entityArea, List<ItemEntity> affectedItems, List<TransportedItemStackHandlerBehaviour> transportedHandlers) {
         AtomicBoolean hasProcessedItem = new AtomicBoolean(false);
         for (Iterator<ItemEntity> itemIterator = affectedItems.iterator(); itemIterator.hasNext(); ) {
@@ -76,26 +96,6 @@ final class EndIncinerationBlowerEffectProcessor {
         return hasProcessedItem.get();
     }
 
-    void tick(ServerLevel level) {
-        float absSpeed = Mth.abs(blower.getSpeed());
-        EndIncinerationBlowerStructuralBlockEntity structural = blower.getStructuralForEffect();
-        if (EndIncinerationBlowerRange.calculateRange(absSpeed) <= 0 || structural == null) {
-            return;
-        }
-
-        AABB effectArea = EndIncinerationBlowerRange.calculateArea(blower.getBlockPos(), absSpeed);
-        boolean effectApplied = switch (structural.getBlowerWorkingMode().get()) {
-            case SMOKING -> applyFanProcessing(level, AllFanProcessingTypes.SMOKING, effectArea);
-            case BLASTING -> applyFanProcessing(level, AllFanProcessingTypes.BLASTING, effectArea);
-            case IGNITION -> shouldApplyIgnition(level) && applyIgnition(level, effectArea);
-        };
-        if (!effectApplied) {
-            return;
-        }
-
-        blower.awardPrimaryEffectAdvancement();
-    }
-
     private boolean applyFanProcessing(ServerLevel level, FanProcessingType processingType, AABB effectArea) {
         EntityArea entityArea = SubLevelBridge.createEntityArea(level, blower.getBlockPos(), effectArea);
         return applyFanProcessing(level, processingType, effectArea, entityArea, targetCache.getAffectedItems(level, effectArea, entityArea), targetCache.getTransportedHandlers(level, blower.getSpeed()));
@@ -105,8 +105,8 @@ final class EndIncinerationBlowerEffectProcessor {
         EntityArea entityArea = SubLevelBridge.createEntityArea(level, blower.getBlockPos(), effectArea);
         FakePlayer fakePlayer = blower.getFakePlayer(level);
         boolean effectApplied = false;
-        boolean shouldAffectPlayers = CCBConfig.server().endDevices.ignitionAffectsPlayers.get();
-        float configuredDamage = Math.max(0, CCBConfig.server().endDevices.ignitionDamage.getF());
+        boolean shouldAffectPlayers = CCBConfig.server().machines.endIncinerationBlower.ignitionAffectsPlayers.get();
+        float configuredDamage = Math.max(0, CCBConfig.server().machines.endIncinerationBlower.ignitionDamagePerPulse.getF());
         DamageSource damageSource = CCBDamageTypes.source(DamageTypes.IN_FIRE, level, fakePlayer);
         for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, effectArea)) {
             if (!entityArea.intersects(target) || !target.isAlive() || target.fireImmune() || target instanceof Player && !shouldAffectPlayers) {
@@ -131,6 +131,6 @@ final class EndIncinerationBlowerEffectProcessor {
     }
 
     private boolean shouldApplyIgnition(ServerLevel level) {
-        return Math.floorMod(level.getGameTime(), 20) == Math.floorMod(blower.getBlockPos().hashCode(), 20);
+        return Math.floorMod(level.getGameTime(), 20) == Mth.positiveModulo(blower.getBlockPos().hashCode(), 20);
     }
 }

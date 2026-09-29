@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:glaciologist",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:luxury_treat_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

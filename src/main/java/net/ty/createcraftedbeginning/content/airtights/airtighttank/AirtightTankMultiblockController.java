@@ -4,8 +4,9 @@ import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
+import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,7 +32,8 @@ final class AirtightTankMultiblockController {
 
     void initialize() {
         sendData();
-        if (owner.getLevel() == null || !owner.getLevel().isClientSide) {
+        Level level = owner.getLevel();
+        if (level == null || !level.isClientSide) {
             return;
         }
 
@@ -76,35 +78,39 @@ final class AirtightTankMultiblockController {
 
     void updateConnectivity() {
         updateConnectivity = false;
-        if (owner.getLevel() == null || owner.getLevel().isClientSide || !owner.isController()) {
+        Level level = owner.getLevel();
+        if (level == null || level.isClientSide || !owner.isController()) {
             return;
         }
 
-        GasConnectivityHandler.formMulti(owner, owner.getLevel());
+        GasTankMultiblockConnectivity.formMultiblock(owner, level);
     }
 
     BlockPos getController() {
         if (!isController()) {
             return controllerPos;
         }
+
         return owner.getBlockPos();
     }
 
     @SuppressWarnings("unchecked")
     <T extends BlockEntity & IMultiBlockEntityContainer> @Nullable T getControllerBE() {
-        if (isController() || owner.getLevel() == null) {
+        Level level = owner.getLevel();
+        if (isController() || level == null) {
             return (T) owner;
         }
 
         BlockPos controllerPosition = controllerPos;
-        if (controllerPosition == null || !owner.getLevel().isLoaded(controllerPosition)) {
+        if (controllerPosition == null || !level.isLoaded(controllerPosition)) {
             return null;
         }
 
-        BlockEntity controllerEntity = owner.getLevel().getBlockEntity(controllerPosition);
+        BlockEntity controllerEntity = level.getBlockEntity(controllerPosition);
         if (controllerEntity == null || controllerEntity.getType() != owner.getType() || !(controllerEntity instanceof AbstractAirtightTankBlockEntity controllerTank)) {
             return null;
         }
+
         return (T) controllerTank;
     }
 
@@ -113,7 +119,8 @@ final class AirtightTankMultiblockController {
     }
 
     void setController(BlockPos newControllerPos) {
-        if (owner.getLevel() == null || owner.getLevel().isClientSide && !owner.isVirtual() || newControllerPos.equals(controllerPos)) {
+        Level level = owner.getLevel();
+        if (level == null || level.isClientSide && !owner.isVirtual() || newControllerPos.equals(controllerPos)) {
             return;
         }
 
@@ -132,13 +139,14 @@ final class AirtightTankMultiblockController {
         }
 
         owner.updateMultiBlockState();
-        owner.onGasStackChanged(owner.getTankInventory().getGasStack());
+        owner.onTankStateChanged();
         owner.afterMultiUpdated();
         owner.setChanged();
     }
 
     void removeController(boolean keepFluids) {
-        if (owner.getLevel() == null || owner.getLevel().isClientSide) {
+        Level level = owner.getLevel();
+        if (level == null || level.isClientSide) {
             return;
         }
 
@@ -153,40 +161,7 @@ final class AirtightTankMultiblockController {
         owner.notifyUpdate();
     }
 
-    private boolean recoverOrphanedMember() {
-        if (owner.getLevel() == null || owner.getLevel().isClientSide || owner.isController()) {
-            return false;
-        }
-
-        BlockPos controllerPosition = controllerPos;
-        if (controllerPosition == null || !owner.getLevel().isLoaded(controllerPosition)) {
-            return false;
-        }
-
-        AbstractAirtightTankBlockEntity controllerTank = owner.getControllerBE();
-        if (controllerTank != null && !controllerTank.isRemoved() && controllerTank.isController()) {
-            return false;
-        }
-
-        owner.removeController(true);
-        return true;
-    }
-
-    private void tickSyncCooldown() {
-        if (syncCooldown <= 0) {
-            return;
-        }
-
-        syncCooldown--;
-        if (syncCooldown != 0 || !queuedSync) {
-            return;
-        }
-
-        sendData();
-    }
-
-    @Nullable
-    BlockPos getLastKnownPos() {
+    @Nullable BlockPos getLastKnownPos() {
         return lastKnownPos;
     }
 
@@ -194,8 +169,7 @@ final class AirtightTankMultiblockController {
         this.lastKnownPos = lastKnownPos;
     }
 
-    @Nullable
-    BlockPos getControllerPos() {
+    @Nullable BlockPos getControllerPos() {
         return controllerPos;
     }
 
@@ -229,5 +203,38 @@ final class AirtightTankMultiblockController {
 
     void setHeight(int height) {
         this.height = Mth.clamp(height, 1, AbstractAirtightTankBlockEntity.configuredMaxLength());
+    }
+
+    private boolean recoverOrphanedMember() {
+        Level level = owner.getLevel();
+        if (level == null || level.isClientSide || owner.isController()) {
+            return false;
+        }
+
+        BlockPos controllerPosition = controllerPos;
+        if (controllerPosition == null || !level.isLoaded(controllerPosition)) {
+            return false;
+        }
+
+        AbstractAirtightTankBlockEntity controllerTank = owner.getControllerBE();
+        if (controllerTank != null && !controllerTank.isRemoved() && controllerTank.isController()) {
+            return false;
+        }
+
+        owner.removeController(true);
+        return true;
+    }
+
+    private void tickSyncCooldown() {
+        if (syncCooldown <= 0) {
+            return;
+        }
+
+        syncCooldown--;
+        if (syncCooldown != 0 || !queuedSync) {
+            return;
+        }
+
+        sendData();
     }
 }

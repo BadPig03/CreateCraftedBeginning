@@ -27,8 +27,8 @@ public class GasPackagerVisual extends AbstractBlockEntityVisual<GasPackagerBloc
     private float lastTrayOffset = Float.NaN;
     private PartialModel lastHatchPartial;
 
-    public GasPackagerVisual(VisualizationContext ctx, GasPackagerBlockEntity blockEntity, float partialTick) {
-        super(ctx, blockEntity, partialTick);
+    public GasPackagerVisual(VisualizationContext context, GasPackagerBlockEntity blockEntity, float partialTick) {
+        super(context, blockEntity, partialTick);
         Direction facing = blockState.getValue(PackagerBlock.FACING).getOpposite();
 
         lastHatchPartial = GasPackagerRenderer.getHatchModel(blockEntity);
@@ -37,23 +37,6 @@ public class GasPackagerVisual extends AbstractBlockEntityVisual<GasPackagerBloc
         hatch.setIdentityTransform().translate(getVisualPosition()).translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(0.5)).rotateYCenteredDegrees(AngleHelper.horizontalAngle(facing)).rotateXCenteredDegrees(AngleHelper.verticalAngle(facing)).setChanged();
 
         animate(partialTick);
-    }
-
-    private void animate(float partialTick) {
-        PartialModel hatchPartial = GasPackagerRenderer.getHatchModel(blockEntity);
-        if (hatchPartial != lastHatchPartial) {
-            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(hatchPartial)).stealInstance(hatch);
-            lastHatchPartial = hatchPartial;
-        }
-
-        float trayOffset = blockEntity.getTrayOffset(partialTick);
-        if (trayOffset == lastTrayOffset) {
-            return;
-        }
-
-        Direction facing = blockState.getValue(PackagerBlock.FACING).getOpposite();
-        tray.setIdentityTransform().translate(getVisualPosition()).translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).rotateYCenteredDegrees(facing.toYRot()).setChanged();
-        lastTrayOffset = trayOffset;
     }
 
     @Override
@@ -72,7 +55,24 @@ public class GasPackagerVisual extends AbstractBlockEntityVisual<GasPackagerBloc
     }
 
     @Override
-    public void beginFrame(Context ctx) {
-        animate(ctx.partialTick());
+    public void beginFrame(Context context) {
+        animate(context.partialTick());
+    }
+
+    private void animate(float partialTick) {
+        PartialModel hatchPartial = GasPackagerRenderer.getHatchModel(blockEntity);
+        if (hatchPartial != lastHatchPartial) {
+            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(hatchPartial)).stealInstance(hatch);
+            lastHatchPartial = hatchPartial;
+        }
+
+        float trayOffset = blockEntity.getTrayOffset(partialTick);
+        if (Float.compare(trayOffset, lastTrayOffset) == 0) {
+            return;
+        }
+
+        Direction facing = blockState.getValue(PackagerBlock.FACING).getOpposite();
+        tray.setIdentityTransform().translate(getVisualPosition()).translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).rotateYCenteredDegrees(facing.toYRot()).setChanged();
+        lastTrayOffset = trayOffset;
     }
 }

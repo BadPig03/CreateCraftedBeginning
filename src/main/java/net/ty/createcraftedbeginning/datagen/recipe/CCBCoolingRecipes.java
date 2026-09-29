@@ -18,13 +18,15 @@ import java.util.concurrent.CompletableFuture;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBCoolingRecipes extends CoolingRecipeGen {
-    private final GeneratedRecipe ICE_CREAMS = create("ice_creams", b -> b.require(CCBItemTags.ICE_CREAMS.tag).duration(450));
-    private final GeneratedRecipe ICE = create("ice", b -> b.require(Blocks.ICE).duration(100));
-    private final GeneratedRecipe PACKED_ICE = create("packed_ice", b -> b.require(Blocks.PACKED_ICE).duration(900));
-    private final GeneratedRecipe BLUE_ICE = create("blue_ice", b -> b.require(Blocks.BLUE_ICE).duration(8100));
-    private final GeneratedRecipe SLUSH = create("slush", b -> b.require(CCBFluids.SLUSH.get(), 1000).duration(1800));
-    private final GeneratedRecipe POWDER_SNOW_BUCKET = create("powder_snow_bucket", b -> b.require(Items.POWDER_SNOW_BUCKET).duration(1800));
-    private final GeneratedRecipe CREATIVE_ICE_CREAM = create("creative_ice_cream", b -> b.require(CCBItems.CREATIVE_ICE_CREAM).duration(32767));
+    private final GeneratedRecipe ICE_CREAMS = create("ice_creams", builder -> builder.require(CCBItemTags.ICE_CREAMS.tag).duration(400));
+    private final GeneratedRecipe SNOW = create("snow", builder -> builder.require(Blocks.SNOW).duration(10));
+    private final GeneratedRecipe SNOW_BLOCK = create("snow_block", builder -> builder.require(Blocks.SNOW_BLOCK).duration(80));
+    private final GeneratedRecipe ICE = create("ice", builder -> builder.require(Blocks.ICE).duration(200));
+    private final GeneratedRecipe PACKED_ICE = create("packed_ice", builder -> builder.require(Blocks.PACKED_ICE).duration(1800));
+    private final GeneratedRecipe BLUE_ICE = create("blue_ice", builder -> builder.require(Blocks.BLUE_ICE).duration(16200));
+    private final GeneratedRecipe SLUSH = create("slush", builder -> builder.require(CCBFluids.SLUSH.get(), 1000).duration(160));
+    private final GeneratedRecipe POWDER_SNOW_BUCKET = create("powder_snow_bucket", builder -> builder.require(Items.POWDER_SNOW_BUCKET).duration(160));
+    private final GeneratedRecipe CREATIVE_ICE_CREAM = create("creative_ice_cream", builder -> builder.require(CCBItems.CREATIVE_ICE_CREAM).duration(32767));
 
     public CCBCoolingRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CCBAPI.MOD_ID);

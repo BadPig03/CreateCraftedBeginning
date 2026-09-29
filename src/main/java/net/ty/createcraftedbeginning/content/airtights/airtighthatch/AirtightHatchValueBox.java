@@ -18,8 +18,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 class AirtightHatchValueBox extends Sided {
-    private static final int COLOR = 0x191C26;
-
     @Override
     public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
         Vec3 localOffset = VecHelper.rotateCentered(getSouthLocation(), -90, Axis.X);
@@ -44,6 +42,6 @@ class AirtightHatchValueBox extends Sided {
 
     @Override
     public int getOverrideColor() {
-        return COLOR;
+        return 0x191C26;
     }
 }

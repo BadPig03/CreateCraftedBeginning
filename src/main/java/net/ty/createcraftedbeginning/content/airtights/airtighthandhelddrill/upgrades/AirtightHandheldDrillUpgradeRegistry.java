@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.up
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
@@ -22,10 +21,6 @@ public final class AirtightHandheldDrillUpgradeRegistry {
 
     public static @Nullable AirtightUpgrade getById(ResourceLocation id) {
         return REGISTRY.getById(id);
-    }
-
-    public static @Nullable AirtightUpgrade getByStack(ItemStack stack) {
-        return REGISTRY.getByStack(stack);
     }
 
     public static List<AirtightUpgrade> getAll() {

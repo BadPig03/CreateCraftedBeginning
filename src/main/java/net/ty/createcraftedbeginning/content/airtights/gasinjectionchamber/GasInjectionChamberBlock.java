@@ -24,8 +24,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,46 +34,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasInjectionChamberBlock extends HorizontalDirectionalBlock implements IBE<GasInjectionChamberBlockEntity>, IWrenchable, IAirtightComponent {
+public class GasInjectionChamberBlock extends HorizontalDirectionalBlock implements IBE<GasInjectionChamberBlockEntity>, IWrenchable, GasConnectable {
     public GasInjectionChamberBlock(Properties properties) {
         super(properties);
-    }
-
-    private static ItemInteractionResult installFilter(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, GasInjectionChamberBlockEntity chamber) {
-        if (chamber.hasInstalledFilter()) {
-            return ItemInteractionResult.FAIL;
-        }
-
-        if (level.isClientSide) {
-            return ItemInteractionResult.SUCCESS;
-        }
-
-        if (!chamber.installFilter(stack)) {
-            return ItemInteractionResult.FAIL;
-        }
-
-        stack.shrink(1);
-        level.playSound(null, pos, state.getSoundType(level, pos, player).getPlaceSound(), SoundSource.BLOCKS, 0.75f, 1.1f);
-        return ItemInteractionResult.SUCCESS;
-    }
-
-    private static ItemInteractionResult removeFilter(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, GasInjectionChamberBlockEntity chamber) {
-        if (chamber.isFilterLocked()) {
-            return ItemInteractionResult.FAIL;
-        }
-
-        if (level.isClientSide) {
-            return ItemInteractionResult.SUCCESS;
-        }
-
-        ItemStack removedFilter = chamber.removeInstalledFilter();
-        if (removedFilter.isEmpty()) {
-            return ItemInteractionResult.SUCCESS;
-        }
-
-        player.setItemInHand(hand, removedFilter);
-        level.playSound(null, pos, state.getSoundType(level, pos, player).getBreakSound(), SoundSource.BLOCKS, 0.75f, 1.1f);
-        return ItemInteractionResult.SUCCESS;
     }
 
     @Nullable
@@ -82,6 +46,7 @@ public class GasInjectionChamberBlock extends HorizontalDirectionalBlock impleme
         if (state == null) {
             return null;
         }
+
         return state.setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
@@ -113,13 +78,14 @@ public class GasInjectionChamberBlock extends HorizontalDirectionalBlock impleme
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        if (GasInjectionChamberUtils.isFilter(stack)) {
+        if (GasInjectionChamberFilterItem.isFilter(stack)) {
             return installFilter(stack, state, level, pos, player, chamber);
         }
 
         if (!stack.isEmpty() || !chamber.hasInstalledFilter()) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+
         return removeFilter(state, level, pos, player, hand, chamber);
     }
 
@@ -146,5 +112,43 @@ public class GasInjectionChamberBlock extends HorizontalDirectionalBlock impleme
     @Override
     public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return localFace == Direction.UP;
+    }
+
+    private static ItemInteractionResult installFilter(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, GasInjectionChamberBlockEntity chamber) {
+        if (chamber.hasInstalledFilter()) {
+            return ItemInteractionResult.FAIL;
+        }
+
+        if (level.isClientSide) {
+            return ItemInteractionResult.SUCCESS;
+        }
+
+        if (!chamber.installFilter(stack)) {
+            return ItemInteractionResult.FAIL;
+        }
+
+        CCBAdvancements.CLANK_CLANK_CLANK.awardTo(player);
+        stack.shrink(1);
+        level.playSound(null, pos, state.getSoundType(level, pos, player).getPlaceSound(), SoundSource.BLOCKS, 0.75F, 1.1F);
+        return ItemInteractionResult.SUCCESS;
+    }
+
+    private static ItemInteractionResult removeFilter(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, GasInjectionChamberBlockEntity chamber) {
+        if (chamber.isFilterLocked()) {
+            return ItemInteractionResult.FAIL;
+        }
+
+        if (level.isClientSide) {
+            return ItemInteractionResult.SUCCESS;
+        }
+
+        ItemStack removedFilter = chamber.removeInstalledFilter();
+        if (removedFilter.isEmpty()) {
+            return ItemInteractionResult.SUCCESS;
+        }
+
+        player.setItemInHand(hand, removedFilter);
+        level.playSound(null, pos, state.getSoundType(level, pos, player).getBreakSound(), SoundSource.BLOCKS, 0.75F, 1.1F);
+        return ItemInteractionResult.SUCCESS;
     }
 }

@@ -6,7 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
@@ -19,12 +19,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 final class TeslaTurbineNozzleConnection {
     private final TeslaTurbineNozzleBlockEntity nozzle;
     private TeslaTurbineBlockEntity turbine;
+    private GasHandler gasCapability;
+    private boolean gasCapabilityClockwise;
 
     TeslaTurbineNozzleConnection(TeslaTurbineNozzleBlockEntity nozzle) {
         this.nozzle = nozzle;
     }
 
-    @Nullable IGasHandler getGasCapability(@Nullable Direction accessDirection) {
+    @Nullable GasHandler getGasCapability(@Nullable Direction accessDirection) {
         BlockState nozzleState = nozzle.getBlockState();
         if (accessDirection != nozzleState.getValue(TeslaTurbineNozzleBlock.FACING)) {
             return null;
@@ -32,16 +34,23 @@ final class TeslaTurbineNozzleConnection {
 
         if (turbine == null || turbine.isRemoved()) {
             turbine = findTurbine();
+            gasCapability = null;
         }
         if (turbine == null) {
             return null;
         }
 
-        return turbine.createGasHandler(nozzleState.getValue(TeslaTurbineNozzleBlock.CLOCKWISE));
+        boolean clockwise = nozzleState.getValue(TeslaTurbineNozzleBlock.CLOCKWISE);
+        if (gasCapability == null || gasCapabilityClockwise != clockwise) {
+            gasCapability = turbine.createGasHandler(clockwise);
+            gasCapabilityClockwise = clockwise;
+        }
+        return gasCapability;
     }
 
     void invalidate() {
         turbine = null;
+        gasCapability = null;
     }
 
     void scheduleValidation() {
@@ -95,6 +104,7 @@ final class TeslaTurbineNozzleConnection {
         if (!(level.getBlockEntity(masterPos) instanceof TeslaTurbineBlockEntity master)) {
             return null;
         }
+
         return master;
     }
 }

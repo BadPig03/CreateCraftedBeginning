@@ -27,13 +27,12 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
-import net.ty.createcraftedbeginning.api.weatherflares.IWeatherFlare;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
+import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlare;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,8 +44,8 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
     private static final double MIN_DELTA_MOVEMENT_LENGTH = 0.01;
     private static final double MIN_DELTA_MOVEMENT_LENGTH_SQR = MIN_DELTA_MOVEMENT_LENGTH * MIN_DELTA_MOVEMENT_LENGTH;
     private static final double MIN_WEATHER_DURATION_RATIO = MIN_DELTA_MOVEMENT_LENGTH;
-    private static final float DEFAULT_SIZE = 0.25f;
-    private static final float INERTIA = 0.95f;
+    private static final float DEFAULT_SIZE = 0.25F;
+    private static final float INERTIA = 0.95F;
     private static final int DEFAULT_Y = 32;
     private static final int MAX_LIFE_TIME = 1800;
     private static final String COMPOUND_KEY_ITEM = "Item";
@@ -70,15 +69,6 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         accelerationPower = 0;
         itemStack = new ItemStack(flareItem);
         this.startY = startY;
-    }
-
-    @Contract(" -> new")
-    private static ItemStack getDefaultItem() {
-        return new ItemStack(CCBItems.SUNNY_FLARE.asItem());
-    }
-
-    public static void build(EntityType.Builder<WeatherFlareProjectileEntity> builder) {
-        builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
     }
 
     @Override
@@ -153,33 +143,33 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
 
     @Override
     protected float getLiquidInertia() {
-        return INERTIA * INERTIA;
+        return Mth.square(INERTIA);
     }
 
     @Override
     public void addAdditionalSaveData(CompoundTag compoundTag) {
         super.addAdditionalSaveData(compoundTag);
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_ITEM, itemStack.save(registryAccess()));
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_LIFE_TIME, lifeTime);
-        CCBNbtUtils.putDouble(compoundTag, COMPOUND_KEY_START_Y, startY);
-        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_COPIED, copied);
+        compoundTag.put(COMPOUND_KEY_ITEM, itemStack.save(registryAccess()));
+        compoundTag.putInt(COMPOUND_KEY_LIFE_TIME, lifeTime);
+        compoundTag.putDouble(COMPOUND_KEY_START_Y, startY);
+        compoundTag.putBoolean(COMPOUND_KEY_COPIED, copied);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag compoundTag) {
         super.readAdditionalSaveData(compoundTag);
-        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_ITEM, Tag.TAG_COMPOUND)) {
-            itemStack = ItemStack.parse(registryAccess(), CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_ITEM)).orElseGet(WeatherFlareProjectileEntity::getDefaultItem);
+        if (compoundTag.contains(COMPOUND_KEY_ITEM, Tag.TAG_COMPOUND)) {
+            itemStack = ItemStack.parse(registryAccess(), compoundTag.getCompound(COMPOUND_KEY_ITEM)).orElseGet(WeatherFlareProjectileEntity::getDefaultItem);
         }
         else {
             itemStack = getDefaultItem();
         }
-        lifeTime = CCBMathUtils.clampNonNegative(CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_LIFE_TIME, lifeTime), MAX_LIFE_TIME);
-        double storedStartY = CCBNbtUtils.getDoubleOrDefault(compoundTag, COMPOUND_KEY_START_Y, startY);
-        if (GasConsumptions.isFinite(storedStartY)) {
+        lifeTime = Mth.clamp(NbtValues.getIntOrDefault(compoundTag, COMPOUND_KEY_LIFE_TIME, lifeTime), 0, MAX_LIFE_TIME);
+        double storedStartY = NbtValues.getDoubleOrDefault(compoundTag, COMPOUND_KEY_START_Y, startY);
+        if (GasConsumptionMath.isFinite(storedStartY)) {
             startY = storedStartY;
         }
-        copied = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_COPIED, copied);
+        copied = NbtValues.getBooleanOrDefault(compoundTag, COMPOUND_KEY_COPIED, copied);
     }
 
     @Override
@@ -221,12 +211,21 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         return DoubleDoubleImmutablePair.of(target.position().x - position().x, target.position().z - position().z);
     }
 
+    public static void build(EntityType.Builder<WeatherFlareProjectileEntity> builder) {
+        builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
+    }
+
     public void setCopied(boolean copied) {
         this.copied = copied;
     }
 
+    @Contract(" -> new")
+    private static ItemStack getDefaultItem() {
+        return new ItemStack(CCBItems.SUNNY_FLARE.asItem());
+    }
+
     private void explode() {
-        if (!(level() instanceof ServerLevel level) || !(itemStack.getItem() instanceof IWeatherFlare flare)) {
+        if (!(level() instanceof ServerLevel level) || !(itemStack.getItem() instanceof WeatherFlare flare)) {
             return;
         }
 

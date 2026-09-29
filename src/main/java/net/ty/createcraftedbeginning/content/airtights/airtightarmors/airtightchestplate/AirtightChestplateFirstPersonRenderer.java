@@ -35,19 +35,19 @@ public class AirtightChestplateFirstPersonRenderer {
     }
 
     public static void tick() {
-        Minecraft mc = Minecraft.getInstance();
-        rendererActive = mc.player != null && mc.player.getItemBySlot(EquipmentSlot.CHEST).is(CCBItems.AIRTIGHT_CHESTPLATE);
+        Minecraft client = Minecraft.getInstance();
+        rendererActive = client.player != null && client.player.getItemBySlot(EquipmentSlot.CHEST).is(CCBItems.AIRTIGHT_CHESTPLATE);
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void onChestplateFirstPersonRender(RenderArmEvent event) {
-        if (!CCBConfig.client().enableChestplateFirstPersonArm.get() || !rendererActive) {
+        if (!CCBConfig.client().equipmentRendering.showChestplateFirstPersonArm.get() || !rendererActive) {
             return;
         }
 
-        Minecraft mc = Minecraft.getInstance();
-        LocalPlayer player = mc.player;
-        if (player == null || !(mc.getEntityRenderDispatcher().getRenderer(player) instanceof PlayerRenderer renderer)) {
+        Minecraft client = Minecraft.getInstance();
+        LocalPlayer player = client.player;
+        if (player == null || !(client.getEntityRenderDispatcher().getRenderer(player) instanceof PlayerRenderer renderer)) {
             return;
         }
 

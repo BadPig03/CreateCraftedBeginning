@@ -5,92 +5,62 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents;
-import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasTransferPlan;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasTransferPlan.ExecutionResult;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasTransferPlan.TransferPolicy;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonItem;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
-import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class GasPackagerPendingGas {
-    private static final String COMPOUND_KEY_PENDING_GASES = "PendingGases";
+    private static final String COMPOUND_KEY_PENDING_GAS = "PendingGas";
 
-    private BalloonGasContents pendingGases = BalloonGasContents.EMPTY;
-
-    private static ItemStack copyOrEmpty(ItemStack stack) {
-        if (stack.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-        return stack.copy();
-    }
+    private GasStack pendingGas = GasStack.EMPTY;
 
     boolean isEmpty() {
-        return pendingGases.isEmpty();
+        return pendingGas.isEmpty();
     }
 
-    boolean canStage(ItemStack box, IGasHandler handler) {
-        if (!BalloonUtils.containsGasContents(box)) {
-            return false;
-        }
-
-        BalloonGasContents contents = BalloonUtils.getGasContents(box);
-        return !contents.isEmpty() && BalloonUtils.fitsInBalloon(contents) && GasPackagerUtils.canInsertAll(handler, contents);
+    boolean canStage(ItemStack box, GasHandler handler, long sourcePressurePa) {
+        GasStack gas = BalloonItem.getGas(box);
+        return !gas.isEmpty() && BalloonGasTransferPlan.plan(handler, gas, sourcePressurePa, TransferPolicy.FULL_ONLY).acceptsEntireBalloon();
     }
 
     void stage(ItemStack box) {
-        pendingGases = BalloonUtils.getGasContents(box).copy();
+        pendingGas = BalloonItem.getGas(box);
     }
 
-    InsertionResult insertInto(@Nullable IGasHandler handler, ItemStack previouslyUnwrapped) {
-        BalloonGasContents pendingContents = pendingGases.copy();
-        if (pendingContents.isEmpty()) {
+    InsertionResult insertInto(@Nullable GasHandler handler, ItemStack previouslyUnwrapped, long sourcePressurePa) {
+        GasStack gas = pendingGas.copy();
+        if (gas.isEmpty()) {
             return InsertionResult.NO_OP;
         }
 
-        if (handler == null) {
+        if (handler == null || sourcePressurePa <= GasPressure.VACUUM_PA) {
             return new InsertionResult(copyOrEmpty(previouslyUnwrapped), false);
         }
 
-        List<GasStack> gasStacks = pendingContents.copyGasStacks();
-        if (gasStacks.size() > 1) {
-            if (!handler.tryFillAtomically(gasStacks, GasAction.EXECUTE).isSuccess()) {
-                return new InsertionResult(copyOrEmpty(previouslyUnwrapped), false);
-            }
-            return new InsertionResult(ItemStack.EMPTY, true);
+        ExecutionResult execution = BalloonGasTransferPlan.plan(handler, gas, sourcePressurePa, TransferPolicy.FULL_ONLY).execute();
+        if (!execution.complete()) {
+            return new InsertionResult(copyOrEmpty(previouslyUnwrapped), false);
         }
 
-        List<GasStack> gasRemainders = new ArrayList<>();
-        for (GasStack gas : gasStacks) {
-            long filledAmount = handler.fill(gas.copy(), GasAction.EXECUTE);
-            if (filledAmount < gas.getAmount()) {
-                gasRemainders.add(gas.copyWithAmount(gas.getAmount() - filledAmount));
-            }
-        }
-
-        BalloonGasContents remainingContents = new BalloonGasContents(gasRemainders);
-        ItemStack returnedPackage = ItemStack.EMPTY;
-        if (!remainingContents.isEmpty() && !previouslyUnwrapped.isEmpty()) {
-            returnedPackage = previouslyUnwrapped.copy();
-            BalloonUtils.setGasContents(returnedPackage, remainingContents);
-        }
-
-        return new InsertionResult(returnedPackage, true);
+        return new InsertionResult(ItemStack.EMPTY, execution.transferredAmount() > 0);
     }
 
     void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_PENDING_GASES) || clientPacket) {
+        if (!compoundTag.contains(COMPOUND_KEY_PENDING_GAS) || clientPacket) {
             return;
         }
 
-        Tag pendingTag = CCBNbtUtils.getTag(compoundTag, COMPOUND_KEY_PENDING_GASES);
-        pendingGases = pendingTag == null ? BalloonGasContents.EMPTY : BalloonGasContents.parseOptional(provider, pendingTag);
+        Tag pendingTag = compoundTag.get(COMPOUND_KEY_PENDING_GAS);
+        pendingGas = pendingTag == null ? GasStack.EMPTY : GasStack.parse(provider, pendingTag).orElse(GasStack.EMPTY);
     }
 
     void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
@@ -98,11 +68,19 @@ final class GasPackagerPendingGas {
             return;
         }
 
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_PENDING_GASES, pendingGases.saveOptional(provider));
+        compoundTag.put(COMPOUND_KEY_PENDING_GAS, pendingGas.saveOptional(provider));
     }
 
     void clear() {
-        pendingGases = BalloonGasContents.EMPTY;
+        pendingGas = GasStack.EMPTY;
+    }
+
+    private static ItemStack copyOrEmpty(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        return stack.copy();
     }
 
     record InsertionResult(ItemStack returnedPackage, boolean inventoryChanged) {

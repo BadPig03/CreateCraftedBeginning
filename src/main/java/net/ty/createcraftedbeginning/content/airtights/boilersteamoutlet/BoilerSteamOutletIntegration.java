@@ -12,6 +12,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandler;
+import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlers;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore;
+import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -64,6 +69,11 @@ public final class BoilerSteamOutletIntegration {
 
     static double getSteamEngineFullLoadStressCapacity() {
         return SteamEngineBlock.getSpeedRange().getFirst() * BlockStressValues.getCapacity(AllBlocks.STEAM_ENGINE.get());
+    }
+
+    static double getNormalPressureSteamStressCapacityPerGasUnit() {
+        AirtightEngineHandler steamHandler = AirtightEngineHandlers.resolve(CCBGases.STEAM.get(), GasPressure.REFERENCE_PRESSURE_PA);
+        return AirtightAssemblyDriverCore.getStressCapacityPerGasUnit(steamHandler.getWorkFactor());
     }
 
     static synchronized boolean ensureVerified(FluidTankBlockEntity controllerTank) {

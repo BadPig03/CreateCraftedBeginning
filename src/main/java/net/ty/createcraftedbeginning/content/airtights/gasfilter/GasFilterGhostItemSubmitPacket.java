@@ -6,7 +6,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 
 import javax.annotation.ParametersAreNonnullByDefault;

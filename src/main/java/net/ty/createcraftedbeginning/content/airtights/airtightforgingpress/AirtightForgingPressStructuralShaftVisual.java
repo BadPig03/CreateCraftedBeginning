@@ -9,7 +9,7 @@ import dev.engine_room.flywheel.lib.model.Models;
 import dev.engine_room.flywheel.lib.visual.SimpleTickableVisual;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;

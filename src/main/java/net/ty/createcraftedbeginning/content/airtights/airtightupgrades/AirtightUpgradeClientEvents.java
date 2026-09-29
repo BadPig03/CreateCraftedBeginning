@@ -19,5 +19,6 @@ final class AirtightUpgradeClientEvents {
     @SubscribeEvent
     private static void onClientLoggingOut(LoggingOut event) {
         GlobalAirtightUpgradesConsumptionManager.clearClientTracking();
+        AirtightUpgradeMaterials.clearClientMaterials();
     }
 }

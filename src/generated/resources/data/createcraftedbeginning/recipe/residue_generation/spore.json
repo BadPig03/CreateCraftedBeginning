@@ -1,12 +1,14 @@
 {
   "type": "createcraftedbeginning:residue_generation",
-  "ingredients": [
+  "gas_ingredients": [
     {
-      "type": "createcraftedbeginning:single",
       "amount": 1,
-      "gas": "createcraftedbeginning:spore_air"
+      "ingredient": {
+        "gas": "createcraftedbeginning:spore_air"
+      }
     }
   ],
+  "ingredients": [],
   "results": [
     {
       "id": "minecraft:mushroom_stem"

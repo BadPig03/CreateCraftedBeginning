@@ -12,9 +12,9 @@ import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.GlobalAirtightUpgradesConsumptionManager;
-import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
@@ -27,6 +27,8 @@ import java.util.List;
 public enum HelmetResistanceUpgrade implements AirtightUpgrade {
     INSTANCE;
 
+    private static final float BASE_GAS_MULTIPLIER = 5;
+
     private static final ResourceLocation ID = CCBAPI.asResource("helmet_resistance");
     private static final Couple<Integer> OFFSET = Couple.create(132, 79);
 
@@ -35,6 +37,7 @@ public enum HelmetResistanceUpgrade implements AirtightUpgrade {
         if (getGasConsumptionMultiplier(player) == 0) {
             return List.of(CCBLang.translateDirect("gui.gas_consumption.supply_require_only"));
         }
+
         return List.of(CCBLang.translateDirect("gui.gas_consumption.damage_amount"));
     }
 
@@ -79,7 +82,7 @@ public enum HelmetResistanceUpgrade implements AirtightUpgrade {
     }
 
     @Override
-    public Item getUpgradeItem() {
+    public Item getDefaultUpgradeItem() {
         return Items.NETHERITE_HELMET;
     }
 
@@ -94,7 +97,7 @@ public enum HelmetResistanceUpgrade implements AirtightUpgrade {
 
     @Override
     public float getGasConsumptionMultiplier(Player player) {
-        return CCBConfig.server().equipments.helmetResistanceMultiplier.getF();
+        return BASE_GAS_MULTIPLIER * CCBConfig.server().equipment.airtightHelmet.resistanceGasMultiplier.getF();
     }
 
     @Override

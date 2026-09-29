@@ -9,7 +9,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -25,44 +25,15 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
         this.isBasin = isBasin;
     }
 
-    private static float getNozzleSqueeze(float cycle) {
-        if (cycle < 20) {
-            return Mth.sin(cycle / 40.0f * Mth.PI) * 15;
-        }
-
-        if (cycle > 60 && cycle < 80) {
-            return Mth.sin((cycle - 40) / 40.0f * Mth.PI) * 15;
-        }
-
-        if (cycle >= 80) {
-            return 0;
-        }
-        return 15;
-    }
-
-    private static float getNozzleTopSqueeze(float cycle) {
-        if (cycle <= 20 || cycle >= 60) {
-            return 0;
-        }
-
-        if (cycle < 30) {
-            return Mth.sin((cycle - 20) / 60.0f * Mth.PI) * 7;
-        }
-
-        if (cycle > 50) {
-            return Mth.sin(cycle / 60.0f * Mth.PI) * 7;
-        }
-        return 3.5f;
-    }
-
+    @SuppressWarnings("ConstantExpression")
     @Override
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
 
         poseStack.translate(xOffset, yOffset, 100);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
-        poseStack.mulPose(Axis.YP.rotationDegrees(22.5f));
+        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
+        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
 
         poseStack.pushPose();
 
@@ -80,5 +51,37 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
         blockElement(supportState).atLocal(0, 2, 0).scale(SCALE).render(graphics);
 
         poseStack.popPose();
+    }
+
+    private static float getNozzleSqueeze(float cycle) {
+        if (cycle < 20) {
+            return Mth.sin(cycle / 40.0F * Mth.PI) * 15;
+        }
+
+        if (cycle > 60 && cycle < 80) {
+            return Mth.sin((cycle - 40) / 40.0F * Mth.PI) * 15;
+        }
+
+        if (cycle >= 80) {
+            return 0;
+        }
+
+        return 15;
+    }
+
+    private static float getNozzleTopSqueeze(float cycle) {
+        if (cycle <= 20 || cycle >= 60) {
+            return 0;
+        }
+
+        if (cycle < 30) {
+            return Mth.sin((cycle - 20) / 60.0F * Mth.PI) * 7;
+        }
+
+        if (cycle > 50) {
+            return Mth.sin(cycle / 60.0F * Mth.PI) * 7;
+        }
+
+        return 3.5F;
     }
 }

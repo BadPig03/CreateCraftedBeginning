@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -86,17 +87,36 @@ public final class OpticalPowerNetworkManager {
 
     public static void invalidateAround(Level level, BlockPos pos) {
         invalidateAt(level, pos);
-        for (Direction direction : Direction.values()) {
+        for (Direction direction : Iterate.directions) {
             invalidateAt(level, pos.relative(direction));
         }
     }
 
-    public static void invalidateSolarCollectorChange(Level level, BlockPos pos) {
+    public static void invalidateAmethystCollectorPanelChange(Level level, BlockPos pos) {
         invalidateAround(level, pos);
     }
 
     public static void onChunkAccessibilityChanged(ServerLevel level, ChunkPos chunkPos) {
         invalidateChunkNeighborhood(level, chunkPos);
+    }
+
+    public static void tick(ServerLevel level) {
+        LevelCache cache = LEVELS.get(level);
+        if (cache == null) {
+            return;
+        }
+
+        cache.refreshConfiguredLimits(level);
+        cache.refreshDynamicNetworks(level);
+        cache.rebuildDirtyNetworks(level);
+    }
+
+    public static void removeLevel(ServerLevel level) {
+        LEVELS.remove(level);
+    }
+
+    public static void clear() {
+        LEVELS.clear();
     }
 
     private static void invalidateChunkNeighborhood(ServerLevel level, ChunkPos chunkPos) {
@@ -121,25 +141,6 @@ public final class OpticalPowerNetworkManager {
         for (CachedNetwork network : affected) {
             cache.invalidate(network);
         }
-    }
-
-    public static void tick(ServerLevel level) {
-        LevelCache cache = LEVELS.get(level);
-        if (cache == null) {
-            return;
-        }
-
-        cache.refreshConfiguredLimits(level);
-        cache.refreshDynamicNetworks(level);
-        cache.rebuildDirtyNetworks(level);
-    }
-
-    public static void removeLevel(ServerLevel level) {
-        LEVELS.remove(level);
-    }
-
-    public static void clear() {
-        LEVELS.clear();
     }
 
     private static LevelCache getCache(ServerLevel level) {
@@ -187,9 +188,11 @@ public final class OpticalPowerNetworkManager {
             observedNetworkPowerLimit = configuredLimit;
             ObjectOpenHashSet<CachedNetwork> uniqueNetworks = new ObjectOpenHashSet<>();
             for (CachedNetwork cached : networkByNode.values()) {
-                if (cached.valid) {
-                    uniqueNetworks.add(cached);
+                if (!cached.valid) {
+                    continue;
                 }
+
+                uniqueNetworks.add(cached);
             }
             for (CachedNetwork cached : uniqueNetworks) {
                 cached.network.refreshConfiguredLimits();

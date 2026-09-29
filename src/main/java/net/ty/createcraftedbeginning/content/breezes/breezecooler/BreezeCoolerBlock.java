@@ -51,7 +51,6 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,12 +60,146 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE<BreezeCoolerBlockEntity>, SimpleWaterloggedBlock, IWrenchable {
     public static final EnumProperty<FrostLevel> FROST_LEVEL = EnumProperty.create("frost_level", FrostLevel.class);
-    public static final BooleanProperty ATTACHED = BooleanProperty.create("attached");
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public BreezeCoolerBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(FROST_LEVEL, FrostLevel.RIMING).setValue(ATTACHED, false));
+        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(FROST_LEVEL, FrostLevel.RIMING));
+    }
+
+    @Override
+    protected boolean isPathfindable(BlockState state, PathComputationType pathComputationType) {
+        return false;
+    }
+
+    @Override
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
+        if (state.getValue(WATERLOGGED)) {
+            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+        }
+        return state;
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        if (AllItems.GOGGLES.isIn(stack)) {
+            return onBlockEntityUseItemOn(level, pos, cooler -> setGoggles(cooler, true));
+        }
+
+        BreezeCoolerBlockEntity cooler = getBlockEntity(level, pos);
+        if (cooler != null && cooler.isStockKeeper()) {
+            StockTickerBlockEntity stockTicker = BlazeBurnerBlockEntity.getStockTicker(level, pos);
+            if (stockTicker != null) {
+                StockTickerInteractionHandler.interactWithLogisticsManagerAt(player, level, stockTicker.getBlockPos());
+            }
+            return ItemInteractionResult.SUCCESS;
+        }
+
+        if (stack.isEmpty()) {
+            return onBlockEntityUseItemOn(level, pos, blockEntity -> setGoggles(blockEntity, false));
+        }
+
+        boolean doNotConsume = player.isCreative();
+        boolean forceOverflow = !(player instanceof FakePlayer);
+        InteractionResultHolder<ItemStack> insertResult = tryInsert(state, level, pos, stack, doNotConsume, forceOverflow, false);
+        ItemInteractionResult interactionResult = insertResult.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        ItemStack leftover = insertResult.getObject();
+        if (level.isClientSide || doNotConsume || leftover.isEmpty()) {
+            return interactionResult;
+        }
+
+        if (stack.isEmpty()) {
+            player.setItemInHand(hand, leftover);
+        }
+        else if (!player.getInventory().add(leftover)) {
+            player.drop(leftover, false);
+        }
+        return interactionResult;
+    }
+
+    @Override
+    public FluidState getFluidState(BlockState state) {
+        if (!state.getValue(WATERLOGGED)) {
+            return Fluids.EMPTY.defaultFluidState();
+        }
+
+        return Fluids.WATER.defaultFluidState();
+    }
+
+    @Override
+    public boolean hasAnalogOutputSignal(BlockState blockState) {
+        return true;
+    }
+
+    @Override
+    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos blockPos) {
+        if (state.getValue(FROST_LEVEL) != FrostLevel.CHILLED) {
+            return 0;
+        }
+
+        return 15;
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter reader, BlockPos pos, CollisionContext context) {
+        return CCBShapes.COOLER_BLOCK_SHAPE;
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
+        if (context != CollisionContext.empty()) {
+            return getShape(blockState, level, blockPos, context);
+        }
+
+        return CCBShapes.COOLER_BLOCK_SPECIAL_COLLISION_SHAPE;
+    }
+
+    @Override
+    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
+        return simpleCodec(BreezeCoolerBlock::new);
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
+        if (random.nextInt(10) != 0) {
+            return;
+        }
+
+        level.playLocalSound(pos.getX() + 0.5F, pos.getY() + 0.5F, pos.getZ() + 0.5F, SoundEvents.BREEZE_IDLE_GROUND, SoundSource.BLOCKS, 0.1F, random.nextFloat() * 0.7F + 0.6F, false);
+    }
+
+    @Override
+    public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
+        BlockState state = super.getStateForPlacement(context);
+        if (state == null) {
+            return null;
+        }
+
+        state = state.setValue(FROST_LEVEL, FrostLevel.RIMING).setValue(FACING, context.getHorizontalDirection().getOpposite());
+        return ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
+        builder.add(FROST_LEVEL, FACING, WATERLOGGED);
+        super.createBlockStateDefinition(builder);
+    }
+
+    @Override
+    public Class<BreezeCoolerBlockEntity> getBlockEntityClass() {
+        return BreezeCoolerBlockEntity.class;
+    }
+
+    @Override
+    public BlockEntityType<? extends BreezeCoolerBlockEntity> getBlockEntityType() {
+        return CCBBlockEntities.BREEZE_COOLER.get();
     }
 
     static FrostLevel getFrostLevelOf(BlockState blockState) {
@@ -115,158 +248,17 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         return ItemInteractionResult.SUCCESS;
     }
 
-    @Override
-    protected boolean isPathfindable(BlockState state, PathComputationType pathComputationType) {
-        return false;
-    }
-
-    @Override
-    public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState, LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
-        if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
-        }
-        if (direction != Direction.UP) {
-            return state;
-        }
-
-        state = state.setValue(ATTACHED, neighbourState.is(CCBBlocks.AIR_COMPRESSOR_BLOCK.get()));
-        return state;
-    }
-
-    @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (AllItems.GOGGLES.isIn(stack)) {
-            return onBlockEntityUseItemOn(level, pos, cooler -> setGoggles(cooler, true));
-        }
-
-        BreezeCoolerBlockEntity cooler = getBlockEntity(level, pos);
-        if (cooler != null && cooler.isStockKeeper()) {
-            StockTickerBlockEntity stockTicker = BlazeBurnerBlockEntity.getStockTicker(level, pos);
-            if (stockTicker != null) {
-                StockTickerInteractionHandler.interactWithLogisticsManagerAt(player, level, stockTicker.getBlockPos());
-            }
-            return ItemInteractionResult.SUCCESS;
-        }
-
-        if (stack.isEmpty()) {
-            return onBlockEntityUseItemOn(level, pos, be -> setGoggles(be, false));
-        }
-
-        boolean doNotConsume = player.isCreative();
-        boolean forceOverflow = !(player instanceof FakePlayer);
-        InteractionResultHolder<ItemStack> insertResult = tryInsert(state, level, pos, stack, doNotConsume, forceOverflow, false);
-        ItemInteractionResult interactionResult = insertResult.getResult() == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        ItemStack leftover = insertResult.getObject();
-        if (level.isClientSide || doNotConsume || leftover.isEmpty()) {
-            return interactionResult;
-        }
-
-        if (stack.isEmpty()) {
-            player.setItemInHand(hand, leftover);
-        }
-        else if (!player.getInventory().add(leftover)) {
-            player.drop(leftover, false);
-        }
-        return interactionResult;
-    }
-
-    @Override
-    public FluidState getFluidState(BlockState state) {
-        if (!state.getValue(WATERLOGGED)) {
-            return Fluids.EMPTY.defaultFluidState();
-        }
-        return Fluids.WATER.defaultFluidState();
-    }
-
-    @Override
-    public boolean hasAnalogOutputSignal(BlockState blockState) {
-        return true;
-    }
-
-    @Override
-    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos blockPos) {
-        if (state.getValue(FROST_LEVEL) != FrostLevel.CHILLED) {
-            return 0;
-        }
-        return 15;
-    }
-
-    @Override
-    public VoxelShape getShape(BlockState state, BlockGetter reader, BlockPos pos, CollisionContext context) {
-        if (!state.getValue(ATTACHED)) {
-            return CCBShapes.COOLER_BLOCK_SHAPE;
-        }
-        return CCBShapes.COOLER_BLOCK_COOLER_SHAPE;
-    }
-
-    @Override
-    public VoxelShape getCollisionShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        if (context != CollisionContext.empty()) {
-            return getShape(blockState, level, blockPos, context);
-        }
-        return CCBShapes.COOLER_BLOCK_SPECIAL_COLLISION_SHAPE;
-    }
-
-    @Override
-    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
-        return simpleCodec(BreezeCoolerBlock::new);
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
-        if (random.nextInt(10) != 0) {
-            return;
-        }
-
-        level.playLocalSound(pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f, SoundEvents.BREEZE_IDLE_GROUND, SoundSource.BLOCKS, 0.1f, random.nextFloat() * 0.7f + 0.6f, false);
-    }
-
-    @Override
-    public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state = super.getStateForPlacement(context);
-        if (state == null) {
-            return null;
-        }
-
-        boolean compressorAttached = context.getLevel().getBlockState(context.getClickedPos().above()).is(CCBBlocks.AIR_COMPRESSOR_BLOCK.get());
-        state = state.setValue(FROST_LEVEL, FrostLevel.RIMING).setValue(FACING, context.getHorizontalDirection().getOpposite()).setValue(ATTACHED, compressorAttached);
-        return ProperWaterloggedBlock.withWater(context.getLevel(), state, context.getClickedPos());
-    }
-
-    @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
-    }
-
-    @Override
-    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        builder.add(FROST_LEVEL, FACING, WATERLOGGED, ATTACHED);
-        super.createBlockStateDefinition(builder);
-    }
-
-    @Override
-    public Class<BreezeCoolerBlockEntity> getBlockEntityClass() {
-        return BreezeCoolerBlockEntity.class;
-    }
-
-    @Override
-    public BlockEntityType<? extends BreezeCoolerBlockEntity> getBlockEntityType() {
-        return CCBBlockEntities.BREEZE_COOLER.get();
-    }
-
     public enum FrostLevel implements StringRepresentable {
         RIMING,
         CHILLED;
 
-        public boolean isAtLeast(FrostLevel frostLevel) {
-            return ordinal() >= frostLevel.ordinal();
-        }
-
         @Override
         public String getSerializedName() {
             return Lang.asId(name());
+        }
+
+        public boolean isAtLeast(FrostLevel frostLevel) {
+            return ordinal() >= frostLevel.ordinal();
         }
 
         @Contract(pure = true)

@@ -19,7 +19,7 @@ final class GasVirtualEvents {
 
     @SubscribeEvent
     private static void onDropGasVirtualItems(ItemTossEvent event) {
-        if (!GasVirtualUtils.isVirtualItem(event.getEntity().getItem())) {
+        if (!VirtualGasItems.isVirtualItem(event.getEntity().getItem())) {
             return;
         }
 
@@ -30,13 +30,13 @@ final class GasVirtualEvents {
     private static void onClickOnGasVirtualItems(ItemStackedOnOtherEvent event) {
         ItemStack carriedStack = event.getCarriedItem();
         boolean shouldCancel = false;
-        if (GasVirtualUtils.isVirtualItem(carriedStack)) {
+        if (VirtualGasItems.isVirtualItem(carriedStack)) {
             carriedStack.shrink(1);
             shouldCancel = true;
         }
 
         ItemStack stackedOnStack = event.getStackedOnItem();
-        if (GasVirtualUtils.isVirtualItem(stackedOnStack)) {
+        if (VirtualGasItems.isVirtualItem(stackedOnStack)) {
             stackedOnStack.shrink(1);
             shouldCancel = true;
         }

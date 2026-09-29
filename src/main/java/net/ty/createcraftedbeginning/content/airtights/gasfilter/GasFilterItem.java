@@ -22,8 +22,8 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils.GasFilterData;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilters.GasFilterData;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -34,22 +34,9 @@ import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasFilterItem extends Item implements MenuProvider, SupportsItemCopying, IGasFilter {
+public class GasFilterItem extends Item implements MenuProvider, SupportsItemCopying, GasFilter {
     public GasFilterItem(Properties properties) {
         super(properties);
-    }
-
-    static GasFilterData getFilterData(ItemStack filter) {
-        return filter.getOrDefault(CCBDataComponents.GAS_FILTER_DATA, GasFilterData.EMPTY);
-    }
-
-    static ItemStackHandler createFilterInventory(GasFilterData filterData) {
-        ItemStackHandler filterInventory = new ItemStackHandler(GasFilterData.MAX_ENTRIES);
-        List<GasStack> configuredGases = filterData.gases();
-        for (int slotIndex = 0; slotIndex < configuredGases.size(); slotIndex++) {
-            filterInventory.setStackInSlot(slotIndex, GasVirtualUtils.createVirtualItem(configuredGases.get(slotIndex)));
-        }
-        return filterInventory;
     }
 
     @Override
@@ -58,6 +45,7 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
         if (player == null) {
             return InteractionResult.PASS;
         }
+
         return use(context.getLevel(), player, context.getHand()).getResult();
     }
 
@@ -72,7 +60,7 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
             return InteractionResultHolder.success(heldFilter);
         }
 
-        player.openMenu(this, buf -> ItemStack.STREAM_CODEC.encode(buf, heldFilter));
+        player.openMenu(this, buffer -> ItemStack.STREAM_CODEC.encode(buffer, heldFilter));
         return InteractionResultHolder.success(heldFilter);
     }
 
@@ -135,6 +123,20 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
         if (!filterItem.is(CCBItems.GAS_FILTER)) {
             return gas -> false;
         }
+
         return getFilterData(filterItem).compile();
+    }
+
+    static GasFilterData getFilterData(ItemStack filter) {
+        return filter.getOrDefault(CCBDataComponents.GAS_FILTER_DATA, GasFilterData.EMPTY);
+    }
+
+    static ItemStackHandler createFilterInventory(GasFilterData filterData) {
+        ItemStackHandler filterInventory = new ItemStackHandler(GasFilterData.MAX_ENTRIES);
+        List<GasStack> configuredGases = filterData.gases();
+        for (int slotIndex = 0; slotIndex < configuredGases.size(); slotIndex++) {
+            filterInventory.setStackInSlot(slotIndex, VirtualGasItems.createVirtualItem(configuredGases.get(slotIndex)));
+        }
+        return filterInventory;
     }
 }

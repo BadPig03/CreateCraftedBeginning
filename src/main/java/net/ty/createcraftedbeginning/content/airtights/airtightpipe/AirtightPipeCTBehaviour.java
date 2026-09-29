@@ -1,16 +1,16 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpipe;
 
 import com.simibubi.create.foundation.block.connected.CTSpriteShiftEntry;
+import com.simibubi.create.foundation.block.connected.CTType;
 import com.simibubi.create.foundation.block.connected.ConnectedTextureBehaviour.Base;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.foundation.texture.CCBSpriteShifts;
+import net.ty.createcraftedbeginning.client.render.CCBSpriteShifts;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -24,32 +24,67 @@ public class AirtightPipeCTBehaviour extends Base {
             return null;
         }
 
-        if (direction.getAxis() == state.getValue(AirtightPipeBlock.AXIS)) {
+        CTSpriteShiftEntry casingShift = CCBSpriteShifts.AIRTIGHT_PIPE_CASING;
+        if (sprite != null && sprite != casingShift.getOriginal() || direction.getAxis() == state.getValue(AirtightPipeBlock.AXIS)) {
             return null;
         }
-        return CCBSpriteShifts.AIRTIGHT_PIPE_CASING;
+
+        return casingShift;
+    }
+
+    @Override
+    public @Nullable CTType getDataType(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
+        if (!AirtightCasingCTHelper.hasCasingNeighbourOnSurface(level, pos, state, direction)) {
+            return null;
+        }
+
+        return super.getDataType(level, pos, state, direction);
     }
 
     @Override
     public boolean connectsTo(BlockState state, BlockState other, BlockAndTintGetter level, BlockPos pos, BlockPos otherPos, Direction face) {
-        if (state.getBlock() != other.getBlock() || !state.getValue(AirtightPipeBlock.CASED) || !other.getValue(AirtightPipeBlock.CASED)) {
-            return false;
-        }
+        return AirtightCasingCTHelper.connects(state, other, pos, otherPos, face);
+    }
 
-        Axis pipeAxis = state.getValue(AirtightPipeBlock.AXIS);
-        Axis otherPipeAxis = other.getValue(AirtightPipeBlock.AXIS);
-        if (pipeAxis == face.getAxis() || otherPipeAxis == face.getAxis()) {
-            return false;
-        }
+    @Override
+    protected Direction getUpDirection(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction face) {
+        Axis axis = state.getValue(AirtightPipeBlock.AXIS);
+        switch (axis) {
+            case Y -> {
+                return super.getUpDirection(level, pos, state, face);
+            }
+            case X -> {
+                if (face == Direction.DOWN) {
+                    return Direction.WEST;
+                }
 
-        int dx = otherPos.getX() - pos.getX();
-        int dy = otherPos.getY() - pos.getY();
-        int dz = otherPos.getZ() - pos.getZ();
-        if (Mth.abs(dx) + Mth.abs(dy) + Mth.abs(dz) != 1) {
-            return false;
-        }
+                return Direction.EAST;
+            }
+            default -> {
+                if (face == Direction.DOWN) {
+                    return Direction.SOUTH;
+                }
 
-        Axis connectionAxis = dx != 0 ? Axis.X : dy != 0 ? Axis.Y : Axis.Z;
-        return pipeAxis == connectionAxis && otherPipeAxis == connectionAxis;
+                return Direction.NORTH;
+            }
+        }
+    }
+
+    @Override
+    protected Direction getRightDirection(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction face) {
+        Axis axis = state.getValue(AirtightPipeBlock.AXIS);
+        return switch (axis) {
+            case Y -> super.getRightDirection(level, pos, state, face);
+            case X -> switch (face) {
+                case UP -> Direction.NORTH;
+                case DOWN -> Direction.SOUTH;
+                default -> Direction.UP;
+            };
+            default -> switch (face) {
+                case UP -> Direction.WEST;
+                case DOWN -> Direction.EAST;
+                default -> Direction.UP;
+            };
+        };
     }
 }

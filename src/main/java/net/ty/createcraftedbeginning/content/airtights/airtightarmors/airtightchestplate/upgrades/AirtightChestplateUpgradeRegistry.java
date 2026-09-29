@@ -26,10 +26,6 @@ public final class AirtightChestplateUpgradeRegistry {
         return REGISTRY.getById(id);
     }
 
-    public static @Nullable AirtightUpgrade getByStack(ItemStack stack) {
-        return REGISTRY.getByStack(stack);
-    }
-
     public static boolean allUpgradesEnabled(Player player) {
         ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
         return chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE) && REGISTRY.allUpgradesEnabled(chestplate);

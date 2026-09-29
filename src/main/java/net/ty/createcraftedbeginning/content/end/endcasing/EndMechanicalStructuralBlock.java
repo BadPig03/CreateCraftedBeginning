@@ -39,6 +39,7 @@ public abstract class EndMechanicalStructuralBlock extends KineticBlock {
         if (!(level.getBlockState(pos).getBlock() instanceof EndMechanicalStructuralBlock)) {
             return ItemStack.EMPTY;
         }
+
         return new ItemStack(CCBBlocks.END_CASING_BLOCK);
     }
 
@@ -59,6 +60,7 @@ public abstract class EndMechanicalStructuralBlock extends KineticBlock {
         if (lootState == null || !(lootState.getBlock() instanceof EndMechanicalStructuralBlock)) {
             return drops;
         }
+
         return List.of(new ItemStack(CCBBlocks.END_CASING_BLOCK));
     }
 

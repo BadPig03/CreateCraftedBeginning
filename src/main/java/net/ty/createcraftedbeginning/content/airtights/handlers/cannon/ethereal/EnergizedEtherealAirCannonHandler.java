@@ -15,7 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContext;
-import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonUtils;
+import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonBlast;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -25,7 +25,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EnergizedEtherealAirCannonHandler extends EtherealAirCannonHandler {
-    private static final int ENERGIZED_BONUS_DAMAGE = 6;
+    private static final int BONUS_DAMAGE = 6;
 
     @Override
     public ItemStack getRenderIcon(Level level) {
@@ -33,7 +33,7 @@ public class EnergizedEtherealAirCannonHandler extends EtherealAirCannonHandler 
     }
 
     @Override
-    public void renderTrailParticles(Level level, Vec3 pos) {
+    public void renderTrailParticles(Level level, Vec3 pos, Vec3 velocity) {
         level.addParticle(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 0, 0, 0);
         RandomSource random = level.getRandom();
         for (int i = 0; i < random.nextInt(2, 4); i++) {
@@ -42,9 +42,11 @@ public class EnergizedEtherealAirCannonHandler extends EtherealAirCannonHandler 
             double offsetZ = (random.nextDouble() - 0.5) * 0.6;
             level.addParticle(ParticleTypes.DRAGON_BREATH, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, (random.nextDouble() - 0.5) * 0.02, random.nextDouble() * 0.02 + 0.01, (random.nextDouble() - 0.5) * 0.02);
             level.addParticle(ParticleTypes.MYCELIUM, pos.x, pos.y, pos.z, 0, 0, 0);
-            if (random.nextFloat() < 0.25f) {
-                level.addParticle(ParticleTypes.PORTAL, pos.x, pos.y + 0.2, pos.z, 0, 0, 0);
+            if (random.nextFloat() >= 0.25F) {
+                continue;
             }
+
+            level.addParticle(ParticleTypes.PORTAL, pos.x, pos.y + 0.2, pos.z, 0, 0, 0);
         }
     }
 
@@ -54,8 +56,13 @@ public class EnergizedEtherealAirCannonHandler extends EtherealAirCannonHandler 
     }
 
     @Override
+    public float getRotationSpeed() {
+        return super.getRotationSpeed() * 2;
+    }
+
+    @Override
     public float getGasConsumptionMultiplier() {
-        return 0.64f;
+        return super.getGasConsumptionMultiplier() * 0.75F;
     }
 
     @Override
@@ -64,9 +71,9 @@ public class EnergizedEtherealAirCannonHandler extends EtherealAirCannonHandler 
     }
 
     @Override
-    protected void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
+    public void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
         super.applyAdditionalEffects(level, entities, explosionDamageSource, context);
-        float bonusDamage = ENERGIZED_BONUS_DAMAGE * context.effectMultiplier();
-        AirtightCannonUtils.applyBonusDamage(entities, explosionDamageSource, bonusDamage);
+        float bonusDamage = BONUS_DAMAGE * context.effectMultiplier();
+        AirtightCannonBlast.applyBonusDamage(entities, explosionDamageSource, bonusDamage);
     }
 }

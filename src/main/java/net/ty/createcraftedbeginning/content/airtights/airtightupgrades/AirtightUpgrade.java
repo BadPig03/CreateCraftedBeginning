@@ -7,11 +7,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
+import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -19,10 +17,6 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface AirtightUpgrade {
-    @Nullable
-    static AirtightUpgrade getByID(ResourceLocation id) {
-        return AirtightUpgradeRegistry.getGlobalById(id);
-    }
 
     List<Component> getComponents(Player player, ItemStack item);
 
@@ -48,7 +42,11 @@ public interface AirtightUpgrade {
         return 0;
     }
 
-    Item getUpgradeItem();
+    Item getDefaultUpgradeItem();
+
+    default Item getUpgradeItem(Level level) {
+        return AirtightUpgradeMaterials.resolveMaterial(this, level.isClientSide);
+    }
 
     ResourceLocation getID();
 
@@ -58,8 +56,8 @@ public interface AirtightUpgrade {
         return 1;
     }
 
-    default boolean testUpgradeItem(ItemStack item) {
-        return item.is(getUpgradeItem());
+    default boolean testUpgradeItem(ItemStack item, Level level) {
+        return !item.isEmpty() && !startsInstalled() && item.is(getUpgradeItem(level));
     }
 
     default boolean startsEnabled() {
@@ -95,7 +93,7 @@ public interface AirtightUpgrade {
     default AirtightUpgradeStatus getUpgradeStatus(ItemStack item) {
         List<AirtightUpgradeStatus> upgradeStatuses = item.get(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS);
         if (upgradeStatuses == null) {
-            upgradeStatuses = AirtightArmorsUtils.getDefaultUpgradeList(item);
+            upgradeStatuses = AirtightItemUpgrades.getDefaultUpgradeList(item);
         }
 
         ResourceLocation upgradeId = getID();

@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.gaspackager;
 
 import com.simibubi.create.api.packager.InventoryIdentifier;
+import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
@@ -17,17 +18,19 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Clearable;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.advancement.GasPackagingAdvancements;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifiers;
 import net.ty.createcraftedbeginning.compat.computercraft.ComputerCraftPackagerCompat;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasManipulationBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlockEntity;
+import net.ty.createcraftedbeginning.gas.behaviour.GasManipulationBehaviour;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,18 +53,18 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.GAS_PACKAGER.get(), (be, context) -> be.inventory);
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.GAS_PACKAGER.get(), (packager, context) -> packager.inventory);
     }
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        gasInventory = new GasManipulationBehaviour(this, InterfaceProvider.oppositeOfBlockFacing()).withFilter(GasPackagerUtils::supportsGasHandler);
+        gasInventory = new GasManipulationBehaviour(this, InterfaceProvider.oppositeOfBlockFacing()).withFilter(target -> target != null && !(target instanceof PortableGasInterfaceBlockEntity));
         behaviours.add(gasInventory);
 
-        targetInventory = new InvManipulationBehaviour(this, InterfaceProvider.oppositeOfBlockFacing()).withFilter(GasPackagerUtils::supportsItemHandler);
+        targetInventory = new InvManipulationBehaviour(this, InterfaceProvider.oppositeOfBlockFacing()).withFilter(target -> target != null && !(target instanceof PortableStorageInterfaceBlockEntity));
         behaviours.add(targetInventory);
 
-        behaviours.add(new CCBAdvancementBehaviour(this));
+        behaviours.add(new CCBAdvancementBehaviour(this, CCBAdvancements.ALVEOLI));
         ComputerCraftPackagerCompat.addBehaviour(this, behaviours);
     }
 
@@ -151,21 +154,25 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         }
 
         BlockFace targetFace = gasInventory.getTarget().getOpposite();
-        BlockEntity targetBlockEntity = level.getBlockEntity(targetFace.getPos());
-        if (!(targetBlockEntity instanceof IGasInventoryIdentifierProvider provider)) {
-            return null;
-        }
-        return provider.getGasInventoryIdentifier(targetFace.getFace());
+        return GasInventoryIdentifiers.get(level, targetFace);
     }
 
     @Nullable
     public IdentifiedInventory getIdentifiedGasInventory() {
         InventoryIdentifier identifier = getGasInventoryIdentifier();
-        return identifier == null ? null : new IdentifiedInventory(identifier, EMPTY_GAS_INVENTORY_HANDLER);
+        if (identifier == null) {
+            return null;
+        }
+
+        return new IdentifiedInventory(identifier, EMPTY_GAS_INVENTORY_HANDLER);
     }
 
-    @Nullable IGasHandler gasHandlerForController() {
-        return gasInventory == null ? null : gasInventory.getInventory();
+    @Nullable GasHandler gasHandlerForController() {
+        if (gasInventory == null) {
+            return null;
+        }
+
+        return gasInventory.getInventory();
     }
 
     boolean isGasPackageAnimationActive() {
@@ -191,6 +198,8 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
             return;
         }
 
+        getBehaviour(CCBAdvancementBehaviour.TYPE).awardPlayer(CCBAdvancements.ALVEOLI);
+        GasPackagingAdvancements.onBalloonCreated();
         ComputerCraftPackagerCompat.emitPackageCreated(this, balloon);
         if (!heldBox.isEmpty() || animationTicks != 0) {
             queuedExitingPackages.add(new BigItemStack(balloon, 1));

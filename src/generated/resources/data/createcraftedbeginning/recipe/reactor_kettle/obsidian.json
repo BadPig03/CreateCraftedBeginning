@@ -2,23 +2,15 @@
   "type": "createcraftedbeginning:reactor_kettle",
   "ingredients": [
     {
-      "tag": "c:cobblestones"
-    },
-    {
-      "type": "createcraftedbeginning:single",
-      "amount": 250,
-      "gas": "createcraftedbeginning:moist_air"
-    },
-    {
-      "type": "createcraftedbeginning:single",
-      "amount": 250,
-      "gas": "createcraftedbeginning:ultrawarm_air"
+      "type": "neoforge:tag",
+      "amount": 1000,
+      "tag": "c:lava"
     }
   ],
-  "processing_time": 100,
   "results": [
     {
       "id": "minecraft:obsidian"
     }
-  ]
+  ],
+  "temperature": "superchilled"
 }

@@ -15,8 +15,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.ty.createcraftedbeginning.client.gui.CCBGUITextures;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -34,19 +35,6 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
     public GasCanisterPackScreen(GasCanisterPackMenu container, Inventory inv, Component title) {
         super(container, inv, title);
         pack = menu.player.getMainHandItem();
-    }
-
-    private static void drawGasCanister(GuiGraphics graphics, ItemStack canister, int x, int y) {
-        if (CanisterContainerSuppliers.isValidGasCanister(canister)) {
-            CANISTER.render(graphics, x, y);
-            return;
-        }
-
-        if (!CanisterContainerSuppliers.isValidCreativeGasCanister(canister)) {
-            return;
-        }
-
-        CREATIVE_CANISTER.render(graphics, x, y);
     }
 
     @Override
@@ -92,6 +80,19 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
         GuiGameElement.of(pack).scale(4).at(leftPos + BACKGROUND.getWidth() + 11, topPos + BACKGROUND.getHeight() - 48, -200).render(graphics);
     }
 
+    private static void drawGasCanister(GuiGraphics graphics, ItemStack canister, int x, int y) {
+        if (CanisterContainerSuppliers.isValidGasCanister(canister)) {
+            CANISTER.render(graphics, x, y);
+            return;
+        }
+
+        if (!CanisterContainerSuppliers.isValidCreativeGasCanister(canister)) {
+            return;
+        }
+
+        CREATIVE_CANISTER.render(graphics, x, y);
+    }
+
     private void initButtons() {
         IconButton confirmButton = new IconButton(leftPos + BACKGROUND.getWidth() - 33, topPos + BACKGROUND.getHeight() - 24, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
         addRenderableWidget(confirmButton);
@@ -99,7 +100,7 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
 
     private void drawGasCanisters(GuiGraphics graphics) {
         int canisterY = topPos + 27;
-        var packInventory = menu.getPackInventory();
+        IItemHandler packInventory = menu.getPackInventory();
         drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.I_SLOT_INDEX), leftPos + 23, canisterY);
         drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.II_SLOT_INDEX), leftPos + 65, canisterY);
         drawGasCanister(graphics, packInventory.getStackInSlot(GasCanisterPackMenu.III_SLOT_INDEX), leftPos + 107, canisterY);

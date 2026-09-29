@@ -1,8 +1,6 @@
 package net.ty.createcraftedbeginning.ponder.scenes.gascontainers;
 
-import com.simibubi.create.AllBlocks;
-import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
-import com.simibubi.create.content.kinetics.motor.CreativeMotorBlock;
+import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
@@ -15,9 +13,14 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -31,36 +34,41 @@ public class CreativeAirtightTankScenes {
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 
-        BlockPos pumpPos = util.grid().at(3, 1, 3);
-        BlockPos cogPos = pumpPos.south();
-        BlockPos motorPos = cogPos.east();
-        BlockPos rightPipePos = pumpPos.west();
-        BlockPos tankPos = rightPipePos.west();
-        BlockPos leftPipePos = pumpPos.east();
-        BlockPos creativePos = leftPipePos.east();
+        BlockPos pipeMiddlePos = util.grid().at(3, 1, 3);
+        BlockPos tankPipePos = pipeMiddlePos.west();
+        BlockPos tankPos = tankPipePos.west();
+        BlockPos creativePipePos = pipeMiddlePos.east();
+        BlockPos creativePos = creativePipePos.east();
         BlockPos creativeTopPos = creativePos.above();
 
         Selection tankSelection = util.select().fromTo(tankPos, tankPos.above());
+        Selection pipeSelection = util.select().fromTo(tankPipePos, creativePipePos);
         Selection creativeSelection = util.select().fromTo(creativePos, creativeTopPos);
-        Selection pipeSelection = util.select().fromTo(leftPipePos, rightPipePos);
-        Selection cogSelection = util.select().fromTo(cogPos, motorPos);
 
         Vec3 creativeVec = util.vector().centerOf(creativePos);
-        Vec3 pumpVec = util.vector().centerOf(pumpPos);
-        Vec3 rightPipeVec = util.vector().centerOf(rightPipePos);
-        Vec3 leftPipeVec = util.vector().centerOf(leftPipePos);
+        Vec3 networkVec = util.vector().centerOf(pipeMiddlePos);
+        Vec3 pressurePanelVec = util.vector().blockSurface(creativeTopPos, Direction.NORTH);
+        Vec3 sourceStartVec = util.vector().blockSurface(creativePos, Direction.WEST);
+        Vec3 sinkStartVec = util.vector().blockSurface(tankPos, Direction.EAST);
 
-        AABB creativeArea = new AABB(creativeVec, creativeVec);
-        AABB pipeArea = new AABB(leftPipeVec, leftPipeVec);
-        AABB pipeReverseArea = new AABB(rightPipeVec, rightPipeVec);
+        AABB sourceFlowArea = new AABB(sourceStartVec, sourceStartVec);
+        AABB sinkFlowArea = new AABB(sinkStartVec, sinkStartVec);
+        AABB pressureSettingArea = new AABB(creativeVec, creativeVec);
 
-        Object creativeObject = new Object();
-        Object pipeObject = new Object();
-        Object pipeReverseObject = new Object();
+        Object sourceFlowObject = new Object();
+        Object sinkFlowObject = new Object();
+        Object pressureSettingObject = new Object();
 
-        ItemStack gasCanisterItem = new ItemStack(CCBItems.GAS_CANISTER.asItem());
+        ItemStack naturalAirCanister = new ItemStack(CCBItems.GAS_CANISTER.asItem());
+        naturalAirCanister.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, new GasStack(CCBGases.NATURAL_AIR.get(), 1));
+        ItemStack ultrawarmAirCanister = new ItemStack(CCBItems.GAS_CANISTER.asItem());
+        ultrawarmAirCanister.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, new GasStack(CCBGases.ULTRAWARM_AIR.get(), 1));
+        ItemStack wrenchItem = new ItemStack(AllItems.WRENCH.asItem());
 
-        float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
+        long selectedPressurePa = GasPressure.pascals(4);
+        long lowNetworkPressurePa = GasPressure.pascals(2);
+        long highNetworkPressurePa = GasPressure.pascals(8);
+        long adjustedPressurePa = GasPressure.pascals(6);
 
         scene.idle(20);
         scene.world().showSection(tankSelection, Direction.DOWN);
@@ -72,98 +80,131 @@ public class CreativeAirtightTankScenes {
         scene.world().showSection(creativeSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, creativeObject, creativeArea, 3);
+        scene.overlay().showControls(util.vector().topOf(creativeTopPos), Pointing.DOWN, 60).rightClick().withItem(naturalAirCanister.copy());
+        scene.overlay().showText(60).text("Right-click with a filled Gas Canister to select the gas supplied").colored(PonderPalette.BLUE).pointAt(creativeVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(7);
+        scene.world().modifyBlockEntity(creativePos, CreativeAirtightTankBlockEntity.class, tank -> tank.getTankInventory().setContainedGas(new GasStack(CCBGases.NATURAL_AIR.get(), 1)));
+
+        scene.idle(73);
+        scene.overlay().showCenteredScrollInput(creativeTopPos, Direction.NORTH, 60);
+        scene.overlay().showControls(pressurePanelVec, Pointing.RIGHT, 60).withItem(wrenchItem.copy()).scroll();
+        scene.overlay().showText(60).text("Hold a Wrench and scroll the value panel to set the pressure").colored(PonderPalette.BLUE).pointAt(pressurePanelVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(7);
+        scene.world().modifyBlockEntity(creativePos, CreativeAirtightTankBlockEntity.class, tank -> tank.setExtraData(selectedPressurePa));
+
+        scene.idle(67);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, sourceFlowObject, sourceFlowArea, 3);
 
         scene.idle(3);
-        creativeArea = creativeArea.inflate(0.5, 0.5, 0.5);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, creativeObject, creativeArea, 3);
+        sourceFlowArea = sourceFlowArea.inflate(0, 0.3125, 0.3125);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, sourceFlowObject, sourceFlowArea, 3);
 
         scene.idle(3);
-        creativeArea = creativeArea.expandTowards(0, 1, 0);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, creativeObject, creativeArea, 60);
-        scene.overlay().showText(60).text("Creative Airtight Tanks provide an infinite supply of gas").colored(PonderPalette.GREEN).pointAt(creativeVec).placeNearTarget().attachKeyFrame();
+        sourceFlowArea = sourceFlowArea.expandTowards(-3, 0, 0);
+        scene.world().modifyBlockEntity(tankPos, AirtightTankBlockEntity.class, tank -> setTankPressure(tank, CCBGases.NATURAL_AIR.get(), lowNetworkPressurePa));
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, sourceFlowObject, sourceFlowArea, 60);
+        scene.overlay().showText(60).text("Below the set pressure, the tank supplies the selected gas indefinitely").colored(PonderPalette.OUTPUT).pointAt(networkVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(80);
-        scene.overlay().showControls(util.vector().blockSurface(creativeTopPos, Direction.UP), Pointing.DOWN, 67).rightClick().withItem(gasCanisterItem.copy());
-        
-		scene.idle(7);
-		scene.overlay().showText(60).text("Right-click the tank with a Gas Canister to designate its gas type").colored(PonderPalette.BLUE).pointAt(creativeVec).placeNearTarget().attachKeyFrame();
+        scene.idle(74);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, sinkFlowObject, sinkFlowArea, 3);
 
-        scene.idle(80);
-        scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.EAST), false);
-        scene.world().showSection(cogSelection, Direction.NORTH);
+        scene.idle(3);
+        sinkFlowArea = sinkFlowArea.inflate(0, 0.3125, 0.3125);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, sinkFlowObject, sinkFlowArea, 3);
 
-        scene.idle(15);
-        scene.world().setKineticSpeed(cogSelection, mediumSpeed);
-        scene.world().setKineticSpeed(pipeSelection, -mediumSpeed);
-        scene.effects().rotationSpeedIndicator(pumpPos);
+        scene.idle(3);
+        sinkFlowArea = sinkFlowArea.expandTowards(3, 0, 0);
+        scene.world().modifyBlockEntity(tankPos, AirtightTankBlockEntity.class, tank -> setTankPressure(tank, CCBGases.NATURAL_AIR.get(), highNetworkPressurePa));
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, sinkFlowObject, sinkFlowArea, 60);
+        scene.overlay().showText(60).text("Above the set pressure, the tank absorbs and destroys incoming gas").colored(PonderPalette.INPUT).pointAt(networkVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(77);
+        scene.overlay().showCenteredScrollInput(creativeTopPos, Direction.SOUTH, 27);
+        scene.overlay().showControls(pressurePanelVec, Pointing.RIGHT, 27).withItem(wrenchItem.copy()).scroll();
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, pressureSettingObject, pressureSettingArea, 3);
+
+        scene.idle(3);
+        pressureSettingArea = pressureSettingArea.inflate(0.5).expandTowards(0, 1, 0);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, pressureSettingObject, pressureSettingArea, 60);
+        scene.overlay().showText(60).text("Pressure and selected gas can be adjusted independently").colored(PonderPalette.BLUE).pointAt(creativeVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(7);
+        scene.world().modifyBlockEntity(creativePos, CreativeAirtightTankBlockEntity.class, tank -> tank.setExtraData(adjustedPressurePa));
 
         scene.idle(20);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, pipeObject, pipeArea, 3);
+        scene.overlay().showControls(util.vector().topOf(creativeTopPos), Pointing.DOWN, 33).rightClick().withItem(ultrawarmAirCanister.copy());
 
-        scene.idle(3);
-        pipeArea = pipeArea.inflate(0.5, 0.375, 0.375);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, pipeObject, pipeArea, 3);
+        scene.idle(7);
+        scene.world().modifyBlockEntity(creativePos, CreativeAirtightTankBlockEntity.class, tank -> tank.getTankInventory().setContainedGas(new GasStack(CCBGases.ULTRAWARM_AIR.get(), 1)));
 
-        scene.idle(3);
-        pipeArea = pipeArea.expandTowards(-2, 0, 0);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, pipeObject, pipeArea, 60);
-        scene.overlay().showText(60).text("Gas pipes can indefinitely drain the designated gas from it").colored(PonderPalette.OUTPUT).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
-
-        scene.idle(80);
-        scene.world().setBlock(pumpPos, CCBBlocks.AIRTIGHT_PUMP_BLOCK.getDefaultState().setValue(AirtightPumpBlock.FACING, Direction.EAST), true);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, pipeReverseObject, pipeReverseArea, 3);
-
-        scene.idle(3);
-        pipeReverseArea = pipeReverseArea.inflate(0.5, 0.375, 0.375);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, pipeReverseObject, pipeReverseArea, 3);
-
-        scene.idle(3);
-        pipeReverseArea = pipeReverseArea.expandTowards(2, 0, 0);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, pipeReverseObject, pipeReverseArea, 60);
-        scene.overlay().showText(60).text("Any gas pumped into a Creative Gas Tank will be disposed").colored(PonderPalette.RED).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
-
-        scene.idle(60);
+        scene.idle(26);
         scene.markAsFinished();
     }
 
     public static void size(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("creative_airtight_tank_size", "Size of Creative Airtight Tanks");
+        scene.title("creative_airtight_tank_size", "Building Larger Creative Airtight Tanks");
         scene.configureBasePlate(0, 0, 7);
-        scene.scaleSceneView(0.9f);
+        scene.scaleSceneView(0.9F);
         scene.showBasePlate();
 
-        BlockPos tankPos = util.grid().at(3, 1, 3);
-        BlockPos leftPos = tankPos.north().east();
-        BlockPos rightPos = tankPos.south().west().above(4);
+        BlockPos startPos = util.grid().at(2, 1, 2);
+        BlockPos structurePos = startPos.east().above().south();
+        BlockPos firstSliceEndPos = startPos.east(2).south(2);
+        BlockPos remainderStartPos = startPos.above();
+        BlockPos fullEndPos = startPos.east(2).above(3).south(2);
 
-        Selection tankSelection = util.select().fromTo(leftPos, rightPos);
+        Selection firstBlockSelection = util.select().position(startPos);
+        Selection firstSliceSelection = util.select().fromTo(startPos, firstSliceEndPos).substract(firstBlockSelection);
+        Selection remainderSelection = util.select().fromTo(remainderStartPos, fullEndPos);
 
-        Vec3 leftVec = util.vector().centerOf(leftPos);
-        Vec3 tankVec = util.vector().centerOf(tankPos);
+        Vec3 startVec = util.vector().centerOf(startPos);
+        Vec3 structureVec = util.vector().centerOf(structurePos);
 
-        AABB tankArea = new AABB(leftVec, leftVec);
-
+        AABB tankArea = new AABB(startVec, startVec);
         Object tankObject = new Object();
 
         scene.idle(20);
-        scene.world().showSection(tankSelection, Direction.DOWN);
+        scene.world().showSection(firstBlockSelection, Direction.DOWN);
 
         scene.idle(20);
+        scene.world().showSection(firstSliceSelection, Direction.DOWN);
+
+        scene.idle(15);
+        for (BlockPos pos : firstSliceSelection) {
+            scene.effects().indicateSuccess(pos);
+        }
+        scene.overlay().showText(60).text("Creative Airtight Tanks can combine into larger tanks within the configured size limit").colored(PonderPalette.GREEN).pointAt(structureVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(7);
+        scene.world().showSection(remainderSelection, Direction.DOWN);
+
+        scene.idle(8);
+        for (BlockPos pos : remainderSelection) {
+            scene.effects().indicateSuccess(pos);
+        }
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, tankObject, tankArea, 3);
 
         scene.idle(3);
-        tankArea = tankArea.inflate(0.5, 0.5, 0.5);
+        tankArea = tankArea.inflate(0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, tankObject, tankArea, 3);
 
         scene.idle(3);
-        tankArea = tankArea.expandTowards(-2, 3, 2);
+        tankArea = tankArea.expandTowards(2, 3, 2);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, tankObject, tankArea, 60);
-        scene.overlay().showText(60).text("Creative Airtight Tanks can be combined up to 3x3x4").colored(PonderPalette.GREEN).pointAt(tankVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(59);
+        scene.overlay().showText(60).text("The whole tank shares one selected gas and pressure setting").colored(PonderPalette.BLUE).pointAt(structureVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();
+    }
+
+    private static void setTankPressure(AirtightTankBlockEntity tank, Gas gas, long pressurePa) {
+        long amount = Math.min(tank.getTankInventory().getMaxAmount(), GasPressure.amount(tank.getTankInventory().getVolume(), pressurePa));
+        tank.getTankInventory().tryReplaceContents(new GasStack(gas, amount)).requireAccepted();
     }
 }

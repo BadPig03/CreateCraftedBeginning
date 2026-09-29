@@ -1,17 +1,28 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill;
 
 import com.simibubi.create.AllSpecialTextures;
+import net.createmod.catnip.outliner.Outliner;
+import net.createmod.catnip.render.BindableTexture;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.ClipContext.Block;
+import net.minecraft.world.level.ClipContext.Fluid;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult.Type;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.client.outliner.CCBHandheldDrillClusterOutline;
+import net.ty.createcraftedbeginning.client.render.CCBSpecialTextures;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HandheldDrillOutlineDisplayButton;
-import net.ty.createcraftedbeginning.foundation.client.outliner.CCBOutliner;
-import net.ty.createcraftedbeginning.foundation.client.render.CCBSpecialTextures;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.LiquidReplacementUpgrade;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -29,13 +40,13 @@ public final class AirtightHandheldDrillOutlineRenderer {
     private static final int COLOR_RED = 0xFF5D6C;
     private static final int COLOR_GREEN = 0x4EB483;
 
-    private static final String TOTAL_FIRST_KEY = "handheldDrillTotalFirst";
-    private static final String TOTAL_SECOND_KEY = "handheldDrillTotalSecond";
-    private static final String PROTECTED_KEY = "handheldDrillProtected";
-    private static final String INSTANT_KEY = "handheldDrillInstant";
-    private static final String UNBREAKABLE_KEY = "handheldDrillUnbreakable";
-    private static final String LIQUID_KEY = "handheldDrillLiquid";
-    private static final Map<String, Set<BlockPos>> CACHED_POSITIONS = new HashMap<>();
+    private static final ResourceLocation TOTAL_FIRST_KEY = CCBAPI.asResource("outliner/handheld_drill/total_first");
+    private static final ResourceLocation TOTAL_SECOND_KEY = CCBAPI.asResource("outliner/handheld_drill/total_second");
+    private static final ResourceLocation PROTECTED_KEY = CCBAPI.asResource("outliner/handheld_drill/protected");
+    private static final ResourceLocation INSTANT_KEY = CCBAPI.asResource("outliner/handheld_drill/instant");
+    private static final ResourceLocation UNBREAKABLE_KEY = CCBAPI.asResource("outliner/handheld_drill/unbreakable");
+    private static final ResourceLocation LIQUID_KEY = CCBAPI.asResource("outliner/handheld_drill/liquid");
+    private static final Map<ResourceLocation, Set<BlockPos>> CACHED_POSITIONS = new HashMap<>();
 
     private AirtightHandheldDrillOutlineRenderer() {
     }
@@ -51,16 +62,20 @@ public final class AirtightHandheldDrillOutlineRenderer {
             return;
         }
 
-        BlockPos basePos = AirtightHandheldDrillUtils.getHitResult(player);
-        if (basePos == null) {
+        Vec3 eyePosition = player.getEyePosition();
+        Vec3 rayEnd = eyePosition.add(player.calculateViewVector(player.getXRot(), player.getYRot()).scale(player.blockInteractionRange()));
+        Level level = player.level();
+        Fluid fluidMode = LiquidReplacementUpgrade.INSTANCE.canApply(drill) ? Fluid.ANY : Fluid.NONE;
+        BlockHitResult blockHit = level.clip(new ClipContext(eyePosition, rayEnd, Block.OUTLINE, fluidMode, player));
+        if (blockHit.getType() == Type.MISS) {
             return;
         }
 
-        renderOutline(player.level(), drill, basePos);
+        renderOutline(level, drill, blockHit.getBlockPos());
     }
 
     private static void renderOutline(Level level, ItemStack drill, BlockPos basePos) {
-        CCBOutliner outliner = CCBOutliner.INSTANCE;
+        Outliner outliner = Outliner.getInstance();
         AirtightHandheldDrillMiningContext miningContext = AirtightHandheldDrillMiningContext.of(drill, basePos, level);
         Set<BlockPos> targetPositions = miningContext.totalPos();
         boolean hasHighlightedOutline = showHighlightedCluster(outliner, level, PROTECTED_KEY, miningContext.protectedPos(), COLOR_ORANGE);
@@ -72,7 +87,7 @@ public final class AirtightHandheldDrillOutlineRenderer {
         }
 
         if (!keepCachedCluster(outliner, TOTAL_FIRST_KEY, targetPositions)) {
-            outliner.showCluster(TOTAL_FIRST_KEY, level, targetPositions).colored(COLOR_WHITE).disableLineNormals().disableCull().lineWidth(0.015625f).withFaceTexture(CCBSpecialTextures.LOW_TRANSLUCENT);
+            showCluster(outliner, level, TOTAL_FIRST_KEY, targetPositions, COLOR_WHITE, 0.015625F, CCBSpecialTextures.LOW_TRANSLUCENT);
             CACHED_POSITIONS.put(TOTAL_FIRST_KEY, targetPositions);
         }
         if (hasHighlightedOutline) {
@@ -83,23 +98,28 @@ public final class AirtightHandheldDrillOutlineRenderer {
             return;
         }
 
-        outliner.showCluster(TOTAL_SECOND_KEY, level, targetPositions).colored(COLOR_WHITE).disableLineNormals().disableCull().lineWidth(0.015625f).withFaceTexture(CCBSpecialTextures.LOW_TRANSLUCENT_HIGHLIGHTED);
+        showCluster(outliner, level, TOTAL_SECOND_KEY, targetPositions, COLOR_WHITE, 0.015625F, CCBSpecialTextures.LOW_TRANSLUCENT_HIGHLIGHTED);
         CACHED_POSITIONS.put(TOTAL_SECOND_KEY, targetPositions);
     }
 
-    private static boolean showHighlightedCluster(CCBOutliner outliner, Level level, String outlineKey, Set<BlockPos> positions, int color) {
+    private static boolean showHighlightedCluster(Outliner outliner, Level level, ResourceLocation outlineKey, Set<BlockPos> positions, int color) {
         if (positions.isEmpty()) {
             return false;
         }
 
         if (!keepCachedCluster(outliner, outlineKey, positions)) {
-            outliner.showCluster(outlineKey, level, positions).colored(color).disableLineNormals().disableCull().lineWidth(0.03125f).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED);
+            showCluster(outliner, level, outlineKey, positions, color, 0.03125F, AllSpecialTextures.HIGHLIGHT_CHECKERED);
             CACHED_POSITIONS.put(outlineKey, positions);
         }
         return true;
     }
 
-    private static boolean keepCachedCluster(CCBOutliner outliner, String outlineKey, Set<BlockPos> positions) {
+    private static void showCluster(Outliner outliner, Level level, ResourceLocation outlineKey, Set<BlockPos> positions, int color, float lineWidth, BindableTexture faceTexture) {
+        CCBHandheldDrillClusterOutline outline = new CCBHandheldDrillClusterOutline(level, positions).withFaceTexture(faceTexture).disableLineNormals();
+        outliner.showOutline(outlineKey, outline).colored(color).lineWidth(lineWidth);
+    }
+
+    private static boolean keepCachedCluster(Outliner outliner, ResourceLocation outlineKey, Set<BlockPos> positions) {
         Set<BlockPos> cachedPositions = CACHED_POSITIONS.get(outlineKey);
         if (cachedPositions == null || !cachedPositions.equals(positions) || !outliner.getOutlines().containsKey(outlineKey)) {
             return false;

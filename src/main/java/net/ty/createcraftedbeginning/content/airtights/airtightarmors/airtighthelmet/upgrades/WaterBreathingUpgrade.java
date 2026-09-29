@@ -16,8 +16,8 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
-import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
@@ -39,6 +39,7 @@ public enum WaterBreathingUpgrade implements AirtightUpgrade {
         if (gasCost == 0) {
             return List.of(CCBLang.translateDirect("gui.gas_consumption.supply_require_only"));
         }
+
         return List.of(CCBLang.translateDirect("gui.airtight_helmet.water_breathing_upgrade.gas_cost", gasCost));
     }
 
@@ -90,11 +91,11 @@ public enum WaterBreathingUpgrade implements AirtightUpgrade {
 
     @Override
     public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return CCBConfig.server().equipments.waterBreathingConsumption.get();
+        return CCBConfig.server().equipment.airtightHelmet.waterBreathingGasPerSecond.get();
     }
 
     @Override
-    public Item getUpgradeItem() {
+    public Item getDefaultUpgradeItem() {
         return AllItems.COPPER_DIVING_HELMET.asItem();
     }
 

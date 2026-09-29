@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:living_freezer",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:frozen_ambrosia_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

@@ -37,5 +37,4 @@ public class AirtightReactorKettleBlockItem extends BlockItem {
         ClientRenderBridge.showPlacementBounds(context, "airtight_reactor_kettle", adjacentPos, new AABB(adjacentPos).inflate(1));
         return placementResult;
     }
-
 }

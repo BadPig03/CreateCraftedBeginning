@@ -22,21 +22,12 @@ public class SlushVirtualFluid extends BaseFlowingFluid {
         this.isSource = isSource;
     }
 
-    @Contract("_ -> new")
-    public static SlushVirtualFluid createSource(Properties properties) {
-        return new SlushVirtualFluid(properties, true);
-    }
-
-    @Contract("_ -> new")
-    public static SlushVirtualFluid createFlowing(Properties properties) {
-        return new SlushVirtualFluid(properties, false);
-    }
-
     @Override
     public Fluid getFlowing() {
         if (!isSource) {
             return this;
         }
+
         return super.getFlowing();
     }
 
@@ -45,6 +36,7 @@ public class SlushVirtualFluid extends BaseFlowingFluid {
         if (!isSource) {
             return super.getSource();
         }
+
         return this;
     }
 
@@ -66,5 +58,15 @@ public class SlushVirtualFluid extends BaseFlowingFluid {
     @Override
     public int getAmount(FluidState fluidState) {
         return 0;
+    }
+
+    @Contract("_ -> new")
+    public static SlushVirtualFluid createSource(Properties properties) {
+        return new SlushVirtualFluid(properties, true);
+    }
+
+    @Contract("_ -> new")
+    public static SlushVirtualFluid createFlowing(Properties properties) {
+        return new SlushVirtualFluid(properties, false);
     }
 }

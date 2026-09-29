@@ -5,7 +5,7 @@ import com.mojang.math.Axis;
 import com.simibubi.create.compat.jei.category.animations.AnimatedKinetics;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -17,15 +17,25 @@ public class AnimatedBreezeCooler extends AnimatedKinetics {
 
     @Override
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
+        drawAt(graphics, xOffset, yOffset, 192, 1);
+    }
+
+    public void drawForBasin(GuiGraphics graphics, int xOffset, int yOffset) {
+        drawAt(graphics, xOffset, yOffset, 200, 1.65);
+    }
+
+    @SuppressWarnings("ConstantExpression")
+    private void drawAt(GuiGraphics graphics, int xOffset, int yOffset, int zOffset, double localY) {
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
 
-        poseStack.translate(xOffset, yOffset, 192);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
-        poseStack.mulPose(Axis.YP.rotationDegrees(22.5f));
-        blockElement(CCBBlocks.BREEZE_COOLER_BLOCK.getDefaultState()).atLocal(0, 1, 0).scale(SCALE).render(graphics);
-        blockElement(CCBPartialModels.BREEZE_COOLER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, 1, 0).scale(SCALE).render(graphics);
-        blockElement(CCBPartialModels.BREEZE_CHILLED).rotateBlock(0, 180, 0).atLocal(0, 1, 0).scale(SCALE).render(graphics);
+        poseStack.translate(xOffset, yOffset, zOffset);
+        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
+        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
+
+        blockElement(CCBBlocks.BREEZE_COOLER_BLOCK.getDefaultState()).atLocal(0, localY, 0).scale(SCALE).render(graphics);
+        blockElement(CCBPartialModels.BREEZE_CHILLED).rotateBlock(0, 180, 0).atLocal(0, localY, 0).scale(SCALE).render(graphics);
+        blockElement(CCBPartialModels.BREEZE_COOLER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, localY, 0).scale(SCALE).render(graphics);
 
         poseStack.popPose();
     }

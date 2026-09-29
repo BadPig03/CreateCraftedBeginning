@@ -19,11 +19,11 @@ public class EtherealAirArmorsHandler implements AirtightArmorsHandler {
 
     @Override
     public float getConsumptionMultiplier(EquipmentSlot slot) {
-        return 0.8f;
+        return 0.6F;
     }
 
     @Override
     public float getMultiplierForBoostingElytra() {
-        return 0.7f;
+        return 1;
     }
 }

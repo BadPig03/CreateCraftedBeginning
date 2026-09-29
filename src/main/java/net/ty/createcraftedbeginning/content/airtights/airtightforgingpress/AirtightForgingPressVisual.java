@@ -8,7 +8,7 @@ import dev.engine_room.flywheel.lib.model.Models;
 import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
@@ -51,7 +51,7 @@ public class AirtightForgingPressVisual extends AbstractBlockEntityVisual<Airtig
 
     private void animate(float partialTick) {
         float pressHeadDistance = blockEntity.getPressHeadDistance(partialTick);
-        if (pressHeadDistance == lastDistance) {
+        if (Float.compare(pressHeadDistance, lastDistance) == 0) {
             return;
         }
 

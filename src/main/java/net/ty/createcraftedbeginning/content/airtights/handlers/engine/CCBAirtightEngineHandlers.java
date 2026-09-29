@@ -1,7 +1,8 @@
 package net.ty.createcraftedbeginning.content.airtights.handlers.engine;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlerUtils;
+import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlers;
+import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfiles;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -9,26 +10,28 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBAirtightEngineHandlers {
-    private static final int FULL_LEVEL = 8;
-    private static final int SPECIAL_AIR_MAX_LEVEL = 4;
-
     public static void register() {
-        AirtightEngineHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), 1, FULL_LEVEL);
-        AirtightEngineHandlerUtils.register(CCBGases.PRESSURIZED_NATURAL_AIR.get().getResourceLocation(), 10, FULL_LEVEL);
+        AirtightEngineHandlers.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 1, 4);
+        AirtightEngineHandlers.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 10, 4);
 
-        AirtightEngineHandlerUtils.register(CCBGases.ULTRAWARM_AIR.get().getResourceLocation(), 1.5, FULL_LEVEL);
-        AirtightEngineHandlerUtils.register(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get().getResourceLocation(), 15, FULL_LEVEL);
+        AirtightEngineHandlers.register(CCBGases.ULTRAWARM_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 1.5F, 6);
+        AirtightEngineHandlers.register(CCBGases.ULTRAWARM_AIR.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 15, 6);
 
-        AirtightEngineHandlerUtils.register(CCBGases.ETHEREAL_AIR.get().getResourceLocation(), 2, FULL_LEVEL);
-        AirtightEngineHandlerUtils.register(CCBGases.PRESSURIZED_ETHEREAL_AIR.get().getResourceLocation(), 20, FULL_LEVEL);
+        AirtightEngineHandlers.register(CCBGases.ETHEREAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 2, 8);
+        AirtightEngineHandlers.register(CCBGases.ETHEREAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 20, 8);
 
-        AirtightEngineHandlerUtils.register(CCBGases.MOIST_AIR.get().getResourceLocation(), 1, SPECIAL_AIR_MAX_LEVEL);
-        AirtightEngineHandlerUtils.register(CCBGases.SPORE_AIR.get().getResourceLocation(), 1, SPECIAL_AIR_MAX_LEVEL);
-        AirtightEngineHandlerUtils.register(CCBGases.SCULK_AIR.get().getResourceLocation(), 1, SPECIAL_AIR_MAX_LEVEL);
+        AirtightEngineHandlers.register(CCBGases.MOIST_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 1, 4);
+        AirtightEngineHandlers.register(CCBGases.MOIST_AIR.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 10, 4);
 
-        AirtightEngineHandlerUtils.register(CCBGases.STEAM.get().getResourceLocation(), 2, FULL_LEVEL);
-        AirtightEngineHandlerUtils.register(CCBGases.PRESSURIZED_STEAM.get().getResourceLocation(), 20, FULL_LEVEL);
+        AirtightEngineHandlers.register(CCBGases.SPORE_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 1, 4);
+        AirtightEngineHandlers.register(CCBGases.SPORE_AIR.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 10, 4);
 
-        AirtightEngineHandlerUtils.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), 32, FULL_LEVEL);
+        AirtightEngineHandlers.register(CCBGases.SCULK_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 1, 4);
+        AirtightEngineHandlers.register(CCBGases.SCULK_AIR.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 1, 4);
+
+        AirtightEngineHandlers.register(CCBGases.STEAM.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 2, 8);
+        AirtightEngineHandlers.register(CCBGases.STEAM.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 20, 8);
+
+        AirtightEngineHandlers.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 32, 8);
     }
 }

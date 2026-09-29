@@ -60,6 +60,7 @@ public final class RequestScreenBridge {
         if (!(screen instanceof StockKeeperRequestScreenAccess access)) {
             return null;
         }
+
         return access.ccb$getOrderForItem(stack);
     }
 }

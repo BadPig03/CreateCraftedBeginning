@@ -5,7 +5,7 @@
       "item": "createcraftedbeginning:ice_cream"
     },
     {
-      "type": "fluid_stack",
+      "type": "neoforge:single",
       "amount": 250,
       "fluid": "createcraftedbeginning:amethyst_suspension"
     }

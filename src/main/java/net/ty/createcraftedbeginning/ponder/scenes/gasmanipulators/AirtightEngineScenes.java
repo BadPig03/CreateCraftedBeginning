@@ -1,9 +1,7 @@
 package net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators;
 
-import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
-import com.simibubi.create.content.kinetics.motor.CreativeMotorBlock;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
@@ -14,16 +12,12 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
-import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.InactiveChamberState;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -33,9 +27,9 @@ public class AirtightEngineScenes {
     public static void settingUp(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("airtight_engine_setting_up", "Setting up Airtight Engines");
+        scene.title("airtight_engine_setting_up", "Setting Up an Airtight Assembly Driver");
         scene.configureBasePlate(0, 0, 7);
-        scene.scaleSceneView(0.9f);
+        scene.scaleSceneView(0.9F);
         scene.showBasePlate();
 
         BlockPos smallTankBottomPos = util.grid().at(5, 1, 1);
@@ -43,7 +37,8 @@ public class AirtightEngineScenes {
         BlockPos smallTankChamberPos = smallTankTopPos.above();
         BlockPos smallTankEnginePos = smallTankBottomPos.above().west();
         BlockPos smallTankOutletPos = smallTankTopPos.north();
-        BlockPos largeTankBottomPos = util.grid().at(3, 1, 3);
+        BlockPos smallEngineCogPos = smallTankEnginePos.above().north();
+        BlockPos largeTankBottomPos = smallTankBottomPos.west(2).south(2);
         BlockPos largeTankTopPos = largeTankBottomPos.above(3).west(2).south(2);
         BlockPos largeTankChamberLeftPos = largeTankBottomPos.above(4);
         BlockPos largeTankChamberRightPos = largeTankChamberLeftPos.west(2).south(2);
@@ -55,6 +50,7 @@ public class AirtightEngineScenes {
         Selection smallTankChamberSelection = util.select().position(smallTankChamberPos);
         Selection smallTankEngineSelection = util.select().position(smallTankEnginePos);
         Selection smallTankOutletSelection = util.select().position(smallTankOutletPos);
+        Selection smallEngineCogSelection = util.select().position(smallEngineCogPos);
         Selection largeTankSelection = util.select().fromTo(largeTankBottomPos, largeTankTopPos);
         Selection largeTankChamberSelection = util.select().fromTo(largeTankChamberLeftPos, largeTankChamberRightPos);
         Selection largeTankEngineLeftSelection = util.select().position(largeTankEngineLeftPos);
@@ -63,17 +59,20 @@ public class AirtightEngineScenes {
 
         Vec3 smallTankEngineVec = util.vector().centerOf(smallTankEnginePos);
         Vec3 smallTankTopVec = util.vector().centerOf(smallTankTopPos);
-        Vec3 largeTankOutletVec = util.vector().centerOf(largeTankOutletPos);
+        Vec3 smallEngineCogVec = util.vector().centerOf(smallEngineCogPos);
+        Vec3 largeTankVec = util.vector().centerOf(largeTankBottomPos.above(2));
         Vec3 smallTankChamberVec = util.vector().centerOf(smallTankChamberPos);
         Vec3 smallTankOutletVec = util.vector().centerOf(smallTankOutletPos);
 
         AABB smallTankArea = new AABB(util.vector().centerOf(smallTankBottomPos), smallTankTopVec);
         AABB smallTankChamberArea = new AABB(smallTankChamberVec, smallTankChamberVec);
         AABB smallTankOutletArea = new AABB(smallTankOutletVec, smallTankOutletVec);
+        AABB largeTankArea = new AABB(util.vector().centerOf(largeTankBottomPos), util.vector().centerOf(largeTankTopPos));
 
         Object smallTankObject = new Object();
         Object smallTankChamberObject = new Object();
         Object smallTankOutletObject = new Object();
+        Object largeTankObject = new Object();
 
         scene.idle(20);
         scene.world().showSection(smallTankSelection, Direction.DOWN);
@@ -87,24 +86,37 @@ public class AirtightEngineScenes {
         scene.idle(3);
         smallTankArea = smallTankArea.inflate(0.5, 0.5, 0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, smallTankObject, smallTankArea, 60);
-        scene.overlay().showText(60).text("Airtight Engines must be placed on Airtight Tanks, forming an Airtight Assembly Driver").pointAt(smallTankEngineVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Attach an Airtight Engine directly to an Airtight Tank to form a Driver").colored(PonderPalette.GREEN).pointAt(smallTankEngineVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        scene.world().showSection(smallTankOutletSelection, Direction.SOUTH);
+
+        scene.idle(15);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, smallTankOutletObject, smallTankOutletArea, 3);
+
+        scene.idle(3);
+        smallTankOutletArea = smallTankOutletArea.inflate(0.5);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, smallTankOutletObject, smallTankOutletArea, 60);
+        scene.overlay().showText(60).text("At least one Residue Outlet is required for the Driver to run").colored(PonderPalette.GREEN).pointAt(smallTankOutletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(smallTankChamberSelection, Direction.DOWN);
 
-        scene.idle(10);
-        scene.world().showSection(smallTankOutletSelection, Direction.SOUTH);
-
-        scene.idle(10);
+        scene.idle(7);
+        setWindLevel(scene, smallTankChamberPos, WindLevel.GALE);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, smallTankChamberObject, smallTankChamberArea, 3);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, smallTankOutletObject, smallTankOutletArea, 3);
 
         scene.idle(3);
-        smallTankChamberArea = smallTankChamberArea.inflate(0.5, 0.5, 0.5);
-        smallTankOutletArea = smallTankOutletArea.inflate(0.5, 0.5, 0.5);
+        smallTankChamberArea = smallTankChamberArea.inflate(0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, smallTankChamberObject, smallTankChamberArea, 60);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, smallTankOutletObject, smallTankOutletArea, 60);
-        scene.overlay().showText(60).text("Additionally, at least one Breeze Chamber and Residue Outlet must be placed...").colored(PonderPalette.RED).pointAt(smallTankTopVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Gale Breeze Chambers above the tank provide the Driver's wind charge").colored(PonderPalette.GREEN).pointAt(smallTankChamberVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        scene.overlay().showText(60).text("Each Airtight Engine acts as a large cogwheel output").pointAt(smallTankEngineVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        scene.world().showSection(smallEngineCogSelection, Direction.NORTH);
+        scene.overlay().showText(60).text("Mesh another cogwheel with it to join the kinetic network").colored(PonderPalette.GREEN).pointAt(smallEngineCogVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(largeTankSelection, Direction.DOWN);
@@ -122,7 +134,12 @@ public class AirtightEngineScenes {
         scene.world().showSection(largeTankChamberSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("...Alternatively, place more Breeze Chambers, Residue Outlets, Airtight Engines, or even Airtight Tanks").colored(PonderPalette.GREEN).pointAt(largeTankOutletVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, largeTankObject, largeTankArea.inflate(0.5), 60);
+        scene.overlay().showText(60).text("Larger Airtight Tanks provide more gas storage and more attachment space").colored(PonderPalette.GREEN).pointAt(largeTankVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, largeTankObject, largeTankArea.inflate(0.5), 60);
+        scene.overlay().showText(60).text("Tank size alone does not increase the Driver's output").colored(PonderPalette.RED).pointAt(largeTankVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();
@@ -131,25 +148,18 @@ public class AirtightEngineScenes {
     public static void generating(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("airtight_engine_generating_rotational_force", "Generating Rotational Force via an Airtight Assembly Driver");
+        scene.title("airtight_engine_generating_rotational_force", "Generating Rotational Force with an Airtight Assembly Driver");
         scene.configureBasePlate(0, 0, 7);
-        scene.scaleSceneView(0.9f);
+        scene.scaleSceneView(0.9F);
         scene.showBasePlate();
 
         BlockPos tankBottomPos = util.grid().at(2, 1, 2);
-        BlockPos tankTopPos = util.grid().at(4, 4, 4);
-        BlockPos airtightPipePos = tankBottomPos.west();
-        BlockPos airtightPumpPos = airtightPipePos.west();
-        BlockPos airtightPumpCogPos = airtightPumpPos.south();
-        BlockPos airtightMotorPos = airtightPumpCogPos.east();
+        BlockPos tankTopPos = tankBottomPos.east(2).above(3).south(2);
+        BlockPos innerGasPipePos = tankBottomPos.west();
+        BlockPos outerGasPipePos = innerGasPipePos.west();
         BlockPos engineBottomPos = tankBottomPos.north().above().east(2);
         BlockPos engineTopPos = engineBottomPos.above(2).west();
         BlockPos outletPos = tankBottomPos.above(2).west();
-        BlockPos funnelPos = outletPos.north();
-        BlockPos fluidPipePos = outletPos.above();
-        BlockPos fluidPumpPos = fluidPipePos.west();
-        BlockPos fluidPumpCogPos = fluidPumpPos.south();
-        BlockPos fluidMotorPos = fluidPumpCogPos.east();
         BlockPos chamberLeftPos = tankBottomPos.above(4);
         BlockPos chamberRightPos = chamberLeftPos.south(2).east(2);
 
@@ -158,34 +168,20 @@ public class AirtightEngineScenes {
         Selection engineBottomSelection = util.select().position(engineBottomPos);
         Selection engineTopSelection = util.select().position(engineTopPos);
         Selection chamberSelection = util.select().fromTo(chamberLeftPos, chamberRightPos);
-        Selection gasSupplySelection = util.select().fromTo(airtightPipePos, airtightPumpCogPos);
-        Selection airtightPumpSelection = util.select().fromTo(airtightPipePos, airtightPumpPos);
-        Selection airtightPumpMotorSelection = util.select().fromTo(airtightPumpCogPos, airtightMotorPos);
-        Selection residueSelection = util.select().fromTo(fluidPipePos, fluidPumpPos);
-        Selection residueCogSelection = util.select().fromTo(fluidPumpCogPos, fluidMotorPos);
-        Selection fluidPumpSelection = util.select().fromTo(fluidPipePos, fluidPumpPos);
-        Selection fluidPumpMotorSelection = util.select().fromTo(fluidPumpCogPos, fluidMotorPos);
-        Selection funnelSelection = util.select().position(funnelPos);
+        Selection gasSupplySelection = util.select().fromTo(innerGasPipePos, outerGasPipePos);
 
-        Vec3 airtightPumpVec = util.vector().centerOf(airtightPumpPos);
+        Vec3 outerGasPipeVec = util.vector().centerOf(outerGasPipePos);
         Vec3 chamberLeftVec = util.vector().centerOf(chamberLeftPos);
         Vec3 outletVec = util.vector().centerOf(outletPos);
-        Vec3 engineBottomVec =  util.vector().centerOf(engineBottomPos);
         Vec3 engineTopVec = util.vector().centerOf(engineTopPos);
-        Vec3 fluidPipeVec = util.vector().centerOf(fluidPipePos);
-        Vec3 funnelVec = util.vector().centerOf(funnelPos);
 
-        AABB gasSupplyArea = new AABB(airtightPumpVec, airtightPumpVec);
+        AABB gasSupplyArea = new AABB(outerGasPipeVec, outerGasPipeVec);
         AABB chamberArea = new AABB(chamberLeftVec, util.vector().centerOf(chamberRightPos));
-        AABB outletArea = new AABB(outletVec, outletVec);
-        AABB outletUpArea = new AABB(fluidPipeVec, fluidPipeVec);
-        AABB funnelArea = new AABB(funnelVec, funnelVec);
+        AABB residueArea = new AABB(outletVec, outletVec);
 
         Object gasSupplyObject = new Object();
         Object chamberObject = new Object();
-        Object outletObject = new Object();
-        Object outletUpObject = new Object();
-        Object funnelObject = new Object();
+        Object residueObject = new Object();
 
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
 
@@ -203,112 +199,105 @@ public class AirtightEngineScenes {
         scene.idle(3);
         scene.world().showSection(chamberSelection, Direction.DOWN);
 
-        scene.idle(20);
-        scene.overlay().showText(60).text("Generating Stress requires fulfilling multiple conditions...").colored(PonderPalette.RED).pointAt(engineBottomVec).placeNearTarget().attachKeyFrame();
-
-        scene.idle(80);
-        scene.world().setBlock(airtightMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.WEST), false);
-        scene.world().showSection(gasSupplySelection, Direction.EAST);
-
         scene.idle(15);
-        scene.world().setKineticSpeed(airtightPumpSelection, mediumSpeed);
-        scene.world().setKineticSpeed(airtightPumpMotorSelection, -mediumSpeed);
-        scene.effects().rotationSpeedIndicator(airtightPumpPos);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasSupplyObject, gasSupplyArea, 3);
-
-        scene.idle(3);
-        gasSupplyArea = gasSupplyArea.inflate(0.5, 0.375, 0.375);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasSupplyObject, gasSupplyArea, 3);
-
-        scene.idle(3);
-        gasSupplyArea = gasSupplyArea.expandTowards(1, 0, 0);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasSupplyObject, gasSupplyArea, 60);
-        scene.overlay().showText(60).text("1. Continuous and sufficient gas input").colored(PonderPalette.INPUT).pointAt(airtightPumpVec).placeNearTarget().attachKeyFrame();
-
-        scene.idle(80);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, chamberObject, chamberArea, 3);
-
-        scene.idle(3);
-        chamberArea = chamberArea.inflate(0.5, 0.5, 0.5);
         for (int i = 0; i <= 1; i++) {
             for (int j = 0; j <= 1; j++) {
-                BlockPos chamberPos = chamberLeftPos.south(i * 2).east(j * 2);
-                scene.world().setBlock(chamberPos, CCBBlocks.BREEZE_CHAMBER_BLOCK.getDefaultState().setValue(BreezeChamberBlock.WIND_LEVEL, WindLevel.GALE), false);
-                scene.world().modifyBlockEntity(chamberPos, BreezeChamberBlockEntity.class, BreezeChamberBlockEntity::SwitchToGaleState);
+                setWindLevel(scene, chamberLeftPos.south(i * 2).east(j * 2), WindLevel.GALE);
             }
         }
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, chamberObject, chamberArea, 60);
-        scene.overlay().showText(60).text("2. Breeze Chambers maintained in Gale state").colored(PonderPalette.GREEN).pointAt(chamberLeftVec).placeNearTarget().attachKeyFrame();
-        scene.world().setKineticSpeed(engineBottomSelection, 8);
-        scene.effects().rotationSpeedIndicator(engineBottomPos);
-
-        scene.idle(80);
-        scene.world().setBlock(fluidMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.WEST), false);
-        scene.world().showSection(residueSelection, Direction.EAST);
-        scene.world().showSection(funnelSelection, Direction.SOUTH);
-        scene.world().showSection(residueCogSelection, Direction.EAST);
-
-        scene.idle(15);
-        scene.world().setKineticSpeed(fluidPumpSelection, mediumSpeed);
-        scene.world().setKineticSpeed(fluidPumpMotorSelection, -mediumSpeed);
-        scene.world().setKineticSpeed(engineBottomSelection, 16);
-        scene.effects().rotationSpeedIndicator(engineBottomPos);
-        scene.effects().rotationSpeedIndicator(fluidPumpPos);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outletObject, outletArea, 3);
-
-        scene.idle(3);
-        outletArea = outletArea.inflate(0.375, 0.375, 0.375).expandTowards(0, -0.125, 0);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outletObject, outletArea, 3);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outletUpObject, outletUpArea, 3);
-
-        scene.idle(3);
-        outletArea = outletArea.expandTowards(0, 1, 0);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outletObject, outletArea, 63);
-        outletUpArea = outletUpArea.inflate(0.375, 0.375, 0.375).expandTowards(-0.125, 0, 0);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outletUpObject, outletUpArea, 3);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, funnelObject, funnelArea, 3);
-
-        scene.idle(3);
-        scene.world().modifyBlockEntity(outletPos, ResidueOutletBlockEntity.class, be -> {
-            be.insertResidueFluid(new FluidStack(Fluids.WATER, 4000), FluidAction.EXECUTE);
-        });
-        scene.world().propagatePipeChange(fluidPumpPos);
-        outletUpArea = outletUpArea.expandTowards(-1, 0, 0);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outletUpObject, outletUpArea, 60);
-        funnelArea = funnelArea.inflate(0.5, 0.5, 0.5);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, funnelObject, funnelArea, 60);
-        scene.overlay().showText(60).text("3. Timely handling of generated Residue").colored(PonderPalette.OUTPUT).pointAt(outletVec).placeNearTarget().attachKeyFrame();
-
-        scene.idle(51);
-        scene.world().setKineticSpeed(engineBottomSelection, 24);
-        scene.effects().rotationSpeedIndicator(engineBottomPos);
-
-        scene.idle(29);
-        scene.overlay().showText(60).text("This enables Airtight Engines to steadily generate Stress").colored(PonderPalette.GREEN).pointAt(engineBottomVec).placeNearTarget();
-
-        scene.idle(51);
-        scene.world().setKineticSpeed(engineBottomSelection, 32);
-        scene.effects().rotationSpeedIndicator(engineBottomPos);
-
-        scene.idle(29);
-        scene.world().showSection(engineTopSelection, Direction.SOUTH);
 
         scene.idle(20);
-        scene.world().setKineticSpeed(engineBottomSelection, 16);
-        scene.world().setKineticSpeed(engineTopSelection, 16);
-        scene.effects().rotationSpeedIndicator(engineBottomPos);
-        scene.effects().rotationSpeedIndicator(engineTopPos);
-        scene.overlay().showText(60).text("Total generated Stress and rotational speed is evenly distributed per Airtight Engine").colored(PonderPalette.GREEN).pointAt(engineTopVec).placeNearTarget().attachKeyFrame();
+        scene.world().showSection(gasSupplySelection, Direction.EAST);
 
-        scene.idle(80);
-        scene.overlay().showControls(util.vector().blockSurface(engineTopPos, Direction.UP), Pointing.DOWN, 67).rightClick().withItem(wrenchItem.copy());
+        scene.idle(20);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasSupplyObject, gasSupplyArea, 3);
+
+        scene.idle(3);
+        gasSupplyArea = gasSupplyArea.inflate(0.5, 0.375, 0.375).expandTowards(1, 0, 0);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasSupplyObject, gasSupplyArea, 60);
+        scene.overlay().showText(60).text("Supplying a supported gas starts the Driver").colored(PonderPalette.INPUT).pointAt(outerGasPipeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
-        scene.world().setKineticSpeed(engineTopSelection, -16);
-        scene.effects().rotationSpeedIndicator(engineTopPos);
-        scene.overlay().showText(60).text("A Wrench can be used to reverse the direction").colored(PonderPalette.GREEN).pointAt(engineTopVec).placeNearTarget().attachKeyFrame();
+        scene.world().setKineticSpeed(engineBottomSelection, mediumSpeed);
+        scene.effects().rotationSpeedIndicator(engineBottomPos);
 
-        scene.idle(60);
+        scene.idle(73);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasSupplyObject, gasSupplyArea, 60);
+        scene.overlay().showText(60).text("Gas type and pressure determine how much output that supply can sustain").colored(PonderPalette.INPUT).pointAt(outerGasPipeVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        chamberArea = chamberArea.inflate(0.5);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, chamberObject, chamberArea, 60);
+        scene.overlay().showText(60).text("Insufficient wind makes the Driver slow down even with gas available").colored(PonderPalette.RED).pointAt(chamberLeftVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(7);
+        for (int i = 0; i <= 1; i++) {
+            for (int j = 0; j <= 1; j++) {
+                if (i == 0 && j == 0) {
+                    continue;
+                }
+
+                setWindLevel(scene, chamberLeftPos.south(i * 2).east(j * 2), WindLevel.CALM);
+            }
+        }
+        scene.world().setKineticSpeed(engineBottomSelection, mediumSpeed / 4);
+        scene.effects().rotationSpeedIndicator(engineBottomPos);
+
+        scene.idle(73);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, chamberObject, chamberArea, 60);
+        scene.overlay().showText(60).text("Restoring wind lets the Driver recover within its other limits").colored(PonderPalette.GREEN).pointAt(chamberLeftVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(7);
+        for (int i = 0; i <= 1; i++) {
+            for (int j = 0; j <= 1; j++) {
+                setWindLevel(scene, chamberLeftPos.south(i * 2).east(j * 2), WindLevel.GALE);
+            }
+        }
+        scene.world().setKineticSpeed(engineBottomSelection, mediumSpeed);
+        scene.effects().rotationSpeedIndicator(engineBottomPos);
+
+        scene.idle(73);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, residueObject, residueArea.inflate(0.5), 60);
+        scene.overlay().showText(60).text("Blocked Residue Outlets limit the Driver's output and can eventually stop it").colored(PonderPalette.RED).pointAt(outletVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(7);
+        scene.world().setKineticSpeed(engineBottomSelection, mediumSpeed / 2);
+        scene.effects().rotationSpeedIndicator(engineBottomPos);
+
+        scene.idle(73);
+        scene.world().showSection(engineTopSelection, Direction.SOUTH);
+        scene.overlay().showText(60).text("Adding another Airtight Engine adds another output point...").colored(PonderPalette.GREEN).pointAt(engineTopVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(7);
+        scene.world().setKineticSpeed(engineBottomSelection, mediumSpeed / 4);
+        scene.world().setKineticSpeed(engineTopSelection, mediumSpeed / 4);
+        scene.effects().rotationSpeedIndicator(engineBottomPos);
+        scene.effects().rotationSpeedIndicator(engineTopPos);
+
+        scene.idle(73);
+        scene.overlay().showText(60).text("...but the same total output is shared evenly among all attached Engines").colored(PonderPalette.RED).pointAt(engineTopVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        scene.overlay().showText(60).text("Use a Wrench on an Airtight Engine to reverse its rotation direction").colored(PonderPalette.BLUE).pointAt(engineTopVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showControls(util.vector().topOf(engineTopPos), Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
+
+        scene.idle(7);
+        scene.world().setKineticSpeed(engineTopSelection, -mediumSpeed / 4);
+        scene.effects().rotationSpeedIndicator(engineTopPos);
+
+        scene.idle(53);
         scene.markAsFinished();
+    }
+
+    private static void setWindLevel(CreateSceneBuilder scene, BlockPos chamberPos, WindLevel windLevel) {
+        scene.world().modifyBlock(chamberPos, state -> state.setValue(BreezeChamberBlock.WIND_LEVEL, windLevel), false);
+        scene.world().modifyBlockEntity(chamberPos, BreezeChamberBlockEntity.class, chamber -> {
+            if (windLevel != WindLevel.GALE) {
+                chamber.setChamberState(new InactiveChamberState());
+                return;
+            }
+
+            chamber.SwitchToGaleState();
+        });
     }
 }

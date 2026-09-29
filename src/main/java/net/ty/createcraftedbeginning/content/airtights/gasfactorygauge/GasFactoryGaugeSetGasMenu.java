@@ -14,7 +14,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.VirtualGasItems;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.client.ClientScreenBridge;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
@@ -39,11 +39,6 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
         super(type, id, inventory, extraData);
     }
 
-    @Contract("_, _, _ -> new")
-    static GasFactoryGaugeSetGasMenu create(int id, Inventory inventory, GasFactoryGaugeBehaviour behaviour) {
-        return new GasFactoryGaugeSetGasMenu(CCBMenuTypes.GAS_FACTORY_GAUGE_SET_GAS_MENU.get(), id, inventory, behaviour);
-    }
-
     @Override
     protected ItemStackHandler createGhostInventory() {
         return new ItemStackHandler(1);
@@ -60,6 +55,7 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
         if (!(ClientScreenBridge.resolveFactoryPanelBehaviour(extraData) instanceof GasFactoryGaugeBehaviour behaviour)) {
             return null;
         }
+
         return behaviour;
     }
 
@@ -77,7 +73,7 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
             return;
         }
 
-        List<ItemStack> gasTokens = GasVirtualUtils.getVirtualItems(gasSource);
+        List<ItemStack> gasTokens = VirtualGasItems.createVirtualItems(gasSource);
         if (gasTokens.size() != 1) {
             if (gasTokens.isEmpty()) {
                 player.displayClientMessage(CCBLang.translateDirect("gui.warnings.empty_gas_source", gasSource.getHoverName()).withStyle(ChatFormatting.RED), true);
@@ -90,6 +86,11 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
         }
 
         behaviour.setFilter(gasTokens.getFirst());
-        player.level().playSound(null, behaviour.getPos(), SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 0.25f, 0.1f);
+        player.level().playSound(null, behaviour.getPos(), SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 0.25F, 0.1F);
+    }
+
+    @Contract("_, _, _ -> new")
+    static GasFactoryGaugeSetGasMenu create(int id, Inventory inventory, GasFactoryGaugeBehaviour behaviour) {
+        return new GasFactoryGaugeSetGasMenu(CCBMenuTypes.GAS_FACTORY_GAUGE_SET_GAS_MENU.get(), id, inventory, behaviour);
     }
 }

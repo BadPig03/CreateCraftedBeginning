@@ -10,7 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.foundation.texture.CCBSpriteShifts;
+import net.ty.createcraftedbeginning.client.render.CCBSpriteShifts;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;

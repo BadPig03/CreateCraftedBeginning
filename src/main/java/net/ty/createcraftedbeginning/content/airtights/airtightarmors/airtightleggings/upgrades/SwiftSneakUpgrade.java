@@ -11,7 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
-import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -67,7 +67,7 @@ public enum SwiftSneakUpgrade implements AirtightUpgrade {
     }
 
     @Override
-    public Item getUpgradeItem() {
+    public Item getDefaultUpgradeItem() {
         return Items.SOUL_SAND;
     }
 

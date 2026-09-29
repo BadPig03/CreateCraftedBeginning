@@ -13,7 +13,7 @@ public final class DefaultTurbineHandler implements AirtightTurbineHandler {
     }
 
     @Override
-    public int getMaxLevel() {
-        return 0;
+    public float getMaxLevel() {
+        return 1;
     }
 }

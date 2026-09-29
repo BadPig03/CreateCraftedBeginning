@@ -2,11 +2,11 @@ package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtighta
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.gas.storage.GasTank;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -100,8 +100,9 @@ final class AirtightAssemblyDriverController {
             return;
         }
 
-        IGasHandler gasHandler = driverCore.getGasHandler();
-        long acceptedAmount = gasHandler.fill(storedGas, GasAction.SIMULATE);
+        long sourcePressurePa = gasBuffer.getPressurePa();
+        GasPressureBoundary gasHandler = driverCore.getGasHandler();
+        long acceptedAmount = gasHandler.fillFromPressure(storedGas, sourcePressurePa, GasAction.SIMULATE);
         if (acceptedAmount <= 0) {
             return;
         }
@@ -111,7 +112,7 @@ final class AirtightAssemblyDriverController {
             return;
         }
 
-        long consumedAmount = gasHandler.fill(drainableGas, GasAction.EXECUTE);
+        long consumedAmount = gasHandler.fillFromPressure(drainableGas, sourcePressurePa, GasAction.EXECUTE);
         if (consumedAmount <= 0) {
             return;
         }

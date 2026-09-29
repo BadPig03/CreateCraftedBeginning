@@ -1,7 +1,7 @@
 package net.ty.createcraftedbeginning.compat.functionalstorage.access;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -10,5 +10,5 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 @FunctionalInterface
 public interface GasConnectedDrawersAccess {
-    List<IGasHandler> ccb$getGasHandlers();
+    List<GasHandler> ccb$getGasHandlers();
 }

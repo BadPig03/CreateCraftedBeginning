@@ -22,13 +22,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @WailaPlugin
 public class JadePlugin implements IWailaPlugin {
     public static final ResourceLocation GAS = CCBAPI.asResource("gas");
-    public static final ResourceLocation GAS_BLOCK_TOOLTIP = CCBAPI.asResource("gas_block_tooltip");
-    public static final ResourceLocation GAS_CONTRAPTION_TOOLTIP = CCBAPI.asResource("gas_contraption_tooltip");
+    public static final ResourceLocation GAS_STORAGE_BLOCK_TOOLTIP = CCBAPI.asResource("gas_storage_block_tooltip");
+    public static final ResourceLocation GAS_STORAGE_CONTRAPTION_TOOLTIP = CCBAPI.asResource("gas_storage_contraption_tooltip");
+    public static final ResourceLocation GAS_PIPE_TELEMETRY_TOOLTIP = CCBAPI.asResource("gas_pipe_telemetry_tooltip");
 
     @Override
     public void register(IWailaCommonRegistration registration) {
-        registration.registerEntityDataProvider(GasTooltipContraptionProvider.INSTANCE, AbstractContraptionEntity.class);
-        registration.registerBlockDataProvider(GasTooltipProvider.INSTANCE, BlockEntity.class);
+        registration.registerEntityDataProvider(GasStorageContraptionTooltipProvider.INSTANCE, AbstractContraptionEntity.class);
+        registration.registerBlockDataProvider(GasStorageTooltipProvider.INSTANCE, BlockEntity.class);
+        registration.registerBlockDataProvider(GasPipeTelemetryTooltipProvider.INSTANCE, BlockEntity.class);
 
         registration.registerBlockDataProvider(BreezeChamberProvider.INSTANCE, BreezeChamberBlockEntity.class);
         registration.registerBlockDataProvider(BreezeCoolerProvider.INSTANCE, BreezeCoolerBlockEntity.class);
@@ -37,9 +39,11 @@ public class JadePlugin implements IWailaPlugin {
     @Override
     public void registerClient(IWailaClientRegistration registration) {
         registration.addConfig(GAS, true);
+        registration.addTooltipCollectedCallback(JadeGoggleTooltip::onTooltipCollected);
 
-        registration.registerEntityComponent(GasTooltipContraptionProvider.INSTANCE, AbstractContraptionEntity.class);
-        registration.registerBlockComponent(GasTooltipProvider.INSTANCE, Block.class);
+        registration.registerEntityComponent(GasStorageContraptionTooltipProvider.INSTANCE, AbstractContraptionEntity.class);
+        registration.registerBlockComponent(GasStorageTooltipProvider.INSTANCE, Block.class);
+        registration.registerBlockComponent(GasPipeTelemetryTooltipProvider.INSTANCE, Block.class);
 
         registration.registerBlockComponent(BreezeChamberProvider.INSTANCE, BreezeChamberBlock.class);
         registration.registerBlockComponent(BreezeCoolerProvider.INSTANCE, BreezeCoolerBlock.class);

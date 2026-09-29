@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -36,10 +37,6 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
         super(type, pos, state);
         storage = new CrateBlockEntityStorage(maxCountSupplier, this::canStoreItem, this::onInventoryChanged, trackedDiscardPredicate, this::onTrackedItemDiscarded);
         display = new CrateDisplay(storage);
-    }
-
-    public static <T extends CratesBlockEntity> void registerCapabilities(RegisterCapabilitiesEvent event, BlockEntityType<T> type) {
-        event.registerBlockEntity(ItemHandler.BLOCK, type, (be, context) -> be.getHandler());
     }
 
     @Override
@@ -109,6 +106,10 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
         invalidateCapabilities();
     }
 
+    public static <T extends CratesBlockEntity> void registerCapabilities(RegisterCapabilitiesEvent event, BlockEntityType<T> type) {
+        event.registerBlockEntity(ItemHandler.BLOCK, type, (blockEntity, context) -> blockEntity.getHandler());
+    }
+
     public final ItemStack getStoredItem() {
         return storage.storedItem();
     }
@@ -132,7 +133,8 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
     protected void onTrackedItemDiscarded() {
     }
 
-    final CrateItemStackHandler getHandler() {
+    @Internal
+    public final CrateItemStackHandler getHandler() {
         return storage.handler();
     }
 }

@@ -5,7 +5,6 @@ import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -13,6 +12,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -28,69 +28,31 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
+import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
+import net.ty.createcraftedbeginning.gas.visual.GasPlacementHelper;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.EnumSet;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<AirtightPumpBlockEntity>, SimpleWaterloggedBlock, ICogWheel, IAirtightComponent {
-    static final SpeedLevel MINIMUM_REQUIRED_SPEED_LEVEL = SpeedLevel.MEDIUM;
+public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<AirtightPumpBlockEntity>, SimpleWaterloggedBlock, ICogWheel, GasConnectable {
+    private static final SpeedLevel MINIMUM_REQUIRED_SPEED_LEVEL = SpeedLevel.MEDIUM;
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AirtightPumpBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
-    }
-
-    private static boolean canConnectTo(Level level, BlockPos neighbourPos, BlockState neighbourState, Direction direction) {
-        Direction oppositeDirection = direction.getOpposite();
-        if (GasCapabilities.hasGasCapability(level, neighbourPos, oppositeDirection)) {
-            return true;
-        }
-
-        GasTransportBehaviour transportBehaviour = BlockEntityBehaviour.get(level, neighbourPos, GasTransportBehaviour.TYPE);
-        return transportBehaviour != null && transportBehaviour.canHaveFlowToward(neighbourState, oppositeDirection);
-    }
-
-    private static boolean isPump(BlockState state) {
-        return state.getBlock() instanceof AirtightPumpBlock;
-    }
-
-    private static boolean isOpenAt(BlockState state, Direction direction) {
-        return direction.getAxis() == state.getValue(FACING).getAxis();
-    }
-
-    private static @Nullable Direction findBestConnection(Level level, BlockPos pos, Direction targetDirection) {
-        Direction bestDirection = null;
-        double bestDistance = Double.MAX_VALUE;
-        Vec3 targetDirectionVector = Vec3.atLowerCornerOf(targetDirection.getNormal());
-        for (Direction direction : Iterate.directions) {
-            BlockPos neighbourPos = pos.relative(direction);
-            if (!canConnectTo(level, neighbourPos, level.getBlockState(neighbourPos), direction)) {
-                continue;
-            }
-
-            double distance = Vec3.atLowerCornerOf(direction.getNormal()).distanceTo(targetDirectionVector);
-            if (distance > bestDistance) {
-                continue;
-            }
-
-            bestDistance = distance;
-            bestDirection = direction;
-        }
-        return bestDirection;
     }
 
     @Override
@@ -123,39 +85,36 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        boolean isSneaking = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
-        Direction lookDirection = context.getNearestLookingDirection();
-        Direction targetDirection = isSneaking ? lookDirection : lookDirection.getOpposite();
-        Direction connectedDirection = findBestConnection(level, pos, targetDirection);
-        state = ProperWaterloggedBlock.withWater(level, state, pos);
-        if (isSneaking || connectedDirection == null || connectedDirection.getAxis() == targetDirection.getAxis()) {
-            return state;
-        }
-        return state.setValue(FACING, connectedDirection);
+        Player player = context.getPlayer();
+        boolean isSneaking = player != null && player.isShiftKeyDown();
+        EnumSet<Direction> connectedDirections = GasPlacementHelper.getConnectableDirections(level, pos);
+        Axis gasAxis = isSneaking ? context.getNearestLookingDirection().getAxis() : GasPlacementHelper.chooseAxis(context, GasPlacementHelper.getConnectableAxes(connectedDirections));
+        Direction outputDirection = GasPlacementHelper.chooseOutputDirection(context, gasAxis, connectedDirections, !isSneaking);
+        state = state.setValue(FACING, outputDirection);
+        return ProperWaterloggedBlock.withWater(level, state, pos);
     }
 
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
         super.onPlace(state, level, pos, oldState, isMoving);
-        if (level.isClientSide) {
+        if (level.isClientSide || state == oldState) {
             return;
         }
 
-        if (state != oldState) {
-            level.scheduleTick(pos, this, 1, TickPriority.HIGH);
-        }
-        if (!isPump(state) || !isPump(oldState) || state.getValue(FACING) != oldState.getValue(FACING).getOpposite() || !(level.getBlockEntity(pos) instanceof AirtightPumpBlockEntity pump)) {
-            return;
-        }
-
-        pump.markPressureUpdate();
+        level.scheduleTick(pos, this, 1, TickPriority.HIGH);
     }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock()) && !level.isClientSide) {
-            GasPropagator.propagatePipe(level, pos);
+            GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
+            if (transport != null) {
+                transport.finalizePendingTransfersBeforeBlockRemoval();
+            }
+
+            GasNetworkTopology.invalidate(level, pos);
         }
+
         super.onRemove(state, level, pos, newState, isMoving);
     }
 
@@ -183,8 +142,8 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
-        Direction changedDirection = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
-        if (changedDirection == null || !isOpenAt(state, changedDirection)) {
+        Direction changedDirection = GasConnectionResolver.getChangedNeighborFace(level, pos, neighborPos);
+        if (changedDirection == null || changedDirection.getAxis() != state.getValue(FACING).getAxis()) {
             return;
         }
 
@@ -196,6 +155,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
         if (!state.getValue(WATERLOGGED)) {
             return Fluids.EMPTY.defaultFluidState();
         }
+
         return Fluids.WATER.getSource(false);
     }
 
@@ -206,7 +166,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        GasPropagator.propagateChangedPipe(level, pos);
+        GasNetworkTopology.invalidate(level, pos);
     }
 
     @Override
@@ -223,4 +183,15 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
     public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return currentState.getValue(FACING).getAxis() == localFace.getAxis();
     }
+
+    @Override
+    public boolean propagatesGasNeighborUpdates() {
+        return false;
+    }
+
+    @Override
+    public boolean blocksAtmosphere(BlockPos pos, BlockState state, Direction face) {
+        return canConnectOnFace(pos, state, face);
+    }
+
 }

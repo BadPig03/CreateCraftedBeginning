@@ -10,11 +10,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class EnergizedNaturalAirArmorsHandler extends NaturalAirArmorsHandler {
     @Override
     public float getConsumptionMultiplier(EquipmentSlot slot) {
-        return 0.8f;
+        return super.getConsumptionMultiplier(slot) * 0.75F;
     }
 
     @Override
     public float getMultiplierForBoostingElytra() {
-        return super.getMultiplierForBoostingElytra() * 2;
+        return super.getMultiplierForBoostingElytra() * 1.5F;
     }
 }

@@ -31,6 +31,15 @@ final class EndIncinerationBlowerVisualState {
 
     private int particleCounter;
 
+    void tick(Level level, BlockPos pos, float speed, Supplier<BlowerWorkingMode> workingModeSupplier) {
+        spawnParticles(level, pos, speed);
+        if (level instanceof PonderLevel || !shouldSpawnProcessingParticles(level, pos)) {
+            return;
+        }
+
+        spawnPrimaryEffectParticles(level, pos, speed, workingModeSupplier.get());
+    }
+
     private static void spawnFanProcessingParticles(Level level, FanProcessingType processingType, AABB processingArea, EntityArea entityArea) {
         int spawnedCount = 0;
         for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, processingArea)) {
@@ -64,16 +73,7 @@ final class EndIncinerationBlowerVisualState {
     }
 
     private static boolean shouldSpawnProcessingParticles(Level level, BlockPos pos) {
-        return Math.floorMod(level.getGameTime(), PROCESSING_PARTICLE_INTERVAL_TICKS) == Math.floorMod(pos.hashCode(), PROCESSING_PARTICLE_INTERVAL_TICKS);
-    }
-
-    void tick(Level level, BlockPos pos, float speed, Supplier<BlowerWorkingMode> workingModeSupplier) {
-        spawnParticles(level, pos, speed);
-        if (level instanceof PonderLevel || !shouldSpawnProcessingParticles(level, pos)) {
-            return;
-        }
-
-        spawnPrimaryEffectParticles(level, pos, speed, workingModeSupplier.get());
+        return Math.floorMod(level.getGameTime(), PROCESSING_PARTICLE_INTERVAL_TICKS) == Mth.positiveModulo(pos.hashCode(), PROCESSING_PARTICLE_INTERVAL_TICKS);
     }
 
     private void spawnParticles(Level level, BlockPos pos, float speed) {
@@ -84,7 +84,7 @@ final class EndIncinerationBlowerVisualState {
         }
 
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
-        float maxEffectiveRatio = Math.max(1, EndIncinerationBlowerRange.getMaxRange() + 0.5f);
+        float maxEffectiveRatio = Math.max(1, EndIncinerationBlowerRange.getMaxRange() + 0.5F);
         float effectiveRatio = mediumSpeed <= 0 ? maxEffectiveRatio : Mth.clamp(absSpeed / mediumSpeed, 1, maxEffectiveRatio);
         int spawnInterval = Math.max(1, Mth.floor(40 / effectiveRatio));
         particleCounter++;
@@ -96,7 +96,7 @@ final class EndIncinerationBlowerVisualState {
         int particleCount = Math.max(1, Mth.floor(effectiveRatio));
         Vec3 center = VecHelper.getCenterOf(pos);
         for (int i = 0; i < particleCount; i++) {
-            Vec3 offset = VecHelper.offsetRandomly(center, level.random, range * 0.9f);
+            Vec3 offset = VecHelper.offsetRandomly(center, level.random, range * 0.9F);
             Vec3 direction = center.subtract(offset);
             if (direction.lengthSqr() < PARTICLE_DIRECTION_LENGTH_SQR_EPSILON) {
                 continue;

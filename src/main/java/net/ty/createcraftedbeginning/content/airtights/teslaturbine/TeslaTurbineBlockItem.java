@@ -48,5 +48,4 @@ public class TeslaTurbineBlockItem extends BlockItem {
         }
         return placementResult;
     }
-
 }

@@ -10,10 +10,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class AirVentVoxelShapes {
-    private AirVentVoxelShapes() {
-    }
-
-    private static final double THICKNESS = 0.0125;
+    static final double THICKNESS = 0.0125;
     private static final VoxelShape NORTH_FACE = Shapes.box(0, 0, 0, 1, 1, THICKNESS);
     private static final VoxelShape SOUTH_FACE = Shapes.box(0, 0, 1 - THICKNESS, 1, 1, 1);
     private static final VoxelShape WEST_FACE = Shapes.box(0, 0, 0, THICKNESS, 1, 1);
@@ -26,6 +23,17 @@ final class AirVentVoxelShapes {
         for (int openingMask = 0; openingMask < SHAPES.length; openingMask++) {
             SHAPES[openingMask] = createShape(hasOpening(openingMask, Direction.NORTH), hasOpening(openingMask, Direction.SOUTH), hasOpening(openingMask, Direction.EAST), hasOpening(openingMask, Direction.WEST), hasOpening(openingMask, Direction.UP), hasOpening(openingMask, Direction.DOWN));
         }
+    }
+
+    private AirVentVoxelShapes() {
+    }
+
+    static VoxelShape getShape(int mask) {
+        if (mask < 0 || mask >= SHAPES.length) {
+            return SHAPES[0];
+        }
+
+        return SHAPES[mask];
     }
 
     private static boolean hasOpening(int openingMask, Direction direction) {
@@ -53,12 +61,5 @@ final class AirVentVoxelShapes {
             shape = Shapes.or(shape, DOWN_FACE);
         }
         return shape.optimize();
-    }
-
-    static VoxelShape getShape(int mask) {
-        if (mask < 0 || mask >= SHAPES.length) {
-            return SHAPES[0];
-        }
-        return SHAPES[mask];
     }
 }

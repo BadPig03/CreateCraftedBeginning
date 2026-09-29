@@ -5,10 +5,10 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
-import net.ty.createcraftedbeginning.api.gas.gases.GasHolder;
-import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasBuilder;
+import net.ty.createcraftedbeginning.api.gas.GasHolder;
+import net.ty.createcraftedbeginning.api.gas.GasRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -22,10 +22,6 @@ public class CCBGasDeferredRegister extends DeferredRegister<Gas> {
 
     public CCBGasDeferredRegister(String modId) {
         super(GasRegistries.GAS_REGISTRY_KEY, modId);
-    }
-
-    public GasHolder<Gas, Gas> register(String name, GasBuilder builder) {
-        return register(name, () -> new Gas(builder));
     }
 
     @SuppressWarnings("unchecked")
@@ -44,5 +40,9 @@ public class CCBGasDeferredRegister extends DeferredRegister<Gas> {
     @Override
     protected <I extends Gas> @NotNull GasHolder<Gas, I> createHolder(ResourceKey<? extends Registry<Gas>> registryKey, ResourceLocation key) {
         return (GasHolder<Gas, I>) holderCreator.apply(ResourceKey.create(registryKey, key));
+    }
+
+    public GasHolder<Gas, Gas> register(String name, GasBuilder builder) {
+        return register(name, () -> new Gas(builder));
     }
 }

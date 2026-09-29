@@ -9,8 +9,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
-import net.ty.createcraftedbeginning.foundation.texture.CCBSpriteShifts;
+import net.ty.createcraftedbeginning.client.render.CCBSpriteShifts;
+import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -20,7 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightTankCTBehaviour extends Base {
     @Override
     public boolean connectsTo(BlockState state, BlockState other, BlockAndTintGetter level, BlockPos pos, BlockPos otherPos, Direction face) {
-        return state.getBlock() == other.getBlock() && GasConnectivityHandler.isConnected(level, pos, otherPos);
+        return state.getBlock() == other.getBlock() && GasTankMultiblockConnectivity.isConnected(level, pos, otherPos);
     }
 
     @Override
@@ -28,6 +28,7 @@ public class AirtightTankCTBehaviour extends Base {
         if (direction.getAxis() != Axis.Y) {
             return CCBSpriteShifts.AIRTIGHT_TANK;
         }
+
         return CCBSpriteShifts.AIRTIGHT_TANK_TOP;
     }
 }

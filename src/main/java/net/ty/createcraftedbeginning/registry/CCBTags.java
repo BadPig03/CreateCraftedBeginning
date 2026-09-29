@@ -18,9 +18,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
-import net.ty.createcraftedbeginning.api.gas.gases.GasTags;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasRegistries;
+import net.ty.createcraftedbeginning.api.gas.GasTags;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -115,17 +115,18 @@ public class CCBTags {
             this(namespace, path, namespace.optionalDefault, namespace.alwaysDataGenDefault);
         }
 
-        private static void init() {
-        }
-
         public boolean matches(BlockState state) {
             return state.is(tag);
+        }
+
+        private static void init() {
         }
     }
 
     public enum CCBItemTags {
         AIRTIGHT_COMPONENTS,
         AIRTIGHT_ARMOR,
+        AIRTIGHT_SHEET_ADHESIVES,
         END_CASING_RAW_MATERIALS,
         CRATES,
         WEATHER_FLARE,
@@ -174,11 +175,11 @@ public class CCBTags {
             this(namespace, path, namespace.optionalDefault, namespace.alwaysDataGenDefault);
         }
 
-        private static void init() {
-        }
-
         public boolean matches(ItemStack stack) {
             return stack.is(tag);
+        }
+
+        private static void init() {
         }
     }
 
@@ -215,7 +216,8 @@ public class CCBTags {
     }
 
     public enum CCBEntityFlags {
-        BREEZE_CHAMBER_CAPTURABLE;
+        BREEZE_CHAMBER_CAPTURABLE,
+        IMMUNE_TO_FUNGAL_INFECTION;
 
         public final TagKey<EntityType<?>> tag;
         public final boolean alwaysDataGen;
@@ -242,15 +244,15 @@ public class CCBTags {
             this(namespace, path, namespace.optionalDefault, namespace.alwaysDataGenDefault);
         }
 
-        private static void init() {
-        }
-
         public boolean matches(Entity entity) {
             return matches(entity.getType());
         }
 
         public boolean matches(EntityType<?> type) {
             return type.is(tag);
+        }
+
+        private static void init() {
         }
     }
 
@@ -262,8 +264,6 @@ public class CCBTags {
         SPORE,
         SCULK,
         ENERGIZED,
-        PRESSURIZED,
-        PRESSURIZED_ENERGIZED,
         CREATIVE;
 
         public final TagKey<Gas> tag;

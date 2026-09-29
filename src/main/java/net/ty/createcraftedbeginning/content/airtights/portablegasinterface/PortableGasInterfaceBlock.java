@@ -44,7 +44,13 @@ public class PortableGasInterfaceBlock extends WrenchableDirectionalBlock implem
 
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
-        return getBlockEntityOptional(level, pos).map(blockEntity -> blockEntity.isConnected() ? 15 : 0).orElse(0);
+        return getBlockEntityOptional(level, pos).map(blockEntity -> {
+            if (!blockEntity.isConnected()) {
+                return 0;
+            }
+
+            return 15;
+        }).orElse(0);
     }
 
     @Override

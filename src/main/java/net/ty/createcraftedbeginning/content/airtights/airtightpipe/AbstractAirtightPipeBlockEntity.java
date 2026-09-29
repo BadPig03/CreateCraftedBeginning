@@ -7,8 +7,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasTransporter;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.GasTransportNode;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -16,7 +16,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public abstract class AbstractAirtightPipeBlockEntity extends SmartBlockEntity implements IGasTransporter {
+public abstract class AbstractAirtightPipeBlockEntity extends SmartBlockEntity implements GasTransportNode {
     private CCBAdvancementBehaviour advancementBehaviour;
 
     protected AbstractAirtightPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -27,7 +27,7 @@ public abstract class AbstractAirtightPipeBlockEntity extends SmartBlockEntity i
     public final void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         addPipeBehaviours(behaviours);
 
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.GASEOUS_VARIATIONS, CCBAdvancements.MINTY_FRESH);
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.GASEOUS_VARIATIONS);
         behaviours.add(advancementBehaviour);
         behaviours.add(createTransportBehaviour());
     }

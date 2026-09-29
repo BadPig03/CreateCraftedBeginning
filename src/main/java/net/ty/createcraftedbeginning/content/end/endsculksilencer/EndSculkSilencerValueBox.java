@@ -24,9 +24,9 @@ class EndSculkSilencerValueBox extends Sided {
     }
 
     @Override
-    public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack ms) {
-        super.rotate(level, pos, state, ms);
-        TransformStack.of(ms).rotateZDegrees(-AngleHelper.horizontalAngle(Direction.UP));
+    public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack poseStack) {
+        super.rotate(level, pos, state, poseStack);
+        TransformStack.of(poseStack).rotateZDegrees(-AngleHelper.horizontalAngle(Direction.UP));
     }
 
     @Override

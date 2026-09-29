@@ -3,17 +3,17 @@ package net.ty.createcraftedbeginning.recipe;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
-import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
+import net.ty.createcraftedbeginning.recipe.gas.processing.GasProcessingRecipeParams;
+import net.ty.createcraftedbeginning.recipe.gas.processing.StandardGasProcessingRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class EnergizationRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> {
-    EnergizationRecipe(ProcessingWithGasRecipeParams params) {
+public class EnergizationRecipe extends StandardGasProcessingRecipe<SingleRecipeInput> {
+    EnergizationRecipe(GasProcessingRecipeParams params) {
         super(CCBRecipeTypes.ENERGIZATION, params);
     }
 
@@ -42,17 +42,17 @@ public class EnergizationRecipe extends StandardProcessingWithGasRecipe<SingleRe
         return 1;
     }
 
-    public SizedGasIngredient getGasIngredient() {
-        if (gasIngredients.isEmpty()) {
-            throw new IllegalStateException("Energization Recipe has no gas ingredient!");
+    public GasRecipeRequirement getGasRequirement() {
+        if (getGasRequirements().isEmpty()) {
+            throw new IllegalStateException("Energization recipe has no gas requirement.");
         }
 
-        return gasIngredients.getFirst();
+        return getGasRequirements().getFirst();
     }
 
     public GasStack getGasResult() {
         if (gasResults.isEmpty()) {
-            throw new IllegalStateException("Energization Recipe has no gas result!");
+            throw new IllegalStateException("Energization recipe has no gas result.");
         }
 
         return gasResults.getFirst();

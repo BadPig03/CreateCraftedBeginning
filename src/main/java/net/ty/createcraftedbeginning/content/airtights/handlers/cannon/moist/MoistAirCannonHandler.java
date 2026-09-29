@@ -23,7 +23,7 @@ import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContex
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.CannonAnimationType;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.CannonModelType;
-import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonUtils;
+import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonBlast;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -35,8 +35,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class MoistAirCannonHandler implements AirtightCannonHandler, AirtightCannonVisualHandler {
-    private static final float DEFAULT_RADIUS = 1.2f;
-    private static final int WATER_SENSITIVE_BONUS_DAMAGE = 5;
+    private static final int WATER_SENSITIVE_BONUS_DAMAGE = 4;
 
     @Override
     public ItemStack getRenderIcon(Level level) {
@@ -44,7 +43,7 @@ public class MoistAirCannonHandler implements AirtightCannonHandler, AirtightCan
     }
 
     @Override
-    public void renderTrailParticles(Level level, Vec3 pos) {
+    public void renderTrailParticles(Level level, Vec3 pos, Vec3 velocity) {
         level.addParticle(ParticleTypes.DOLPHIN, pos.x, pos.y, pos.z, 0, 0, 0);
         RandomSource random = level.getRandom();
         for (int i = 0; i < random.nextInt(2, 4); i++) {
@@ -67,7 +66,7 @@ public class MoistAirCannonHandler implements AirtightCannonHandler, AirtightCan
 
     @Override
     public CannonAnimationType getAnimationType() {
-        return CannonAnimationType.CORE_Y;
+        return CannonAnimationType.ONLY_CORE;
     }
 
     @Override
@@ -77,23 +76,11 @@ public class MoistAirCannonHandler implements AirtightCannonHandler, AirtightCan
 
     @Override
     public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
-        float radius = DEFAULT_RADIUS * context.effectMultiplier();
-        DamageSource explosionDamageSource = CCBDamageTypes.source(DamageTypes.DROWN, level, context.projectile());
-        level.explode(context.projectile(), explosionDamageSource, AirtightCannonUtils.createDamageCalculator(context), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
-
-        List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, radius, context);
-        float waterSensitiveBonusDamage = WATER_SENSITIVE_BONUS_DAMAGE * context.effectMultiplier();
-        for (LivingEntity entity : entities) {
-            if (entity.isSensitiveToWater()) {
-                AirtightCannonUtils.applyBonusDamage(entity, explosionDamageSource, waterSensitiveBonusDamage);
-            }
-            if (entity.isOnFire()) {
-                entity.extinguishFire();
-            }
-            if (entity instanceof WaterAnimal waterAnimal) {
-                waterAnimal.setAirSupply(300);
-            }
-        }
+        float multiplier = context.effectMultiplier();
+        DamageSource explosionDamageSource = CCBDamageTypes.source(DamageTypes.DROWN, level, context.projectile(), context.owner());
+        level.explode(context.projectile(), explosionDamageSource, AirtightCannonBlast.createDamageCalculator(context), pos.x(), pos.y(), pos.z(), multiplier, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
+        List<LivingEntity> entities = AirtightCannonBlast.getNearbyEntities(level, pos, multiplier, context);
+        applyAdditionalEffects(level, entities, explosionDamageSource, context);
     }
 
     @Override
@@ -104,5 +91,23 @@ public class MoistAirCannonHandler implements AirtightCannonHandler, AirtightCan
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.moist_air").style(ChatFormatting.DARK_GREEN).component());
+    }
+
+    @Override
+    public void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
+        float bonusDamage = WATER_SENSITIVE_BONUS_DAMAGE * context.effectMultiplier();
+        for (LivingEntity entity : entities) {
+            if (entity.isSensitiveToWater()) {
+                AirtightCannonBlast.applyBonusDamage(entity, explosionDamageSource, bonusDamage);
+            }
+            if (entity.isOnFire()) {
+                entity.extinguishFire();
+            }
+            if (!(entity instanceof WaterAnimal waterAnimal)) {
+                continue;
+            }
+
+            waterAnimal.setAirSupply(waterAnimal.getMaxAirSupply());
+        }
     }
 }

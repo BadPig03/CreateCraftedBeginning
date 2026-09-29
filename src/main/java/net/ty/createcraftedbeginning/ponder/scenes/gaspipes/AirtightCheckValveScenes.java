@@ -1,9 +1,6 @@
 package net.ty.createcraftedbeginning.ponder.scenes.gaspipes;
 
-import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
-import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
-import com.simibubi.create.content.kinetics.motor.CreativeMotorBlock;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
@@ -26,16 +23,14 @@ public class AirtightCheckValveScenes {
     public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("airtight_check_valve", "One-Way Transport with Airtight Check Valves");
+        scene.title("airtight_check_valve", "Controlling Gas Flow using Airtight Check Valves");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 
         BlockPos encasedPipePos = util.grid().at(5, 1, 5);
         BlockPos secondPipePos = encasedPipePos.north();
-        BlockPos pumpPos = secondPipePos.north();
-        BlockPos cogPos = pumpPos.east();
-        BlockPos motorPos = cogPos.south();
-        BlockPos firstPipePos = pumpPos.north();
+        BlockPos middlePipePos = secondPipePos.north();
+        BlockPos firstPipePos = middlePipePos.north();
         BlockPos firstTankPos = firstPipePos.north();
         BlockPos thirdPipePos = encasedPipePos.west();
         BlockPos valvePos = thirdPipePos.west();
@@ -44,27 +39,29 @@ public class AirtightCheckValveScenes {
 
         Selection firstTankSelection = util.select().fromTo(firstTankPos, firstTankPos.above());
         Selection secondTankSelection = util.select().fromTo(secondTankPos, secondTankPos.above());
-        Selection pumpPipeSelection = util.select().fromTo(firstPipePos, secondPipePos);
+        Selection northPipeSelection = util.select().fromTo(firstPipePos, secondPipePos);
         Selection valvePipeSelection = util.select().fromTo(thirdPipePos, fourthPipePos);
         Selection encasedSelection = util.select().position(encasedPipePos);
-        Selection motorSelection = util.select().fromTo(motorPos, cogPos);
 
         Vec3 valveVec = util.vector().centerOf(valvePos);
-        Vec3 fourthPipeVec = util.vector().centerOf(fourthPipePos);
+        Vec3 encasedVec = util.vector().centerOf(encasedPipePos);
 
-        AABB valveReverseArea = new AABB(fourthPipeVec, fourthPipeVec);
+        AABB connectionArea = new AABB(valveVec, valveVec).inflate(0.3125);
+        AABB blockedArea = new AABB(encasedVec, encasedVec);
 
-        Object valveReverseObject = new Object();
+        Object outputConnectionObject = new Object();
+        Object inputConnectionObject = new Object();
+        Object blockedObject = new Object();
+        Object reversedOutputConnectionObject = new Object();
+        Object reversedInputConnectionObject = new Object();
 
         ItemStack wrenchItem = new ItemStack(AllItems.WRENCH.asItem());
-
-        float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
 
         scene.idle(20);
         scene.world().showSection(firstTankSelection, Direction.SOUTH);
 
         scene.idle(3);
-        scene.world().showSection(pumpPipeSelection, Direction.SOUTH);
+        scene.world().showSection(northPipeSelection, Direction.SOUTH);
 
         scene.idle(3);
         scene.world().showSection(encasedSelection, Direction.DOWN);
@@ -75,36 +72,46 @@ public class AirtightCheckValveScenes {
         scene.idle(3);
         scene.world().showSection(secondTankSelection, Direction.EAST);
 
-        scene.idle(3);
-        scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.NORTH), false);
-        scene.world().showSection(motorSelection, Direction.WEST);
+        scene.idle(20);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outputConnectionObject, connectionArea, 3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, inputConnectionObject, connectionArea, 3);
 
-        scene.idle(15);
-        scene.world().setKineticSpeed(motorSelection, mediumSpeed);
-        scene.world().setKineticSpeed(pumpPipeSelection, -mediumSpeed);
-        scene.effects().rotationSpeedIndicator(pumpPos);
-        scene.overlay().showText(60).text("Airtight Check Valves allow gas flowing in a single direction only").colored(PonderPalette.GREEN).pointAt(valveVec).placeNearTarget().attachKeyFrame();
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outputConnectionObject, connectionArea.move(0.5, 0, 0), 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, inputConnectionObject, connectionArea.move(-0.5, 0, 0), 60);
+        scene.overlay().showText(60).text("Airtight Check Valves only allow gas to flow from input to output").pointAt(valveVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, valveReverseObject, valveReverseArea, 3);
+        scene.overlay().showText(60).text("Check Valves do not drive gas; a pressure difference is still required").colored(PonderPalette.RED).pointAt(valveVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(74);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, blockedObject, blockedArea, 3);
 
         scene.idle(3);
-        valveReverseArea = valveReverseArea.inflate(0.5, 0.3125, 0.3125);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, valveReverseObject, valveReverseArea, 3);
+        blockedArea = blockedArea.inflate(0.5, 0.3125, 0.3125);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, blockedObject, blockedArea, 3);
 
         scene.idle(3);
-        valveReverseArea = valveReverseArea.expandTowards(2, 0, 0);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, valveReverseObject, valveReverseArea, 60);
-        scene.overlay().showText(60).text("Gas attempting to flow from the opposite direction is blocked").colored(PonderPalette.RED).pointAt(valveVec).placeNearTarget().attachKeyFrame();
+        blockedArea = blockedArea.expandTowards(-1.5, 0, 0);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, blockedObject, blockedArea, 60);
+        scene.overlay().showText(60).text("Pressure on the output side cannot force gas back through the valve").colored(PonderPalette.RED).pointAt(valveVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-		scene.overlay().showControls(util.vector().blockSurface(valvePos, Direction.UP).subtract(0, 0.125, 0), Pointing.DOWN, 67).rightClick().withItem(wrenchItem.copy());
-        
-		scene.idle(7);
-		scene.world().modifyBlock(valvePos, s -> s.setValue(AirtightCheckValveBlock.INVERTED, true), false);
-        scene.overlay().showText(60).text("A Wrench can be used to reverse the direction").colored(PonderPalette.GREEN).pointAt(valveVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, reversedOutputConnectionObject, connectionArea, 3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, reversedInputConnectionObject, connectionArea, 3);
 
-        scene.idle(60);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, reversedOutputConnectionObject, connectionArea.move(0.5, 0, 0), 7);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, reversedInputConnectionObject, connectionArea.move(-0.5, 0, 0), 7);
+        scene.overlay().showText(60).text("Use a Wrench to swap the input and output sides").colored(PonderPalette.BLUE).pointAt(valveVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showControls(util.vector().topOf(valvePos), Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
+
+        scene.idle(7);
+        scene.world().modifyBlock(valvePos, state -> state.setValue(AirtightCheckValveBlock.INVERTED, false), false);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, reversedOutputConnectionObject, connectionArea.move(-0.5, 0, 0), 53);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, reversedInputConnectionObject, connectionArea.move(0.5, 0, 0), 53);
+
+        scene.idle(53);
         scene.markAsFinished();
     }
 }

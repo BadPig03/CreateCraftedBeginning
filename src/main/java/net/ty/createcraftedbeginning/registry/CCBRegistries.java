@@ -4,9 +4,9 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
-import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasRegistries;
+import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageType;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

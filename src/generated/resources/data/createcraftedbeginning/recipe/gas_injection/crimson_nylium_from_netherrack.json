@@ -1,13 +1,16 @@
 {
   "type": "createcraftedbeginning:gas_injection",
+  "gas_ingredients": [
+    {
+      "amount": 2000,
+      "ingredient": {
+        "gas": "createcraftedbeginning:spore_air"
+      }
+    }
+  ],
   "ingredients": [
     {
       "item": "minecraft:netherrack"
-    },
-    {
-      "type": "createcraftedbeginning:single",
-      "amount": 500,
-      "gas": "createcraftedbeginning:spore_air"
     }
   ],
   "results": [

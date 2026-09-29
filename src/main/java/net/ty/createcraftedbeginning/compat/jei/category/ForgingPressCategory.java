@@ -7,7 +7,6 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
-import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -19,13 +18,12 @@ import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.crafting.SmithingTrimRecipe;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
-import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightForgingPress;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
+import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightForgingPress;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -51,54 +49,6 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
 
     public ForgingPressCategory(Info<ForgingPressRecipe> info) {
         super(info);
-    }
-
-    private static int getInputX(int inputIndex) {
-        return 42 - inputIndex * 19;
-    }
-
-    private static int getOutputX(int size) {
-        return 144 - (size == 1 ? 0 : 10);
-    }
-
-    private static Optional<IRecipeSlotDrawable> findSlot(List<IRecipeSlotDrawable> slots, String name) {
-        return slots.stream().filter(slot -> slot.getSlotName().filter(name::equals).isPresent()).findFirst();
-    }
-
-    private static List<ItemStack> getSmithingLookupOutputs(ForgingPressRecipe recipe, SmithingRecipe smithingRecipe, Level level) {
-        NonNullList<Ingredient> ingredients = recipe.getIngredients();
-        if (ingredients.size() <= ADDITION_INDEX) {
-            return List.of();
-        }
-
-        List<ItemStack> templates = Arrays.asList(ingredients.get(TEMPLATE_INDEX).getItems());
-        if (templates.isEmpty()) {
-            templates = List.of(ItemStack.EMPTY);
-        }
-
-        List<ItemStack> bases = Arrays.asList(ingredients.get(BASE_INDEX).getItems());
-        if (bases.isEmpty()) {
-            bases = List.of(ItemStack.EMPTY);
-        }
-
-        ItemStack[] additions = ingredients.get(ADDITION_INDEX).getItems();
-        ItemStack addition = additions.length == 0 ? ItemStack.EMPTY : additions[0];
-        List<ItemStack> outputs = new ArrayList<>();
-        for (ItemStack template : templates) {
-            for (ItemStack base : bases) {
-                SmithingRecipeInput smithingInput = new SmithingRecipeInput(template.copyWithCount(1), base.copyWithCount(1), addition.copyWithCount(1));
-                ItemStack smithingResult = smithingRecipe.assemble(smithingInput, level.registryAccess());
-                if (smithingResult.isEmpty()) {
-                    continue;
-                }
-
-                ItemStack lookupResult = smithingResult.copyWithCount(1);
-                if (outputs.stream().noneMatch(existing -> ItemStack.isSameItemSameComponents(existing, lookupResult))) {
-                    outputs.add(lookupResult);
-                }
-            }
-        }
-        return outputs;
     }
 
     @Override
@@ -143,6 +93,7 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
             if (displayedBase.isEmpty()) {
                 return;
             }
+
             base = displayedBase.get().copyWithCount(1);
         }
 
@@ -162,8 +113,8 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
     @Override
     protected void draw(ForgingPressRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         NonNullList<SizedFluidIngredient> fluidIngredients = recipe.getFluidIngredients();
-        NonNullList<SizedGasIngredient> gasIngredients = recipe.getGasIngredients();
-        int inputCount = recipe.getIngredients().size() + fluidIngredients.size() + gasIngredients.size();
+        List<GasRecipeRequirement> gasRequirements = recipe.getGasRequirements();
+        int inputCount = recipe.getIngredients().size() + fluidIngredients.size() + gasRequirements.size();
         if (inputCount > 1) {
             CCBJEITextures.JEI_PRESS_HEAD_TOOL.render(graphics, 24, 43);
         }
@@ -179,7 +130,7 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
     protected void setRecipe(IRecipeLayoutBuilder builder, ForgingPressRecipe recipe, IFocusGroup focuses) {
         NonNullList<Ingredient> ingredients = recipe.getIngredients();
         NonNullList<SizedFluidIngredient> fluidIngredients = recipe.getFluidIngredients();
-        NonNullList<SizedGasIngredient> gasIngredients = recipe.getGasIngredients();
+        List<GasRecipeRequirement> gasRequirements = recipe.getGasRequirements();
         List<ProcessingOutput> results = recipe.getRollableResults();
         if (ingredients.isEmpty()) {
             return;
@@ -199,26 +150,84 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
             addFluidSlot(builder, getInputX(inputIndex), 6, fluidIngredients.getFirst());
             inputIndex++;
         }
-        if (!gasIngredients.isEmpty()) {
-            SizedGasIngredient gasIngredient = gasIngredients.getFirst();
-            List<GasStack> gasStacks = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
-            builder.addSlot(RecipeIngredientRole.INPUT, getInputX(inputIndex), 6).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
+        if (!gasRequirements.isEmpty()) {
+            GasRecipeRequirement gasRequirement = gasRequirements.getFirst();
+            List<GasStack> gasStacks = Arrays.stream(gasRequirement.getGases()).map(GasStack::copy).toList();
+            builder.addSlot(RecipeIngredientRole.INPUT, getInputX(inputIndex), 6).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> addGasRequirementTooltip(tooltip, gasRequirement));
         }
         SmithingRecipe smithingRecipe = recipe.getSmithingRecipe();
         if (smithingRecipe != null) {
             IRecipeSlotBuilder outputSlot = builder.addSlot(RecipeIngredientRole.OUTPUT, getOutputX(1), 82).setSlotName(SLOT_OUTPUT).setBackground(BASIC_SLOT, -1, -1);
             Level level = Minecraft.getInstance().level;
-            if (level != null) {
-                List<ItemStack> lookupOutputs = getSmithingLookupOutputs(recipe, smithingRecipe, level);
-                if (!lookupOutputs.isEmpty()) {
-                    outputSlot.addItemStacks(lookupOutputs);
-                }
+            if (level == null) {
+                return;
             }
+
+            List<ItemStack> lookupOutputs = getSmithingLookupOutputs(recipe, smithingRecipe, level);
+            if (lookupOutputs.isEmpty()) {
+                return;
+            }
+
+            outputSlot.addItemStacks(lookupOutputs);
             return;
         }
 
         for (ProcessingOutput output : results) {
             builder.addSlot(RecipeIngredientRole.OUTPUT, getOutputX(results.size()), 82).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(addStochasticTooltip(output));
         }
+    }
+
+    private static int getInputX(int inputIndex) {
+        return 42 - inputIndex * 19;
+    }
+
+    private static int getOutputX(int size) {
+        if (size == 1) {
+            return 144;
+        }
+
+        return 134;
+    }
+
+    private static Optional<IRecipeSlotDrawable> findSlot(List<IRecipeSlotDrawable> slots, String name) {
+        return slots.stream().filter(slot -> slot.getSlotName().filter(name::equals).isPresent()).findFirst();
+    }
+
+    private static List<ItemStack> getSmithingLookupOutputs(ForgingPressRecipe recipe, SmithingRecipe smithingRecipe, Level level) {
+        NonNullList<Ingredient> ingredients = recipe.getIngredients();
+        if (ingredients.size() <= ADDITION_INDEX) {
+            return List.of();
+        }
+
+        List<ItemStack> templates = Arrays.asList(ingredients.get(TEMPLATE_INDEX).getItems());
+        if (templates.isEmpty()) {
+            templates = List.of(ItemStack.EMPTY);
+        }
+
+        List<ItemStack> bases = Arrays.asList(ingredients.get(BASE_INDEX).getItems());
+        if (bases.isEmpty()) {
+            bases = List.of(ItemStack.EMPTY);
+        }
+
+        ItemStack[] additions = ingredients.get(ADDITION_INDEX).getItems();
+        ItemStack addition = additions.length == 0 ? ItemStack.EMPTY : additions[0];
+        List<ItemStack> outputs = new ArrayList<>();
+        for (ItemStack template : templates) {
+            for (ItemStack base : bases) {
+                SmithingRecipeInput smithingInput = new SmithingRecipeInput(template.copyWithCount(1), base.copyWithCount(1), addition.copyWithCount(1));
+                ItemStack smithingResult = smithingRecipe.assemble(smithingInput, level.registryAccess());
+                if (smithingResult.isEmpty()) {
+                    continue;
+                }
+
+                ItemStack lookupResult = smithingResult.copyWithCount(1);
+                if (outputs.stream().anyMatch(existing -> ItemStack.isSameItemSameComponents(existing, lookupResult))) {
+                    continue;
+                }
+
+                outputs.add(lookupResult);
+            }
+        }
+        return outputs;
     }
 }

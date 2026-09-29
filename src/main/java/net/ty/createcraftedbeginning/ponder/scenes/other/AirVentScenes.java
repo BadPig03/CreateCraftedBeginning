@@ -31,7 +31,7 @@ public class AirVentScenes {
     public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
-        scene.title("air_vent", "Placing Air Vents");
+        scene.title("air_vent", "Using Air Vents");
         scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
 
@@ -58,70 +58,73 @@ public class AirVentScenes {
         scene.world().showSection(centerSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Placed Air Vents automatically connect to adjacent vents").pointAt(centerVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Air Vents automatically connect to adjacent Air Vents").pointAt(centerVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(30);
+        scene.idle(26);
         placeAirVent(scene, centerAbovePos);
         scene.world().showSection(centerAboveSelection, Direction.DOWN);
 
-        scene.idle(5);
+        scene.idle(8);
         placeAirVent(scene, centerAbove2Pos);
         scene.world().showSection(centerAbove2Selection, Direction.DOWN);
 
-        scene.idle(5);
+        scene.idle(8);
         scene.effects().indicateSuccess(centerPos);
         scene.effects().indicateSuccess(centerAbovePos);
 
-        scene.idle(5);
+        scene.idle(8);
         scene.effects().indicateSuccess(centerAbovePos);
         scene.effects().indicateSuccess(centerAbove2Pos);
 
-        scene.idle(35);
-        scene.overlay().showControls(eastControlVec, Pointing.RIGHT, 67).rightClick().withItem(wrenchItem.copy());
+        scene.idle(25);
+        scene.overlay().showControls(eastControlVec, Pointing.RIGHT, 65).rightClick().withItem(wrenchItem.copy());
 
-        scene.idle(7);
-        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, be -> be.setLouverState(Direction.NORTH, VentState.CLOSED));
-        scene.overlay().showText(60).text("Use a Wrench to install Louvered Vents on Air Vents").colored(PonderPalette.BLUE).pointAt(centerVec).placeNearTarget().attachKeyFrame();
-
-        scene.idle(80);
-        scene.overlay().showControls(eastControlVec, Pointing.RIGHT, 67).rightClick();
-
-        scene.idle(7);
-        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, be -> be.setLouverState(Direction.NORTH, VentState.OPENED));
-        scene.overlay().showText(60).text("Right-click with empty hand to open Louvered Vents").colored(PonderPalette.BLUE).pointAt(centerVec).placeNearTarget().attachKeyFrame();
+        scene.idle(5);
+        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, vent -> vent.setLouverState(Direction.NORTH, VentState.CLOSED));
+        scene.overlay().showText(60).text("Using a Wrench, louvers can be added to exposed sides").colored(PonderPalette.BLUE).pointAt(centerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
+        scene.overlay().showText(60).text("Closed louvers block entities").colored(PonderPalette.RED).pointAt(centerVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(75);
+        scene.overlay().showControls(eastControlVec, Pointing.RIGHT, 65).rightClick();
+
+        scene.idle(5);
+        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, vent -> vent.setLouverState(Direction.NORTH, VentState.OPENED));
+        scene.overlay().showText(60).text("Right-click a louver with an empty hand to open it").colored(PonderPalette.BLUE).pointAt(centerVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(60);
         ElementLink<ParrotElement> parrot = scene.special().createBirb(util.vector().blockSurface(parrotPos, Direction.DOWN), FlappyPose::new);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Only open Louvered Vents permit passage").colored(PonderPalette.GREEN).pointAt(centerVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Open louvers allow entities to pass through").colored(PonderPalette.GREEN).pointAt(centerVec).placeNearTarget().attachKeyFrame();
         scene.world().showSection(fanSelection, Direction.SOUTH);
 
-        scene.idle(20);
+        scene.idle(15);
         scene.world().setKineticSpeed(fanSelection, mediumSpeed);
         scene.effects().rotationSpeedIndicator(fanPos);
         scene.special().rotateParrot(parrot, 0, 240, 0, 40);
         scene.special().moveParrot(parrot, util.vector().of(0, 0, 2), 40);
 
-        scene.idle(60);
+        scene.idle(55);
         scene.rotateCameraY(-180);
 
         scene.idle(30);
         scene.overlay().showControls(westControlVec, Pointing.RIGHT, 27).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);
-        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, be -> be.setLouverState(Direction.SOUTH, VentState.CLOSED));
+        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, vent -> vent.setLouverState(Direction.SOUTH, VentState.CLOSED));
 
         scene.idle(27);
         scene.overlay().showControls(westControlVec, Pointing.RIGHT, 27).rightClick();
 
         scene.idle(7);
-        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, be -> be.setLouverState(Direction.SOUTH, VentState.OPENED));
+        scene.world().modifyBlockEntity(centerPos, AirVentBlockEntity.class, vent -> vent.setLouverState(Direction.SOUTH, VentState.OPENED));
         scene.special().rotateParrot(parrot, 0, 360, 0, 60);
         scene.special().moveParrot(parrot, util.vector().of(0, 0, 3), 60);
 
         scene.idle(60);
-        scene.overlay().showText(60).text("Players can crawl through connected Air Vents").attachKeyFrame();
+        scene.overlay().showText(60).text("Players can also crawl through connected Air Vents").colored(PonderPalette.BLUE).attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

@@ -21,8 +21,8 @@ public class BubbleWithoutWaterParticle extends TextureSheetParticle {
 
     private BubbleWithoutWaterParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
         super(level, x, y, z);
-        setSize(0.02f, 0.02f);
-        quadSize *= random.nextFloat() * 0.6f + 0.2f;
+        setSize(0.02F, 0.02F);
+        quadSize *= random.nextFloat() * 0.6F + 0.2F;
         xd = xSpeed * 0.2 + (random.nextDouble() * 2 - 1) * 0.02;
         yd = ySpeed * 0.2 + (random.nextDouble() * 2 - 1) * 0.02;
         zd = zSpeed * 0.2 + (random.nextDouble() * 2 - 1) * 0.02;

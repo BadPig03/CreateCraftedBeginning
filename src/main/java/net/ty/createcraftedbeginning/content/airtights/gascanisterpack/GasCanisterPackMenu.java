@@ -14,7 +14,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides.GasCanisterPackType;
@@ -65,7 +65,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
 
     @Override
     protected void initAndReadInventory(ItemStack pack) {
-        if (!(pack.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+        if (!(pack.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
             return;
         }
 
@@ -78,15 +78,15 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     @Override
     protected void addSlots() {
         addPlayerSlots(PLAYER_SLOT_X, PLAYER_SLOT_Y);
-        addSlot(SlotType.getSlot(packInventory, I_SLOT_INDEX, I_SLOT_X));
-        addSlot(SlotType.getSlot(packInventory, II_SLOT_INDEX, II_SLOT_X));
-        addSlot(SlotType.getSlot(packInventory, III_SLOT_INDEX, III_SLOT_X));
-        addSlot(SlotType.getSlot(packInventory, IV_SLOT_INDEX, IV_SLOT_X));
+        addSlot(SlotType.createCanisterSlot(packInventory, I_SLOT_INDEX, I_SLOT_X));
+        addSlot(SlotType.createCanisterSlot(packInventory, II_SLOT_INDEX, II_SLOT_X));
+        addSlot(SlotType.createCanisterSlot(packInventory, III_SLOT_INDEX, III_SLOT_X));
+        addSlot(SlotType.createCanisterSlot(packInventory, IV_SLOT_INDEX, IV_SLOT_X));
     }
 
     @Override
     protected void saveData(ItemStack pack) {
-        if (!(pack.getCapability(GasHandler.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+        if (!(pack.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
             return;
         }
 
@@ -164,7 +164,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     }
 
     public void updateCanister(int slotIndex, ItemStack canister) {
-        if (slotIndex < 0 || slotIndex >= MAX_COUNT || !(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents)) {
+        if (slotIndex < 0 || slotIndex >= MAX_COUNT || !(canister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents)) {
             return;
         }
 
@@ -201,11 +201,11 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
             this.index = index;
         }
 
-        private static SlotItemHandler getSlot(IItemHandler itemHandler, int slotIndex, int x) {
+        private static SlotItemHandler createCanisterSlot(IItemHandler itemHandler, int slotIndex, int x) {
             return new SlotItemHandler(itemHandler, slotIndex, x, SLOT_Y) {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
-                    return stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents;
+                    return stack.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents;
                 }
 
                 @Override

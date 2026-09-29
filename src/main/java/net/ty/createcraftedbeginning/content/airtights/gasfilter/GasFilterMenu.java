@@ -12,11 +12,11 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
+import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
+import net.ty.createcraftedbeginning.api.canister.GasCanisterContainer;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils.GasFilterData;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilters.GasFilterData;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 import org.jetbrains.annotations.Contract;
@@ -43,11 +43,6 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
     private GasFilterMenu(MenuType<?> type, int id, Inventory inv, ItemStack stack) {
         super(type, id, inv, stack);
-    }
-
-    @Contract("_, _, _ -> new")
-    static GasFilterMenu create(int id, Inventory inv, ItemStack filter) {
-        return new GasFilterMenu(CCBMenuTypes.GAS_FILTER_MENU.get(), id, inv, filter);
     }
 
     @Override
@@ -77,7 +72,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
     protected void saveData(ItemStack filter) {
         List<GasStack> configuredGases = new ArrayList<>(filterInventory.getSlots());
         for (int slotIndex = 0; slotIndex < filterInventory.getSlots(); slotIndex++) {
-            GasStack configuredGas = GasVirtualUtils.getGasType(filterInventory.getStackInSlot(slotIndex));
+            GasStack configuredGas = VirtualGasItems.readGasSample(filterInventory.getStackInSlot(slotIndex));
             if (configuredGas.isEmpty()) {
                 continue;
             }
@@ -177,7 +172,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
             return;
         }
 
-        ItemStack virtualItem = GasVirtualUtils.createVirtualItem(normalizedGas);
+        ItemStack virtualItem = VirtualGasItems.createVirtualItem(normalizedGas);
         if (virtualItem.isEmpty()) {
             return;
         }
@@ -186,18 +181,23 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
         getSlot(slotIndex + PLAYER_INVENTORY_SLOTS).setChanged();
     }
 
+    @Contract("_, _, _ -> new")
+    static GasFilterMenu create(int id, Inventory inv, ItemStack filter) {
+        return new GasFilterMenu(CCBMenuTypes.GAS_FILTER_MENU.get(), id, inv, filter);
+    }
+
     private void tryToInsert(ItemStack canisterStack) {
         if (!CanisterContainerSuppliers.isValidCanisterContainer(canisterStack)) {
             return;
         }
 
-        IGasCanisterContainer canisterContainer = canisterStack.getCapability(GasHandler.ITEM);
+        GasCanisterContainer canisterContainer = canisterStack.getCapability(CanisterCapabilities.ITEM);
         if (canisterContainer == null) {
             return;
         }
 
-        for (ItemStack virtualItem : canisterContainer.getVirtualItems()) {
-            GasStack gasType = GasVirtualUtils.getGasType(virtualItem);
+        for (ItemStack virtualItem : canisterContainer.createVirtualItems()) {
+            GasStack gasType = VirtualGasItems.readGasSample(virtualItem);
             if (gasType.isEmpty()) {
                 continue;
             }
@@ -236,7 +236,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
                 continue;
             }
 
-            GasStack existingGas = GasVirtualUtils.getGasType(filterInventory.getStackInSlot(slotIndex));
+            GasStack existingGas = VirtualGasItems.readGasSample(filterInventory.getStackInSlot(slotIndex));
             if (existingGas.isEmpty()) {
                 continue;
             }

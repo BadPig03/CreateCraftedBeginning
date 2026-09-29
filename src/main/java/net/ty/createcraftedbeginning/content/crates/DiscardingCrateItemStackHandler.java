@@ -21,8 +21,8 @@ class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
 
     DiscardingCrateItemStackHandler(IntSupplier maxCountSupplier, Predicate<ItemStack> itemValidator, Runnable contentsChangedListener, Predicate<ItemStack> trackedDiscardPredicate, Runnable trackedDiscardListener) {
         super(maxCountSupplier, itemValidator, contentsChangedListener);
-        trackedItemPredicate = Objects.requireNonNull(trackedDiscardPredicate);
-        this.trackedDiscardListener = Objects.requireNonNull(trackedDiscardListener);
+        trackedItemPredicate = Objects.requireNonNull(trackedDiscardPredicate, "Parameter 'trackedDiscardPredicate' must not be null.");
+        this.trackedDiscardListener = Objects.requireNonNull(trackedDiscardListener, "Parameter 'trackedDiscardListener' must not be null.");
     }
 
     @Override
@@ -36,6 +36,7 @@ class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
         if (slot == DISCARD_SLOT) {
             return ItemStack.EMPTY;
         }
+
         return super.getStackInSlot(STORAGE_SLOT);
     }
 
@@ -70,6 +71,7 @@ class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
         if (slot == DISCARD_SLOT) {
             return ItemStack.EMPTY;
         }
+
         return super.extractItem(STORAGE_SLOT, amount, simulate);
     }
 
@@ -79,6 +81,7 @@ class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
         if (slot == DISCARD_SLOT) {
             return VIRTUAL_DISCARD_SLOT_LIMIT;
         }
+
         return super.getSlotLimit(STORAGE_SLOT);
     }
 
@@ -94,6 +97,7 @@ class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
         if (slot == DISCARD_SLOT) {
             return ItemStack.EMPTY;
         }
+
         return super.getStoredItem(STORAGE_SLOT);
     }
 
@@ -109,16 +113,17 @@ class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
     }
 
     @Override
-    int getCountInSlot(int slot) {
+    public int getCountInSlot(int slot) {
         validateSlotIndex(slot);
         if (slot == DISCARD_SLOT) {
             return 0;
         }
+
         return super.getCountInSlot(STORAGE_SLOT);
     }
 
     @Override
-    void setStoredItems(int slot, ItemStack stack, int newCount) {
+    public void setStoredItems(int slot, ItemStack stack, int newCount) {
         validateSlotIndex(slot);
         if (slot == DISCARD_SLOT) {
             if (stack.isEmpty() || newCount <= 0) {
@@ -138,6 +143,6 @@ class DiscardingCrateItemStackHandler extends CrateItemStackHandler {
             return;
         }
 
-        throw new RuntimeException("Slot " + slot + " not in valid range - [0," + SLOT_COUNT + ')');
+        throw new RuntimeException("Slot index must be in [0, " + SLOT_COUNT + "); got " + slot + '.');
     }
 }

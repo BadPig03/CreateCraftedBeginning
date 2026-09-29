@@ -4,15 +4,16 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.DataComponentGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.GasIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SingleGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.recipe.DissipationRecipe;
 import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
+import net.ty.createcraftedbeginning.recipe.gas.ingredient.DataComponentGasIngredient;
+import net.ty.createcraftedbeginning.recipe.gas.ingredient.GasIngredient;
+import net.ty.createcraftedbeginning.recipe.gas.ingredient.SingleGasIngredient;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -59,8 +60,10 @@ public final class BreezeChamberRecipeIndex {
         }
     }
 
-    record GasConversion(SizedGasIngredient input, GasStack output) {
-        GasConversion {
+    @Internal
+    public record GasConversion(GasRecipeRequirement input, GasStack output) {
+        @Internal
+        public GasConversion {
             output = output.copy();
         }
 
@@ -77,10 +80,6 @@ public final class BreezeChamberRecipeIndex {
             return matches(inputStack);
         }
 
-        boolean hasRequiredInput(GasStack inputStack) {
-            return input.test(inputStack);
-        }
-
         int specificity(GasStack inputStack) {
             GasIngredient ingredient = input.ingredient();
             if (!ingredient.test(inputStack)) {
@@ -94,6 +93,7 @@ public final class BreezeChamberRecipeIndex {
             if (ingredient instanceof SingleGasIngredient) {
                 return 2;
             }
+
             return 1;
         }
     }
@@ -109,9 +109,10 @@ public final class BreezeChamberRecipeIndex {
                 }
 
                 try {
-                    addRecipe(energization, holder.id().toString(), recipe.getGasIngredient(), recipe.getGasResult());
-                } catch (RuntimeException exception) {
-                    CCBAPI.LOGGER.error("Failed to index breeze chamber energization recipe {}", holder.id(), exception);
+                    addRecipe(energization, holder.id().toString(), recipe.getGasRequirements().getFirst(), recipe.getGasResult());
+                }
+                catch (RuntimeException exception) {
+                    CCBAPI.LOGGER.error("Failed to index breeze chamber energization recipe '{}'.", holder.id(), exception);
                 }
             }
 
@@ -122,9 +123,10 @@ public final class BreezeChamberRecipeIndex {
                 }
 
                 try {
-                    addRecipe(dissipation, holder.id().toString(), recipe.getGasIngredient(), recipe.getGasResult());
-                } catch (RuntimeException exception) {
-                    CCBAPI.LOGGER.error("Failed to index breeze chamber dissipation recipe {}", holder.id(), exception);
+                    addRecipe(dissipation, holder.id().toString(), recipe.getGasRequirements().getFirst(), recipe.getGasResult());
+                }
+                catch (RuntimeException exception) {
+                    CCBAPI.LOGGER.error("Failed to index breeze chamber dissipation recipe '{}'.", holder.id(), exception);
                 }
             }
 
@@ -133,9 +135,9 @@ public final class BreezeChamberRecipeIndex {
             return new Index(energization, dissipation);
         }
 
-        private static void addRecipe(ConversionLookup lookup, String recipeId, SizedGasIngredient input, GasStack output) {
+        private static void addRecipe(ConversionLookup lookup, String recipeId, GasRecipeRequirement input, GasStack output) {
             if (output.isEmpty()) {
-                CCBAPI.LOGGER.warn("Ignoring breeze chamber recipe {} because its gas output is empty", recipeId);
+                CCBAPI.LOGGER.warn("Ignoring breeze chamber recipe '{}': gas output is empty.", recipeId);
                 return;
             }
 

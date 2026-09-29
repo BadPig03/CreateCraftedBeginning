@@ -27,11 +27,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandler;
-import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
-import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSupplierUtils;
+import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonHandlers;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSources;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
@@ -40,7 +40,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
-import java.util.Optional;
+import java.util.OptionalDouble;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -62,6 +62,7 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
         if (player == null) {
             return InteractionResult.FAIL;
         }
+
         return use(context.getLevel(), player, context.getHand()).getResult();
     }
 
@@ -123,19 +124,19 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
             return;
         }
 
-        Optional<Float> chargedRatioOptional = AirtightCannonUtils.getChargedRatio(cannon, MAX_CHARGE_TIME - remainingUseTicks);
+        OptionalDouble chargedRatioOptional = AirtightCannonCharge.getChargedRatio(cannon, MAX_CHARGE_TIME - remainingUseTicks);
         if (chargedRatioOptional.isEmpty()) {
             return;
         }
 
-        float chargedRatio = chargedRatioOptional.get();
-        ItemStack flareStack = WeatherFlareSupplierUtils.getFirstFlare(player);
+        float chargedRatio = (float) chargedRatioOptional.getAsDouble();
+        ItemStack flareStack = WeatherFlareSources.findFirst(player);
         if (!flareStack.isEmpty()) {
-            AirtightCannonUtils.fireFlares(level, player, flareStack, chargedRatio);
+            AirtightCannonShooting.fireFlares(level, player, flareStack, chargedRatio);
             return;
         }
 
-        AirtightCannonUtils.spawnWindCharges(level, player, chargedRatio);
+        AirtightCannonShooting.spawnWindCharges(level, player, chargedRatio);
     }
 
     @Override
@@ -149,12 +150,12 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gasContent).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
 
-        AirtightCannonHandler cannonHandler = AirtightCannonHandlerUtils.of(gasContent.getGasType());
+        AirtightCannonHandler cannonHandler = AirtightCannonHandlers.resolveForEquipment(gasContent.getGasType());
         float gasConsumptionMultiplier = cannonHandler.getGasConsumptionMultiplier();
         cannonHandler.appendHoverText(cannon, context, tooltip, tooltipFlag);
 
-        MutableComponent advancedMultiplierText = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptions.format(gasConsumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptions.formatPercent(gasConsumptionMultiplier)).add(advancedMultiplierText.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        MutableComponent advancedMultiplierText = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionMath.format(gasConsumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionMath.formatPercent(gasConsumptionMultiplier)).add(advancedMultiplierText.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 
     @Override
@@ -193,6 +194,7 @@ public class AirtightCannonItem extends Item implements CustomArmPoseItem {
         if (player.swinging) {
             return null;
         }
+
         return ArmPose.CROSSBOW_HOLD;
     }
 }

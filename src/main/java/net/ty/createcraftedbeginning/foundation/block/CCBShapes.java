@@ -16,14 +16,22 @@ import java.util.function.BiFunction;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBShapes {
+    public static final VoxelShaper LASER_EMITTER = shape(0, 0, 0, 16, 13, 16).add(4, 13, 4, 12, 16, 12).forDirectional(Direction.UP);
+    public static final VoxelShaper LASER_RECEIVER = shape(0, 0, 0, 16, 13, 16).add(2, 13, 2, 14, 16, 14).forDirectional(Direction.UP);
+    public static final VoxelShaper OPTICAL_FIBER_END = shape(6, 8, 6, 10, 16, 10).add(5, 7, 5, 11, 10, 11).forDirectional(Direction.UP);
+    public static final VoxelShape OPTICAL_FIBER_JUNCTION = Block.box(5, 5, 5, 11, 11, 11);
+    public static final VoxelShaper OPTICAL_FIBER_DEVICE_PORT = shape(5, 14, 5, 11, 17, 11).forDirectional(Direction.UP);
     public static final VoxelShaper AIRTIGHT_ENGINE = shape(0, 0, 0, 16, 2, 16).add(2, 2, 2, 14, 6, 14).add(0, 6, 0, 16, 10, 16).add(2, 10, 2, 14, 14, 14).forDirectional(Direction.UP);
     public static final VoxelShaper AIRTIGHT_HATCH = shape(2, 2, 0, 14, 14, 1).add(3, 0, 0, 13, 16, 10).forHorizontal(Direction.SOUTH);
     public static final VoxelShaper AIRTIGHT_PIPE = shape(4, 0, 4, 12, 16, 12).forAxis();
     public static final VoxelShaper AIRTIGHT_PUMP = shape(2, 0, 2, 14, 16, 14).forDirectional(Direction.UP);
-    public static final VoxelShaper CHECK_VALVE = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).forAxis();
+    public static final VoxelShaper AIRTIGHT_CHECK_VALVE = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).forAxis();
+    public static final VoxelShaper AIRTIGHT_VALVE = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).forAxis();
     public static final VoxelShaper RESIDUE_OUTLET = shape(0, 0, 0, 16, 2, 16).add(3, 2, 3, 13, 13, 13).add(4, 13, 4, 12, 15, 12).add(4, 4, 1, 12, 12, 3).add(1, 4, 4, 3, 12, 12).add(13, 4, 4, 15, 12, 12).add(4, 4, 13, 12, 12, 15).forDirectional(Direction.UP);
     public static final VoxelShaper BOILER_STEAM_OUTLET = shape(1, 0, 1, 15, 3, 15).add(3, 2, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).forDirectional(Direction.UP);
     public static final VoxelShaper PORTABLE_GAS_INTERFACE = shape(0, 0, 0, 16, 14, 16).forDirectional(Direction.UP);
+    public static final VoxelShaper AIRTIGHT_REGULATOR_PUMP = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).add(4, 4, 1, 12, 12, 3).forAxis();
+    public static final VoxelShaper AIRTIGHT_REGULATOR_PUMP_VERTICAL = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).add(4, 4, 1, 12, 12, 3).forDirectional(Direction.NORTH);
     public static final VoxelShaper SMART_AIRTIGHT_PIPE = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).add(4, 4, 1, 12, 12, 3).forAxis();
     public static final VoxelShaper SMART_AIRTIGHT_PIPE_VERTICAL = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).add(4, 4, 1, 12, 12, 3).forDirectional(Direction.NORTH);
     public static final VoxelShaper TESLA_TURBINE = shape(0, 1, 0, 16, 15, 16).forAxis();
@@ -32,7 +40,6 @@ public class CCBShapes {
 
     public static final VoxelShape CHAMBER_BLOCK_SHAPE = shape(0, 0, 0, 16, 2, 16).add(1, 2, 1, 15, 15, 15).build();
     public static final VoxelShape CHAMBER_BLOCK_SPECIAL_COLLISION_SHAPE = shape(0, 0, 0, 16, 2, 16).build();
-    public static final VoxelShape COOLER_BLOCK_COOLER_SHAPE = shape(1, 0, 1, 15, 12, 15).add(0, 12, 0, 16, 16, 16).build();
     public static final VoxelShape COOLER_BLOCK_SHAPE = shape(1, 0, 1, 15, 14, 15).build();
     public static final VoxelShape COOLER_BLOCK_SPECIAL_COLLISION_SHAPE = shape(0, 0, 0, 16, 4, 16).build();
     public static final VoxelShape CRATE_SHAPE = shape(1, 0, 1, 15, 14, 15).build();
@@ -47,7 +54,7 @@ public class CCBShapes {
     public static final VoxelShape AIRTIGHT_FORGING_PRESS_BOTTOM_CENTER_SHAPE = shape(0, 0, 0, 16, 13, 16).build();
     public static final VoxelShape AIRTIGHT_FORGING_PRESS_CENTER_SHAPE = shape(-2, 10, -2, 18, 16, 18).build();
 
-    public static final VoxelShape SOLAR_COLLECTOR_SHAPE = shape(0, 7, 0, 16, 9, 16).build();
+    public static final VoxelShape AMETHYST_COLLECTOR_PANEL_SHAPE = shape(0, 8, 0, 16, 10, 16).add(0, 5, 0, 3, 8, 3).add(0, 5, 13, 3, 8, 16).add(13, 5, 13, 16, 8, 16).add(13, 5, 0, 16, 8, 3).add(0, 0, 0, 2, 5, 2).add(0, 0, 14, 2, 5, 16).add(14, 0, 14, 16, 5, 16).add(14, 0, 0, 16, 5, 2).add(0, 6, 3, 2, 8, 13).add(3, 6, 0, 13, 8, 2).add(14, 6, 3, 16, 8, 13).add(3, 6, 14, 13, 8, 16).build();
 
     public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_CORNER = shape(0, 0, 0, 16, 16, 16).remove(2, 0, 2, 16, 2, 16).add(4, 0, 4, 8, 2, 8).add(2, 0, 4, 4, 2, 13).add(4, 0, 2, 13, 2, 4).add(2, 0, 13, 3, 2, 16).add(13, 0, 2, 16, 2, 3).forHorizontal(Direction.NORTH);
     public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_MID = shape(0, 0, 0, 16, 16, 16).remove(0, 0, 2, 16, 2, 16).forHorizontal(Direction.NORTH);
@@ -66,12 +73,7 @@ public class CCBShapes {
 
     @Contract("_, _, _, _, _, _ -> new")
     private static Builder shape(double x1, double y1, double z1, double x2, double y2, double z2) {
-        return shape(cuboid(x1, y1, z1, x2, y2, z2));
-    }
-
-    @Contract(value = "_ -> new", pure = true)
-    private static Builder shape(VoxelShape shape) {
-        return new Builder(shape);
+        return new Builder(cuboid(x1, y1, z1, x2, y2, z2));
     }
 
     private static VoxelShape cuboid(double x1, double y1, double z1, double x2, double y2, double z2) {
@@ -107,20 +109,20 @@ public class CCBShapes {
             return shape;
         }
 
-        private VoxelShaper forAxis() {
-            return build(VoxelShaper::forAxis, Axis.Y);
-        }
-
         public VoxelShaper build(BiFunction<VoxelShape, Axis, VoxelShaper> factory, Axis axis) {
             return factory.apply(shape, axis);
         }
 
-        private VoxelShaper forDirectional(Direction direction) {
-            return build(VoxelShaper::forDirectional, direction);
-        }
-
         public VoxelShaper build(BiFunction<VoxelShape, Direction, VoxelShaper> factory, Direction direction) {
             return factory.apply(shape, direction);
+        }
+
+        private VoxelShaper forAxis() {
+            return build(VoxelShaper::forAxis, Axis.Y);
+        }
+
+        private VoxelShaper forDirectional(Direction direction) {
+            return build(VoxelShaper::forDirectional, direction);
         }
 
         private VoxelShaper forHorizontal(Direction direction) {

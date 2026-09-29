@@ -1,7 +1,7 @@
 {
 	"credit": "Made with Blockbench",
 	"render_type": "minecraft:cutout_mipped",
-	"parent": "block/block",
+	"parent": "minecraft:block/block",
 	"textures": {
 		"0": "createcraftedbeginning:block/gas_packager/packager_frame",
 		"1": "createcraftedbeginning:block/gas_packager/packager_details",

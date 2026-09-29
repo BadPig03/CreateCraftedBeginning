@@ -11,8 +11,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeCooler;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
+import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeCooler;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 
@@ -27,13 +27,6 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
 
     public CoolingCategory(Info<CoolingRecipe> info) {
         super(info);
-    }
-
-    private static MutableComponent getProcessingTime(CoolingRecipe recipe) {
-        if (!recipe.isFluidIngredients() && recipe.isCreativeIceCream()) {
-            return Component.translatable("createcraftedbeginning.generic.infinity_mark");
-        }
-        return CCBLang.secondsWithGameTicks(recipe.getProcessingDuration(), 20).component();
     }
 
     @Override
@@ -57,5 +50,13 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
         }
 
         builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredient());
+    }
+
+    private static MutableComponent getProcessingTime(CoolingRecipe recipe) {
+        if (!recipe.isFluidIngredients() && recipe.isCreativeIceCream()) {
+            return Component.translatable("createcraftedbeginning.generic.infinity_mark");
+        }
+
+        return CCBLang.secondsWithGameTicks(recipe.getProcessingDuration(), 20).component();
     }
 }

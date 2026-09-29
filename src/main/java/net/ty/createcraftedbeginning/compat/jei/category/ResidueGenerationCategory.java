@@ -12,11 +12,12 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.fluids.FluidType;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
-import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightEngine;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
+import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightEngine;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -48,12 +49,14 @@ public class ResidueGenerationCategory extends CCBRecipeCategory<ResidueGenerati
 
     @Override
     protected void setRecipe(IRecipeLayoutBuilder builder, ResidueGenerationRecipe recipe, IFocusGroup focuses) {
-        List<GasStack> gasStacks = Arrays.stream(recipe.getIngredientsGas().getGases()).map(GasStack::copy).toList();
-        builder.addSlot(RecipeIngredientRole.INPUT, 27, 74).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks);
+        GasRecipeRequirement gasRequirement = recipe.getGasRequirement();
+        List<GasStack> gasStacks = Arrays.stream(gasRequirement.getGases()).map(GasStack::copy).toList();
+        builder.addSlot(RecipeIngredientRole.INPUT, 27, 74).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> addGasRequirementTooltip(tooltip, gasRequirement));
         IRecipeSlotBuilder outputSlot = builder.addSlot(RecipeIngredientRole.OUTPUT, 132, 74).setBackground(getRenderedSlot(), -1, -1);
         if (!recipe.hasResidueOutput()) {
             return;
         }
+
         if (recipe.getFluidResults().isEmpty()) {
             outputSlot.addItemStack(getResultItem(recipe));
             return;

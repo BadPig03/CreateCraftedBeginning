@@ -7,7 +7,6 @@ import com.simibubi.create.content.logistics.packager.PackagerBlock;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,16 +14,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
-import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlock;
-import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonItem;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
@@ -36,57 +30,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class GasPackagerBlock extends PackagerBlock {
     public GasPackagerBlock(Properties properties) {
         super(properties);
-    }
-
-    @Nullable
-    private static Direction findConnectedGasDirection(BlockPlaceContext context, Level level, BlockPos clickedPos) {
-        for (Direction direction : context.getNearestLookingDirections()) {
-            BlockPos targetPos = clickedPos.relative(direction);
-            BlockEntity targetBlockEntity = level.getBlockEntity(targetPos);
-            if (targetBlockEntity instanceof GasPackagerBlockEntity) {
-                continue;
-            }
-
-            Direction targetSide = direction.getOpposite();
-            if (targetBlockEntity == null || level.getCapability(GasHandler.BLOCK, targetPos, targetSide) == null) {
-                continue;
-            }
-
-            return targetSide;
-        }
-        return null;
-    }
-
-    private static void handleInteraction(ItemStack stack, Level level, BlockPos pos, Player player, InteractionHand hand, PackagerBlockEntity blockEntity) {
-        if (blockEntity.animationTicks > 0) {
-            return;
-        }
-
-        if (!blockEntity.heldBox.isEmpty()) {
-            if (!level.isClientSide()) {
-                player.getInventory().placeItemBackInInventory(blockEntity.heldBox.copy());
-                AllSoundEvents.playItemPickup(player);
-                blockEntity.heldBox = ItemStack.EMPTY;
-                blockEntity.notifyUpdate();
-            }
-            return;
-        }
-
-        if (!BalloonUtils.isBalloon(stack) || level.isClientSide()) {
-            return;
-        }
-
-        if (!blockEntity.unwrapBox(stack.copyWithCount(1), false)) {
-            return;
-        }
-
-        stack.shrink(1);
-        AllSoundEvents.DEPOT_PLOP.playOnServer(level, pos);
-        if (!stack.isEmpty()) {
-            return;
-        }
-
-        player.setItemInHand(hand, ItemStack.EMPTY);
     }
 
     @Override
@@ -102,22 +45,12 @@ public class GasPackagerBlock extends PackagerBlock {
             return null;
         }
 
-        Level level = context.getLevel();
-        BlockPos clickedPos = context.getClickedPos();
-        Direction preferredFacing = findConnectedGasDirection(context, level, clickedPos);
-        Player player = context.getPlayer();
-        if (preferredFacing == null) {
-            Direction lookDirection = context.getNearestLookingDirection();
-            preferredFacing = player != null && player.isShiftKeyDown() ? lookDirection : lookDirection.getOpposite();
-        }
-
-        BlockPos targetPos = clickedPos.relative(preferredFacing.getOpposite());
-        if (player != null && !(player instanceof FakePlayer) && level.getBlockState(targetPos).getBlock() instanceof PortableGasInterfaceBlock) {
-            CCBLang.translate("gui.warnings.no_gas_portable_interface").sendStatus(player);
+        BlockState gasFacingState = GasPackagerPlacement.withGasFacing(context, placementState);
+        if (gasFacingState == null) {
             return null;
         }
 
-        return placementState.setValue(POWERED, level.hasNeighborSignal(clickedPos)).setValue(FACING, preferredFacing);
+        return gasFacingState.setValue(POWERED, context.getLevel().hasNeighborSignal(context.getClickedPos()));
     }
 
     @Override
@@ -136,5 +69,33 @@ public class GasPackagerBlock extends PackagerBlock {
     @Override
     public BlockEntityType<? extends PackagerBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.GAS_PACKAGER.get();
+    }
+
+    private static void handleInteraction(ItemStack stack, Level level, BlockPos pos, Player player, InteractionHand hand, PackagerBlockEntity blockEntity) {
+        if (blockEntity.animationTicks > 0) {
+            return;
+        }
+
+        if (!blockEntity.heldBox.isEmpty()) {
+            if (!level.isClientSide()) {
+                player.getInventory().placeItemBackInInventory(blockEntity.heldBox.copy());
+                AllSoundEvents.playItemPickup(player);
+                blockEntity.heldBox = ItemStack.EMPTY;
+                blockEntity.notifyUpdate();
+            }
+            return;
+        }
+
+        if (!BalloonItem.isBalloon(stack) || level.isClientSide() || !blockEntity.unwrapBox(stack.copyWithCount(1), false)) {
+            return;
+        }
+
+        stack.shrink(1);
+        AllSoundEvents.DEPOT_PLOP.playOnServer(level, pos);
+        if (!stack.isEmpty()) {
+            return;
+        }
+
+        player.setItemInHand(hand, ItemStack.EMPTY);
     }
 }

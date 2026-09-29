@@ -15,6 +15,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -31,9 +32,11 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -42,6 +45,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class GasFactoryGaugeBlock extends FactoryPanelBlock {
     public GasFactoryGaugeBlock(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
     }
 
     @Override
@@ -57,6 +66,7 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
         if (level.isClientSide) {
             return InteractionResult.SUCCESS;
         }
+
         return onBlockEntityUse(level, pos, blockEntity -> {
             FactoryPanelBehaviour panelBehaviour = blockEntity.panels.get(targetedSlot);
             if (panelBehaviour == null || !panelBehaviour.isActive()) {
@@ -141,7 +151,7 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
 
     @Override
     public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
-        return CCBBlocks.GAS_FACTORY_GAUGE_BLOCK.asStack();
+        return new ItemStack(CCBBlocks.GAS_FACTORY_GAUGE_BLOCK);
     }
 
     private boolean tryDestroyGasSubPanelFirst(BlockState state, Level level, BlockPos pos, Player player) {
@@ -154,7 +164,7 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
             }
 
             if (!player.isCreative()) {
-                popResource(level, pos, CCBBlocks.GAS_FACTORY_GAUGE_BLOCK.asStack());
+                popResource(level, pos, new ItemStack(CCBBlocks.GAS_FACTORY_GAUGE_BLOCK));
             }
             return InteractionResult.SUCCESS;
         });

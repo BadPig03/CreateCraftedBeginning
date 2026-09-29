@@ -14,39 +14,24 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.functionalstorage.GasDrawerBlock;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasDrawerISTER extends FunctionalStorageISTER {
-    private static final String COMPOUND_KEY_DRAWER_OPTIONS = "drawerOptions";
-    private static final String COMPOUND_KEY_CREATIVE = "isCreative";
-
     public static final GasDrawerISTER SLOT_1 = new GasDrawerISTER(DrawerType.X_1);
     public static final GasDrawerISTER SLOT_2 = new GasDrawerISTER(DrawerType.X_2);
     public static final GasDrawerISTER SLOT_4 = new GasDrawerISTER(DrawerType.X_4);
+    private static final String COMPOUND_KEY_DRAWER_OPTIONS = "drawerOptions";
+    private static final String COMPOUND_KEY_CREATIVE = "isCreative";
 
     private final DrawerType drawerType;
 
     private GasDrawerISTER(DrawerType drawerType) {
         this.drawerType = drawerType;
-    }
-
-    private static void renderSlot(Provider registryAccess, CompoundTag tileTag, int slot, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, DrawerOptions options, boolean creative, double offsetX, double offsetY, double width, double height, boolean compact) {
-        GasStack storedGas = GasDrawerBlock.readStoredGas(tileTag, slot, registryAccess);
-        if (storedGas.isEmpty()) {
-            return;
-        }
-
-        poseStack.pushPose();
-        poseStack.translate(offsetX, offsetY, 0);
-        AABB gasBounds = new AABB(0.0625, 0.078125, 0.0625, 0.0625 + width, 0.078125 + height, 0.9375);
-        GasDrawerRenderer.renderItemGas(poseStack, buffers, light, overlay, storedGas, options, gasBounds, compact, creative);
-        poseStack.popPose();
     }
 
     @Override
@@ -70,8 +55,8 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
         }
 
         DrawerOptions drawerOptions = new DrawerOptions();
-        drawerOptions.deserializeNBT(access, CCBNbtUtils.getCompound(tileTag, COMPOUND_KEY_DRAWER_OPTIONS));
-        boolean isCreative = CCBNbtUtils.getBoolean(tileTag, COMPOUND_KEY_CREATIVE);
+        drawerOptions.deserializeNBT(access, tileTag.getCompound(COMPOUND_KEY_DRAWER_OPTIONS));
+        boolean isCreative = tileTag.getBoolean(COMPOUND_KEY_CREATIVE);
         poseStack.mulPose(Axis.YP.rotationDegrees(-90));
         poseStack.mulPose(Axis.XP.rotationDegrees(90));
         poseStack.translate(0, -1, -1);
@@ -88,5 +73,18 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
                 renderSlot(access, tileTag, 3, poseStack, buffers, light, overlay, drawerOptions, isCreative, 0, 0.5, 0.4375, 0.34375, true);
             }
         }
+    }
+
+    private static void renderSlot(Provider registryAccess, CompoundTag tileTag, int slot, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, DrawerOptions options, boolean creative, double offsetX, double offsetY, double width, double height, boolean compact) {
+        GasStack storedGas = GasDrawerBlock.readStoredGas(tileTag, slot, registryAccess);
+        if (storedGas.isEmpty()) {
+            return;
+        }
+
+        poseStack.pushPose();
+        poseStack.translate(offsetX, offsetY, 0);
+        AABB gasBounds = new AABB(0.0625, 0.078125, 0.0625, 0.0625 + width, 0.078125 + height, 0.9375);
+        GasDrawerRenderer.renderItemGas(poseStack, buffers, light, overlay, storedGas, options, gasBounds, compact, creative);
+        poseStack.popPose();
     }
 }

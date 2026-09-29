@@ -6,7 +6,9 @@
       "y": 90
     },
     "axis=x,cased=true": {
-      "model": "createcraftedbeginning:block/airtight_pipe/casing"
+      "model": "createcraftedbeginning:block/airtight_pipe/casing",
+      "x": 90,
+      "y": 90
     },
     "axis=y,cased=false": {
       "model": "createcraftedbeginning:block/airtight_pipe/pipe"
@@ -19,7 +21,8 @@
       "x": 90
     },
     "axis=z,cased=true": {
-      "model": "createcraftedbeginning:block/airtight_pipe/casing"
+      "model": "createcraftedbeginning:block/airtight_pipe/casing",
+      "x": 90
     }
   }
 }

@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 
+
+
 import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityVisual;
 import com.simibubi.create.content.kinetics.base.RotatingInstance;
@@ -16,7 +18,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -37,37 +39,6 @@ public class TeslaTurbineVisual extends KineticBlockEntityVisual<TeslaTurbineBlo
         axis = blockState.getValue(TeslaTurbineBlock.AXIS);
         shaft = createRotatingInstance(AllPartialModels.SHAFT);
         syncRotors();
-    }
-
-    private RotatingInstance createRotatingInstance(PartialModel partialModel) {
-        RotatingInstance instance = instancerProvider().instancer(AllInstanceTypes.ROTATING, Models.partial(partialModel)).createInstance().rotateToFace(Direction.UP, axis).setup(blockEntity).setPosition(getVisualPosition());
-        instance.setChanged();
-        return instance;
-    }
-
-    private void syncRotors() {
-        int desiredRotorCount = blockEntity.getBlockState().getValue(TeslaTurbineBlock.ROTOR);
-        if (desiredRotorCount == rotorCount) {
-            return;
-        }
-
-        for (RotatingInstance rotor : rotors) {
-            rotor.delete();
-        }
-        rotors.clear();
-        rotorCount = desiredRotorCount;
-        if (rotorCount == 0) {
-            return;
-        }
-
-        Direction positiveAxis = Direction.get(AxisDirection.POSITIVE, axis);
-        float rotorSpacing = 14.0f / (rotorCount + 1);
-        for (int rotorIndex = 0; rotorIndex < rotorCount; rotorIndex++) {
-            float rotorOffset = (rotorSpacing * (rotorIndex + 1) - 7) / 16;
-            RotatingInstance rotor = createRotatingInstance(CCBPartialModels.TESLA_TURBINE_ROTOR).nudge(positiveAxis.getStepX() * rotorOffset, positiveAxis.getStepY() * rotorOffset, positiveAxis.getStepZ() * rotorOffset);
-            rotor.setChanged();
-            rotors.add(rotor);
-        }
     }
 
     @Override
@@ -114,6 +85,37 @@ public class TeslaTurbineVisual extends KineticBlockEntityVisual<TeslaTurbineBlo
         consumer.accept(shaft);
         for (RotatingInstance rotor : rotors) {
             consumer.accept(rotor);
+        }
+    }
+
+    private RotatingInstance createRotatingInstance(PartialModel partialModel) {
+        RotatingInstance instance = instancerProvider().instancer(AllInstanceTypes.ROTATING, Models.partial(partialModel)).createInstance().rotateToFace(Direction.UP, axis).setup(blockEntity).setPosition(getVisualPosition());
+        instance.setChanged();
+        return instance;
+    }
+
+    private void syncRotors() {
+        int desiredRotorCount = blockEntity.getBlockState().getValue(TeslaTurbineBlock.ROTOR);
+        if (desiredRotorCount == rotorCount) {
+            return;
+        }
+
+        for (RotatingInstance rotor : rotors) {
+            rotor.delete();
+        }
+        rotors.clear();
+        rotorCount = desiredRotorCount;
+        if (rotorCount == 0) {
+            return;
+        }
+
+        Direction positiveAxis = Direction.get(AxisDirection.POSITIVE, axis);
+        float rotorSpacing = 14.0F / (rotorCount + 1);
+        for (int rotorIndex = 0; rotorIndex < rotorCount; rotorIndex++) {
+            float rotorOffset = (rotorSpacing * (rotorIndex + 1) - 7) / 16;
+            RotatingInstance rotor = createRotatingInstance(CCBPartialModels.TESLA_TURBINE_ROTOR).nudge(positiveAxis.getStepX() * rotorOffset, positiveAxis.getStepY() * rotorOffset, positiveAxis.getStepZ() * rotorOffset);
+            rotor.setChanged();
+            rotors.add(rotor);
         }
     }
 }

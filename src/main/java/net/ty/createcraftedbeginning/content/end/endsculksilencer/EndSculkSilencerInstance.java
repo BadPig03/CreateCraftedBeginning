@@ -14,16 +14,12 @@ record EndSculkSilencerInstance(BlockPos registrationPos, BlockPos effectCenter,
         registrationPos = registrationPos.immutable();
         effectCenter = effectCenter.immutable();
         if (range <= 0) {
-            throw new IllegalArgumentException("Silencer range must be positive");
+            throw new IllegalArgumentException("Sculk silencer range must be positive; got " + range + " blocks.");
         }
     }
 
     static long chunkKey(BlockPos blockPos) {
         return chunkKey(blockPos.getX() >> 4, blockPos.getZ() >> 4);
-    }
-
-    private static long chunkKey(int chunkX, int chunkZ) {
-        return chunkX & 0xFFFFFFFFL | (long) chunkZ << 32;
     }
 
     boolean hasSameCoverage(BlockPos otherEffectCenter, short otherRange) {
@@ -39,5 +35,9 @@ record EndSculkSilencerInstance(BlockPos registrationPos, BlockPos effectCenter,
                 consumer.accept(chunkKey(chunkX, chunkZ));
             }
         }
+    }
+
+    private static long chunkKey(int chunkX, int chunkZ) {
+        return chunkX & 0xFFFFFFFFL | (long) chunkZ << 32;
     }
 }

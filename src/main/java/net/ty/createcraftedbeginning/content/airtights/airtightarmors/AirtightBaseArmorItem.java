@@ -28,6 +28,7 @@ public class AirtightBaseArmorItem extends ArmorItem {
         if (slot != EquipmentSlot.LEGS) {
             return OUTER_TEXTURE;
         }
+
         return INNER_TEXTURE;
     }
 }

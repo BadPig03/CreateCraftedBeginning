@@ -1,67 +1,21 @@
 package net.ty.createcraftedbeginning.recipe;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
-import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
+import net.ty.createcraftedbeginning.recipe.gas.processing.GasProcessingRecipeParams;
+import net.ty.createcraftedbeginning.recipe.gas.processing.StandardGasProcessingRecipe;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> {
-    private static final Map<RecipeManager, Map<GasStack, ResidueOutput>> OUTPUT_CACHES = new WeakHashMap<>();
+public class ResidueGenerationRecipe extends StandardGasProcessingRecipe<SingleRecipeInput> {
 
-    ResidueGenerationRecipe(ProcessingWithGasRecipeParams params) {
+    ResidueGenerationRecipe(GasProcessingRecipeParams params) {
         super(CCBRecipeTypes.RESIDUE_GENERATION, params);
-    }
-
-    public static synchronized ResidueOutput findOutput(Level level, GasStack gasStack) {
-        if (gasStack.isEmpty()) {
-            return ResidueOutput.EMPTY;
-        }
-
-        Map<GasStack, ResidueOutput> outputCache = OUTPUT_CACHES.computeIfAbsent(level.getRecipeManager(), ignored -> new HashMap<>());
-        return outputCache.computeIfAbsent(gasStack.copyWithAmount(1), normalizedGas -> findOutputUncached(level, normalizedGas));
-    }
-
-    public static synchronized void invalidateCaches() {
-        OUTPUT_CACHES.clear();
-    }
-
-    private static ResidueOutput findOutputUncached(Level level, GasStack gasStack) {
-        for (RecipeHolder<ResidueGenerationRecipe> recipeHolder : level.getRecipeManager().<SingleRecipeInput, ResidueGenerationRecipe>getAllRecipesFor(CCBRecipeTypes.RESIDUE_GENERATION.getType())) {
-            ResidueGenerationRecipe recipe = recipeHolder.value();
-            if (recipe.isIngredientEmpty() || !recipe.getIngredientsGas().ingredient().test(gasStack)) {
-                continue;
-            }
-
-            boolean hasItemOutput = !recipe.getRollableResults().isEmpty();
-            boolean hasFluidOutput = !recipe.getFluidResults().isEmpty();
-            if (hasItemOutput && hasFluidOutput) {
-                continue;
-            }
-            if (!hasItemOutput && !hasFluidOutput) {
-                return ResidueOutput.EMPTY;
-            }
-
-            if (hasFluidOutput) {
-                return ResidueOutput.fluid(recipe.getFluidResults().getFirst());
-            }
-            return ResidueOutput.item(recipe.getResultItem(level.registryAccess()));
-        }
-        return ResidueOutput.EMPTY;
     }
 
     @Override
@@ -105,53 +59,15 @@ public class ResidueGenerationRecipe extends StandardProcessingWithGasRecipe<Sin
         return true;
     }
 
-    public SizedGasIngredient getIngredientsGas() {
-        if (isIngredientEmpty()) {
-            throw new IllegalStateException("Residue Generation Recipe has no gas ingredient!");
+    public GasRecipeRequirement getGasRequirement() {
+        if (getGasRequirements().isEmpty()) {
+            throw new IllegalStateException("Residue generation recipe has no gas requirement.");
         }
 
-        return gasIngredients.getFirst();
-    }
-
-    private boolean isIngredientEmpty() {
-        return gasIngredients.isEmpty();
+        return getGasRequirements().getFirst();
     }
 
     public boolean hasResidueOutput() {
         return !results.isEmpty() || !fluidResults.isEmpty();
-    }
-
-    public record ResidueOutput(ItemStack itemStack, FluidStack fluidStack) {
-        private static final ResidueOutput EMPTY = new ResidueOutput(ItemStack.EMPTY, FluidStack.EMPTY);
-
-        public ResidueOutput {
-            itemStack = itemStack.isEmpty() ? ItemStack.EMPTY : itemStack.copyWithCount(1);
-            fluidStack = fluidStack.isEmpty() ? FluidStack.EMPTY : fluidStack.copyWithAmount(1);
-            if (!itemStack.isEmpty() && !fluidStack.isEmpty()) {
-                throw new IllegalArgumentException("A residue output cannot contain both an item and a fluid.");
-            }
-        }
-
-        private static ResidueOutput item(ItemStack itemStack) {
-            if (itemStack.isEmpty()) {
-                return EMPTY;
-            }
-            return new ResidueOutput(itemStack, FluidStack.EMPTY);
-        }
-
-        private static ResidueOutput fluid(FluidStack fluidStack) {
-            if (fluidStack.isEmpty()) {
-                return EMPTY;
-            }
-            return new ResidueOutput(ItemStack.EMPTY, fluidStack);
-        }
-
-        public boolean hasItem() {
-            return !itemStack.isEmpty();
-        }
-
-        public boolean hasFluid() {
-            return !fluidStack.isEmpty();
-        }
     }
 }

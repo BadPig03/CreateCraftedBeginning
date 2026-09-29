@@ -1,24 +1,38 @@
 package net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
-import net.ty.createcraftedbeginning.core.MachineResourceSnapshots;
-import net.ty.createcraftedbeginning.core.MachineResourceSnapshots.GasTankSnapshot;
-import net.ty.createcraftedbeginning.core.ResourceTransaction;
-import net.ty.createcraftedbeginning.core.Participant;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfiles;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
+import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.foundation.transaction.TransactionParticipant;
+import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
+import net.ty.createcraftedbeginning.recipe.transaction.MachineResourceSnapshots;
+import net.ty.createcraftedbeginning.recipe.transaction.MachineResourceSnapshots.GasTankSnapshot;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberTransactions {
+public final class GasInjectionChamberTransactions {
     private GasInjectionChamberTransactions() {
     }
 
-    static Participant<GasTankSnapshot> gasParticipant(GasInjectionChamberBlockEntity chamber, GasStack request) {
-        IGasTank gasTank = chamber.getGasTank();
-        return ResourceTransaction.participant(() -> !request.isEmpty() && GasStack.matches(gasTank.drain(request, GasAction.SIMULATE), request), () -> MachineResourceSnapshots.snapshotGasTanks(chamber.getGasTankBehaviour()), () -> !request.isEmpty() && GasStack.matches(gasTank.drain(request, GasAction.EXECUTE), request), snapshot -> MachineResourceSnapshots.restoreGasTanks(snapshot, chamber.getGasTankBehaviour()));
+    public static boolean pressureProfileMatches(long currentPressurePa, long sourcePressurePa) {
+        return sourcePressurePa < 0 || GameplayPressureProfiles.resolve(currentPressurePa).equals(GameplayPressureProfiles.resolve(sourcePressurePa));
+    }
+
+    static TransactionParticipant<GasTankSnapshot> gasParticipant(GasInjectionChamberBlockEntity chamber, GasConsumptionPlan plan) {
+        return ResourceTransaction.participant(plan::canExecute, () -> MachineResourceSnapshots.snapshotGasTanks(chamber.getGasTankBehaviour()), plan::execute, snapshot -> MachineResourceSnapshots.restoreGasTanks(snapshot, chamber.getGasTankBehaviour()));
+    }
+
+    static TransactionParticipant<GasTankSnapshot> gasParticipant(GasInjectionChamberBlockEntity chamber, GasStack request) {
+        return gasParticipant(chamber, request, -1);
+    }
+
+    static TransactionParticipant<GasTankSnapshot> gasParticipant(GasInjectionChamberBlockEntity chamber, GasStack request, long sourcePressurePa) {
+        GasPressureCompartment gasTank = chamber.getGasTank();
+        return ResourceTransaction.participant(() -> pressureProfileMatches(gasTank.getPressurePa(), sourcePressurePa) && !request.isEmpty() && GasStack.matches(gasTank.drain(request, GasAction.SIMULATE), request), () -> MachineResourceSnapshots.snapshotGasTanks(chamber.getGasTankBehaviour()), () -> pressureProfileMatches(gasTank.getPressurePa(), sourcePressurePa) && !request.isEmpty() && GasStack.matches(gasTank.drain(request, GasAction.EXECUTE), request), snapshot -> MachineResourceSnapshots.restoreGasTanks(snapshot, chamber.getGasTankBehaviour()));
     }
 }

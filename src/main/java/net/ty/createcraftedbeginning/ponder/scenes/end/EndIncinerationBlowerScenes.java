@@ -22,8 +22,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.client.gui.CCBIcons;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerBlockEntity;
-import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -97,7 +97,7 @@ public class EndIncinerationBlowerScenes {
         scene.world().setKineticSpeed(blowerAllSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(blowerTopPos);
         scene.effects().rotationSpeedIndicator(motorPos);
-        scene.overlay().showText(60).text("It can smelt items or ignite entities within its working range").colored(PonderPalette.GREEN).pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("It can smelt items or ignite entities within its working range").pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, outlineObject, workingArea, 5);
 
         scene.idle(5);
@@ -110,13 +110,13 @@ public class EndIncinerationBlowerScenes {
 
         scene.idle(80);
         workingArea = EndIncinerationBlowerBlockEntity.calculateArea(blowerTopPos, mediumSpeed * 3);
-        scene.world().setKineticSpeed(motorSelection, mediumSpeed * 1.5f);
-        scene.world().setKineticSpeed(largeCogSelection, mediumSpeed * 1.5f);
+        scene.world().setKineticSpeed(motorSelection, mediumSpeed * 1.5F);
+        scene.world().setKineticSpeed(largeCogSelection, mediumSpeed * 1.5F);
         scene.world().setKineticSpeed(cogSelection, -mediumSpeed * 3);
         scene.world().setKineticSpeed(blowerAllSelection, -mediumSpeed * 3);
         scene.effects().rotationSpeedIndicator(blowerTopPos);
         scene.effects().rotationSpeedIndicator(motorPos);
-        scene.overlay().showText(60).text("A higher rotation speed increases its working range").colored(PonderPalette.FAST).pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("A higher rotation speed increases its working range").colored(PonderPalette.GREEN).pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, outlineObject, workingArea, 80);
 
         scene.idle(80);
@@ -125,16 +125,16 @@ public class EndIncinerationBlowerScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, outlineObject, workingArea, 80);
 
         scene.idle(80);
-        scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, 0.1, 0), beefItem);
+        scene.world().createItemEntity(util.vector().centerOf(itemPos), util.vector().of(0, 0.1, 0), beefItem.copy());
         scene.overlay().showControls(blowerSideVec, Pointing.DOWN, 60).showing(CCBIcons.I_SMOKING);
-        scene.overlay().showText(60).text("\"Bulk Smoking\": Cooks food").colored(PonderPalette.GREEN).pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("\"Bulk Smoking\": Cooks food").colored(PonderPalette.BLUE).pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, outlineObject, workingArea, 80);
 
         scene.idle(10);
         scene.effects().emitParticles(util.vector().topOf(itemPos.below()), scene.effects().simpleParticleEmitter(ParticleTypes.LARGE_SMOKE, Vec3.ZERO), 1, 40);
 
         scene.idle(40);
-        scene.world().modifyEntities(ItemEntity.class, ie -> ie.setItem(cookedBeefItem));
+        scene.world().modifyEntities(ItemEntity.class, itemEntity -> itemEntity.setItem(cookedBeefItem.copy()));
 
         scene.idle(20);
         scene.world().modifyEntities(ItemEntity.class, Entity::discard);
@@ -142,25 +142,25 @@ public class EndIncinerationBlowerScenes {
 
         scene.idle(10);
         scene.overlay().showControls(blowerSideVec, Pointing.DOWN, 60).showing(CCBIcons.I_BLASTING);
-        scene.overlay().showText(60).text("\"Bulk Smelting\": Smelting ores or other items").colored(PonderPalette.GREEN).pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("\"Bulk Smelting\": Smelting ores or other items").colored(PonderPalette.BLUE).pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, outlineObject, workingArea, 90);
 
         scene.idle(10);
         scene.effects().emitParticles(util.vector().topOf(depotPos), scene.effects().simpleParticleEmitter(ParticleTypes.LARGE_SMOKE, Vec3.ZERO), 1, 40);
 
         scene.idle(40);
-        scene.world().modifyBlockEntity(depotPos, DepotBlockEntity.class, be -> be.setHeldItem(stoneItem));
+        scene.world().modifyBlockEntity(depotPos, DepotBlockEntity.class, depot -> depot.setHeldItem(stoneItem.copy()));
 
         scene.idle(20);
         scene.world().hideSection(depotSelection, Direction.UP);
 
         scene.idle(20);
         scene.overlay().showControls(blowerSideVec, Pointing.DOWN, 60).showing(CCBIcons.I_IGNITION);
-        scene.overlay().showText(60).text("\"Mob Ignition\": Sets mobs on fire, and also counts as a player kill").colored(PonderPalette.GREEN).pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("\"Mob Ignition\": Sets mobs on fire, and also counts as a player kill").colored(PonderPalette.BLUE).pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, outlineObject, workingArea, 80);
 
-        scene.idle(80);
-        scene.overlay().showControls(util.vector().blockSurface(blowerTopPos, Direction.NORTH), Pointing.RIGHT, 27).rightClick().withItem(wrenchItem);
+        scene.idle(73);
+        scene.overlay().showControls(util.vector().blockSurface(blowerTopPos, Direction.NORTH), Pointing.RIGHT, 67).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);
         scene.overlay().showText(60).text("Right-click with a Wrench to toggle the working range display").colored(PonderPalette.BLUE).pointAt(blowerTopVec).placeNearTarget().attachKeyFrame();

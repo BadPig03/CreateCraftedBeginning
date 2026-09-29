@@ -6,7 +6,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 import org.jetbrains.annotations.Contract;
@@ -15,12 +15,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record GasCanisterOverlayPacket(GasStack content, long capacity, int packType, boolean creative) implements ClientboundPacketPayload {
-    public static final StreamCodec<RegistryFriendlyByteBuf, GasCanisterOverlayPacket> STREAM_CODEC = StreamCodec.composite(GasStack.OPTIONAL_STREAM_CODEC, GasCanisterOverlayPacket::content, ByteBufCodecs.VAR_LONG, GasCanisterOverlayPacket::capacity, ByteBufCodecs.VAR_INT, GasCanisterOverlayPacket::packType, ByteBufCodecs.BOOL, GasCanisterOverlayPacket::creative, GasCanisterOverlayPacket::new);
+public record GasCanisterOverlayPacket(GasStack content, long maxAmount, long pressurePa, int packType, boolean creative) implements ClientboundPacketPayload {
+    public static final StreamCodec<RegistryFriendlyByteBuf, GasCanisterOverlayPacket> STREAM_CODEC = StreamCodec.composite(GasStack.OPTIONAL_STREAM_CODEC, GasCanisterOverlayPacket::content, ByteBufCodecs.VAR_LONG, GasCanisterOverlayPacket::maxAmount, ByteBufCodecs.VAR_LONG, GasCanisterOverlayPacket::pressurePa, ByteBufCodecs.VAR_INT, GasCanisterOverlayPacket::packType, ByteBufCodecs.BOOL, GasCanisterOverlayPacket::creative, GasCanisterOverlayPacket::new);
 
     @Override
     public void handle(LocalPlayer player) {
-        CanisterContainerClients.updateDisplayedGasState(content, capacity, packType, creative);
+        CanisterContainerClients.updateDisplayedGasState(content, maxAmount, pressurePa, packType, creative);
     }
 
     @Contract(pure = true)

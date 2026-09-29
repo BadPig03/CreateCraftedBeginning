@@ -22,7 +22,7 @@ public class BreezeChamberInteractionPoint extends DepositOnlyArmInteractionPoin
     }
 
     @Override
-    public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
+    public ItemStack insert(ArmBlockEntity arm, ItemStack stack, boolean simulate) {
         ItemStack inputStack = stack.copy();
         InteractionResultHolder<ItemStack> insertionResult = BreezeChamberBlock.tryInsert(level, pos, inputStack, false, false, simulate);
         ItemStack remainder = insertionResult.getObject();

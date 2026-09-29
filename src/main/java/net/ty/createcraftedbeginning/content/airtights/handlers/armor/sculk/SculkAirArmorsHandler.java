@@ -24,6 +24,6 @@ public class SculkAirArmorsHandler implements AirtightArmorsHandler {
 
     @Override
     public float getMultiplierForBoostingElytra() {
-        return 0.5f;
+        return 0.5F;
     }
 }

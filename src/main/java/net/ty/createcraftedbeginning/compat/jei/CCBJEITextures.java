@@ -16,9 +16,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public enum CCBJEITextures implements ScreenElement, TextureSheetSegment {
+    JEI_CONDENSATION("jei/widgets", 0, 106, 13, 17),
+    JEI_CONDENSATION_ARROW("jei/widgets", 19, 124, 18, 15),
     JEI_COOLING("jei/widgets", 12, 178, 16, 16),
     JEI_COOLING_BACKGROUND("jei/widgets", 28, 178, 16, 16),
     JEI_DOWN_ARROW("jei/widgets", 0, 21, 18, 14),
+    JEI_FRACTIONATION("jei/widgets", 0, 92, 10, 13),
+    JEI_FRACTIONATION_ARROW("jei/widgets", 0, 124, 17, 15),
     JEI_HEAT_BAR("jei/widgets", 0, 201, 169, 19),
     JEI_LONG_ARROW("jei/widgets", 19, 0, 71, 10),
     JEI_NO_HEAT_BAR("jei/widgets", 0, 221, 169, 19),
@@ -53,12 +57,6 @@ public enum CCBJEITextures implements ScreenElement, TextureSheetSegment {
         graphics.blit(location, x, y, startX, startY, width, height);
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public void render(GuiGraphics graphics, int x, int y, Color color) {
-        bind();
-        UIRenderHelper.drawColoredTexture(graphics, color, x, y, startX, startY, width, height);
-    }
-
     @Override
     public int getStartX() {
         return startX;
@@ -77,5 +75,11 @@ public enum CCBJEITextures implements ScreenElement, TextureSheetSegment {
     @Override
     public int getHeight() {
         return height;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public void render(GuiGraphics graphics, int x, int y, Color color) {
+        bind();
+        UIRenderHelper.drawColoredTexture(graphics, color, x, y, startX, startY, width, height);
     }
 }

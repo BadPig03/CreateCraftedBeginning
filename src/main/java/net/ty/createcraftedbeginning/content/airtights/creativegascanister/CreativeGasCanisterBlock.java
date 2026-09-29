@@ -67,6 +67,7 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
         if (placementState == null) {
             return null;
         }
+
         return ProperWaterloggedBlock.withWater(context.getLevel(), placementState, context.getClickedPos());
     }
 
@@ -91,6 +92,7 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
         if (!(asItem() instanceof CreativeGasCanisterBlockItem) || !(level.getBlockEntity(pos) instanceof CreativeGasCanisterBlockEntity canister)) {
             return ItemStack.EMPTY;
         }
+
         return canister.getCanister().copy();
     }
 
@@ -114,6 +116,7 @@ public class CreativeGasCanisterBlock extends Block implements IBE<CreativeGasCa
         if (!state.getValue(WATERLOGGED)) {
             return super.getFluidState(state);
         }
+
         return Fluids.WATER.defaultFluidState();
     }
 

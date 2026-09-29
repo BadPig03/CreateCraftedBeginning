@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -22,13 +21,13 @@ final class TeslaTurbineSerialization {
 
     CompoundTag write(Provider provider, boolean clientPacket) {
         CompoundTag compoundTag = new CompoundTag();
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_FLOW_METER, core.getFlowMeter().write(provider, clientPacket));
+        compoundTag.put(COMPOUND_KEY_FLOW_METER, core.getFlowMeter().write(provider, clientPacket));
         if (!clientPacket) {
             return compoundTag;
         }
 
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_LEVEL_CALCULATOR, core.getLevelCalculator().write());
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_STRUCTURE_MANAGER, core.getStructureManager().writeClient());
+        compoundTag.put(COMPOUND_KEY_LEVEL_CALCULATOR, core.getLevelCalculator().write());
+        compoundTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, core.getStructureManager().writeClient());
         return compoundTag;
     }
 
@@ -43,23 +42,23 @@ final class TeslaTurbineSerialization {
     }
 
     private void readClient(CompoundTag compoundTag, Provider provider) {
-        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_FLOW_METER)) {
-            core.getFlowMeter().read(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_FLOW_METER), provider, true);
+        if (compoundTag.contains(COMPOUND_KEY_FLOW_METER)) {
+            core.getFlowMeter().read(compoundTag.getCompound(COMPOUND_KEY_FLOW_METER), provider, true);
         }
-        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_LEVEL_CALCULATOR)) {
-            core.getLevelCalculator().read(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_LEVEL_CALCULATOR), true);
+        if (compoundTag.contains(COMPOUND_KEY_LEVEL_CALCULATOR)) {
+            core.getLevelCalculator().read(compoundTag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR), true);
         }
-        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_STRUCTURE_MANAGER)) {
+        if (!compoundTag.contains(COMPOUND_KEY_STRUCTURE_MANAGER)) {
             return;
         }
 
-        core.getStructureManager().readClient(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_STRUCTURE_MANAGER));
+        core.getStructureManager().readClient(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
     }
 
     private void readPersistent(CompoundTag compoundTag, Provider provider) {
         core.getLevelCalculator().read(new CompoundTag(), false);
-        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_FLOW_METER)) {
-            core.getFlowMeter().read(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_FLOW_METER), provider, false);
+        if (compoundTag.contains(COMPOUND_KEY_FLOW_METER)) {
+            core.getFlowMeter().read(compoundTag.getCompound(COMPOUND_KEY_FLOW_METER), provider, false);
         }
         else {
             core.getFlowMeter().loadEmptyState();

@@ -7,7 +7,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AbstractAirtightPipeBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -24,7 +24,7 @@ public class AirtightCheckValveBlockEntity extends AbstractAirtightPipeBlockEnti
     }
 
     @Override
-    public boolean canTransport(Level level, BlockState state, BlockPos pos, Direction direction) {
+    public boolean allowsGasTransport(Level level, BlockState state, BlockPos pos, Direction direction) {
         return AirtightCheckValveBlock.isInputSide(state, direction);
     }
 }

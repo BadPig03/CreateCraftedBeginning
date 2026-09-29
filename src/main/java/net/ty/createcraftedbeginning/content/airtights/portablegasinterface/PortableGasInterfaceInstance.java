@@ -54,10 +54,6 @@ class PortableGasInterfaceInstance {
         top.setChanged();
     }
 
-    private void applyBaseTransform(TransformedInstance instance) {
-        instance.setIdentityTransform().translate(pos).center().rotateYDegrees(yRotation).rotateXDegrees(xRotation).uncenter();
-    }
-
     void tick(boolean lit) {
         if (this.lit == lit) {
             return;
@@ -75,5 +71,9 @@ class PortableGasInterfaceInstance {
     void collectCrumblingInstances(Consumer<Instance> consumer) {
         consumer.accept(middle);
         consumer.accept(top);
+    }
+
+    private void applyBaseTransform(TransformedInstance instance) {
+        instance.setIdentityTransform().translate(pos).center().rotateYDegrees(yRotation).rotateXDegrees(xRotation).uncenter();
     }
 }

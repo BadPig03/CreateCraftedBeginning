@@ -14,11 +14,10 @@ import net.minecraft.world.item.component.ItemContainerContents;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
-import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonGasContents;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterUtils.GasFilterData;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilters.GasFilterData;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateContents;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,11 +37,6 @@ public class CCBDataComponents {
 
     public static final DataComponentType<Integer> GAS_CANISTER_PACK_FLAGS = register("gas_canister_pack_flags", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
 
-    public static final DataComponentType<Integer> COMPRESSOR_STORED_HEAT = register("compressor_stored_heat", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
-
-    public static final DataComponentType<Integer> BREEZE_TIME = register("breeze_time", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
-    public static final DataComponentType<Boolean> BREEZE_CREATIVE = register("breeze_creative", builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
-
     public static final DataComponentType<AirtightHandheldDrillMiningTemplates> DRILL_MINING_TEMPLATE = register("drill_mining_template", builder -> builder.persistent(AirtightHandheldDrillMiningTemplates.CODEC).networkSynchronized(AirtightHandheldDrillMiningTemplates.STREAM_CODEC));
     public static final DataComponentType<BlockPos> DRILL_MINING_SIZE = register("drill_mining_size", builder -> builder.persistent(BlockPos.CODEC).networkSynchronized(BlockPos.STREAM_CODEC));
     public static final DataComponentType<Direction> DRILL_MINING_DIRECTION = register("drill_mining_direction", builder -> builder.persistent(Direction.CODEC).networkSynchronized(Direction.STREAM_CODEC));
@@ -54,18 +48,18 @@ public class CCBDataComponents {
     public static final DataComponentType<Integer> GAS_INJECTION_CHAMBER_FILTER_COLOR = register("gas_injection_chamber_filter_color", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
     public static final DataComponentType<ResourceLocation> GAS_INJECTION_CHAMBER_FILTER_FAN_PROCESSING_TYPE = register("gas_injection_chamber_filter_fan_processing_type", builder -> builder.persistent(ResourceLocation.CODEC).networkSynchronized(ResourceLocation.STREAM_CODEC));
 
-    public static final DataComponentType<BalloonGasContents> BALLOON_GAS_CONTENTS = register("balloon_gas_contents", builder -> builder.persistent(BalloonGasContents.CODEC).networkSynchronized(BalloonGasContents.STREAM_CODEC));
+    public static final DataComponentType<GasStack> BALLOON_GAS = register("balloon_gas", builder -> builder.persistent(GasStack.CODEC).networkSynchronized(GasStack.STREAM_CODEC));
     public static final DataComponentType<Integer> GAS_VIRTUAL_ITEM_COLOR = register("gas_virtual_item_color", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
     public static final DataComponentType<GasStack> GAS_VIRTUAL_ITEM_TYPE = register("gas_virtual_item_type", builder -> builder.persistent(GasStack.OPTIONAL_CODEC).networkSynchronized(GasStack.OPTIONAL_STREAM_CODEC));
     public static final DataComponentType<GasFilterData> GAS_FILTER_DATA = register("gas_filter_data", builder -> builder.persistent(GasFilterData.CODEC).networkSynchronized(GasFilterData.STREAM_CODEC));
+
+    public static void register(IEventBus eventBus) {
+        COMPONENTS.register(eventBus);
+    }
 
     private static <T> @NotNull DataComponentType<T> register(String name, UnaryOperator<Builder<T>> builder) {
         DataComponentType<T> type = builder.apply(DataComponentType.builder()).build();
         COMPONENTS.register(name, () -> type);
         return type;
-    }
-
-    public static void register(IEventBus eventBus) {
-        COMPONENTS.register(eventBus);
     }
 }

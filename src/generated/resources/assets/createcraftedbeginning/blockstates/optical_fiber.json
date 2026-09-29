@@ -2,55 +2,352 @@
   "multipart": [
     {
       "apply": {
-        "model": "createcraftedbeginning:block/optical_fiber/core"
+        "model": "createcraftedbeginning:block/optical_fiber/junction"
+      },
+      "when": {
+        "OR": [
+          {
+            "down": "false",
+            "east": "false",
+            "north": "false",
+            "south": "false",
+            "up": "false",
+            "west": "false"
+          },
+          {
+            "down": "true",
+            "north": "true"
+          },
+          {
+            "down": "true",
+            "south": "true"
+          },
+          {
+            "down": "true",
+            "west": "true"
+          },
+          {
+            "down": "true",
+            "east": "true"
+          },
+          {
+            "north": "true",
+            "up": "true"
+          },
+          {
+            "south": "true",
+            "up": "true"
+          },
+          {
+            "up": "true",
+            "west": "true"
+          },
+          {
+            "east": "true",
+            "up": "true"
+          },
+          {
+            "north": "true",
+            "west": "true"
+          },
+          {
+            "east": "true",
+            "north": "true"
+          },
+          {
+            "south": "true",
+            "west": "true"
+          },
+          {
+            "east": "true",
+            "south": "true"
+          }
+        ]
       }
     },
     {
       "apply": {
-        "model": "createcraftedbeginning:block/optical_fiber/down"
+        "model": "createcraftedbeginning:block/optical_fiber/end/down"
       },
       "when": {
-        "down": "true"
+        "down": "true",
+        "east": "false",
+        "north": "false",
+        "south": "false",
+        "up": "false",
+        "west": "false"
       }
     },
     {
       "apply": {
-        "model": "createcraftedbeginning:block/optical_fiber/up"
+        "model": "createcraftedbeginning:block/optical_fiber/connection/down"
       },
       "when": {
-        "up": "true"
+        "AND": [
+          {
+            "down": "true"
+          },
+          {
+            "OR": [
+              {
+                "north": "true"
+              },
+              {
+                "south": "true"
+              },
+              {
+                "west": "true"
+              },
+              {
+                "east": "true"
+              }
+            ]
+          }
+        ]
       }
     },
     {
       "apply": {
-        "model": "createcraftedbeginning:block/optical_fiber/north"
+        "model": "createcraftedbeginning:block/optical_fiber/end/up"
       },
       "when": {
-        "north": "true"
+        "down": "false",
+        "east": "false",
+        "north": "false",
+        "south": "false",
+        "up": "true",
+        "west": "false"
       }
     },
     {
       "apply": {
-        "model": "createcraftedbeginning:block/optical_fiber/south"
+        "model": "createcraftedbeginning:block/optical_fiber/connection/up"
       },
       "when": {
-        "south": "true"
+        "AND": [
+          {
+            "up": "true"
+          },
+          {
+            "OR": [
+              {
+                "north": "true"
+              },
+              {
+                "south": "true"
+              },
+              {
+                "west": "true"
+              },
+              {
+                "east": "true"
+              }
+            ]
+          }
+        ]
       }
     },
     {
       "apply": {
-        "model": "createcraftedbeginning:block/optical_fiber/west"
+        "model": "createcraftedbeginning:block/optical_fiber/straight/y"
       },
       "when": {
+        "down": "true",
+        "east": "false",
+        "north": "false",
+        "south": "false",
+        "up": "true",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/end/north"
+      },
+      "when": {
+        "down": "false",
+        "east": "false",
+        "north": "true",
+        "south": "false",
+        "up": "false",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/connection/north"
+      },
+      "when": {
+        "AND": [
+          {
+            "north": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true"
+              },
+              {
+                "up": "true"
+              },
+              {
+                "west": "true"
+              },
+              {
+                "east": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/end/south"
+      },
+      "when": {
+        "down": "false",
+        "east": "false",
+        "north": "false",
+        "south": "true",
+        "up": "false",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/connection/south"
+      },
+      "when": {
+        "AND": [
+          {
+            "south": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true"
+              },
+              {
+                "up": "true"
+              },
+              {
+                "west": "true"
+              },
+              {
+                "east": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/straight/z"
+      },
+      "when": {
+        "down": "false",
+        "east": "false",
+        "north": "true",
+        "south": "true",
+        "up": "false",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/end/west"
+      },
+      "when": {
+        "down": "false",
+        "east": "false",
+        "north": "false",
+        "south": "false",
+        "up": "false",
         "west": "true"
       }
     },
     {
       "apply": {
-        "model": "createcraftedbeginning:block/optical_fiber/east"
+        "model": "createcraftedbeginning:block/optical_fiber/connection/west"
       },
       "when": {
-        "east": "true"
+        "AND": [
+          {
+            "west": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true"
+              },
+              {
+                "up": "true"
+              },
+              {
+                "north": "true"
+              },
+              {
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/end/east"
+      },
+      "when": {
+        "down": "false",
+        "east": "true",
+        "north": "false",
+        "south": "false",
+        "up": "false",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/connection/east"
+      },
+      "when": {
+        "AND": [
+          {
+            "east": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true"
+              },
+              {
+                "up": "true"
+              },
+              {
+                "north": "true"
+              },
+              {
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/optical_fiber/straight/x"
+      },
+      "when": {
+        "down": "false",
+        "east": "true",
+        "north": "false",
+        "south": "false",
+        "up": "false",
+        "west": "true"
       }
     }
   ]

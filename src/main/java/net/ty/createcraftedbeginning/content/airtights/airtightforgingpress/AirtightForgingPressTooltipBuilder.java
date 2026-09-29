@@ -1,8 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 
-import com.simibubi.create.api.stress.BlockStressValues;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
-import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
 import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -13,11 +11,15 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitsTooltips;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips;
 import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -35,9 +37,10 @@ class AirtightForgingPressTooltipBuilder {
         this.press = press;
     }
 
-    void addToGoggleTooltip(List<Component> tooltip) {
+    void addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         addStoredInfo(tooltip);
-        addKineticInfo(tooltip);
+        OverpressureTooltips.addStatus(tooltip, press.getOverpressureBehaviour(), press.getGasCapability());
+        addKineticInfo(tooltip, isPlayerSneaking);
     }
 
     boolean addToTooltip(List<Component> tooltip) {
@@ -60,27 +63,26 @@ class AirtightForgingPressTooltipBuilder {
         return true;
     }
 
-    private void addKineticInfo(List<Component> tooltip) {
-        if (!StressImpact.isEnabled()) {
+    private void addKineticInfo(List<Component> tooltip, boolean isPlayerSneaking) {
+        AirtightForgingPressStructuralShaftBlockEntity shaft = core.getStructureManager().getKineticTooltipSource();
+        if (shaft == null) {
+            return;
+        }
+
+        List<Component> kineticTooltip = new ArrayList<>();
+        if (!shaft.addToGoggleTooltip(kineticTooltip, isPlayerSneaking)) {
             return;
         }
 
         tooltip.add(CommonComponents.EMPTY);
-        CCBLang.translate("gui.stress_impact").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        double stressImpact = Mth.abs(core.getStructureManager().getTheoreticalSpeed()) * BlockStressValues.getImpact(CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.get());
-        CCBLang.number(stressImpact).translate("gui.unit.stress").style(ChatFormatting.AQUA).space().add(CCBLang.translate("gui.at_current_speed").style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+        tooltip.addAll(kineticTooltip);
     }
 
-    private List<Component> calculateStorage() {
-        List<Component> storageTooltip = new ArrayList<>();
-        addItemStorage(storageTooltip);
-        addFluidStorage(storageTooltip);
-        addGasStorage(storageTooltip);
-        return storageTooltip;
-    }
+    private int addItemStorage(List<Component> tooltip, int maxDisplayedStacks) {
+        if (!GoggleTooltip.isVisible(tooltip, Section.ITEM_STORAGE)) {
+            return 0;
+        }
 
-    private void addItemStorage(List<Component> tooltip) {
-        int maxDisplayedStacks = ClientContextBridge.getMaxItemStackDisplay();
         int stackCount = 0;
         IItemHandler itemHandler = press.getInputOutputCapability();
         for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
@@ -89,20 +91,23 @@ class AirtightForgingPressTooltipBuilder {
                 continue;
             }
 
+            if (stackCount == 0) {
+                CCBLang.translate("gui.airtight_forging_press.items").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            }
             if (stackCount < maxDisplayedStacks) {
-                CCBLang.text("").add(Component.translatable(storedStack.getDescriptionId()).withStyle(ChatFormatting.GRAY)).add(CCBLang.text(" x" + storedStack.getCount()).style(ChatFormatting.GREEN)).forGoggles(tooltip, 1);
+                CCBLang.itemName(storedStack).style(ChatFormatting.GRAY).add(CCBLang.text(" x" + storedStack.getCount()).style(ChatFormatting.GREEN)).forGoggles(tooltip, 2);
             }
             stackCount++;
         }
-
-        if (stackCount <= maxDisplayedStacks) {
-            return;
-        }
-
-        CCBLang.translate("gui.airtight_forging_press.more", stackCount - maxDisplayedStacks).style(ChatFormatting.DARK_GRAY).forGoggles(tooltip, 1);
+        return stackCount;
     }
 
-    private void addFluidStorage(List<Component> tooltip) {
+    private int addFluidStorage(List<Component> tooltip) {
+        if (!GoggleTooltip.isVisible(tooltip, Section.FLUID_STORAGE)) {
+            return 0;
+        }
+
+        int fluidCount = 0;
         IFluidHandler fluidHandler = press.getFluidCapability();
         for (int tank = 0; tank < fluidHandler.getTanks(); tank++) {
             FluidStack storedFluid = fluidHandler.getFluidInTank(tank);
@@ -111,42 +116,67 @@ class AirtightForgingPressTooltipBuilder {
                 continue;
             }
 
-            CCBLang.fluidName(storedFluid).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(storedFluid.getAmount()).add(volumeUnit).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
+            if (fluidCount == 0) {
+                CCBLang.translate("gui.airtight_forging_press.fluids").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            }
+            CCBLang.fluidName(storedFluid).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(storedFluid.getAmount()).space().add(volumeUnit).style(ChatFormatting.BLUE)).forGoggles(tooltip, 2);
+            fluidCount++;
         }
+        return fluidCount;
     }
 
-    private void addGasStorage(List<Component> tooltip) {
-        IGasHandler gasHandler = press.getGasCapability();
+    private int addGasStorage(List<Component> tooltip) {
+        if (!GoggleTooltip.isVisible(tooltip, Section.GAS_STORAGE)) {
+            return 0;
+        }
+
+        int gasCount = 0;
+        GasStorageHandler gasHandler = press.getGasCapability();
         for (int tank = 0; tank < gasHandler.getTanks(); tank++) {
             GasStack storedGas = gasHandler.getGasInTank(tank);
             if (storedGas.isEmpty()) {
                 continue;
             }
 
-            CCBLang.gasName(storedGas).space().style(ChatFormatting.GRAY).add(GasAmounts.precise(storedGas.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 1);
+            if (gasCount == 0) {
+                CCBLang.translate("gui.airtight_forging_press.gases").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
+            }
+            CCBLang.gasName(storedGas).space().style(ChatFormatting.GRAY).add(GasUnitFormat.amount(storedGas.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 2);
+            GasUnitsTooltips.addPressureReading(tooltip, gasHandler, tank, 2, press);
+            gasCount++;
         }
+        return gasCount;
     }
 
     private void addStoredInfo(List<Component> tooltip) {
         CCBLang.translate("gui.airtight_forging_press").forGoggles(tooltip);
         ItemStack pressHeadStack = press.getPressHeadInventory().getStackInSlot(0);
-        if (!pressHeadStack.isEmpty()) {
+        if (!pressHeadStack.isEmpty() && GoggleTooltip.isVisible(tooltip, Section.PRESS_HEAD)) {
             CCBLang.translate("gui.airtight_forging_press.press_head_tool").style(ChatFormatting.GRAY).forGoggles(tooltip);
             CCBLang.text("").add(Component.translatable(pressHeadStack.getDescriptionId()).withStyle(ChatFormatting.GRAY)).forGoggles(tooltip, 1);
         }
 
         ItemStack processingStack = press.getAdditionInventory().getStackInSlot(0);
-        if (!processingStack.isEmpty()) {
+        if (!processingStack.isEmpty() && GoggleTooltip.isVisible(tooltip, Section.PROCESSING_MATERIAL)) {
             CCBLang.translate("gui.airtight_forging_press.processing_material").style(ChatFormatting.GRAY).forGoggles(tooltip);
             CCBLang.text("").add(Component.translatable(processingStack.getDescriptionId()).withStyle(ChatFormatting.GRAY)).add(CCBLang.text(" x" + processingStack.getCount()).style(ChatFormatting.GREEN)).forGoggles(tooltip, 1);
         }
 
-        List<Component> storageTooltip = calculateStorage();
-        if (storageTooltip.isEmpty()) {
+        int contentsStartIndex = tooltip.size();
+        CCBLang.translate("gui.airtight_forging_press.contents").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        int maxDisplayedStacks = ClientContextBridge.getMaxItemStackDisplay();
+        int itemCount = addItemStorage(tooltip, maxDisplayedStacks);
+        if (itemCount > maxDisplayedStacks) {
+            CCBLang.translate("gui.airtight_forging_press.more", itemCount - maxDisplayedStacks).style(ChatFormatting.DARK_GRAY).forGoggles(tooltip, 2);
+        }
+
+        int storedEntryCount = itemCount + addFluidStorage(tooltip) + addGasStorage(tooltip);
+        if (storedEntryCount > 0) {
             return;
         }
 
-        CCBLang.translate("gui.airtight_forging_press.contents").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        tooltip.addAll(storageTooltip);
+        while (tooltip.size() > contentsStartIndex) {
+            tooltip.removeLast();
+        }
     }
 }

@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightcannon;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.breeze.Breeze;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -24,7 +23,7 @@ class AirtightCannonEvents {
     @SubscribeEvent
     private static void onAirtightCannonKillEntity(LivingDeathEvent event) {
         LivingEntity killedEntity = event.getEntity();
-        if (killedEntity.level().isClientSide || killedEntity.getType().getCategory() != MobCategory.MONSTER) {
+        if (killedEntity.level().isClientSide) {
             return;
         }
 

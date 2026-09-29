@@ -14,7 +14,7 @@ import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
 import net.ty.createcraftedbeginning.compat.createdragonsplus.CreateDragonsPlusCompat;
 import net.ty.createcraftedbeginning.compat.dndesires.DnDesiresCompat;
-import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberFilterItem;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -49,32 +49,6 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
         this.runtimeSupplier = runtimeSupplier;
     }
 
-    private static @Nullable LookupTarget readTarget(IFocus<?> focus) {
-        if (focus.getRole() != RecipeIngredientRole.INPUT) {
-            return null;
-        }
-
-        Optional<ItemStack> focusedStack = focus.getTypedValue().getItemStack();
-        ResourceLocation typeId = focusedStack.flatMap(GasInjectionChamberUtils::getFanProcessingTypeId).orElse(null);
-        if (typeId == null) {
-            return null;
-        }
-
-        ResourceLocation categoryId = PROCESSING_TYPES.get(typeId);
-        if (categoryId == null) {
-            return null;
-        }
-        return new LookupTarget(categoryId);
-    }
-
-    private @Nullable IRecipeCategory<?> findCategory(ResourceLocation categoryId) {
-        IJeiRuntime runtime = runtimeSupplier.get();
-        if (runtime == null) {
-            return null;
-        }
-        return runtime.getRecipeManager().createRecipeCategoryLookup().get().filter(category -> category.getRecipeType().getUid().equals(categoryId)).findFirst().orElse(null);
-    }
-
     @Override
     public <V> List<RecipeType<?>> getRecipeTypes(IFocus<V> focus) {
         LookupTarget target = readTarget(focus);
@@ -86,6 +60,7 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
         if (category == null) {
             return List.of();
         }
+
         return List.of(category.getRecipeType());
     }
 
@@ -100,12 +75,41 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
         if (runtime == null) {
             return List.of();
         }
+
         return runtime.getRecipeManager().createRecipeLookup(recipeCategory.getRecipeType()).get().toList();
     }
 
     @Override
     public <T> List<T> getRecipes(IRecipeCategory<T> recipeCategory) {
         return List.of();
+    }
+
+    private static @Nullable LookupTarget readTarget(IFocus<?> focus) {
+        if (focus.getRole() != RecipeIngredientRole.INPUT) {
+            return null;
+        }
+
+        Optional<ItemStack> focusedStack = focus.getTypedValue().getItemStack();
+        ResourceLocation typeId = focusedStack.flatMap(GasInjectionChamberFilterItem::getFanProcessingTypeId).orElse(null);
+        if (typeId == null) {
+            return null;
+        }
+
+        ResourceLocation categoryId = PROCESSING_TYPES.get(typeId);
+        if (categoryId == null) {
+            return null;
+        }
+
+        return new LookupTarget(categoryId);
+    }
+
+    private @Nullable IRecipeCategory<?> findCategory(ResourceLocation categoryId) {
+        IJeiRuntime runtime = runtimeSupplier.get();
+        if (runtime == null) {
+            return null;
+        }
+
+        return runtime.getRecipeManager().createRecipeCategoryLookup().get().filter(category -> category.getRecipeType().getUid().equals(categoryId)).findFirst().orElse(null);
     }
 
     private record LookupTarget(ResourceLocation categoryId) {}

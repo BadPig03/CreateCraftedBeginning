@@ -4,9 +4,9 @@ import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -23,7 +23,7 @@ final class EndSculkSilencerAnimationState {
         }
 
         float unclampedTargetSpeed = Math.signum(kineticSpeed) * 2 * Mth.ceil(Math.log10(absoluteSpeed) + Math.sqrt(absoluteSpeed));
-        return CCBMathUtils.clampMagnitude(unclampedTargetSpeed, MAX_ANIMATION_SPEED);
+        return BoundedMath.clampMagnitude(unclampedTargetSpeed, MAX_ANIMATION_SPEED);
     }
 
     LerpedFloat getAnimation() {

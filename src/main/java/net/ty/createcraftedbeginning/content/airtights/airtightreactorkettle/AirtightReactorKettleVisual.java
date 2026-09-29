@@ -13,7 +13,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.Mth;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
@@ -31,39 +31,12 @@ public class AirtightReactorKettleVisual extends AbstractBlockEntityVisual<Airti
 
     public AirtightReactorKettleVisual(VisualizationContext context, AirtightReactorKettleBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
-
         mixer = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_MIXER)).createInstance();
         for (int windowIndex = 0; windowIndex < Iterate.horizontalDirections.length; windowIndex++) {
             leftWindows[windowIndex] = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_LEFT_WINDOW)).createInstance();
             rightWindows[windowIndex] = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_RIGHT_WINDOW)).createInstance();
         }
         animate(partialTick);
-    }
-
-    private void animate(float partialTick) {
-        float mixerAngle = blockEntity.getMixerRotation().getValue(partialTick) * Mth.DEG_TO_RAD;
-        float mixerOffset = blockEntity.getMixerOffset(partialTick);
-        if (mixerAngle != lastMixerAngle || mixerOffset != lastMixerOffset) {
-            mixer.setIdentityTransform().translate(getVisualPosition()).translateY(-mixerOffset).rotateYCentered(mixerAngle).setChanged();
-            lastMixerAngle = mixerAngle;
-            lastMixerOffset = mixerOffset;
-        }
-
-        float windowDistance = blockEntity.getWindowDistance().getValue(partialTick);
-        if (windowDistance == lastWindowDistance) {
-            return;
-        }
-
-        for (int windowIndex = 0; windowIndex < Iterate.horizontalDirections.length; windowIndex++) {
-            Direction direction = Iterate.horizontalDirections[windowIndex];
-            Vec3i directionNormal = direction.getNormal();
-            Vec3i leftOffset = direction.getClockWise().getNormal();
-            Vec3i rightOffset = direction.getCounterClockWise().getNormal();
-
-            leftWindows[windowIndex].setIdentityTransform().translate(getVisualPosition()).translate(directionNormal.getX(), directionNormal.getY(), directionNormal.getZ()).translate(leftOffset.getX() * windowDistance, leftOffset.getY() * windowDistance, leftOffset.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).setChanged();
-            rightWindows[windowIndex].setIdentityTransform().translate(getVisualPosition()).translate(directionNormal.getX(), directionNormal.getY(), directionNormal.getZ()).translate(rightOffset.getX() * windowDistance, rightOffset.getY() * windowDistance, rightOffset.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).setChanged();
-        }
-        lastWindowDistance = windowDistance;
     }
 
     @Override
@@ -99,5 +72,31 @@ public class AirtightReactorKettleVisual extends AbstractBlockEntityVisual<Airti
             consumer.accept(leftWindows[windowIndex]);
             consumer.accept(rightWindows[windowIndex]);
         }
+    }
+
+    private void animate(float partialTick) {
+        float mixerAngle = blockEntity.getMixerRotation().getValue(partialTick) * Mth.DEG_TO_RAD;
+        float mixerOffset = blockEntity.getMixerOffset(partialTick);
+        if (Float.compare(mixerAngle, lastMixerAngle) != 0 || Float.compare(mixerOffset, lastMixerOffset) != 0) {
+            mixer.setIdentityTransform().translate(getVisualPosition()).translateY(-mixerOffset).rotateYCentered(mixerAngle).setChanged();
+            lastMixerAngle = mixerAngle;
+            lastMixerOffset = mixerOffset;
+        }
+
+        float windowDistance = blockEntity.getWindowDistance().getValue(partialTick);
+        if (Float.compare(windowDistance, lastWindowDistance) == 0) {
+            return;
+        }
+
+        for (int windowIndex = 0; windowIndex < Iterate.horizontalDirections.length; windowIndex++) {
+            Direction direction = Iterate.horizontalDirections[windowIndex];
+            Vec3i directionNormal = direction.getNormal();
+            Vec3i leftOffset = direction.getClockWise().getNormal();
+            Vec3i rightOffset = direction.getCounterClockWise().getNormal();
+
+            leftWindows[windowIndex].setIdentityTransform().translate(getVisualPosition()).translate(directionNormal.getX(), directionNormal.getY(), directionNormal.getZ()).translate(leftOffset.getX() * windowDistance, leftOffset.getY() * windowDistance, leftOffset.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).setChanged();
+            rightWindows[windowIndex].setIdentityTransform().translate(getVisualPosition()).translate(directionNormal.getX(), directionNormal.getY(), directionNormal.getZ()).translate(rightOffset.getX() * windowDistance, rightOffset.getY() * windowDistance, rightOffset.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).setChanged();
+        }
+        lastWindowDistance = windowDistance;
     }
 }

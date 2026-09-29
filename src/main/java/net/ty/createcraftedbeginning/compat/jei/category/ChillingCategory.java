@@ -15,8 +15,8 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -34,12 +34,7 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
         super(info);
     }
 
-    public static Supplier<ItemStack> getCatalystStack() {
-        ItemStack fanStack = new ItemStack(AllBlocks.ENCASED_FAN);
-        fanStack.set(DataComponents.CUSTOM_NAME, CCBLang.translateDirect("recipe.fan_chilling.fan").withStyle(style -> style.withItalic(false)));
-        return () -> fanStack;
-    }
-
+    @SuppressWarnings("ConstantExpression")
     @Override
     protected void draw(ChillingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         CCBJEITextures.JEI_SHADOW.render(graphics, 46, 29);
@@ -50,8 +45,8 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
         poseStack.translate(56, 33, 0);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-12.5f));
-        poseStack.mulPose(Axis.YP.rotationDegrees(22.5f));
+        poseStack.mulPose(Axis.XP.rotationDegrees(-12.5F));
+        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
 
         AnimatedKinetics.defaultBlockElement(AllPartialModels.ENCASED_FAN_INNER).rotateBlock(180, 0, AnimatedKinetics.getCurrentAngle() * 16).scale(SCALE).render(graphics);
         AnimatedKinetics.defaultBlockElement(AllBlocks.ENCASED_FAN.getDefaultState()).rotateBlock(0, 180, 0).atLocal(0, 0, 0).scale(SCALE).render(graphics);
@@ -77,5 +72,11 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
             builder.addSlot(RecipeIngredientRole.OUTPUT, slotX, slotY).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(CreateRecipeCategory.addStochasticTooltip(output));
             outputIndex++;
         }
+    }
+
+    public static Supplier<ItemStack> getCatalystStack() {
+        ItemStack fanStack = new ItemStack(AllBlocks.ENCASED_FAN);
+        fanStack.set(DataComponents.CUSTOM_NAME, CCBLang.translateDirect("recipe.fan_chilling.fan").withStyle(style -> style.withItalic(false)));
+        return () -> fanStack;
     }
 }

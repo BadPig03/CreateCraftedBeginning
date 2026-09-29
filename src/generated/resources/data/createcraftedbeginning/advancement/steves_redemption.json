@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:the_integrated_industry_age",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:steves_redemption_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

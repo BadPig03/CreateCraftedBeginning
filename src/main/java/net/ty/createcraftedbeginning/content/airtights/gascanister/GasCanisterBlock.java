@@ -67,6 +67,7 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
         if (placementState == null) {
             return null;
         }
+
         return ProperWaterloggedBlock.withWater(context.getLevel(), placementState, context.getClickedPos());
     }
 
@@ -95,6 +96,7 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
         if (!(level.getBlockEntity(pos) instanceof GasCanisterBlockEntity canister)) {
             return ItemStack.EMPTY;
         }
+
         return canister.getCanister().copy();
     }
 
@@ -118,6 +120,7 @@ public class GasCanisterBlock extends Block implements IBE<GasCanisterBlockEntit
         if (!state.getValue(WATERLOGGED)) {
             return Fluids.EMPTY.defaultFluidState();
         }
+
         return Fluids.WATER.defaultFluidState();
     }
 

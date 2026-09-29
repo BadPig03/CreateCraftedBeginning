@@ -25,7 +25,7 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.ClientHooks;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.platform.client.FirstPersonItemRenderBridge;
 import net.ty.createcraftedbeginning.platform.client.FirstPersonItemRenderBridge.HandItems;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -43,6 +43,24 @@ public class AirtightExtendArmRenderHandler {
     private PartialModel pose = CCBPartialModels.AIRTIGHT_EXTEND_ARM_PUNCHING;
 
     private AirtightExtendArmRenderHandler() {
+    }
+
+    public void tick() {
+        lastHandAnimation = handAnimation;
+        handAnimation *= Mth.clamp(handAnimation, 0.8F, 0.99F);
+        updatePose();
+    }
+
+    public void registerListeners(IEventBus bus) {
+        bus.addListener(EventPriority.LOWEST, this::onRenderPlayerHand);
+    }
+
+    float getAnimation(float partialTicks) {
+        return Mth.lerp(partialTicks, lastHandAnimation, handAnimation);
+    }
+
+    PartialModel getPose() {
+        return pose;
     }
 
     private static void renderPlayerArm(RenderHandEvent event, EntityRenderDispatcher renderDispatcher, LocalPlayer player, boolean isRightHand, float handSign) {
@@ -67,24 +85,6 @@ public class AirtightExtendArmRenderHandler {
         }
 
         poseStack.popPose();
-    }
-
-    public void tick() {
-        lastHandAnimation = handAnimation;
-        handAnimation *= Mth.clamp(handAnimation, 0.8f, 0.99f);
-        updatePose();
-    }
-
-    public void registerListeners(IEventBus bus) {
-        bus.addListener(EventPriority.LOWEST, this::onRenderPlayerHand);
-    }
-
-    float getAnimation(float partialTicks) {
-        return Mth.lerp(partialTicks, lastHandAnimation, handAnimation);
-    }
-
-    PartialModel getPose() {
-        return pose;
     }
 
     private void updatePose() {
@@ -145,7 +145,7 @@ public class AirtightExtendArmRenderHandler {
         float equipProgress = isBlockItem ? 0 : event.getEquipProgress() / 4;
 
         if (1 - swingProgress > handAnimation && swingProgress > 0) {
-            handAnimation = 0.95f;
+            handAnimation = 0.95F;
         }
 
         float extensionProgress = getAnimation(AnimationTickHolder.getPartialTicks());
@@ -173,7 +173,7 @@ public class AirtightExtendArmRenderHandler {
             if (isBlockItem && itemRenderer.getModel(heldItem, null, null, 0).isGui3d()) {
                 TransformStack.of(poseStack).rotateYDegrees(handSign * 45);
                 poseStack.translate(handSign * 0.15, -0.15, -0.05);
-                poseStack.scale(1.25f, 1.25f, 1.25f);
+                poseStack.scale(1.25F, 1.25F, 1.25F);
             }
 
             firstPersonRenderer.renderItem(player, heldItem, displayContext, !isRightHand, poseStack, bufferSource, packedLight);

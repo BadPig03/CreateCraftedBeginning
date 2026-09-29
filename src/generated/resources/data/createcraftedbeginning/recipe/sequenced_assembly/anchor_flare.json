@@ -1,0 +1,101 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "createcraftedbeginning:unfilled_weather_flare"
+  },
+  "loops": 4,
+  "results": [
+    {
+      "chance": 80.0,
+      "id": "createcraftedbeginning:anchor_flare"
+    },
+    {
+      "chance": 20.0,
+      "id": "createcraftedbeginning:unfilled_weather_flare"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_anchor_flare"
+        },
+        {
+          "item": "minecraft:gunpowder"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ]
+    },
+    {
+      "type": "createcraftedbeginning:gas_injection",
+      "gas_ingredients": [
+        {
+          "amount": 2000,
+          "ingredient": {
+            "gas": "createcraftedbeginning:ultrawarm_air"
+          }
+        }
+      ],
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ]
+    },
+    {
+      "type": "createcraftedbeginning:gas_injection",
+      "gas_ingredients": [
+        {
+          "amount": 2000,
+          "ingredient": {
+            "gas": "createcraftedbeginning:moist_air"
+          }
+        }
+      ],
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ]
+    },
+    {
+      "type": "createcraftedbeginning:gas_injection",
+      "gas_ingredients": [
+        {
+          "amount": 2000,
+          "ingredient": {
+            "gas": "createcraftedbeginning:ethereal_air"
+          }
+        }
+      ],
+      "ingredients": [
+        {
+          "item": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ],
+      "results": [
+        {
+          "id": "createcraftedbeginning:incomplete_anchor_flare"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "createcraftedbeginning:incomplete_anchor_flare"
+  }
+}

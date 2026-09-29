@@ -9,7 +9,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
+import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.client.gui.CCBGUITextures;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
@@ -58,6 +59,6 @@ public class GasFactoryGaugeSetGasScreen extends AbstractSimiContainerScreen<Gas
         Component title = CCBLang.translateDirect("gui.gas_factory_gauge.place_gas_to_monitor");
         graphics.drawString(font, title, x + imageWidth / 2 - font.width(title) / 2 + 7, y + 4, 0x3D3C48, false);
 
-        GuiGameElement.of(CCBBlocks.GAS_FACTORY_GAUGE_BLOCK.asStack()).scale(3).render(graphics, x + 192, y + 48);
+        GuiGameElement.of(new ItemStack(CCBBlocks.GAS_FACTORY_GAUGE_BLOCK)).scale(3).render(graphics, x + 192, y + 48);
     }
 }

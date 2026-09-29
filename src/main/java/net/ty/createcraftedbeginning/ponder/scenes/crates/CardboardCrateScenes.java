@@ -30,13 +30,13 @@ public class CardboardCrateScenes {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
         RandomSource random = RandomSource.create();
 
-        scene.title("cardboard_crate", "Deposing Items with Cardboard Crates");
+        scene.title("cardboard_crate", "Disposing Items with Cardboard Crates");
         scene.configureBasePlate(0, 0, 5);
         scene.showBasePlate();
 
         BlockPos cratePos = util.grid().at(2, 1, 2);
-        BlockPos chutePos = util.grid().at(2, 2, 2);
-        BlockPos itemPos = util.grid().at(2, 3, 2);
+        BlockPos chutePos = cratePos.above();
+        BlockPos itemPos = cratePos.above(2);
 
         Selection chuteSelection = util.select().position(chutePos);
         Selection crateSelection = util.select().position(cratePos);
@@ -60,12 +60,12 @@ public class CardboardCrateScenes {
         scene.idle(20);
         scene.overlay().showText(60).text("Cardboard Crate can only temporarily store a single type of item").colored(PonderPalette.RED).pointAt(crateVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(80);
+        scene.idle(60);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
          scene.world().showSection(chuteSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).colored(PonderPalette.RED).text("When storing different items, items within the crate will be disposed").colored(PonderPalette.RED).pointAt(crateVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).colored(PonderPalette.RED).text("When storing different items, items within the crate will be disposed").pointAt(crateVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(10);
         ElementLink<EntityElement> remove = scene.world().createItemEntity(itemVec, itemDropMotion, coalItem.copy());
@@ -103,7 +103,7 @@ public class CardboardCrateScenes {
         scene.world().modifyEntity(remove4, Entity::discard);
 
         scene.idle(20);
-        scene.overlay().showText(60).colored(PonderPalette.RED).text("When storing identical items, any excess beyond the capacity limit will be disposed as well").colored(PonderPalette.RED).pointAt(crateVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).colored(PonderPalette.RED).text("When storing identical items, any excess beyond the capacity limit will be disposed as well").pointAt(crateVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(10);
         ElementLink<EntityElement> remove5 = scene.world().createItemEntity(itemVec, itemDropMotion, minecartItem.copy());
@@ -131,9 +131,9 @@ public class CardboardCrateScenes {
             scene.idle(3);
             scene.world().incrementBlockBreakingProgress(cratePos);
         }
-        scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), cardboardCrateItem);
+        scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), cardboardCrateItem.copy());
 
-        scene.idle(30);
+        scene.idle(57);
         scene.markAsFinished();
     }
 }

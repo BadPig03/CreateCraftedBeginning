@@ -7,6 +7,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -22,6 +24,25 @@ final class ResidueOutletTooltip {
         this.inventory = inventory;
     }
 
+    boolean addToGoggleTooltip(List<Component> tooltip) {
+        ItemStack storedItem = inventory.getStackInSlot(0);
+        FluidStack storedFluid = outlet.getStoredFluid();
+        boolean showItem = !storedItem.isEmpty() && GoggleTooltip.isVisible(tooltip, Section.ITEM_STORAGE);
+        boolean showFluid = !storedFluid.isEmpty() && GoggleTooltip.isVisible(tooltip, Section.FLUID_STORAGE);
+        if (!showItem && !showFluid) {
+            return false;
+        }
+
+        CCBLang.translate("gui.residue_outlet.header").forGoggles(tooltip);
+        if (showItem) {
+            addItemTooltip(tooltip, storedItem);
+        }
+        if (showFluid) {
+            addFluidTooltip(tooltip, storedFluid);
+        }
+        return true;
+    }
+
     private static void addItemTooltip(List<Component> tooltip, ItemStack item) {
         CCBLang.text("").add(Component.translatable(item.getDescriptionId()).withStyle(ChatFormatting.GRAY)).add(CCBLang.text(" x" + item.getCount()).style(ChatFormatting.GREEN)).forGoggles(tooltip, 1);
     }
@@ -29,22 +50,5 @@ final class ResidueOutletTooltip {
     private static void addFluidTooltip(List<Component> tooltip, FluidStack fluid) {
         LangBuilder unitLabel = CCBLang.translate("gui.unit.milli_buckets");
         CCBLang.fluidName(fluid).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(fluid.getAmount()).add(unitLabel).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
-    }
-
-    boolean addToGoggleTooltip(List<Component> tooltip) {
-        ItemStack storedItem = inventory.getStackInSlot(0);
-        FluidStack storedFluid = outlet.getStoredFluid();
-        if (storedItem.isEmpty() && storedFluid.isEmpty()) {
-            return false;
-        }
-
-        CCBLang.translate("gui.residue_outlet.header").forGoggles(tooltip);
-        if (!storedItem.isEmpty()) {
-            addItemTooltip(tooltip, storedItem);
-        }
-        if (!storedFluid.isEmpty()) {
-            addFluidTooltip(tooltip, storedFluid);
-        }
-        return true;
     }
 }

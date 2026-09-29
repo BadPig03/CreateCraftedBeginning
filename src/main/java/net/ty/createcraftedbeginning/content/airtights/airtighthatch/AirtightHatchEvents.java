@@ -9,7 +9,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gascanisters.AirtightHatchCanisters;
+import net.ty.createcraftedbeginning.api.canister.AirtightHatchCanisters;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
 
 import javax.annotation.ParametersAreNonnullByDefault;

@@ -12,7 +12,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.compat.computercraft.ComputerCraftPackagerCompat;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonItem;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonPressureSemantics;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -28,10 +31,6 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
         controller = new GasRepackagerController(this);
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.GAS_REPACKAGER.get(), (be, context) -> be.inventory);
-    }
-
     @Override
     public boolean unwrapBox(ItemStack box, boolean simulate) {
         return PackageItem.isPackage(box) && super.unwrapBox(box, simulate);
@@ -42,9 +41,29 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
         controller.attemptToRepackage(targetInv);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.GAS_REPACKAGER.get(), (repackager, context) -> repackager.inventory);
+    }
+
+    void attemptVanillaItemRepackage(IItemHandler targetInv) {
+        super.attemptToRepackage(new NonGasPackageItemHandler(targetInv));
+    }
+
+    long ambientPressurePa() {
+        if (level == null) {
+            return GasPressure.VACUUM_PA;
+        }
+
+        return BalloonPressureSemantics.ambientPressurePa(level, worldPosition);
+    }
+
     String resolveGasOutputAddress(String originalAddress) {
         updateSignAddress();
-        return signBasedAddress.isBlank() ? originalAddress : signBasedAddress;
+        if (signBasedAddress.isBlank()) {
+            return originalAddress;
+        }
+
+        return signBasedAddress;
     }
 
     void acceptPassThroughPackage(ItemStack packageStack) {
@@ -74,23 +93,16 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
                 continue;
             }
 
-            if (level != null) {
-                Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), remainder.copy());
+            if (level == null) {
+                continue;
             }
+
+            Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), remainder.copy());
         }
         if (!restoredAnyRemainder) {
             return;
         }
 
-        notifyUpdate();
-    }
-
-    void enqueuePassThroughBoxes(List<BigItemStack> boxes) {
-        if (boxes.isEmpty()) {
-            return;
-        }
-
-        queuedExitingPackages.addAll(boxes);
         notifyUpdate();
     }
 
@@ -102,5 +114,51 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
         ComputerCraftPackagerCompat.emitRepackage(this, boxes);
         queuedExitingPackages.addAll(boxes);
         notifyUpdate();
+    }
+
+    private record NonGasPackageItemHandler(IItemHandler delegate) implements IItemHandler {
+        @Override
+        public int getSlots() {
+            return delegate.getSlots();
+        }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            ItemStack stack = delegate.getStackInSlot(slot);
+            if (BalloonItem.containsGas(stack)) {
+                return ItemStack.EMPTY;
+            }
+
+            return stack;
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (BalloonItem.containsGas(stack)) {
+                return stack;
+            }
+
+            return delegate.insertItem(slot, stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            ItemStack simulated = delegate.extractItem(slot, amount, true);
+            if (BalloonItem.containsGas(simulated)) {
+                return ItemStack.EMPTY;
+            }
+
+            return delegate.extractItem(slot, amount, simulate);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return delegate.getSlotLimit(slot);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return !BalloonItem.containsGas(stack) && delegate.isItemValid(slot, stack);
+        }
     }
 }

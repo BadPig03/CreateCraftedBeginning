@@ -1,13 +1,16 @@
 {
   "type": "createcraftedbeginning:gas_injection",
+  "gas_ingredients": [
+    {
+      "amount": 50,
+      "ingredient": {
+        "gas": "createcraftedbeginning:energized_natural_air"
+      }
+    }
+  ],
   "ingredients": [
     {
       "item": "minecraft:acacia_sapling"
-    },
-    {
-      "type": "createcraftedbeginning:single",
-      "amount": 20,
-      "gas": "createcraftedbeginning:energized_natural_air"
     }
   ],
   "results": [

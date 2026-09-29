@@ -39,6 +39,11 @@ public final class CCBItemModelTransformer {
     }
 
     @Contract(pure = true)
+    public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> airtightMeter() {
+        return builder -> builder.model((context, provider) -> provider.generated(context::get).texture("layer0", provider.modLoc("item/airtight_meter")));
+    }
+
+    @Contract(pure = true)
     public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> gasInjectionChamberFilter() {
         return builder -> builder.model((context, provider) -> provider.withExistingParent(context.getName(), provider.modLoc("block/gas_injection_chamber/filter_item")));
     }

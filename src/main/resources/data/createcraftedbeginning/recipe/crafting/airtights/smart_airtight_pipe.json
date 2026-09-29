@@ -1,21 +1,17 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "A",
-    "B",
-    "C"
-  ],
-  "key": {
-    "A": {
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
       "tag": "c:ingots/zinc"
     },
-    "B": {
+    {
       "item": "createcraftedbeginning:airtight_pipe"
     },
-    "C": {
+    {
       "item": "create:electron_tube"
     }
-  },
+  ],
   "result": {
     "count": 1,
     "id": "createcraftedbeginning:smart_airtight_pipe"

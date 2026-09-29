@@ -2,10 +2,11 @@ package net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.minecraft.util.Mth;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -46,9 +47,10 @@ final class BoilerSteamOutletExtractionMeter {
         ticksUntilNextSample = SAMPLE_RATE;
         double previousAverageExtractionRate = averageExtractionRate;
         recordSample();
-        if (Double.compare(previousAverageExtractionRate, averageExtractionRate) != 0) {
+        if (previousAverageExtractionRate != averageExtractionRate) {
             return TickResult.AVERAGE_CHANGED;
         }
+
         return TickResult.RECORDED;
     }
 
@@ -61,33 +63,43 @@ final class BoilerSteamOutletExtractionMeter {
             return false;
         }
 
-        gatheredExtraction = CCBMathUtils.saturatedAdd(gatheredExtraction, drainedSteam.getAmount());
+        gatheredExtraction = BoundedMath.saturatedAdd(gatheredExtraction, drainedSteam.getAmount());
         return true;
     }
 
+    boolean restoreExtraction(GasStack restoredSteam, GasAction action) {
+        if (action.simulate() || restoredSteam.isEmpty()) {
+            return false;
+        }
+
+        long previousExtraction = gatheredExtraction;
+        gatheredExtraction = Math.max(0, gatheredExtraction - restoredSteam.getAmount());
+        return gatheredExtraction != previousExtraction;
+    }
+
     void write(CompoundTag compoundTag, boolean clientPacket) {
-        CCBNbtUtils.putDouble(compoundTag, COMPOUND_KEY_AVERAGE_EXTRACTION_RATE, averageExtractionRate);
+        compoundTag.putDouble(COMPOUND_KEY_AVERAGE_EXTRACTION_RATE, averageExtractionRate);
         if (clientPacket) {
             return;
         }
 
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_CURRENT_INDEX, currentIndex);
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE, ticksUntilNextSample);
-        CCBNbtUtils.putLong(compoundTag, COMPOUND_KEY_GATHERED_EXTRACTION, gatheredExtraction);
-        CCBNbtUtils.putLongArray(compoundTag, COMPOUND_KEY_SAMPLES, extractedPerSample);
+        compoundTag.putInt(COMPOUND_KEY_CURRENT_INDEX, currentIndex);
+        compoundTag.putInt(COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE, ticksUntilNextSample);
+        compoundTag.putLong(COMPOUND_KEY_GATHERED_EXTRACTION, gatheredExtraction);
+        compoundTag.putLongArray(COMPOUND_KEY_SAMPLES, extractedPerSample);
     }
 
     void read(CompoundTag compoundTag, boolean clientPacket) {
-        averageExtractionRate = Math.max(0, CCBNbtUtils.getDouble(compoundTag, COMPOUND_KEY_AVERAGE_EXTRACTION_RATE));
+        averageExtractionRate = Math.max(0, compoundTag.getDouble(COMPOUND_KEY_AVERAGE_EXTRACTION_RATE));
         if (clientPacket) {
             return;
         }
 
         clearSamplingState();
-        currentIndex = Math.floorMod(CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_CURRENT_INDEX), SAMPLE_COUNT);
-        ticksUntilNextSample = Math.clamp(CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE, SAMPLE_RATE), 1, SAMPLE_RATE);
-        gatheredExtraction = Math.max(0, CCBNbtUtils.getLong(compoundTag, COMPOUND_KEY_GATHERED_EXTRACTION));
-        long[] storedSamples = CCBNbtUtils.getLongArray(compoundTag, COMPOUND_KEY_SAMPLES);
+        currentIndex = Mth.positiveModulo(compoundTag.getInt(COMPOUND_KEY_CURRENT_INDEX), SAMPLE_COUNT);
+        ticksUntilNextSample = Mth.clamp(NbtValues.getIntOrDefault(compoundTag, COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE, SAMPLE_RATE), 1, SAMPLE_RATE);
+        gatheredExtraction = Math.max(0, compoundTag.getLong(COMPOUND_KEY_GATHERED_EXTRACTION));
+        long[] storedSamples = compoundTag.getLongArray(COMPOUND_KEY_SAMPLES);
         for (int sampleIndex = 0; sampleIndex < Math.min(storedSamples.length, SAMPLE_COUNT); sampleIndex++) {
             extractedPerSample[sampleIndex] = Math.max(0, storedSamples[sampleIndex]);
         }
@@ -101,7 +113,7 @@ final class BoilerSteamOutletExtractionMeter {
     private void recordSample() {
         rollingExtraction = Math.max(0, rollingExtraction - extractedPerSample[currentIndex]);
         extractedPerSample[currentIndex] = gatheredExtraction;
-        rollingExtraction = CCBMathUtils.saturatedAdd(rollingExtraction, gatheredExtraction);
+        rollingExtraction = BoundedMath.saturatedAdd(rollingExtraction, gatheredExtraction);
         currentIndex = (currentIndex + 1) % SAMPLE_COUNT;
         gatheredExtraction = 0;
         averageExtractionRate = (double) rollingExtraction / SAMPLE_WINDOW_TICKS;
@@ -110,7 +122,7 @@ final class BoilerSteamOutletExtractionMeter {
     private void recalculateRollingExtraction() {
         rollingExtraction = 0;
         for (long sample : extractedPerSample) {
-            rollingExtraction = CCBMathUtils.saturatedAdd(rollingExtraction, sample);
+            rollingExtraction = BoundedMath.saturatedAdd(rollingExtraction, sample);
         }
         averageExtractionRate = (double) rollingExtraction / SAMPLE_WINDOW_TICKS;
     }

@@ -35,6 +35,19 @@ public final class EndSculkSilencerEvents {
     private EndSculkSilencerEvents() {
     }
 
+    public static boolean isSilenceableGameEvent(Holder<GameEvent> gameEvent) {
+        return gameEvent.is(GameEventTags.VIBRATIONS) || gameEvent.is(GameEventTags.WARDEN_CAN_LISTEN) || gameEvent.is(GameEventTags.SHRIEKER_CAN_LISTEN) || gameEvent.is(GameEventTags.ALLAY_CAN_LISTEN);
+    }
+
+    public static boolean hasSilencerCoverage(Level level) {
+        return GlobalEndSculkSilencerManager.hasCoverage(level.dimension().location());
+    }
+
+    public static boolean isWithinSilencedArea(Level level, Position position) {
+        ResourceLocation dimension = level.dimension().location();
+        return GlobalEndSculkSilencerManager.hasCoverage(dimension) && GlobalEndSculkSilencerManager.checkWithinRange(SubLevelBridge.resolve(level, position).blockPos(), dimension);
+    }
+
     @SubscribeEvent
     private static void onServerStarting(ServerStartingEvent event) {
         GlobalEndSculkSilencerManager.clear();
@@ -51,12 +64,13 @@ public final class EndSculkSilencerEvents {
             return;
         }
 
-        ResourceLocation dimension = event.getLevel().dimension().location();
+        Level level = event.getLevel();
+        ResourceLocation dimension = level.dimension().location();
         if (!GlobalEndSculkSilencerManager.hasCoverage(dimension)) {
             return;
         }
 
-        BlockPos sourcePos = SubLevelBridge.resolve(event.getLevel(), event.getEventPosition()).blockPos();
+        BlockPos sourcePos = SubLevelBridge.resolve(level, event.getEventPosition()).blockPos();
         if (!GlobalEndSculkSilencerManager.checkWithinRange(sourcePos, dimension)) {
             return;
         }
@@ -87,19 +101,6 @@ public final class EndSculkSilencerEvents {
         }
 
         GlobalEndSculkSilencerManager.removeDimension(serverLevel);
-    }
-
-    public static boolean isSilenceableGameEvent(Holder<GameEvent> gameEvent) {
-        return gameEvent.is(GameEventTags.VIBRATIONS) || gameEvent.is(GameEventTags.WARDEN_CAN_LISTEN) || gameEvent.is(GameEventTags.SHRIEKER_CAN_LISTEN) || gameEvent.is(GameEventTags.ALLAY_CAN_LISTEN);
-    }
-
-    public static boolean hasSilencerCoverage(Level level) {
-        return GlobalEndSculkSilencerManager.hasCoverage(level.dimension().location());
-    }
-
-    public static boolean isWithinSilencedArea(Level level, Position position) {
-        ResourceLocation dimension = level.dimension().location();
-        return GlobalEndSculkSilencerManager.hasCoverage(dimension) && GlobalEndSculkSilencerManager.checkWithinRange(SubLevelBridge.resolve(level, position).blockPos(), dimension);
     }
 
     private static void syncPlayer(Player player) {

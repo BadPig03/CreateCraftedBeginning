@@ -29,14 +29,28 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasUnits;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
+import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseCause;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.gas.behaviour.OverpressureBehaviour;
+import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.gas.overpressure.PressureRuptureService;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
+import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
 import net.ty.createcraftedbeginning.recipe.interfaces.ForgingPressRecipeContext;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -44,7 +58,7 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, IGasInventoryIdentifierProvider, ForgingPressRecipeContext {
+public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, GasInventoryIdentifierProvider, ForgingPressRecipeContext {
     private static final int MAX_INPUT_SLOT = 1;
     private static final int MAX_OUTPUT_SLOT = 8;
     private static final int LAZY_TICK_RATE = 4;
@@ -62,9 +76,10 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     private DeferralBehaviour updateChecker;
     private IFluidHandler fluidCapability;
-    private IGasHandler gasCapability;
+    private GasStorageHandler gasCapability;
     private SmartFluidTankBehaviour fluidTank;
     private SmartGasTankBehaviour gasTank;
+    private OverpressureBehaviour overpressureBehaviour;
     private ItemStack recipeFilter = ItemStack.EMPTY;
 
     public AirtightForgingPressBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -84,27 +99,18 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         serialization = new AirtightForgingPressSerialization(this, controller);
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get(), (press, ignoredDirection) -> press.pressHeadInventory);
-    }
-
-    private static int getFluidCapacity() {
-        return Math.max(1, CCBConfig.server().airtights.forgingPressFluidCapacity.get()) * FluidType.BUCKET_VOLUME;
-    }
-
-    private static long getGasCapacity() {
-        return Math.max(1, CCBConfig.server().airtights.forgingPressGasCapacity.get()) * GasAmounts.MILLIBUCKETS_PER_BUCKET;
-    }
-
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        fluidTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.INPUT, this, 1, getFluidCapacity(), false).whenFluidUpdates(this::notifyContentsChanged);
+        behaviours.add(new CCBAdvancementBehaviour(this, CCBAdvancements.SUPERMASSIVE));
+        fluidTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.INPUT, this, 1, Math.max(1, CCBConfig.server().machines.airtightForgingPress.fluidCapacity.get()) * FluidType.BUCKET_VOLUME, false).whenFluidUpdates(this::notifyContentsChanged);
         fluidCapability = fluidTank.getCapability();
         behaviours.add(fluidTank);
 
-        gasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 1, getGasCapacity(), false).whenGasUpdates(this::notifyContentsChanged);
+        gasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 1, Math.max(1, CCBConfig.server().machines.airtightForgingPress.gasVolume.get()) * GasUnits.LITERS_PER_KILOLITER, GasPressureLimits.HARD_PRESSURE_PA, false).whenTankUpdates(this::notifyContentsChanged);
         gasCapability = gasTank.getCapability();
+        overpressureBehaviour = new OverpressureBehaviour(this, this::getCurrentGasPressurePa);
         behaviours.add(gasTank);
+        behaviours.add(overpressureBehaviour);
 
         updateChecker = new DeferralBehaviour(this, this::updateForgingPress);
         behaviours.add(updateChecker);
@@ -113,6 +119,10 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     @Override
     public void tick() {
         super.tick();
+        if (ruptureIfOverstressed()) {
+            return;
+        }
+
         controller.tick();
     }
 
@@ -126,7 +136,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        serialization.write(compoundTag, provider);
+        serialization.write(compoundTag, provider, clientPacket);
     }
 
     @Override
@@ -143,6 +153,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     @Override
     public void destroy() {
+        releaseStoredGas();
         super.destroy();
         ItemHelper.dropContents(level, worldPosition, pressHeadInventory);
         ItemHelper.dropContents(level, worldPosition, processingInventory);
@@ -152,7 +163,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        core.getTooltipBuilder().addToGoggleTooltip(tooltip);
+        core.getTooltipBuilder().addToGoggleTooltip(tooltip, isPlayerSneaking);
         return true;
     }
 
@@ -169,10 +180,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     @Override
     public InventoryIdentifier getGasInventoryIdentifier(Direction ignoredDirection) {
         return new Single(worldPosition);
-    }
-
-    public void startProcessInPonderLevel() {
-        controller.startProcessInPonderLevel();
     }
 
     @Override
@@ -196,7 +203,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     @Override
-    public IGasHandler getGasCapability() {
+    public GasStorageHandler getGasCapability() {
         return gasCapability;
     }
 
@@ -216,13 +223,21 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     }
 
     @Override
-    public ConsumptionPlan createConsumptionPlan(ItemStack expectedProcessingStack, int processingAmount, ItemStack expectedInputStack, int inputAmount, int[] fluidAmounts, long[] gasAmounts) {
-        return crafting.createConsumptionPlan(expectedProcessingStack, processingAmount, expectedInputStack, inputAmount, fluidAmounts, gasAmounts);
+    public ConsumptionPlan createConsumptionPlan(ItemStack expectedProcessingStack, int processingAmount, ItemStack expectedInputStack, int inputAmount, int[] fluidAmounts, GasConsumptionPlan gasPlan) {
+        return crafting.createConsumptionPlan(expectedProcessingStack, processingAmount, expectedInputStack, inputAmount, fluidAmounts, gasPlan);
     }
 
     @Override
     public synchronized boolean commitCraft(ConsumptionPlan consumptionPlan, OutputPlan outputPlan) {
         return crafting.commitCraft(consumptionPlan, outputPlan);
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get(), (press, ignoredDirection) -> press.pressHeadInventory);
+    }
+
+    public void startProcessInPonderLevel() {
+        controller.startProcessInPonderLevel();
     }
 
     public SmartInventory getOutputInventory() {
@@ -231,6 +246,20 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     public IItemHandler getInputOutputCapability() {
         return inputOutputCapability;
+    }
+
+    @Internal
+    public void setRecipeFilter(ItemStack stack) {
+        ItemStack normalizedFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
+        if (ItemStack.matches(recipeFilter, normalizedFilter)) {
+            return;
+        }
+
+        recipeFilter = normalizedFilter;
+        controller.notifyFilterChanged();
+        syncRecipeFilterReplicas();
+        setChanged();
+        sendData();
     }
 
     void scheduleUpdate() {
@@ -257,19 +286,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         return recipeFilter.copy();
     }
 
-    void setRecipeFilter(ItemStack stack) {
-        ItemStack normalizedFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
-        if (ItemStack.matches(recipeFilter, normalizedFilter)) {
-            return;
-        }
-
-        recipeFilter = normalizedFilter;
-        controller.notifyFilterChanged();
-        syncRecipeFilterReplicas();
-        setChanged();
-        sendData();
-    }
-
     float getPressHeadDistance(float partialTicks) {
         return controller.getPressHeadDistance(partialTicks);
     }
@@ -286,8 +302,58 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         return gasTank;
     }
 
+    OverpressureBehaviour getOverpressureBehaviour() {
+        return overpressureBehaviour;
+    }
+
     void loadRecipeFilter(ItemStack stack) {
         recipeFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
+    }
+
+    private boolean ruptureIfOverstressed() {
+        if (level == null || level.isClientSide || overpressureBehaviour.getFailureReadyChannel() < 0) {
+            return false;
+        }
+
+        PressureRuptureService.rupture(level, worldPosition, gasTank.getPrimaryHandler());
+        return true;
+    }
+
+    private void releaseStoredGas() {
+        if (level == null || level.isClientSide || gasTank == null) {
+            return;
+        }
+
+        GasStorageHandler gasHandler = gasTank.getCapability();
+        gasTank.beginMutation();
+        try {
+            for (int tank = 0; tank < gasHandler.getTanks(); tank++) {
+                GasPressureCompartment compartment = gasHandler.getPressureCompartment(tank);
+                long storedAmount = compartment.getStoredAmount();
+                if (storedAmount <= 0) {
+                    continue;
+                }
+
+                long sourcePressurePa = compartment.getPressurePa();
+                GasStack releasedGas = compartment.drain(storedAmount, GasAction.EXECUTE);
+                if (releasedGas.isEmpty()) {
+                    continue;
+                }
+
+                GasReleaseService.release(level, GasReleaseRequest.radial(releasedGas, worldPosition, GasReleaseCause.TANK_REMOVAL, sourcePressurePa));
+            }
+        }
+        finally {
+            gasTank.endMutation();
+        }
+    }
+
+    private long getCurrentGasPressurePa() {
+        if (gasTank == null) {
+            return GasPressure.VACUUM_PA;
+        }
+
+        return gasTank.getPrimaryHandler().getPressurePa();
     }
 
     private boolean updateForgingPress() {

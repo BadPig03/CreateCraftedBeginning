@@ -21,10 +21,10 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
+import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
+import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +32,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirtightTankBlockEntity>, IWrenchable, IAirtightComponent {
+public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirtightTankBlockEntity>, IWrenchable, GasConnectable {
     static final BooleanProperty TOP = BooleanProperty.create("top");
     static final BooleanProperty BOTTOM = BooleanProperty.create("bottom");
 
@@ -52,25 +52,17 @@ public class CreativeAirtightTankBlock extends Block implements IBE<CreativeAirt
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.hasBlockEntity() || state.is(newState.getBlock())) {
+        if (!state.hasBlockEntity() || state.is(newState.getBlock()) || !(level.getBlockEntity(pos) instanceof CreativeAirtightTankBlockEntity tank)) {
             return;
         }
 
-        if (!(level.getBlockEntity(pos) instanceof CreativeAirtightTankBlockEntity tank)) {
-            return;
-        }
-
-        GasConnectivityHandler.splitMultiOnRemoval(tank);
+        GasTankMultiblockConnectivity.splitMultiblockOnRemoval(tank, false);
         level.removeBlockEntity(pos);
     }
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (player.isShiftKeyDown() || !(stack.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canister)) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        }
-
-        if (!(level.getBlockEntity(pos) instanceof CreativeAirtightTankBlockEntity tank)) {
+        if (player.isShiftKeyDown() || !(stack.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents canister) || !(level.getBlockEntity(pos) instanceof CreativeAirtightTankBlockEntity tank)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 

@@ -10,7 +10,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTab.Builder;
 import net.minecraft.world.item.CreativeModeTab.DisplayItemsGenerator;
 import net.minecraft.world.item.CreativeModeTab.ItemDisplayParameters;
 import net.minecraft.world.item.CreativeModeTab.Output;
@@ -23,10 +22,10 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterDisplayVariants;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
-import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
+import net.ty.createcraftedbeginning.registry.registrate.CCBCreativeSectionTracker;
 import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
@@ -49,7 +48,7 @@ public class CCBCreativeTabs {
     private static final EnumMap<CCBCreativeTabSection, List<ItemProviderEntry<?, ?>>> SECTION_INIT_ITEMS = new EnumMap<>(CCBCreativeTabSection.class);
     private static final EnumMap<CCBCreativeTabSection, List<ItemProviderEntry<?, ?>>> SECTION_TAIL_ITEMS = new EnumMap<>(CCBCreativeTabSection.class);
 
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATIVE_TAB = REGISTER.register("base", () -> builder().title(CCBLang.translateDirect("item_groups.base_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)).displayItems(new RegistrateDisplayItemsGenerator()).build());
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATIVE_TAB = REGISTER.register("base", () -> CreativeModeTab.builder().title(CCBLang.translateDirect("item_groups.base_creative_tab")).withTabsBefore(AllCreativeModeTabs.BASE_CREATIVE_TAB.getKey()).icon(() -> new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK)).displayItems(new RegistrateDisplayItemsGenerator()).build());
 
     @Internal
     public static void register(IEventBus eventBus) {
@@ -64,16 +63,41 @@ public class CCBCreativeTabs {
         SECTION_TAIL_ITEMS.computeIfAbsent(section, ignored -> new ArrayList<>()).addAll(List.of(entries));
     }
 
-    private static Builder builder() {
-        return CreativeModeTab.builder();
-    }
-
     private record RegistrateDisplayItemsGenerator() implements DisplayItemsGenerator {
+        @Override
+        public void accept(ItemDisplayParameters parameters, Output output) {
+            Predicate<Item> exclusionPredicate = makeExclusionPredicate();
+            List<ItemOrdering> orderings = makeOrderings();
+            EnumMap<CCBCreativeTabSection, List<ItemStack>> stacksBySection = new EnumMap<>(CCBCreativeTabSection.class);
+            Map<Item, CCBCreativeTabSection> itemSections = new IdentityHashMap<>();
+            for (CCBCreativeTabSection section : CCBCreativeTabSection.values()) {
+                List<Item> items = new LinkedList<>();
+                items.addAll(collectBlocks(exclusionPredicate, section));
+                items.addAll(collectItems(exclusionPredicate, section));
+                applyOrderings(items, orderings);
+                applySectionItems(items, section);
+
+                List<ItemStack> stacks = new ArrayList<>(items.size());
+                items.stream().map(ItemStack::new).forEach(stacks::add);
+                if (section == CCBCreativeTabSection.CANISTERS) {
+                    stacks.addAll(GasCanisterDisplayVariants.createCanisterVariants());
+                }
+
+                stacksBySection.put(section, stacks);
+                stacks.forEach(stack -> itemSections.put(stack.getItem(), section));
+            }
+
+            CCBCreativeTabLayout.setItemSections(itemSections);
+            for (CCBCreativeTabSection section : CCBCreativeTabSection.values()) {
+                outputAll(output, stacksBySection.get(section));
+            }
+        }
+
         private static Predicate<Item> makeExclusionPredicate() {
             Set<Item> exclusions = new ReferenceOpenHashSet<>();
             List<ItemProviderEntry<?, ?>> itemsExclusions = new ArrayList<>();
             itemsExclusions.addAll(List.of(CCBItems.INCOMPLETE_AIRTIGHT_SHEET, CCBItems.INCOMPLETE_GAS_CANISTER_PACK, CCBItems.INCOMPLETE_HEAVY_CORE, CCBItems.INCOMPLETE_TESLA_TURBINE_ROTOR, CCBItems.INCOMPLETE_BREEZE_CORE, CCBItems.INCOMPLETE_AIRTIGHT_CANNON, CCBItems.INCOMPLETE_AIRTIGHT_EXTEND_ARM, CCBItems.INCOMPLETE_AIRTIGHT_HANDHELD_DRILL, CCBItems.INCOMPLETE_AIRTIGHT_HELMET, CCBItems.INCOMPLETE_AIRTIGHT_CHESTPLATE, CCBItems.INCOMPLETE_AIRTIGHT_LEGGINGS, CCBItems.INCOMPLETE_AIRTIGHT_BOOTS, CCBItems.INCOMPLETE_WEATHER_FLARE, CCBItems.INCOMPLETE_ANCHOR_FLARE));
-            itemsExclusions.addAll(List.of(CCBItems.GAS_CANISTER, CCBItems.GAS_CANISTER_PLACEABLE, CCBItems.CREATIVE_GAS_CANISTER, CCBItems.CREATIVE_GAS_CANISTER_PLACEABLE, CCBItems.NATURAL_WIND_CHARGE, CCBItems.ULTRAWARM_WIND_CHARGE, CCBItems.ETHEREAL_WIND_CHARGE, CCBItems.MOIST_WIND_CHARGE, CCBItems.SPORE_WIND_CHARGE, CCBItems.SCULK_WIND_CHARGE, CCBItems.ENERGIZED_NATURAL_WIND_CHARGE, CCBItems.ENERGIZED_ULTRAWARM_WIND_CHARGE, CCBItems.ENERGIZED_ETHEREAL_WIND_CHARGE, CCBItems.CREATIVE_WIND_CHARGE, CCBItems.GAS_VIRTUAL_ITEM));
+            itemsExclusions.addAll(List.of(CCBItems.GAS_CANISTER, CCBItems.GAS_CANISTER_PLACEABLE, CCBItems.CREATIVE_GAS_CANISTER, CCBItems.CREATIVE_GAS_CANISTER_PLACEABLE, CCBItems.NATURAL_WIND_CHARGE, CCBItems.ULTRAWARM_WIND_CHARGE, CCBItems.ETHEREAL_WIND_CHARGE, CCBItems.MOIST_WIND_CHARGE, CCBItems.SPORE_WIND_CHARGE, CCBItems.SCULK_WIND_CHARGE, CCBItems.STEAM_WIND_CHARGE, CCBItems.ENERGIZED_NATURAL_WIND_CHARGE, CCBItems.ENERGIZED_ULTRAWARM_WIND_CHARGE, CCBItems.ENERGIZED_ETHEREAL_WIND_CHARGE, CCBItems.CREATIVE_WIND_CHARGE, CCBItems.GAS_VIRTUAL_ITEM));
             itemsExclusions.addAll(List.of(CCBItems.BALLOON_RARE_REVERTED, CCBItems.BALLOON_RARE_SMILE, CCBItems.BALLOON_RARE_CRY, CCBItems.BALLOON_RARE_EYE, CCBItems.BALLOON_RARE_ISAAC, CCBItems.BALLOON_RARE_GHAST, CCBItems.BALLOON_RARE_TROLLFACE, CCBItems.BALLOON_RARE_TENNA, CCBItems.BALLOON_RARE_PVZ, CCBItems.BALLOON_RARE_QUESTION_MARKS, CCBItems.BALLOON_RARE_POWERFUL, CCBItems.BALLOON_RARE_CHEESE));
             itemsExclusions.stream().map(ItemProviderEntry::asItem).forEach(exclusions::add);
 
@@ -85,6 +109,8 @@ public class CCBCreativeTabs {
         private static List<ItemOrdering> makeOrderings() {
             List<ItemOrdering> orderings = new ReferenceArrayList<>();
             orderings.add(ItemOrdering.before(CCBItems.GAS_CANISTER.asItem(), CCBItems.CREATIVE_GAS_CANISTER.asItem()));
+            orderings.add(ItemOrdering.before(CCBItems.AIRTIGHT_METER.asItem(), CCBBlocks.AIRTIGHT_FLOWMETER_BLOCK.asItem()));
+            orderings.add(ItemOrdering.before(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL.asItem(), CCBBlocks.CREATIVE_AIRTIGHT_TANK_BLOCK.asItem()));
 
             orderings.add(ItemOrdering.after(CCBItems.TESLA_TURBINE_ROTOR.asItem(), CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK.asItem()));
             orderings.add(ItemOrdering.after(CCBItems.GAS_INJECTION_CHAMBER_FILTER.asItem(), CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.asItem()));
@@ -141,7 +167,7 @@ public class CCBCreativeTabs {
         private static List<Item> collectItems(Predicate<Item> exclusionPredicate, CCBCreativeTabSection section) {
             List<Item> items = new ReferenceArrayList<>();
             for (RegistryEntry<Item, Item> entry : CCBRegistrateProvider.get().getAll(Registries.ITEM)) {
-                if (CCBRegistrate.isOutOfCreativeSection(entry, section)) {
+                if (CCBCreativeSectionTracker.isOutOfSection(entry, section)) {
                     continue;
                 }
 
@@ -159,7 +185,7 @@ public class CCBCreativeTabs {
             List<Item> items = new ReferenceArrayList<>();
             Collection<RegistryEntry<Block, Block>> registryEntries = CCBRegistrateProvider.get().getAll(Registries.BLOCK);
             for (RegistryEntry<Block, Block> entry : registryEntries) {
-                if (CCBRegistrate.isOutOfCreativeSection(entry, section)) {
+                if (CCBCreativeSectionTracker.isOutOfSection(entry, section)) {
                     continue;
                 }
 
@@ -171,35 +197,6 @@ public class CCBCreativeTabs {
                 items.add(item);
             }
             return new ReferenceArrayList<>(new ReferenceLinkedOpenHashSet<>(items));
-        }
-
-        @Override
-        public void accept(ItemDisplayParameters parameters, Output output) {
-            Predicate<Item> exclusionPredicate = makeExclusionPredicate();
-            List<ItemOrdering> orderings = makeOrderings();
-            EnumMap<CCBCreativeTabSection, List<ItemStack>> stacksBySection = new EnumMap<>(CCBCreativeTabSection.class);
-            Map<Item, CCBCreativeTabSection> itemSections = new IdentityHashMap<>();
-            for (CCBCreativeTabSection section : CCBCreativeTabSection.values()) {
-                List<Item> items = new LinkedList<>();
-                items.addAll(collectBlocks(exclusionPredicate, section));
-                items.addAll(collectItems(exclusionPredicate, section));
-                applyOrderings(items, orderings);
-                applySectionItems(items, section);
-
-                List<ItemStack> stacks = new ArrayList<>(items.size());
-                items.stream().map(ItemStack::new).forEach(stacks::add);
-                if (section == CCBCreativeTabSection.CANISTERS) {
-                    stacks.addAll(GasCanisterUtils.getAllCanisters());
-                }
-
-                stacksBySection.put(section, stacks);
-                stacks.forEach(stack -> itemSections.put(stack.getItem(), section));
-            }
-
-            CCBCreativeTabLayout.setItemSections(itemSections);
-            for (CCBCreativeTabSection section : CCBCreativeTabSection.values()) {
-                outputAll(output, stacksBySection.get(section));
-            }
         }
     }
 

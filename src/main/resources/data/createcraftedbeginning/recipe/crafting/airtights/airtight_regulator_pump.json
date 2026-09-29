@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "tag": "c:plates/amethyst_crystal"
+    },
+    {
+      "item": "create:shaft"
+    },
+    {
+      "item": "createcraftedbeginning:airtight_pump"
+    },
+    {
+      "item": "create:precision_mechanism"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:airtight_regulator_pump"
+  }
+}

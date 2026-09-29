@@ -35,25 +35,39 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.CombinedGasTankWrapper;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasUnits;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
+import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseCause;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.gas.behaviour.OverpressureBehaviour;
+import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.gas.overpressure.PressureRuptureService;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
+import net.ty.createcraftedbeginning.gas.storage.handler.CombinedGasStorageHandler;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
 import net.ty.createcraftedbeginning.recipe.interfaces.ReactorKettleRecipeContext;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.function.LongSupplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, IGasInventoryIdentifierProvider, ReactorKettleRecipeContext {
+public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, GasInventoryIdentifierProvider, ReactorKettleRecipeContext {
     private static final int LAZY_TICK_RATE = 4;
     private static final int MAX_ITEM_SLOT = 27;
 
@@ -71,12 +85,13 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     private DeferralBehaviour updateChecker;
     private IFluidHandler recipeFluidCapability;
     private IFluidHandler fluidPortCapability;
-    private IGasHandler recipeGasCapability;
-    private IGasHandler gasPortCapability;
+    private GasStorageHandler recipeGasCapability;
+    private GasHandler gasPortCapability;
     private SmartFluidTankBehaviour inputFluidTank;
     private SmartFluidTankBehaviour outputFluidTank;
     private SmartGasTankBehaviour inputGasTank;
     private SmartGasTankBehaviour outputGasTank;
+    private OverpressureBehaviour overpressureBehaviour;
     private CCBAdvancementBehaviour advancementBehaviour;
     private ItemStack recipeFilter = ItemStack.EMPTY;
     private boolean recipeFilterAuthoritative = true;
@@ -100,23 +115,9 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         serialization = new AirtightReactorKettleSerialization(this, controller);
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, direction) -> be.itemPortCapability);
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, direction) -> be.fluidPortCapability);
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (be, direction) -> be.gasPortCapability);
-    }
-
-    static int getFluidCapacity() {
-        return Math.max(1, CCBConfig.server().airtights.reactorKettleFluidCapacity.get()) * FluidType.BUCKET_VOLUME;
-    }
-
-    static long getGasCapacity() {
-        return Math.max(1, CCBConfig.server().airtights.reactorKettleGasCapacity.get()) * GasAmounts.MILLIBUCKETS_PER_BUCKET;
-    }
-
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.BACK_TO_BASICS);
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.BUNDLE_OF_JOY);
         behaviours.add(advancementBehaviour);
         addFluidBehaviours(behaviours);
         addGasBehaviours(behaviours);
@@ -129,6 +130,10 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     public void tick() {
         super.tick();
         if (level == null) {
+            return;
+        }
+
+        if (!level.isClientSide && ruptureIfOverstressed()) {
             return;
         }
 
@@ -165,6 +170,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
     @Override
     public void destroy() {
+        releaseStoredGases();
         super.destroy();
         ItemHelper.dropContents(level, worldPosition, inputInventory);
         ItemHelper.dropContents(level, worldPosition, outputInventory);
@@ -172,7 +178,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        core.getTooltipBuilder().addToGoggleTooltip(tooltip);
+        core.getTooltipBuilder().addToGoggleTooltip(tooltip, isPlayerSneaking);
         return true;
     }
 
@@ -202,7 +208,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     @Override
-    public IGasHandler getAvailableGases() {
+    public GasStorageHandler getAvailableGases() {
         return recipeGasCapability;
     }
 
@@ -217,7 +223,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     @Override
-    public IGasHandler getOutputGasCapability() {
+    public GasHandler getOutputGasCapability() {
         return outputGasTank.getCapability();
     }
 
@@ -232,20 +238,92 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     @Override
-    public boolean commitRecipeCraft(int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
-        return commitCraft(createCraftPlan(itemAmounts, fluidAmounts, gasAmounts, outputItems, outputFluids, outputGases));
+    public boolean commitRecipeCraft(int[] itemAmounts, int[] fluidAmounts, GasConsumptionPlan gasPlan, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
+        return commitCraft(createCraftPlan(itemAmounts, fluidAmounts, gasPlan, outputItems, outputFluids, outputGases));
     }
 
-    AirtightReactorKettleCore getCore() {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (kettle, direction) -> kettle.itemPortCapability);
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (kettle, direction) -> kettle.fluidPortCapability);
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (kettle, direction) -> kettle.gasPortCapability);
+    }
+
+    public void startProcessInPonderLevel() {
+        controller.startProcessInPonderLevel();
+    }
+
+    @Internal
+    public static int getFluidCapacity() {
+        return Math.max(1, CCBConfig.server().machines.airtightReactorKettle.fluidCapacityPerTank.get()) * FluidType.BUCKET_VOLUME;
+    }
+
+    @Internal
+    public AirtightReactorKettleCore getCore() {
         return core;
     }
 
-    CraftPlan createCraftPlan(int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
-        return crafting.createCraftPlan(itemAmounts, fluidAmounts, gasAmounts, outputItems, outputFluids, outputGases);
+    @Internal
+    public CraftPlan createCraftPlan(int[] itemAmounts, int[] fluidAmounts, GasConsumptionPlan gasPlan, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
+        return crafting.createCraftPlan(itemAmounts, fluidAmounts, gasPlan, outputItems, outputFluids, outputGases);
     }
 
-    synchronized boolean commitCraft(CraftPlan plan) {
+    @Internal
+    public synchronized boolean commitCraft(CraftPlan plan) {
         return crafting.commitCraft(plan);
+    }
+
+    @Internal
+    public SmartFluidTankBehaviour getInputFluidTank() {
+        return inputFluidTank;
+    }
+
+    @Internal
+    public SmartFluidTankBehaviour getOutputFluidTank() {
+        return outputFluidTank;
+    }
+
+    @Internal
+    public SmartGasTankBehaviour getInputGasTank() {
+        return inputGasTank;
+    }
+
+    @Internal
+    public SmartGasTankBehaviour getOutputGasTank() {
+        return outputGasTank;
+    }
+
+    @Internal
+    public AirtightReactorKettleInventory getInputInventory() {
+        return inputInventory;
+    }
+
+    @Internal
+    public SmartInventory getOutputInventory() {
+        return outputInventory;
+    }
+
+    @Internal
+    public GasHandler getGasPortCapability() {
+        return gasPortCapability;
+    }
+
+    @Internal
+    public void setRecipeFilter(ItemStack stack) {
+        ItemStack normalizedFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
+        if (ItemStack.matches(recipeFilter, normalizedFilter)) {
+            return;
+        }
+
+        recipeFilter = normalizedFilter;
+        recipeFilterAuthoritative = true;
+        notifyFiltersChanged();
+        syncRecipeFilterReplicas();
+        setChanged();
+        sendData();
+    }
+
+    static long getGasCapacity() {
+        return Math.max(1, CCBConfig.server().machines.airtightReactorKettle.gasVolumePerTank.get()) * GasUnits.LITERS_PER_KILOLITER;
     }
 
     boolean acceptOutputs(List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
@@ -260,20 +338,8 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         return inputInventory.isEmpty() && outputInventory.isEmpty() && inputFluidTank.isEmpty() && outputFluidTank.isEmpty() && inputGasTank.isEmpty() && outputGasTank.isEmpty();
     }
 
-    SmartFluidTankBehaviour getInputFluidTank() {
-        return inputFluidTank;
-    }
-
-    SmartFluidTankBehaviour getOutputFluidTank() {
-        return outputFluidTank;
-    }
-
-    SmartGasTankBehaviour getInputGasTank() {
-        return inputGasTank;
-    }
-
-    SmartGasTankBehaviour getOutputGasTank() {
-        return outputGasTank;
+    OverpressureBehaviour getOverpressureBehaviour() {
+        return overpressureBehaviour;
     }
 
     Couple<SmartInventory> getInventories() {
@@ -308,36 +374,16 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         controller.notifyContentsChanged();
     }
 
-    private void notifyFiltersChanged() {
-        if (controller == null) {
-            return;
-        }
-
-        controller.notifyFiltersChanged();
-    }
-
     void scheduleUpdate() {
         updateChecker.scheduleUpdate();
-    }
-
-    public void startProcessInPonderLevel() {
-        controller.startProcessInPonderLevel();
     }
 
     AirtightReactorKettleController getController() {
         return controller;
     }
 
-    AirtightReactorKettleInventory getInputInventory() {
-        return inputInventory;
-    }
-
-    SmartInventory getOutputInventory() {
-        return outputInventory;
-    }
-
     void awardBackToBasics() {
-        advancementBehaviour.awardPlayer(CCBAdvancements.BACK_TO_BASICS);
+        advancementBehaviour.awardPlayer(CCBAdvancements.BUNDLE_OF_JOY);
     }
 
     IItemHandler getItemPortCapability() {
@@ -346,10 +392,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
     IFluidHandler getFluidPortCapability() {
         return fluidPortCapability;
-    }
-
-    IGasHandler getGasPortCapability() {
-        return gasPortCapability;
     }
 
     boolean testRecipeFilter(ItemStack stack) {
@@ -364,20 +406,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         return recipeFilter.copy();
     }
 
-    void setRecipeFilter(ItemStack stack) {
-        ItemStack normalizedFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
-        if (ItemStack.matches(recipeFilter, normalizedFilter)) {
-            return;
-        }
-
-        recipeFilter = normalizedFilter;
-        recipeFilterAuthoritative = true;
-        notifyFiltersChanged();
-        syncRecipeFilterReplicas();
-        setChanged();
-        sendData();
-    }
-
     void loadRecipeFilter(ItemStack stack, boolean authoritative) {
         recipeFilter = stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
         recipeFilterAuthoritative = authoritative;
@@ -385,6 +413,70 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
     boolean hasAuthoritativeRecipeFilter() {
         return recipeFilterAuthoritative;
+    }
+
+    private boolean ruptureIfOverstressed() {
+        int failedChannel = overpressureBehaviour.getFailureReadyChannel();
+        if (failedChannel < 0 || recipeGasCapability == null || level == null) {
+            return false;
+        }
+
+        PressureRuptureService.rupture(level, worldPosition, recipeGasCapability.getPressureCompartment(failedChannel));
+        return true;
+    }
+
+    private void releaseStoredGases() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        releaseStoredGases(inputGasTank);
+        releaseStoredGases(outputGasTank);
+    }
+
+    private void releaseStoredGases(@Nullable SmartGasTankBehaviour gasTankBehaviour) {
+        if (gasTankBehaviour == null || level == null) {
+            return;
+        }
+
+        GasStorageHandler gasHandler = gasTankBehaviour.getCapability();
+        gasTankBehaviour.beginMutation();
+        try {
+            for (int tank = 0; tank < gasHandler.getTanks(); tank++) {
+                GasPressureCompartment compartment = gasHandler.getPressureCompartment(tank);
+                long storedAmount = compartment.getStoredAmount();
+                if (storedAmount <= 0) {
+                    continue;
+                }
+
+                long sourcePressurePa = compartment.getPressurePa();
+                GasStack releasedGas = compartment.drain(storedAmount, GasAction.EXECUTE);
+                if (releasedGas.isEmpty()) {
+                    continue;
+                }
+
+                GasReleaseService.release(level, GasReleaseRequest.radial(releasedGas, worldPosition, GasReleaseCause.TANK_REMOVAL, sourcePressurePa));
+            }
+        }
+        finally {
+            gasTankBehaviour.endMutation();
+        }
+    }
+
+    private long getCurrentGasPressurePa(int channel) {
+        if (recipeGasCapability == null || channel < 0 || channel >= recipeGasCapability.getTanks()) {
+            return GasPressure.VACUUM_PA;
+        }
+
+        return recipeGasCapability.getTankPressurePa(channel);
+    }
+
+    private void notifyFiltersChanged() {
+        if (controller == null) {
+            return;
+        }
+
+        controller.notifyFiltersChanged();
     }
 
     private void addFluidBehaviours(List<BlockEntityBehaviour> behaviours) {
@@ -399,14 +491,23 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
     }
 
     private void addGasBehaviours(List<BlockEntityBehaviour> behaviours) {
-        inputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 3, getGasCapacity(), true).whenGasUpdates(this::notifyContentsChanged);
-        outputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 2, getGasCapacity(), true).forbidInsertion().whenGasUpdates(this::notifyContentsChanged);
-        IGasHandler inputCapability = inputGasTank.getCapability();
-        IGasHandler outputCapability = outputGasTank.getCapability();
-        recipeGasCapability = new CombinedGasTankWrapper(inputCapability, outputCapability);
+        inputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.INPUT, this, 3, getGasCapacity(), GasPressureLimits.HARD_PRESSURE_PA, true).whenTankUpdates(this::notifyContentsChanged);
+        outputGasTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, this, 2, getGasCapacity(), GasPressureLimits.HARD_PRESSURE_PA, true).forbidInsertion().whenTankUpdates(this::notifyContentsChanged);
+        GasStorageHandler inputCapability = inputGasTank.getCapability();
+        GasStorageHandler outputCapability = outputGasTank.getCapability();
+        recipeGasCapability = new CombinedGasStorageHandler(inputCapability, outputCapability);
         gasPortCapability = new AirtightReactorKettleGasPortHandler(inputCapability, outputCapability);
+
+        LongSupplier[] pressureChannels = new LongSupplier[recipeGasCapability.getTanks()];
+        for (int channel = 0; channel < pressureChannels.length; channel++) {
+            int trackedChannel = channel;
+            pressureChannels[channel] = () -> getCurrentGasPressurePa(trackedChannel);
+        }
+        overpressureBehaviour = new OverpressureBehaviour(this, pressureChannels);
+
         behaviours.add(inputGasTank);
         behaviours.add(outputGasTank);
+        behaviours.add(overpressureBehaviour);
     }
 
     private boolean updateReactorKettle() {
@@ -421,22 +522,24 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         BlockPos filterCenterPos = worldPosition.below();
         for (Direction direction : Iterate.horizontalDirections) {
             BlockPos filterPos = filterCenterPos.relative(direction);
-            if (!(level.getBlockEntity(filterPos) instanceof AirtightReactorKettleStructuralBlockEntity filterBlockEntity)) {
+            if (!(level.getBlockEntity(filterPos) instanceof AirtightReactorKettleStructuralBlockEntity filter)) {
                 continue;
             }
 
-            filterBlockEntity.syncFilterFromMaster(recipeFilter);
+            filter.syncFilterFromMaster(recipeFilter);
         }
     }
 
-    record CraftPlan(List<ItemStack> expectedItems, List<FluidStack> expectedFluids, List<GasStack> expectedGases, int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
-        CraftPlan(List<ItemStack> expectedItems, List<FluidStack> expectedFluids, List<GasStack> expectedGases, int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
+    @Internal
+    public record CraftPlan(List<ItemStack> expectedItems, List<FluidStack> expectedFluids, List<GasStack> expectedGases, int[] itemAmounts, int[] fluidAmounts, GasConsumptionPlan gasPlan, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
+        @Internal
+        public CraftPlan(List<ItemStack> expectedItems, List<FluidStack> expectedFluids, List<GasStack> expectedGases, int[] itemAmounts, int[] fluidAmounts, GasConsumptionPlan gasPlan, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
             this.expectedItems = expectedItems.stream().map(ItemStack::copy).toList();
             this.expectedFluids = expectedFluids.stream().map(FluidStack::copy).toList();
             this.expectedGases = expectedGases.stream().map(GasStack::copy).toList();
             this.itemAmounts = itemAmounts.clone();
             this.fluidAmounts = fluidAmounts.clone();
-            this.gasAmounts = gasAmounts.clone();
+            this.gasPlan = gasPlan;
             this.outputItems = outputItems.stream().map(ItemStack::copy).toList();
             this.outputFluids = outputFluids.stream().map(FluidStack::copy).toList();
             this.outputGases = outputGases.stream().map(GasStack::copy).toList();

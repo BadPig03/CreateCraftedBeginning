@@ -25,6 +25,11 @@ public class ZombificationImmunityEffect extends MobEffect {
         super(category, color);
     }
 
+    @Override
+    public void onEffectStarted(LivingEntity livingEntity, int amplifier) {
+        setZombificationImmunity(livingEntity, true);
+    }
+
     @SubscribeEvent
     static void onEffectExpired(Expired event) {
         if (!isZombificationImmunity(event.getEffectInstance())) {
@@ -50,14 +55,13 @@ public class ZombificationImmunityEffect extends MobEffect {
     private static void setZombificationImmunity(LivingEntity livingEntity, boolean isImmune) {
         if (livingEntity instanceof AbstractPiglin piglin) {
             piglin.setImmuneToZombification(isImmune);
+            return;
         }
-        else if (livingEntity instanceof Hoglin hoglin) {
-            hoglin.setImmuneToZombification(isImmune);
-        }
-    }
 
-    @Override
-    public void onEffectStarted(LivingEntity livingEntity, int amplifier) {
-        setZombificationImmunity(livingEntity, true);
+        if (!(livingEntity instanceof Hoglin hoglin)) {
+            return;
+        }
+
+        hoglin.setImmuneToZombification(isImmune);
     }
 }

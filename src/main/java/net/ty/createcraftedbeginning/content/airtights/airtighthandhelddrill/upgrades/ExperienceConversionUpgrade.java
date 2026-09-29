@@ -11,7 +11,7 @@ import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
-import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
@@ -24,12 +24,14 @@ import java.util.List;
 public enum ExperienceConversionUpgrade implements AirtightUpgrade {
     INSTANCE;
 
+    public static final float BASE_GAS_MULTIPLIER = 3;
+
     private static final ResourceLocation ID = CCBAPI.asResource("experience_conversion");
     private static final Couple<Integer> OFFSET = Couple.create(159, 78);
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
-        float multiplier = CCBConfig.server().equipments.experienceConversionMultiplier.getF();
+        float multiplier = BASE_GAS_MULTIPLIER * CCBConfig.server().equipment.airtightHandheldDrill.experienceConversionGasMultiplier.getF();
         return List.of(CCBLang.translateDirect("gui.gas_consumption.multiplier", multiplier));
     }
 
@@ -69,7 +71,7 @@ public enum ExperienceConversionUpgrade implements AirtightUpgrade {
     }
 
     @Override
-    public Item getUpgradeItem() {
+    public Item getDefaultUpgradeItem() {
         return Items.ECHO_SHARD;
     }
 

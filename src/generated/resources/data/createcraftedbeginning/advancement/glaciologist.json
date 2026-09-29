@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:plywood",
+  "parent": "createcraftedbeginning:gaseous_variations",
   "criteria": {
     "0": {
       "conditions": {
@@ -65,7 +65,7 @@
       "conditions": {
         "items": [
           {
-            "items": "createcraftedbeginning:builders_tea_ice_cream"
+            "items": "createcraftedbeginning:golden_ice_cream"
           }
         ]
       },

@@ -7,7 +7,7 @@ import net.minecraft.core.WritableRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.neoforged.neoforge.registries.RegistryBuilder;
-import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
+import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageType;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,25 +18,26 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class CCBBuiltInRegistries {
     @Nullable
-    public static Registry<MountedGasStorageType<?>> MOUNTED_GAS_STORAGE_TYPE;
+    private static Registry<MountedGasStorageType<?>> mountedGasStorageType;
 
     private CCBBuiltInRegistries() {
     }
 
     @Internal
     public static void bootstrap() {
-        if (MOUNTED_GAS_STORAGE_TYPE != null) {
+        if (mountedGasStorageType != null) {
             return;
         }
 
-        MOUNTED_GAS_STORAGE_TYPE = register(CCBRegistries.MOUNTED_GAS_STORAGE_TYPE);
+        mountedGasStorageType = register(CCBRegistries.MOUNTED_GAS_STORAGE_TYPE);
     }
 
     public static Registry<MountedGasStorageType<?>> mountedGasStorageType() {
-        Registry<MountedGasStorageType<?>> registry = MOUNTED_GAS_STORAGE_TYPE;
+        Registry<MountedGasStorageType<?>> registry = mountedGasStorageType;
         if (registry == null) {
-            throw new IllegalStateException("CCB built-in registries have not been bootstrapped yet");
+            throw new IllegalStateException("CCB built-in registries have not been bootstrapped yet.");
         }
+
         return registry;
     }
 

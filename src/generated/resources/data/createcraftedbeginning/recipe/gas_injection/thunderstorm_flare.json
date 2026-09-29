@@ -1,13 +1,16 @@
 {
   "type": "createcraftedbeginning:gas_injection",
+  "gas_ingredients": [
+    {
+      "amount": 5000,
+      "ingredient": {
+        "gas": "createcraftedbeginning:ethereal_air"
+      }
+    }
+  ],
   "ingredients": [
     {
       "item": "createcraftedbeginning:unfilled_weather_flare"
-    },
-    {
-      "type": "createcraftedbeginning:single",
-      "amount": 500,
-      "gas": "createcraftedbeginning:ethereal_air"
     }
   ],
   "results": [

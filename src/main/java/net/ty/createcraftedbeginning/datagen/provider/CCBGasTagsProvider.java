@@ -6,7 +6,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.TagsProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.Gas;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 

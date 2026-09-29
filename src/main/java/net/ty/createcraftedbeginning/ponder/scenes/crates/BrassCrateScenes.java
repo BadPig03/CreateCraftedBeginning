@@ -37,8 +37,8 @@ public class BrassCrateScenes {
         scene.showBasePlate();
 
         BlockPos cratePos = util.grid().at(2, 1, 2);
-        BlockPos chutePos = util.grid().at(2, 2, 2);
-        BlockPos itemPos = util.grid().at(2, 3, 2);
+        BlockPos chutePos = cratePos.above();
+        BlockPos itemPos = cratePos.above(2);
 
         Selection crateSelection = util.select().position(cratePos);
         Selection chuteSelection = util.select().position(chutePos);
@@ -62,27 +62,27 @@ public class BrassCrateScenes {
 
         scene.idle(80);
         scene.overlay().showFilterSlotInput(filterVec, Direction.UP, 60);
-        scene.overlay().showText(60).text("Items in the filter slot specify what to store").colored(PonderPalette.GREEN).pointAt(filterVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Items in the filter slot specify what to store").colored(PonderPalette.BLUE).pointAt(filterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showControls(filterVec, Pointing.DOWN, 40).rightClick().withItem(enderPearlItem);
+        scene.overlay().showControls(filterVec, Pointing.DOWN, 40).rightClick().withItem(enderPearlItem.copy());
 
         scene.idle(7);
-        scene.world().setFilterData(crateSelection, BrassCrateBlockEntity.class, enderPearlItem);
+        scene.world().setFilterData(crateSelection, BrassCrateBlockEntity.class, enderPearlItem.copy());
 
         scene.idle(60);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
         scene.world().showSection(chuteSelection, Direction.DOWN);
 
         scene.idle(20);
-        ElementLink<EntityElement> remove = scene.world().createItemEntity(itemVec, itemDropMotion, ironIngotItem);
+        ElementLink<EntityElement> remove = scene.world().createItemEntity(itemVec, itemDropMotion, ironIngotItem.copy());
 
         scene.idle(2);
-        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, ironIngotItem);
+        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, ironIngotItem.copy());
         scene.world().modifyEntity(remove, Entity::discard);
 
         scene.idle(20);
-        ElementLink<EntityElement> remove2 = scene.world().createItemEntity(itemVec, itemDropMotion, ironIngotItem);
+        ElementLink<EntityElement> remove2 = scene.world().createItemEntity(itemVec, itemDropMotion, ironIngotItem.copy());
 
         scene.idle(20);
         for (int i = 0; i < 10; i++) {
@@ -90,9 +90,9 @@ public class BrassCrateScenes {
             scene.world().incrementBlockBreakingProgress(chutePos);
         }
         scene.world().hideSection(chuteSelection, Direction.UP);
-        ElementLink<EntityElement> remove3 = scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), ironIngotItem);
-        ElementLink<EntityElement> remove4 = scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), chuteItem);
-        scene.overlay().showControls(util.vector().blockSurface(cratePos, Direction.NORTH), Pointing.RIGHT, 60).showing(AllIcons.I_MTD_CLOSE).withItem(ironIngotItem);
+        ElementLink<EntityElement> remove3 = scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), ironIngotItem.copy());
+        ElementLink<EntityElement> remove4 = scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), chuteItem.copy());
+        scene.overlay().showControls(util.vector().blockSurface(cratePos, Direction.NORTH), Pointing.RIGHT, 60).showing(AllIcons.I_MTD_CLOSE).withItem(ironIngotItem.copy());
         scene.overlay().showText(60).text("Thus preventing unnecessary items from entering").colored(PonderPalette.GREEN).pointAt(crateVec).attachKeyFrame().placeNearTarget();
 
         scene.idle(80);
@@ -111,10 +111,10 @@ public class BrassCrateScenes {
         scene.world().showSection(chuteSelection, Direction.DOWN);
 
         scene.idle(20);
-        ElementLink<EntityElement> remove5 = scene.world().createItemEntity(itemVec, itemDropMotion, enderPearlItem);
+        ElementLink<EntityElement> remove5 = scene.world().createItemEntity(itemVec, itemDropMotion, enderPearlItem.copy());
 
         scene.idle(2);
-        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, enderPearlItem);
+        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, enderPearlItem.copy());
         scene.world().modifyEntity(remove5, Entity::discard);
 
         scene.idle(20);
@@ -126,10 +126,10 @@ public class BrassCrateScenes {
             scene.idle(3);
             scene.world().incrementBlockBreakingProgress(cratePos);
         }
-        scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), brassCrateItem);
-        scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), enderPearlItem);
+        scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), brassCrateItem.copy());
+        scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), enderPearlItem.copy());
 
-        scene.idle(30);
+        scene.idle(57);
         scene.markAsFinished();
     }
 }

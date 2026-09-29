@@ -11,9 +11,10 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeChamber;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
+import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeChamber;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction;
@@ -31,10 +32,6 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
 
     public WindChargingCategory(Info<WindChargingRecipe> info) {
         super(info);
-    }
-
-    private static void addItemInputSlot(IRecipeLayoutBuilder builder, Ingredient ingredient) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
     }
 
     @Override
@@ -60,20 +57,24 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
 
         boolean isBadFood = recipe.isBadFood();
         MutableComponent time = isBadFood ? CCBLang.text("-").component() : Component.empty();
-        time.append(CCBLang.secondsWithGameTicks(Math.abs(recipe.getProcessingDuration()), 20).component());
+        time.append(CCBLang.secondsWithGameTicks(Mth.abs(recipe.getProcessingDuration()), 20).component());
         int textX = background.getWidth() / 2 - font.width(time) / 2 - 12;
         int color = isBadFood ? COLOR_BAD : COLOR_NORMAL;
         graphics.drawString(font, time, textX, 22, color, false);
         if (isBadFood) {
             illChamber.draw(graphics, chamberX, 18);
+            return;
         }
-        else {
-            galeChamber.draw(graphics, chamberX, 18);
-        }
+
+        galeChamber.draw(graphics, chamberX, 18);
     }
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, WindChargingRecipe recipe, IFocusGroup focuses) {
         addItemInputSlot(builder, recipe.getIngredient());
+    }
+
+    private static void addItemInputSlot(IRecipeLayoutBuilder builder, Ingredient ingredient) {
+        builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
     }
 }

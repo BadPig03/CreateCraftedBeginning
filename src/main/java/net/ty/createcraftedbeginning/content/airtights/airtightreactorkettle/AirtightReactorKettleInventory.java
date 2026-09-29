@@ -6,17 +6,39 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-class AirtightReactorKettleInventory extends SmartInventory {
+public class AirtightReactorKettleInventory extends SmartInventory {
     private final AirtightReactorKettleBlockEntity blockEntity;
 
     AirtightReactorKettleInventory(int slots, AirtightReactorKettleBlockEntity blockEntity) {
         super(slots, blockEntity, 64, true);
         this.blockEntity = blockEntity;
+    }
+
+    @Override
+    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+        if (!isInsertionAllowed(this, slot, stack)) {
+            return stack;
+        }
+
+        return super.insertItem(slot, stack, simulate);
+    }
+
+    @Override
+    public ItemStack extractItem(int slot, int amount, boolean simulate) {
+        ItemStack extractedStack = super.extractItem(slot, amount, simulate);
+        if (simulate || extractedStack.isEmpty()) {
+            return extractedStack;
+        }
+
+        blockEntity.notifyContentsChanged();
+        return extractedStack;
     }
 
     static IItemHandlerModifiable createSimulation(int slots) {
@@ -26,6 +48,7 @@ class AirtightReactorKettleInventory extends SmartInventory {
                 if (!isInsertionAllowed(this, slot, stack)) {
                     return stack;
                 }
+
                 return super.insertItem(slot, stack, simulate);
             }
 
@@ -51,24 +74,5 @@ class AirtightReactorKettleInventory extends SmartInventory {
             firstFreeSlot = candidateSlot;
         }
         return !inventory.getStackInSlot(slot).isEmpty() || firstFreeSlot == slot;
-    }
-
-    @Override
-    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-        if (!isInsertionAllowed(this, slot, stack)) {
-            return stack;
-        }
-        return super.insertItem(slot, stack, simulate);
-    }
-
-    @Override
-    public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        ItemStack extractedStack = super.extractItem(slot, amount, simulate);
-        if (simulate || extractedStack.isEmpty()) {
-            return extractedStack;
-        }
-
-        blockEntity.notifyContentsChanged();
-        return extractedStack;
     }
 }

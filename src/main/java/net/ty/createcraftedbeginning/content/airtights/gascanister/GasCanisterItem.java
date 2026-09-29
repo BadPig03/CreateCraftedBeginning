@@ -13,31 +13,31 @@ import net.minecraft.world.level.block.Block;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.IGasFilter;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilter;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
+import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasCanisterItem extends Item implements IGasFilter {
+public class GasCanisterItem extends Item implements GasFilter {
     private final Supplier<GasCanisterBlockItem> blockItem;
 
     public GasCanisterItem(Properties properties, Supplier<GasCanisterBlockItem> blockItem) {
         super(properties);
         this.blockItem = blockItem;
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerItem(GasHandler.ITEM, (canister, ignoredContext) -> new GasCanisterContainerContents(canister), CCBItems.GAS_CANISTER);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class GasCanisterItem extends Item implements IGasFilter {
 
     @Override
     public boolean shouldCauseBlockBreakReset(ItemStack oldStack, ItemStack newStack) {
-        return GasCanisterUtils.shouldCauseBlockBreakReset(oldStack, newStack);
+        return CanisterMiningReset.shouldCauseBlockBreakReset(oldStack, newStack, Set.of(CCBDataComponents.CANISTER_CONTAINER_CONTENTS));
     }
 
     @Override
@@ -78,19 +78,22 @@ public class GasCanisterItem extends Item implements IGasFilter {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack canister, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+        if (!(canister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
             return;
         }
 
         GasStack storedGas = canisterContents.getGasInTank(0);
-        long capacity = canisterContents.getTankCapacity(0);
+        long maxAmount = canisterContents.getTankMaxAmount(0);
         if (storedGas.isEmpty()) {
-            tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmounts.precise(capacity).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-            return;
+            tooltip.add(CCBLang.translate("gui.gas_canister.max_amount").add(GasUnitFormat.amount(maxAmount).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
         }
-
-        tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(storedGas).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
-        tooltip.add(CCBLang.translate("gui.gas_canister.capacity").add(GasAmounts.precise(storedGas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(capacity).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
+        else {
+            tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(storedGas).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+            tooltip.add(CCBLang.translate("gui.gas_canister.max_amount").add(GasUnitFormat.amount(storedGas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasUnitFormat.amount(maxAmount).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
+        }
+        long pressurePa = canisterContents.getTankPressurePa(0);
+        ChatFormatting pressureColor = GasPressureLimits.isOverpressure(pressurePa) ? ChatFormatting.RED : ChatFormatting.GOLD;
+        tooltip.add(CCBLang.translate("gui.gas_container.pressure").add(CCBLang.text(GasPressure.formatAtm(pressurePa)).style(pressureColor)).style(ChatFormatting.GRAY).component());
     }
 
     @Override
@@ -100,7 +103,7 @@ public class GasCanisterItem extends Item implements IGasFilter {
 
     @Override
     public boolean test(ItemStack filterItem, GasStack filterGasStack) {
-        if (filterGasStack.isEmpty() || !(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents filterContents)) {
+        if (filterGasStack.isEmpty() || !(filterItem.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents filterContents)) {
             return false;
         }
 
@@ -110,7 +113,7 @@ public class GasCanisterItem extends Item implements IGasFilter {
 
     @Override
     public Predicate<GasStack> compile(ItemStack filterItem) {
-        if (!(filterItem.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents filterContents)) {
+        if (!(filterItem.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents filterContents)) {
             return ignoredGas -> false;
         }
 
@@ -118,7 +121,12 @@ public class GasCanisterItem extends Item implements IGasFilter {
         if (filterGas.isEmpty()) {
             return ignoredGas -> false;
         }
+
         return candidateGas -> !candidateGas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, candidateGas);
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerItem(CanisterCapabilities.ITEM, (canister, ignoredContext) -> new GasCanisterContainerContents(canister), CCBItems.GAS_CANISTER);
     }
 
     public static class GasCanisterBlockItem extends BlockItem {

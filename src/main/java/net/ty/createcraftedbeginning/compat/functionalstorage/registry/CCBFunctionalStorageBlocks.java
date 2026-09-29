@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.compat.functionalstorage.registry;
 
 import com.buuz135.functionalstorage.FunctionalStorage.DrawerType;
+import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -9,7 +10,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.ty.createcraftedbeginning.compat.functionalstorage.GasDrawerBlock;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabs;
-import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
+import net.ty.createcraftedbeginning.registry.registrate.CCBCreativeSectionTracker;
 import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -17,10 +18,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBFunctionalStorageBlocks {
-    private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
+    private static final CreateRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
 
     static {
-        CCB_REGISTRATE.setCreativeSection(CCBCreativeTabSection.AIRTIGHTS);
+        CCBCreativeSectionTracker.set(CCB_REGISTRATE, CCBCreativeTabSection.AIRTIGHTS);
     }
 
     public static final BlockEntry<GasDrawerBlock> GAS_DRAWER_1_BLOCK = CCB_REGISTRATE.block("gas_drawer_1", properties -> new GasDrawerBlock(DrawerType.X_1, properties)).properties(ignoredProperties -> Properties.ofFullCopy(Blocks.STONE_BRICKS)).blockstate(NonNullBiConsumer.noop()).lang("Gas Drawer (1x1)").item().model(NonNullBiConsumer.noop()).build().register();

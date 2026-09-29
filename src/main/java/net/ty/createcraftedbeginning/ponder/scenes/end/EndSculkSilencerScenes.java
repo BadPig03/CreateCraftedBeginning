@@ -14,7 +14,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
+import net.ty.createcraftedbeginning.client.gui.CCBIcons;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -83,7 +83,7 @@ public class EndSculkSilencerScenes {
         scene.world().setKineticSpeed(silencerAllSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(motorPos);
         scene.effects().rotationSpeedIndicator(silencerTopPos);
-        scene.overlay().showText(60).text("It can mute sounds and suppress vibration detection within its working range").colored(PonderPalette.GREEN).pointAt(silencerTopVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("It can mute sounds and suppress vibration detection within its working range").pointAt(silencerTopVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, outlineObject, new AABB(calibratedPos).inflate(0, 0, 1), 60);
 
         scene.idle(80);
@@ -91,15 +91,15 @@ public class EndSculkSilencerScenes {
         scene.overlay().showText(60).text("Working ranges are configurable").colored(PonderPalette.BLUE).pointAt(silencerSideVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showText(60).text("But larger working range requires higher rotation speed").colored(PonderPalette.FAST).pointAt(silencerSideVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("But larger working range requires higher rotation speed").colored(PonderPalette.RED).pointAt(silencerSideVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showControls(silencerSideVec, Pointing.DOWN, 60).showing(CCBIcons.I_1X1);
         scene.overlay().showText(60).text("\"1x1\": A single chunk").pointAt(silencerTopVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.world().setKineticSpeed(motorSelection, mediumSpeed * 1.5f);
-        scene.world().setKineticSpeed(largeCogSelection, mediumSpeed * 1.5f);
+        scene.world().setKineticSpeed(motorSelection, mediumSpeed * 1.5F);
+        scene.world().setKineticSpeed(largeCogSelection, mediumSpeed * 1.5F);
         scene.world().setKineticSpeed(cogSelection, -mediumSpeed * 3);
         scene.world().setKineticSpeed(silencerAllSelection, -mediumSpeed * 3);
         scene.effects().rotationSpeedIndicator(motorPos);
@@ -118,7 +118,7 @@ public class EndSculkSilencerScenes {
         scene.overlay().showText(60).text("\"5x5\": 5x5 chunks").pointAt(silencerTopVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showText(60).text("When assembled into a Contraption, its working range is fixed to 1x1 chunk").colored(PonderPalette.BLUE).pointAt(silencerTopVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("When assembled into a Contraption, its working range is fixed to 1x1 chunk").colored(PonderPalette.RED).pointAt(silencerTopVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

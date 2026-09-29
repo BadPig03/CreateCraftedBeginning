@@ -92,6 +92,7 @@ public abstract class EndMechanicalBlockEntity<T extends EndMechanicalStructural
         if (!structuralClass.isInstance(candidateStructural)) {
             return null;
         }
+
         return structuralClass.cast(candidateStructural);
     }
 }

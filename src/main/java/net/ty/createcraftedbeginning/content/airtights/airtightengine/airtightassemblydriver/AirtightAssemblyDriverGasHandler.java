@@ -1,20 +1,20 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
 import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandler;
-import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
-import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandlers;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfiles;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightAssemblyDriverGasHandler implements IGasHandler {
+final class AirtightAssemblyDriverGasHandler implements GasPressureBoundary {
     private final AirtightAssemblyDriverFlowMeter flowMeter;
 
     AirtightAssemblyDriverGasHandler(AirtightAssemblyDriverFlowMeter flowMeter) {
@@ -23,13 +23,7 @@ final class AirtightAssemblyDriverGasHandler implements IGasHandler {
 
     @Override
     public boolean isGasValid(int tank, GasStack gasStack) {
-        if (gasStack.isEmpty()) {
-            return false;
-        }
-
-        AirtightEngineHandler engineHandler = AirtightEngineHandlerUtils.of(gasStack);
-        double workFactor = engineHandler.getWorkFactor();
-        return GasConsumptions.isFinite(workFactor) && workFactor > 0 && engineHandler.getMaxLevel() > 0;
+        return tank == 0 && !gasStack.isEmpty() && GameplayPressureProfiles.orderedProfiles().stream().anyMatch(profile -> isUsable(AirtightEngineHandlers.resolve(gasStack, profile)));
     }
 
     @Override
@@ -54,14 +48,20 @@ final class AirtightAssemblyDriverGasHandler implements IGasHandler {
 
     @Override
     public long fill(GasStack resource, GasAction action) {
-        if (!isGasValid(0, resource)) {
-            return 0;
-        }
-        return flowMeter.fill(resource, action);
+        return fillFromPressure(resource, GasPressure.REFERENCE_PRESSURE_PA, action);
     }
 
     @Override
-    public long getTankCapacity(int tank) {
-        return CCBConfig.server().airtights.maxAirtightTankCapacityPerBlock.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
+    public long fillFromPressure(GasStack resource, long sourcePressurePa, GasAction action) {
+        if (resource.isEmpty() || !isUsable(AirtightEngineHandlers.resolve(resource, sourcePressurePa))) {
+            return 0;
+        }
+
+        return flowMeter.fill(resource, sourcePressurePa, action);
+    }
+
+    private static boolean isUsable(AirtightEngineHandler engineHandler) {
+        double workFactor = engineHandler.getWorkFactor();
+        return GasConsumptionMath.isFinite(workFactor) && workFactor > 0 && engineHandler.getMaxLevel() > 0;
     }
 }

@@ -49,14 +49,6 @@ public class ResidueOutletBlock extends HorizontalDirectionalBlock implements IB
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
     }
 
-    public static Direction getFacing(BlockState state) {
-        return switch (state.getValue(FACE)) {
-            case CEILING -> Direction.UP;
-            case FLOOR -> Direction.DOWN;
-            case WALL -> state.getValue(FACING);
-        };
-    }
-
     @Override
     public Class<ResidueOutletBlockEntity> getBlockEntityClass() {
         return ResidueOutletBlockEntity.class;
@@ -149,6 +141,7 @@ public class ResidueOutletBlock extends HorizontalDirectionalBlock implements IB
         if (!state.getValue(WATERLOGGED)) {
             return Fluids.EMPTY.defaultFluidState();
         }
+
         return Fluids.WATER.getSource(false);
     }
 
@@ -160,5 +153,13 @@ public class ResidueOutletBlock extends HorizontalDirectionalBlock implements IB
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos blockPos, CollisionContext collisionContext) {
         return CCBShapes.RESIDUE_OUTLET.get(getFacing(state).getOpposite());
+    }
+
+    public static Direction getFacing(BlockState state) {
+        return switch (state.getValue(FACE)) {
+            case CEILING -> Direction.UP;
+            case FLOOR -> Direction.DOWN;
+            case WALL -> state.getValue(FACING);
+        };
     }
 }

@@ -26,6 +26,9 @@
     },
     "H": {
       "item": "create:industrial_iron_window_pane"
+    },
+    "M": {
+      "item": "createcraftedbeginning:airtight_meter"
     }
   },
   "pattern": [
@@ -33,7 +36,7 @@
     "CCECC",
     "HHFHH",
     "GDDDG",
-    "BAAAB"
+    "BAMAB"
   ],
   "result": {
     "count": 1,

@@ -22,7 +22,6 @@ public abstract class TintedFluidType extends FluidType {
         super(properties);
         this.stillTexture = stillTexture;
         this.flowingTexture = flowingTexture;
-        CCBFluidClientExtensionRegistry.registerTinted(this);
     }
 
     public final ResourceLocation clientStillTexture() {

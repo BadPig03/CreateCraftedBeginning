@@ -2,8 +2,8 @@ package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtighta
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.minecraft.util.Mth;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumMap;
@@ -22,14 +22,10 @@ class AirtightAssemblyDriverLevelCalculator {
 
     private int windChargingLevel;
     private int residueLevel;
-    private int supplyLevel;
+    private double supplyLevel;
 
     AirtightAssemblyDriverLevelCalculator(AirtightAssemblyDriverCore driverCore) {
         this.driverCore = driverCore;
-    }
-
-    private static int readLevel(CompoundTag compoundTag, String key) {
-        return CCBMathUtils.clampNonNegative(CCBNbtUtils.getIntOrDefault(compoundTag, key, 0), MAX_LEVEL);
     }
 
     void updateWindChargingLevel(int newLevel) {
@@ -40,7 +36,7 @@ class AirtightAssemblyDriverLevelCalculator {
         driverCore.markForClientSync();
     }
 
-    void updateSupplyLevel(int newLevel) {
+    void updateSupplyLevel(double newLevel) {
         if (!setSupplyLevel(newLevel)) {
             return;
         }
@@ -60,7 +56,7 @@ class AirtightAssemblyDriverLevelCalculator {
         setWindChargingLevel(0);
     }
 
-    void loadSupplyLevel(int newLevel) {
+    void loadSupplyLevel(double newLevel) {
         setSupplyLevel(newLevel);
     }
 
@@ -69,14 +65,14 @@ class AirtightAssemblyDriverLevelCalculator {
     }
 
     int getSupplyLevel() {
-        return supplyLevel;
+        return Mth.floor(supplyLevel);
     }
 
-    Map<LevelKey, Integer> getLevels() {
-        Map<LevelKey, Integer> levels = new EnumMap<>(LevelKey.class);
+    Map<LevelKey, Double> getLevels() {
+        Map<LevelKey, Double> levels = new EnumMap<>(LevelKey.class);
         levels.put(LevelKey.SUPPLY, supplyLevel);
-        levels.put(LevelKey.WIND_CHARGING, windChargingLevel);
-        levels.put(LevelKey.RESIDUE, residueLevel);
+        levels.put(LevelKey.WIND_CHARGING, (double) windChargingLevel);
+        levels.put(LevelKey.RESIDUE, (double) residueLevel);
         levels.put(LevelKey.MIN_VALUE, getMinimumLevel());
         levels.put(LevelKey.MAX_VALUE, getMaximumLevel());
         return levels;
@@ -86,7 +82,8 @@ class AirtightAssemblyDriverLevelCalculator {
         if (!driverCore.getStructureManager().isActive()) {
             return 0;
         }
-        return getMinimumLevel();
+
+        return Mth.floor(getMinimumLevel());
     }
 
     void reset() {
@@ -102,33 +99,38 @@ class AirtightAssemblyDriverLevelCalculator {
     }
 
     CompoundTag write(boolean clientPacket) {
-        CompoundTag tag = new CompoundTag();
-        CCBNbtUtils.putInt(tag, COMPOUND_KEY_RESIDUE_LEVEL, residueLevel);
+        CompoundTag compoundTag = new CompoundTag();
+        compoundTag.putInt(COMPOUND_KEY_RESIDUE_LEVEL, residueLevel);
         if (!clientPacket) {
-            return tag;
+            return compoundTag;
         }
 
-        CCBNbtUtils.putInt(tag, COMPOUND_KEY_SUPPLY_LEVEL, supplyLevel);
-        CCBNbtUtils.putInt(tag, COMPOUND_KEY_WIND_CHARGING_LEVEL, windChargingLevel);
-        return tag;
+        compoundTag.putDouble(COMPOUND_KEY_SUPPLY_LEVEL, supplyLevel);
+        compoundTag.putInt(COMPOUND_KEY_WIND_CHARGING_LEVEL, windChargingLevel);
+        return compoundTag;
     }
 
     void read(CompoundTag compoundTag, boolean clientPacket) {
-        supplyLevel = clientPacket ? readLevel(compoundTag, COMPOUND_KEY_SUPPLY_LEVEL) : 0;
+        double storedSupplyLevel = clientPacket ? NbtValues.getDoubleOrDefault(compoundTag, COMPOUND_KEY_SUPPLY_LEVEL, 0) : 0;
+        setSupplyLevel(storedSupplyLevel);
         windChargingLevel = clientPacket ? readLevel(compoundTag, COMPOUND_KEY_WIND_CHARGING_LEVEL) : 0;
         residueLevel = readLevel(compoundTag, COMPOUND_KEY_RESIDUE_LEVEL);
     }
 
-    private int getMinimumLevel() {
+    private static int readLevel(CompoundTag compoundTag, String key) {
+        return Mth.clamp(NbtValues.getIntOrDefault(compoundTag, key, 0), 0, MAX_LEVEL);
+    }
+
+    private double getMinimumLevel() {
         return Math.min(supplyLevel, Math.min(windChargingLevel, residueLevel));
     }
 
-    private int getMaximumLevel() {
+    private double getMaximumLevel() {
         return Math.max(supplyLevel, Math.max(windChargingLevel, residueLevel));
     }
 
     private boolean setWindChargingLevel(int newLevel) {
-        int clampedLevel = CCBMathUtils.clampNonNegative(newLevel, MAX_LEVEL);
+        int clampedLevel = Mth.clamp(newLevel, 0, MAX_LEVEL);
         if (windChargingLevel == clampedLevel) {
             return false;
         }
@@ -137,8 +139,8 @@ class AirtightAssemblyDriverLevelCalculator {
         return true;
     }
 
-    private boolean setSupplyLevel(int newLevel) {
-        int clampedLevel = CCBMathUtils.clampNonNegative(newLevel, MAX_LEVEL);
+    private boolean setSupplyLevel(double newLevel) {
+        double clampedLevel = Double.isFinite(newLevel) ? Mth.clamp(newLevel, 0, MAX_LEVEL) : 0;
         if (supplyLevel == clampedLevel) {
             return false;
         }
@@ -148,7 +150,7 @@ class AirtightAssemblyDriverLevelCalculator {
     }
 
     private boolean setResidueLevel(int newLevel) {
-        int clampedLevel = CCBMathUtils.clampNonNegative(newLevel, MAX_LEVEL);
+        int clampedLevel = Mth.clamp(newLevel, 0, MAX_LEVEL);
         if (residueLevel == clampedLevel) {
             return false;
         }

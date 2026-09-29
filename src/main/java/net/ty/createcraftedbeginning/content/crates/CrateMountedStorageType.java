@@ -21,16 +21,17 @@ public class CrateMountedStorageType<B extends CratesBlockEntity, S extends Crat
 
     public CrateMountedStorageType(MapCodec<S> codec, Class<B> blockEntityClass, Function<B, S> factory) {
         super(codec);
-        this.blockEntityClass = Objects.requireNonNull(blockEntityClass);
-        this.factory = Objects.requireNonNull(factory);
+        this.blockEntityClass = Objects.requireNonNull(blockEntityClass, "Parameter 'blockEntityClass' must not be null.");
+        this.factory = Objects.requireNonNull(factory, "Parameter 'factory' must not be null.");
     }
 
     @Override
     @Nullable
-    public S mount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
-        if (!blockEntityClass.isInstance(be)) {
+    public S mount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity blockEntity) {
+        if (!blockEntityClass.isInstance(blockEntity)) {
             return null;
         }
-        return factory.apply(blockEntityClass.cast(be));
+
+        return factory.apply(blockEntityClass.cast(blockEntity));
     }
 }

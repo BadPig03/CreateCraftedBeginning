@@ -6,13 +6,14 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -24,17 +25,17 @@ public interface ReactorKettleRecipeContext {
 
     IFluidHandler getAvailableFluids();
 
-    IGasHandler getAvailableGases();
+    GasStorageHandler getAvailableGases();
 
     IItemHandler getOutputItemCapability();
 
     IFluidHandler getOutputFluidCapability();
 
-    IGasHandler getOutputGasCapability();
+    GasHandler getOutputGasCapability();
 
     float getRecipeTemperature();
 
     boolean matchesRecipeFilter(ReactorKettleRecipe recipe);
 
-    boolean commitRecipeCraft(int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases);
+    boolean commitRecipeCraft(int[] itemAmounts, int[] fluidAmounts, GasConsumptionPlan gasPlan, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases);
 }

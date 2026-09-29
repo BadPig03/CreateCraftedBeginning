@@ -37,22 +37,33 @@ record AirtightReactorKettleFluidPortHandler(IFluidHandler input, IFluidHandler 
 
     @Override
     public FluidStack drain(FluidStack resource, FluidAction action) {
-        return output.drain(resource, action);
+        FluidStack drained = output.drain(resource, action);
+        if (!drained.isEmpty()) {
+            return drained;
+        }
+
+        return input.drain(resource, action);
     }
 
     @Override
     public FluidStack drain(int maxDrain, FluidAction action) {
-        return output.drain(maxDrain, action);
+        FluidStack drained = output.drain(maxDrain, action);
+        if (!drained.isEmpty()) {
+            return drained;
+        }
+
+        return input.drain(maxDrain, action);
     }
 
     private IFluidHandler getHandler(int tank) {
         if (tank < 0 || tank >= getTanks()) {
-            throw new IndexOutOfBoundsException("Tank " + tank + " not in valid range [0," + getTanks() + ')');
+            throw new IndexOutOfBoundsException("Tank index must be in [0, " + getTanks() + "); got " + tank + '.');
         }
 
         if (tank < input.getTanks()) {
             return input;
         }
+
         return output;
     }
 
@@ -60,6 +71,7 @@ record AirtightReactorKettleFluidPortHandler(IFluidHandler input, IFluidHandler 
         if (tank < input.getTanks()) {
             return tank;
         }
+
         return tank - input.getTanks();
     }
 }

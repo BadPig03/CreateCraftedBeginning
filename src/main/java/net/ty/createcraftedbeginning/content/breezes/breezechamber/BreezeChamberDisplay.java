@@ -13,12 +13,13 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitsTooltips;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -36,7 +37,8 @@ final class BreezeChamberDisplay {
     }
 
     boolean addToGoggleTooltip(List<Component> tooltip) {
-        if (chamber.getLevel() == null) {
+        Level level = chamber.getLevel();
+        if (level == null) {
             return false;
         }
 
@@ -46,19 +48,18 @@ final class BreezeChamberDisplay {
         CCBLang.translate(windLevel.getTranslatable()).style(windLevel.getChatFormatting()).forGoggles(tooltip, 1);
 
         BreezeChamberGasProcessor gasProcessor = chamber.getGasProcessorInternal();
-        Gas tankGasType = gasProcessor.getTankGasType();
         boolean isControllerActive = gasProcessor.isControllerActive();
-        boolean hasInvalidInput = gasProcessor.isInputInvalid();
-        boolean hasOutputFailure = (gasProcessor.isOutputFull() || gasProcessor.isOutputMismatched()) && !isControllerActive;
         int remainingTime = chamber.getWindRemainingTime();
         if (windLevel != WindLevel.CALM) {
-            CCBLang.translate("gui.breeze_chamber.remaining_time").style(ChatFormatting.GRAY).forGoggles(tooltip);
-            ChatFormatting timeColor = remainingTime > 0 ? ChatFormatting.GREEN : ChatFormatting.RED;
-            if (chamber.isCreative()) {
-                CCBLang.translate("gui.gas_container.infinity").style(timeColor).forGoggles(tooltip, 1);
-            }
-            else {
-                CCBLang.seconds(remainingTime, chamber.getLevel().tickRateManager().tickrate()).style(timeColor).forGoggles(tooltip, 1);
+            if (GoggleTooltip.isVisible(tooltip, Section.BREEZE_TIME)) {
+                CCBLang.translate("gui.breeze_chamber.remaining_time").style(ChatFormatting.GRAY).forGoggles(tooltip);
+                ChatFormatting timeColor = remainingTime > 0 ? ChatFormatting.GREEN : ChatFormatting.RED;
+                if (chamber.isCreative()) {
+                    CCBLang.translate("gui.gas_container.infinity").style(timeColor).forGoggles(tooltip, 1);
+                }
+                else {
+                    CCBLang.seconds(remainingTime, level.tickRateManager().tickrate()).style(timeColor).forGoggles(tooltip, 1);
+                }
             }
             if (isControllerActive) {
                 CCBLang.translate("gui.breeze_chamber.energization_level").style(ChatFormatting.GRAY).forGoggles(tooltip);
@@ -70,22 +71,30 @@ final class BreezeChamberDisplay {
         }
 
         tooltip.add(CommonComponents.EMPTY);
-        IGasHandler outputHandler = chamber.getTankBehaviourInternal().getPrimaryHandler();
-        GasStack outputGas = outputHandler.getGasInTank(0);
-        long outputCapacity = outputHandler.getTankCapacity(0);
-        CCBLang.translate("gui.gas_container.capacity").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        if (outputGas.isEmpty()) {
-            GasAmounts.precise(outputCapacity).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+        GasStorageHandler outputHandler = chamber.getTankBehaviourInternal().getPrimaryHandler();
+        GasUnitsTooltips.addContainer(tooltip, outputHandler);
+        return true;
+    }
+
+    boolean addToTooltip(List<Component> tooltip) {
+        if (chamber.getLevel() == null) {
+            return false;
         }
-        else {
-            CCBLang.gasName(outputGas).style(ChatFormatting.WHITE).forGoggles(tooltip, 1);
-            GasAmounts.precise(outputGas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasAmounts.precise(outputCapacity).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
+
+        BreezeChamberGasProcessor gasProcessor = chamber.getGasProcessorInternal();
+        if (gasProcessor.isControllerActive()) {
+            return false;
         }
-        if (hasInvalidInput || hasOutputFailure) {
-            tooltip.add(CommonComponents.EMPTY);
-            CCBLang.translate("gui.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
+
+        boolean hasInvalidInput = gasProcessor.isInputInvalid();
+        boolean hasOutputFailure = gasProcessor.isOutputBlocked();
+        if (!hasInvalidInput && !hasOutputFailure) {
+            return false;
         }
+
+        CCBLang.translate("gui.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
         if (hasInvalidInput) {
+            Gas tankGasType = gasProcessor.getTankGasType();
             CCBLang.addToGoggles(tooltip, "gui.breeze_chamber.invalid_gas", Component.translatable(tankGasType.getTranslationKey()));
         }
         if (hasOutputFailure) {
@@ -95,16 +104,17 @@ final class BreezeChamberDisplay {
     }
 
     void playSound(boolean isIllCharge) {
-        if (chamber.getLevel() == null) {
+        Level level = chamber.getLevel();
+        if (level == null) {
             return;
         }
 
         if (isIllCharge) {
-            chamber.getLevel().playSound(null, chamber.getBlockPos(), SoundEvents.BREEZE_HURT, SoundSource.BLOCKS, 0.125f + chamber.getLevel().random.nextFloat() * 0.125f, 0.75f - chamber.getLevel().random.nextFloat() * 0.25f);
+            level.playSound(null, chamber.getBlockPos(), SoundEvents.BREEZE_HURT, SoundSource.BLOCKS, 0.125F + level.random.nextFloat() * 0.125F, 0.75F - level.random.nextFloat() * 0.25F);
+            return;
         }
-        else {
-            chamber.getLevel().playSound(null, chamber.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, 0.125f + chamber.getLevel().random.nextFloat() * 0.125f, 0.75f - chamber.getLevel().random.nextFloat() * 0.25f);
-        }
+
+        level.playSound(null, chamber.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, 0.125F + level.random.nextFloat() * 0.125F, 0.75F - level.random.nextFloat() * 0.25F);
     }
 
     void spawnParticleBurst(boolean isIllCharge) {
@@ -117,7 +127,7 @@ final class BreezeChamberDisplay {
         RandomSource random = level.random;
         int particleCount = isIllCharge ? 5 : 20;
         for (int particleIndex = 0; particleIndex < particleCount; particleIndex++) {
-            Vec3 particleDirection = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize();
+            Vec3 particleDirection = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5F).multiply(1, 0.25, 1).normalize();
             Vec3 particlePos = center.add(particleDirection.scale(0.5 + random.nextDouble() * 0.125)).add(0, 0.125, 0);
             Vec3 particleMotion = particleDirection.scale(0.03125);
             level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), particlePos.x, particlePos.y, particlePos.z, particleMotion.x, particleMotion.y, particleMotion.z);
@@ -128,40 +138,41 @@ final class BreezeChamberDisplay {
         boolean isControllerActive = chamber.isControllerActive();
         if (isControllerActive) {
             float facingAngle = (AngleHelper.horizontalAngle(chamber.getBlockState().getOptionalValue(BreezeChamberBlock.FACING).orElse(Direction.NORTH)) + 180) % 360;
-            chamber.getHeadAngle().chase(facingAngle, 0.125f, Chaser.EXP);
+            chamber.getHeadAngle().chase(facingAngle, 0.125F, Chaser.EXP);
         }
         else {
-            chamber.getHeadAngle().chase(targetAngle, 0.25f, Chaser.exp(5));
+            chamber.getHeadAngle().chase(targetAngle, 0.25F, Chaser.exp(5));
         }
         chamber.getHeadAngle().tickChaser();
-        chamber.getHeadAnimationInternal().chase(isControllerActive ? 1 : 0, 0.25f, Chaser.exp(0.25f));
+        chamber.getHeadAnimationInternal().chase(isControllerActive ? 1 : 0, 0.25F, Chaser.exp(0.25F));
         chamber.getHeadAnimationInternal().tickChaser();
     }
 
     void spawnParticles() {
         WindLevel windLevel = chamber.getWindLevelFromBlock();
-        if (chamber.getLevel() == null) {
+        Level level = chamber.getLevel();
+        if (level == null) {
             return;
         }
 
-        RandomSource random = chamber.getLevel().getRandom();
+        RandomSource random = level.getRandom();
         int particleChanceBound = windLevel == WindLevel.ILL ? 4 : 2;
         if (random.nextInt(particleChanceBound) != 0) {
             return;
         }
 
         Vec3 center = VecHelper.getCenterOf(chamber.getBlockPos());
-        Vec3 particlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
+        Vec3 particlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125F).multiply(1, 0, 1));
         if (random.nextInt(particleChanceBound * 2) == 0) {
-            chamber.getLevel().addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
+            level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
         }
         double upwardMotion = random.nextDouble() * 0.0125;
-        Vec3 galeParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize().scale(0.5 + random.nextDouble() * 0.125)).add(0, 0.5, 0);
+        Vec3 galeParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5F).multiply(1, 0.25, 1).normalize().scale(0.5 + random.nextDouble() * 0.125)).add(0, 0.5, 0);
         if (!windLevel.isActive()) {
             return;
         }
 
-        chamber.getLevel().addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), galeParticlePos.x, galeParticlePos.y, galeParticlePos.z, 0, upwardMotion, 0);
+        level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), galeParticlePos.x, galeParticlePos.y, galeParticlePos.z, 0, upwardMotion, 0);
     }
 
     boolean hasGoggles() {

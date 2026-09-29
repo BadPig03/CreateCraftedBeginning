@@ -21,6 +21,7 @@ public final class CrateInventoryState {
         if (capacity == 0 || content.isEmpty() || count <= 0) {
             return new CrateInventoryState(ItemStack.EMPTY, 0);
         }
+
         return new CrateInventoryState(content.copyWithCount(1), Math.min(count, capacity));
     }
 

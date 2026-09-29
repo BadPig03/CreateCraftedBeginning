@@ -13,9 +13,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.TickingAirtightUpgrade;
-import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
@@ -41,6 +41,7 @@ enum RegenerationUpgrade implements TickingAirtightUpgrade {
         if (gasCost == 0) {
             return List.of(CCBLang.translateDirect("gui.gas_consumption.supply_require_only"));
         }
+
         return List.of(CCBLang.translateDirect("gui.airtight_chestplate.regeneration_upgrade.gas_cost", gasCost));
     }
 
@@ -91,11 +92,11 @@ enum RegenerationUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return CCBConfig.server().equipments.regenerationConsumption.get();
+        return CCBConfig.server().equipment.airtightChestplate.regenerationGasPerSecond.get();
     }
 
     @Override
-    public Item getUpgradeItem() {
+    public Item getDefaultUpgradeItem() {
         return Items.ENCHANTED_GOLDEN_APPLE;
     }
 

@@ -23,8 +23,8 @@ class AbstractIngredient {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return obj instanceof AbstractIngredient other && (this == other || hashCode == other.hashCode && variants.equals(other.variants));
+    public boolean equals(Object object) {
+        return object instanceof AbstractIngredient other && (this == other || hashCode == other.hashCode && variants.equals(other.variants));
     }
 
     static class Universal extends AbstractIngredient {
@@ -41,8 +41,8 @@ class AbstractIngredient {
         }
 
         @Override
-        public boolean equals(Object obj) {
-            return obj instanceof Universal;
+        public boolean equals(Object object) {
+            return object instanceof Universal;
         }
     }
 }

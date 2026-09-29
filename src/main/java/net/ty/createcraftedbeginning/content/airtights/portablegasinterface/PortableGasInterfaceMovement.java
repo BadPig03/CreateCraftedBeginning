@@ -22,7 +22,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -33,6 +32,91 @@ import java.util.Optional;
 public class PortableGasInterfaceMovement extends PortableStorageInterfaceMovement {
     private static final String COMPOUND_KEY_WORKING_POSITION = "WorkingPosition";
     private static final String COMPOUND_KEY_CLIENT_PREVIOUS_POSITION = "ClientPreviousPosition";
+
+    @Override
+    public Vec3 getActiveAreaOffset(MovementContext context) {
+        return Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal()).scale(1.85);
+    }
+
+    @Nullable
+    @Override
+    public ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld virtualLevel, MovementContext movementContext) {
+        return new PortableGasInterfaceActorVisual(visualizationContext, virtualLevel, movementContext);
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void renderInContraption(MovementContext context, VirtualRenderWorld virtualLevel, ContraptionMatrices matrices, MultiBufferSource bufferSource) {
+        if (VisualizationManager.supportsVisualization(context.world)) {
+            return;
+        }
+
+        PortableGasInterfaceRenderer.renderInContraption(context, virtualLevel, matrices, bufferSource);
+    }
+
+    @Override
+    public void visitNewPosition(MovementContext context, BlockPos pos) {
+        if (context.contraption instanceof CarriageContraption && context.motion.length() > 0.25F || findInterface(context, pos)) {
+            return;
+        }
+
+        context.data.remove(COMPOUND_KEY_WORKING_POSITION);
+    }
+
+    @Override
+    public void tick(MovementContext context) {
+        if (context.world.isClientSide) {
+            getAnimation(context).tickChaser();
+        }
+
+        boolean isOnCarriage = context.contraption instanceof CarriageContraption;
+        if (isOnCarriage && context.motion.length() > 0.25F) {
+            return;
+        }
+
+        if (context.world.isClientSide) {
+            tickClient(context);
+            return;
+        }
+
+        tickServer(context, isOnCarriage);
+    }
+
+    @Override
+    protected boolean findInterface(MovementContext context, BlockPos pos) {
+        if (context.contraption instanceof CarriageContraption contraption && !contraption.notInPortal()) {
+            return false;
+        }
+
+        Optional<Direction> facing = getValidFacing(context);
+        if (facing.isEmpty()) {
+            reset(context);
+            return false;
+        }
+
+        Direction currentFacing = facing.get();
+        PortableGasInterfaceBlockEntity stationary = findStationaryInterface(context.world, pos, context.state, currentFacing);
+        if (stationary == null || stationary.isPowered()) {
+            return false;
+        }
+
+        context.data.put(COMPOUND_KEY_WORKING_POSITION, NbtUtils.writeBlockPos(stationary.getBlockPos()));
+        if (context.world.isClientSide) {
+            updateClientConnection(context, pos, stationary);
+            return true;
+        }
+
+        startTransfer(context, stationary, currentFacing);
+        return true;
+    }
+
+    @Override
+    public void reset(MovementContext context) {
+        context.data.remove(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION);
+        context.data.remove(COMPOUND_KEY_WORKING_POSITION);
+        context.stall = false;
+        getAnimation(context).chase(0, 0.25F, Chaser.LINEAR);
+    }
 
     public static LerpedFloat getAnimation(MovementContext context) {
         if (context.temporaryData instanceof LerpedFloat connectionAnimation) {
@@ -69,6 +153,7 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         if (stationary.isPowered()) {
             return null;
         }
+
         return stationary;
     }
 
@@ -76,9 +161,10 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         Vec3 localFacing = Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal());
         Vec3 rotatedFacing = context.rotation.apply(localFacing);
         Direction worldFacing = Direction.getNearest(rotatedFacing.x, rotatedFacing.y, rotatedFacing.z);
-        if (rotatedFacing.distanceTo(Vec3.atLowerCornerOf(worldFacing.getNormal())) > 0.5f) {
+        if (rotatedFacing.distanceTo(Vec3.atLowerCornerOf(worldFacing.getNormal())) > 0.5F) {
             return Optional.empty();
         }
+
         return Optional.of(worldFacing);
     }
 
@@ -92,104 +178,19 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     }
 
     private static void updateClientConnection(MovementContext context, BlockPos movingPos, PortableGasInterfaceBlockEntity stationary) {
-        CCBNbtUtils.putTag(context.data, COMPOUND_KEY_CLIENT_PREVIOUS_POSITION, NbtUtils.writeBlockPos(movingPos));
+        context.data.put(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION, NbtUtils.writeBlockPos(movingPos));
         boolean shouldAnimateConnection = context.contraption instanceof CarriageContraption || context.contraption.entity.isStalled() || context.motion.lengthSqr() == 0;
         if (!shouldAnimateConnection) {
             return;
         }
 
-        getAnimation(context).chase(stationary.getDistance() / 2, 0.25f, Chaser.LINEAR);
+        getAnimation(context).chase(stationary.getDistance() / 2, 0.25F, Chaser.LINEAR);
     }
 
     private static void startTransfer(MovementContext context, PortableGasInterfaceBlockEntity stationary, Direction facing) {
         Vec3 connectionOffset = VecHelper.getCenterOf(stationary.getBlockPos()).subtract(context.position);
         Vec3 projectedOffset = VecHelper.project(connectionOffset, Vec3.atLowerCornerOf(facing.getNormal()));
-        stationary.startTransferringTo(context.contraption, (float) (projectedOffset.length() + 1.85f - 1));
-    }
-
-    @Override
-    public Vec3 getActiveAreaOffset(MovementContext context) {
-        return Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal()).scale(1.85);
-    }
-
-    @Nullable
-    @Override
-    public ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld virtualLevel, MovementContext movementContext) {
-        return new PortableGasInterfaceActorVisual(visualizationContext, virtualLevel, movementContext);
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void renderInContraption(MovementContext context, VirtualRenderWorld virtualLevel, ContraptionMatrices matrices, MultiBufferSource bufferSource) {
-        if (VisualizationManager.supportsVisualization(context.world)) {
-            return;
-        }
-
-        PortableGasInterfaceRenderer.renderInContraption(context, virtualLevel, matrices, bufferSource);
-    }
-
-    @Override
-    public void visitNewPosition(MovementContext context, BlockPos pos) {
-        if (context.contraption instanceof CarriageContraption && context.motion.length() > 0.25f || findInterface(context, pos)) {
-            return;
-        }
-
-        context.data.remove(COMPOUND_KEY_WORKING_POSITION);
-    }
-
-    @Override
-    public void tick(MovementContext context) {
-        if (context.world.isClientSide) {
-            getAnimation(context).tickChaser();
-        }
-
-        boolean isOnCarriage = context.contraption instanceof CarriageContraption;
-        if (isOnCarriage && context.motion.length() > 0.25f) {
-            return;
-        }
-
-        if (context.world.isClientSide) {
-            tickClient(context);
-            return;
-        }
-
-        tickServer(context, isOnCarriage);
-    }
-
-    @Override
-    protected boolean findInterface(MovementContext context, BlockPos pos) {
-        if (context.contraption instanceof CarriageContraption contraption && !contraption.notInPortal()) {
-            return false;
-        }
-
-        Optional<Direction> facing = getValidFacing(context);
-        if (facing.isEmpty()) {
-            reset(context);
-            return false;
-        }
-
-        Direction currentFacing = facing.get();
-        PortableGasInterfaceBlockEntity stationary = findStationaryInterface(context.world, pos, context.state, currentFacing);
-        if (stationary == null || stationary.isPowered()) {
-            return false;
-        }
-
-        CCBNbtUtils.putTag(context.data, COMPOUND_KEY_WORKING_POSITION, NbtUtils.writeBlockPos(stationary.getBlockPos()));
-        if (context.world.isClientSide) {
-            updateClientConnection(context, pos, stationary);
-            return true;
-        }
-
-        startTransfer(context, stationary, currentFacing);
-        return true;
-    }
-
-    @Override
-    public void reset(MovementContext context) {
-        context.data.remove(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION);
-        context.data.remove(COMPOUND_KEY_WORKING_POSITION);
-        context.stall = false;
-        getAnimation(context).chase(0, 0.25f, Chaser.LINEAR);
+        stationary.startTransferringTo(context.contraption, (float) (projectedOffset.length() + 1.85F - 1));
     }
 
     private void tickClient(MovementContext context) {

@@ -6,7 +6,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -18,16 +18,17 @@ public class HorizontalAirtightTankBlockEntity extends AirtightTankBlockEntity {
         super(type, pos, state);
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
-    }
-
     @Override
     public Axis getMainConnectionAxis() {
         BlockState tankState = getBlockState();
-        if (tankState.hasProperty(HorizontalAirtightTankBlock.HORIZONTAL_AXIS)) {
-            return tankState.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
+        if (!tankState.hasProperty(HorizontalAirtightTankBlock.HORIZONTAL_AXIS)) {
+            return Axis.X;
         }
-        return Axis.X;
+
+        return tankState.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
     }
 }

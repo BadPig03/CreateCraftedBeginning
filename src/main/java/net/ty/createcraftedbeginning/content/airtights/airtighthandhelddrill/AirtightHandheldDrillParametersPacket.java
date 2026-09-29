@@ -21,23 +21,6 @@ public record AirtightHandheldDrillParametersPacket(AirtightHandheldDrillMiningT
 
     public static final StreamCodec<ByteBuf, AirtightHandheldDrillParametersPacket> STREAM_CODEC = StreamCodec.composite(AirtightHandheldDrillMiningTemplates.STREAM_CODEC, AirtightHandheldDrillParametersPacket::template, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::sizeParams, Direction.STREAM_CODEC, AirtightHandheldDrillParametersPacket::direction, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::relativeParams, AirtightHandheldDrillParametersPacket::new);
 
-    private boolean hasValidParameters() {
-        int[] miningSize = {sizeParams.getX(), sizeParams.getY(), sizeParams.getZ()};
-        int[] relativePosition = {relativeParams.getX(), relativeParams.getY(), relativeParams.getZ()};
-
-        for (int index = 0; index < miningSize.length; index++) {
-            if (miningSize[index] < template.getTemplate().getMinValue(index) || miningSize[index] > template.getTemplate().getMaxValue(index)) {
-                return false;
-            }
-
-            if (relativePosition[index] < 0 || relativePosition[index] >= miningSize[index]) {
-                return false;
-            }
-        }
-
-        return AirtightHandheldDrillUtils.isRelativePositionValid(template, miningSize, direction, relativePosition);
-    }
-
     @Override
     public void handle(ServerPlayer player) {
         ItemStack drill = player.getMainHandItem();
@@ -54,5 +37,22 @@ public record AirtightHandheldDrillParametersPacket(AirtightHandheldDrillMiningT
     @Override
     public PacketTypeProvider getTypeProvider() {
         return CCBPackets.AIRTIGHT_HANDHELD_DRILL_PARAMETERS;
+    }
+
+    private boolean hasValidParameters() {
+        int[] miningSize = {sizeParams.getX(), sizeParams.getY(), sizeParams.getZ()};
+        int[] relativePosition = {relativeParams.getX(), relativeParams.getY(), relativeParams.getZ()};
+
+        for (int index = 0; index < miningSize.length; index++) {
+            if (miningSize[index] < template.getTemplate().getMinValue(index) || miningSize[index] > template.getTemplate().getMaxValue(index)) {
+                return false;
+            }
+
+            if (relativePosition[index] < 0 || relativePosition[index] >= miningSize[index]) {
+                return false;
+            }
+        }
+
+        return AirtightHandheldDrillSettings.isRelativePositionValid(template, miningSize, direction, relativePosition);
     }
 }

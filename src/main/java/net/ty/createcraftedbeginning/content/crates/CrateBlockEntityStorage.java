@@ -4,7 +4,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -58,14 +57,14 @@ final class CrateBlockEntityStorage {
     }
 
     void write(CompoundTag compoundTag, Provider provider) {
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_INVENTORY, handler.serializeNBT(provider));
+        compoundTag.put(COMPOUND_KEY_INVENTORY, handler.serializeNBT(provider));
     }
 
     void read(CompoundTag compoundTag, Provider provider) {
-        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_INVENTORY)) {
+        if (!compoundTag.contains(COMPOUND_KEY_INVENTORY)) {
             return;
         }
 
-        handler.deserializeNBT(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_INVENTORY));
+        handler.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INVENTORY));
     }
 }

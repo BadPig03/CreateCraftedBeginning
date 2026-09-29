@@ -30,7 +30,7 @@ public abstract class FactoryPanelEffectPacketMixin {
     public abstract boolean success();
 
     @Inject(method = "handle", at = @At("HEAD"), cancellable = true)
-    private void ccb$handle(LocalPlayer player, CallbackInfo ci) {
+    private void ccb$handle(LocalPlayer player, CallbackInfo callback) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) {
             return;
@@ -43,7 +43,7 @@ public abstract class FactoryPanelEffectPacketMixin {
 
         FactoryPanelBehaviour behaviour = FactoryPanelBehaviour.at(level, toPos());
         if (behaviour == null) {
-            ci.cancel();
+            callback.cancel();
             return;
         }
 
@@ -52,6 +52,6 @@ public abstract class FactoryPanelEffectPacketMixin {
         if (connection != null) {
             connection.success = success();
         }
-        ci.cancel();
+        callback.cancel();
     }
 }

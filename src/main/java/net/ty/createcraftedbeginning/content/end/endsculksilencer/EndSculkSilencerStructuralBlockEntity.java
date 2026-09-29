@@ -8,8 +8,8 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.client.gui.CCBIcons;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalStructuralBlockEntity;
-import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -46,6 +46,7 @@ public class EndSculkSilencerStructuralBlockEntity extends EndMechanicalStructur
         if (silencerWorkingRange == null) {
             return SilencerWorkingRange.ONE_BY_ONE.getWorkingRange();
         }
+
         return silencerWorkingRange.get().getWorkingRange();
     }
 

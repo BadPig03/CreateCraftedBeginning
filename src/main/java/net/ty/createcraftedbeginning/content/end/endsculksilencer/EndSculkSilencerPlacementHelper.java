@@ -40,6 +40,7 @@ public class EndSculkSilencerPlacementHelper implements IPlacementHelper {
         if (!level.getBlockState(placementPos).canBeReplaced()) {
             return PlacementOffset.fail();
         }
+
         return PlacementOffset.success(placementPos, ignoredState -> CCBBlocks.END_SCULK_SILENCER_BLOCK.get().defaultBlockState());
     }
 }

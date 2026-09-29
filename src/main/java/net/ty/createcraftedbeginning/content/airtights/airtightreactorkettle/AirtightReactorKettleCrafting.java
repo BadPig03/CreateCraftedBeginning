@@ -2,33 +2,52 @@ package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 
 import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
+import com.simibubi.create.foundation.item.SmartInventory;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity.CraftPlan;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.core.MachineResourceSnapshots;
-import net.ty.createcraftedbeginning.core.ResourceTransaction;
+import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.recipe.ReactorKettleCraftPreparation;
+import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
+import net.ty.createcraftedbeginning.recipe.transaction.MachineResourceSnapshots;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightReactorKettleCrafting {
+public final class AirtightReactorKettleCrafting {
     private final AirtightReactorKettleBlockEntity kettle;
 
     AirtightReactorKettleCrafting(AirtightReactorKettleBlockEntity kettle) {
         this.kettle = kettle;
+    }
+
+    @Internal
+    public static boolean applyRecipe(AirtightReactorKettleBlockEntity kettle, ReactorKettleRecipe recipe) {
+        return ReactorKettleCraftPreparation.prepare(kettle, recipe).map(plan -> kettle.commitRecipeCraft(plan.itemAmounts(), plan.fluidAmounts(), plan.gasPlan(), plan.outputItems(), plan.outputFluids(), plan.outputGases())).orElse(false);
+    }
+
+    @Internal
+    public static boolean applyCraftingRecipe(AirtightReactorKettleBlockEntity kettle, CraftingRecipe recipe) {
+        return AirtightReactorKettleMixingPlanner.planCraftingRecipe(kettle, recipe).map(kettle::commitCraft).orElse(false);
     }
 
     private static boolean insertFluidOutputs(IFluidHandler outputHandler, List<FluidStack> outputFluids) {
@@ -39,10 +58,11 @@ final class AirtightReactorKettleCrafting {
 
             return false;
         }
+
         return true;
     }
 
-    private static boolean insertGasOutputs(IGasHandler outputHandler, List<GasStack> outputGases) {
+    private static boolean insertGasOutputs(GasHandler outputHandler, List<GasStack> outputGases) {
         for (GasStack outputGas : outputGases) {
             if (outputGas.isEmpty() || outputHandler.fill(outputGas.copy(), GasAction.EXECUTE) == outputGas.getAmount()) {
                 continue;
@@ -50,6 +70,7 @@ final class AirtightReactorKettleCrafting {
 
             return false;
         }
+
         return true;
     }
 
@@ -68,6 +89,7 @@ final class AirtightReactorKettleCrafting {
 
             return false;
         }
+
         return true;
     }
 
@@ -90,28 +112,7 @@ final class AirtightReactorKettleCrafting {
 
             return false;
         }
-        return true;
-    }
 
-    private static boolean consumeGases(IGasHandler gases, List<GasStack> expectedGases, long[] amounts) {
-        for (int tank = 0; tank < amounts.length; tank++) {
-            long consumptionAmount = amounts[tank];
-            if (consumptionAmount <= 0) {
-                continue;
-            }
-
-            GasStack expectedGas = expectedGases.get(tank);
-            if (expectedGas.isEmpty()) {
-                return false;
-            }
-
-            GasStack drainedGas = gases.drain(expectedGas.copyWithAmount(consumptionAmount), GasAction.EXECUTE);
-            if (drainedGas.getAmount() == consumptionAmount && GasStack.isSameGasSameComponents(drainedGas, expectedGas)) {
-                continue;
-            }
-
-            return false;
-        }
         return true;
     }
 
@@ -123,15 +124,16 @@ final class AirtightReactorKettleCrafting {
 
             return false;
         }
+
         return true;
     }
 
-    CraftPlan createCraftPlan(int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
+    CraftPlan createCraftPlan(int[] itemAmounts, int[] fluidAmounts, GasConsumptionPlan gasPlan, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
         IItemHandlerModifiable availableItems = kettle.getAvailableItems();
         IFluidHandler availableFluids = kettle.getAvailableFluids();
-        IGasHandler availableGases = kettle.getAvailableGases();
-        if (itemAmounts.length != availableItems.getSlots() || fluidAmounts.length != availableFluids.getTanks() || gasAmounts.length != availableGases.getTanks()) {
-            throw new IllegalArgumentException("Craft plan resource counts do not match the reactor kettle");
+        GasHandler availableGases = kettle.getAvailableGases();
+        if (itemAmounts.length != availableItems.getSlots() || fluidAmounts.length != availableFluids.getTanks() || gasPlan.tankAmounts().length != availableGases.getTanks()) {
+            throw new IllegalArgumentException("Reactor kettle craft plan resource count mismatch: expected " + availableItems.getSlots() + " item slots, " + availableFluids.getTanks() + " fluid tanks and " + availableGases.getTanks() + " gas tanks, got " + itemAmounts.length + ", " + fluidAmounts.length + " and " + gasPlan.tankAmounts().length + ", respectively.");
         }
 
         for (int amount : itemAmounts) {
@@ -139,33 +141,30 @@ final class AirtightReactorKettleCrafting {
                 continue;
             }
 
-            throw new IllegalArgumentException("Item consumption amounts must not be negative");
+            throw new IllegalArgumentException("Item consumption amount must be non-negative; got " + amount + '.');
         }
         for (int amount : fluidAmounts) {
             if (amount >= 0) {
                 continue;
             }
 
-            throw new IllegalArgumentException("Fluid consumption amounts must not be negative");
+            throw new IllegalArgumentException("Fluid consumption amount must be non-negative; got " + amount + " mB.");
         }
-        for (long amount : gasAmounts) {
-            if (amount >= 0) {
-                continue;
-            }
-
-            throw new IllegalArgumentException("Gas consumption amounts must not be negative");
-        }
-
-        return new CraftPlan(MachineResourceSnapshots.copyItems(availableItems), MachineResourceSnapshots.copyFluids(availableFluids), MachineResourceSnapshots.copyGases(availableGases), itemAmounts, fluidAmounts, gasAmounts, outputItems, outputFluids, outputGases);
+        return new CraftPlan(MachineResourceSnapshots.copyItems(availableItems), MachineResourceSnapshots.copyFluids(availableFluids), MachineResourceSnapshots.copyGases(availableGases), itemAmounts, fluidAmounts, gasPlan, outputItems, outputFluids, outputGases);
     }
 
     boolean commitCraft(CraftPlan plan) {
-        if (kettle.getLevel() == null) {
+        Level level = kettle.getLevel();
+        if (level == null) {
             return false;
         }
 
-        Provider registryProvider = kettle.getLevel().registryAccess();
-        ResourceTransaction craftTransaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesItems(kettle.getAvailableItems(), plan.expectedItems()), this::snapshotItemInventories, () -> executeItemPlan(plan), this::restoreItemInventories)).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesFluids(kettle.getAvailableFluids(), plan.expectedFluids()), () -> MachineResourceSnapshots.snapshotFluidTanks(registryProvider, kettle.getInputFluidTank(), kettle.getOutputFluidTank()), () -> executeFluidPlan(plan), snapshot -> MachineResourceSnapshots.restoreFluidTanks(registryProvider, snapshot, kettle.getInputFluidTank(), kettle.getOutputFluidTank()))).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesGases(kettle.getAvailableGases(), plan.expectedGases()), () -> MachineResourceSnapshots.snapshotGasTanks(kettle.getInputGasTank(), kettle.getOutputGasTank()), () -> executeGasPlan(plan), snapshot -> MachineResourceSnapshots.restoreGasTanks(snapshot, kettle.getInputGasTank(), kettle.getOutputGasTank())));
+        Provider registryProvider = level.registryAccess();
+        SmartFluidTankBehaviour inputFluid = kettle.getInputFluidTank();
+        SmartFluidTankBehaviour outputFluid = kettle.getOutputFluidTank();
+        SmartGasTankBehaviour inputGas = kettle.getInputGasTank();
+        SmartGasTankBehaviour outputGas = kettle.getOutputGasTank();
+        ResourceTransaction craftTransaction = new ResourceTransaction().add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesItems(kettle.getAvailableItems(), plan.expectedItems()), this::snapshotItemInventories, () -> executeItemPlan(plan), this::restoreItemInventories)).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesFluids(kettle.getAvailableFluids(), plan.expectedFluids()), () -> MachineResourceSnapshots.snapshotFluidTanks(registryProvider, inputFluid, outputFluid), () -> executeFluidPlan(plan), snapshot -> MachineResourceSnapshots.restoreFluidTanks(registryProvider, snapshot, inputFluid, outputFluid))).add(ResourceTransaction.participant(() -> MachineResourceSnapshots.matchesGases(kettle.getAvailableGases(), plan.expectedGases()) && plan.gasPlan().canExecute(), () -> MachineResourceSnapshots.snapshotGasTanks(inputGas, outputGas), () -> executeGasPlan(plan), snapshot -> MachineResourceSnapshots.restoreGasTanks(snapshot, inputGas, outputGas)));
 
         boolean craftSucceeded = craftTransaction.commit();
         if (craftSucceeded && plan.outputItems().stream().anyMatch(outputItem -> outputItem.is(AllItems.ANDESITE_ALLOY))) {
@@ -176,7 +175,7 @@ final class AirtightReactorKettleCrafting {
 
     boolean acceptOutputs(List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
         IFluidHandler outputFluidHandler = kettle.getOutputFluidTank().getCapability();
-        IGasHandler outputGasHandler = kettle.getOutputGasTank().getCapability();
+        GasHandler outputGasHandler = kettle.getOutputGasTank().getCapability();
         boolean hasItemOutputs = outputItems.stream().anyMatch(outputItem -> !outputItem.isEmpty());
         if (hasItemOutputs && !canAcceptItemOutputs(outputItems)) {
             return false;
@@ -205,11 +204,13 @@ final class AirtightReactorKettleCrafting {
             return false;
         }
 
-        kettle.getOutputInventory().allowInsertion();
+        SmartInventory output = kettle.getOutputInventory();
+        output.allowInsertion();
         try {
-            return insertItemOutputs(kettle.getOutputInventory(), plan.outputItems());
-        } finally {
-            kettle.getOutputInventory().forbidInsertion();
+            return insertItemOutputs(output, plan.outputItems());
+        }
+        finally {
+            output.forbidInsertion();
         }
     }
 
@@ -218,31 +219,36 @@ final class AirtightReactorKettleCrafting {
             return false;
         }
 
-        kettle.getOutputFluidTank().allowInsertion();
+        SmartFluidTankBehaviour output = kettle.getOutputFluidTank();
+        output.allowInsertion();
         try {
-            return insertFluidOutputs(kettle.getOutputFluidTank().getCapability(), plan.outputFluids());
-        } finally {
-            kettle.getOutputFluidTank().forbidInsertion();
+            return insertFluidOutputs(output.getCapability(), plan.outputFluids());
+        }
+        finally {
+            output.forbidInsertion();
         }
     }
 
     private boolean executeGasPlan(CraftPlan plan) {
-        if (!consumeGases(kettle.getAvailableGases(), plan.expectedGases(), plan.gasAmounts())) {
+        if (!plan.gasPlan().execute()) {
             return false;
         }
 
-        kettle.getOutputGasTank().allowInsertion();
+        SmartGasTankBehaviour output = kettle.getOutputGasTank();
+        output.allowInsertion();
         try {
-            return insertGasOutputs(kettle.getOutputGasTank().getCapability(), plan.outputGases());
-        } finally {
-            kettle.getOutputGasTank().forbidInsertion();
+            return insertGasOutputs(output.getCapability(), plan.outputGases());
+        }
+        finally {
+            output.forbidInsertion();
         }
     }
 
     private boolean canAcceptItemOutputs(List<ItemStack> outputItems) {
-        IItemHandlerModifiable simulatedInventory = AirtightReactorKettleInventory.createSimulation(kettle.getOutputInventory().getSlots());
-        for (int slot = 0; slot < kettle.getOutputInventory().getSlots(); slot++) {
-            simulatedInventory.setStackInSlot(slot, kettle.getOutputInventory().getStackInSlot(slot).copy());
+        IItemHandler output = kettle.getOutputInventory();
+        IItemHandlerModifiable simulatedInventory = AirtightReactorKettleInventory.createSimulation(output.getSlots());
+        for (int slot = 0; slot < output.getSlots(); slot++) {
+            simulatedInventory.setStackInSlot(slot, output.getStackInSlot(slot).copy());
         }
 
         for (ItemStack outputItem : outputItems) {
@@ -252,6 +258,7 @@ final class AirtightReactorKettleCrafting {
 
             return false;
         }
+
         return true;
     }
 
@@ -274,12 +281,13 @@ final class AirtightReactorKettleCrafting {
 
             return false;
         }
+
         return true;
     }
 
-    private boolean canAcceptGasOutputs(IGasHandler outputHandler, List<GasStack> outputGases) {
-        SmartGasTankBehaviour simulatedTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, kettle, outputHandler.getTanks(), AirtightReactorKettleBlockEntity.getGasCapacity(), true);
-        IGasHandler simulatedHandler = simulatedTank.getCapability();
+    private boolean canAcceptGasOutputs(GasHandler outputHandler, List<GasStack> outputGases) {
+        SmartGasTankBehaviour simulatedTank = new SmartGasTankBehaviour(SmartGasTankBehaviour.OUTPUT, kettle, outputHandler.getTanks(), AirtightReactorKettleBlockEntity.getGasCapacity(), GasPressureLimits.HARD_PRESSURE_PA, true);
+        GasHandler simulatedHandler = simulatedTank.getCapability();
         for (int tank = 0; tank < outputHandler.getTanks(); tank++) {
             GasStack storedGas = outputHandler.getGasInTank(tank).copy();
             if (storedGas.isEmpty() || simulatedHandler.fill(storedGas.copy(), GasAction.EXECUTE) == storedGas.getAmount()) {
@@ -296,6 +304,7 @@ final class AirtightReactorKettleCrafting {
 
             return false;
         }
+
         return true;
     }
 

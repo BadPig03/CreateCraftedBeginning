@@ -7,8 +7,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.ty.createcraftedbeginning.core.MachineResourceSnapshots;
-import net.ty.createcraftedbeginning.core.ResourceTransaction;
+import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.recipe.transaction.MachineResourceSnapshots;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -36,6 +36,7 @@ final class ResidueOutletInsertionPlanner {
         if (!hasFluid) {
             return createItemInsertionPlan(itemStack, maxAmount, registryProvider);
         }
+
         return createFluidInsertionPlan(fluidStack, maxAmount, registryProvider);
     }
 

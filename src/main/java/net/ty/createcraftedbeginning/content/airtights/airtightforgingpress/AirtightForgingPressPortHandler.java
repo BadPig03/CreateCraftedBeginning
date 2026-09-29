@@ -26,6 +26,7 @@ record AirtightForgingPressPortHandler(IItemHandlerModifiable input, IItemHandle
         if (slot >= input.getSlots()) {
             return stack;
         }
+
         return input.insertItem(slot, stack, simulate);
     }
 
@@ -35,6 +36,7 @@ record AirtightForgingPressPortHandler(IItemHandlerModifiable input, IItemHandle
         if (slot < input.getSlots()) {
             return ItemStack.EMPTY;
         }
+
         return output.extractItem(slot - input.getSlots(), amount, simulate);
     }
 
@@ -51,11 +53,13 @@ record AirtightForgingPressPortHandler(IItemHandlerModifiable input, IItemHandle
 
     private IItemHandlerModifiable getHandler(int slot) {
         if (slot < 0 || slot >= getSlots()) {
-            throw new IndexOutOfBoundsException("Slot " + slot + " not in valid range [0," + getSlots() + ')');
+            throw new IndexOutOfBoundsException("Slot index must be in [0, " + getSlots() + "); got " + slot + '.');
         }
+
         if (slot < input.getSlots()) {
             return input;
         }
+
         return output;
     }
 
@@ -63,6 +67,7 @@ record AirtightForgingPressPortHandler(IItemHandlerModifiable input, IItemHandle
         if (slot < input.getSlots()) {
             return slot;
         }
+
         return slot - input.getSlots();
     }
 }

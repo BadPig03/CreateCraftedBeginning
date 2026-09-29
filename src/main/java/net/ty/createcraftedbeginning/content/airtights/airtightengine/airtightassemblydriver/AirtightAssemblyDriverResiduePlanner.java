@@ -5,8 +5,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueInsertionPlan;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletInsertionTarget;
-import net.ty.createcraftedbeginning.core.ResourceTransaction;
-import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe.ResidueOutput;
+import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.recipe.ResidueRecipeLookup.ResidueOutput;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -39,6 +39,7 @@ final class AirtightAssemblyDriverResiduePlanner {
         if (remainingAmount != 0) {
             return null;
         }
+
         return new GenerationPlan(List.copyOf(insertions), lastOutletIndex);
     }
 
@@ -54,6 +55,7 @@ final class AirtightAssemblyDriverResiduePlanner {
         if (!(level.getBlockEntity(outletPos) instanceof ResidueOutletInsertionTarget outlet)) {
             return null;
         }
+
         return outlet.createResidueInsertionPlan(residueOutput.fluidStack(), residueOutput.itemStack(), maxAmount);
     }
 

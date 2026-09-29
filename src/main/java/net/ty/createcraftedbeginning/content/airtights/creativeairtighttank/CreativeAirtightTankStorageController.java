@@ -1,9 +1,10 @@
 package net.ty.createcraftedbeginning.content.airtights.creativeairtighttank;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.CreativeSmartGasTank;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasTankMultiBlockEntityContainer;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockPart;
+import net.ty.createcraftedbeginning.gas.storage.CreativeGasReservoir;
+import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -16,21 +17,21 @@ final class CreativeAirtightTankStorageController {
         this.owner = owner;
     }
 
-    void resetCapacity() {
-        owner.getTankInventory().setCapacity(CreativeAirtightTankBlockEntity.getCapacityPerTank());
+    void resetReservoirLimits() {
+        tank().reconfigure(new GasTankLimits(CreativeAirtightTankBlockEntity.getVolumePerBlock(), CreativeAirtightTankPressureBehaviour.MAX_PRESSURE_PA));
     }
 
     void setContainedGas(GasStack gasStack) {
         tank().setContainedGas(gasStack);
     }
 
-    void mergeTankStateFrom(IGasTankMultiBlockEntityContainer source) {
+    void mergeTankStateFrom(GasTankMultiblockPart source) {
         if (!source.hasTank()) {
             return;
         }
 
         GasStack sourceGas = source.getGas(0);
-        CreativeSmartGasTank tank = tank();
+        CreativeGasReservoir tank = tank();
         if (tank.getGasStack().isEmpty() && !sourceGas.isEmpty()) {
             tank.setContainedGas(sourceGas);
         }
@@ -46,11 +47,11 @@ final class CreativeAirtightTankStorageController {
     }
 
     GasStack prepareTankStateForSplit() {
-        resetCapacity();
+        resetReservoirLimits();
         return owner.getGas(0);
     }
 
-    private CreativeSmartGasTank tank() {
-        return (CreativeSmartGasTank) owner.getTankInventory();
+    private CreativeGasReservoir tank() {
+        return owner.getTankInventory();
     }
 }

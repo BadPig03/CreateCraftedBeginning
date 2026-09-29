@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:end_field",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:the_integrated_industry_age_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

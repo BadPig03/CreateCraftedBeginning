@@ -27,6 +27,8 @@ import java.util.List;
 public final class AirtightEncasedPipeOutlineRenderer {
     private static final int COLOR_OPEN = 0xFF4EB483;
     private static final int COLOR_CLOSED = 0xFFFF5D6C;
+    private static final String OPENED = "airtightEncasedPipeOpened";
+    private static final String CLOSED = "airtightEncasedPipeClosed";
 
     private AirtightEncasedPipeOutlineRenderer() {
     }
@@ -39,7 +41,7 @@ public final class AirtightEncasedPipeOutlineRenderer {
             return;
         }
 
-        if (!CCBConfig.client().enableAirtightEncasedPipeOutline.get() || !isHoldingWrench(player) || !GogglesItem.isWearingGoggles(player)) {
+        if (!CCBConfig.client().outlines.showAirtightEncasedPipeSides.get() || !isHoldingWrench(player) || !GogglesItem.isWearingGoggles(player)) {
             return;
         }
 
@@ -57,7 +59,7 @@ public final class AirtightEncasedPipeOutlineRenderer {
         List<BlockPos> closedPositions = new ArrayList<>();
         for (Direction direction : Iterate.directions) {
             BlockPos connectionPos = pipePos.relative(direction);
-            if (AirtightEncasedPipeBlock.isOpenAt(pipeState, direction)) {
+            if (pipeState.getValue(AirtightEncasedPipeBlock.PROPERTY_BY_DIRECTION.get(direction))) {
                 openPositions.add(connectionPos);
                 continue;
             }
@@ -65,8 +67,8 @@ public final class AirtightEncasedPipeOutlineRenderer {
             closedPositions.add(connectionPos);
         }
         Outliner outliner = Outliner.getInstance();
-        outliner.showCluster("airtightEncasedPipeOpened", openPositions).colored(COLOR_OPEN).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.0234375f);
-        outliner.showCluster("airtightEncasedPipeClosed", closedPositions).colored(COLOR_CLOSED).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED).lineWidth(0.0390625f);
+        outliner.showCluster(OPENED, openPositions).colored(COLOR_OPEN).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.0234375F);
+        outliner.showCluster(CLOSED, closedPositions).colored(COLOR_CLOSED).withFaceTexture(AllSpecialTextures.HIGHLIGHT_CHECKERED).lineWidth(0.0390625F);
     }
 
     private static boolean isHoldingWrench(LocalPlayer player) {

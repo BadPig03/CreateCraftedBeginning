@@ -14,12 +14,14 @@ public enum CCBCompatMods {
     COMPUTERCRAFT("computercraft"),
     CREATE_DRAGONS_PLUS("create_dragons_plus"),
     CREATE_FLUID_LOGISTICS("fluidlogistics"),
+    CURIOS("curios"),
     DNDESIRES("dndesires"),
     FUNCTIONAL_STORAGE("functionalstorage"),
     JADE("jade"),
     JEI("jei"),
     KUBEJS("kubejs"),
-    SABLE("sable");
+    SABLE("sable"),
+    SIMULATED("simulated");
 
     private final String id;
 

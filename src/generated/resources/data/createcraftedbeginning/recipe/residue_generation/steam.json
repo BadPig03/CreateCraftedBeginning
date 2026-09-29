@@ -1,11 +1,13 @@
 {
   "type": "createcraftedbeginning:residue_generation",
-  "ingredients": [
+  "gas_ingredients": [
     {
-      "type": "createcraftedbeginning:single",
       "amount": 1,
-      "gas": "createcraftedbeginning:steam"
+      "ingredient": {
+        "gas": "createcraftedbeginning:steam"
+      }
     }
   ],
+  "ingredients": [],
   "results": []
 }

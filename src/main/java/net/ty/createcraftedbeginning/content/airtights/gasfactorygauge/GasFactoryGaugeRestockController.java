@@ -6,11 +6,11 @@ import com.simibubi.create.content.logistics.packagerLink.LogisticallyLinkedBeha
 import com.simibubi.create.content.logistics.packagerLink.LogisticsManager;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonUtils;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasLogisticsUtils;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonPackingLimits;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasNetworkStock;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -29,13 +29,13 @@ final class GasFactoryGaugeRestockController {
             return Result.NONE;
         }
 
-        int availableAmount = GasLogisticsUtils.getUniqueStockOf(network, gasToken, excludedInventory);
+        int availableAmount = GasNetworkStock.getUniqueStockOf(network, gasToken, excludedInventory);
         if (availableAmount <= 0) {
             return Result.failed();
         }
 
         int missingAmount = Math.max(0, targetAmount - promisedAmount - storedAmount);
-        int cycleLimit = GasRequestUtils.toLogisticsAmount(Math.max(1, BalloonUtils.getCapacity()) * 9);
+        int cycleLimit = (int) Mth.clamp(Math.max(1, BalloonPackingLimits.getBaseAmount()) * 9, 0L, BigItemStack.INF);
         int orderAmount = Math.min(Math.min(missingAmount, availableAmount), cycleLimit);
         if (orderAmount <= 0) {
             return Result.NONE;
@@ -47,6 +47,7 @@ final class GasFactoryGaugeRestockController {
         if (!requestAccepted) {
             return Result.failed();
         }
+
         return Result.accepted(orderedGas);
     }
 

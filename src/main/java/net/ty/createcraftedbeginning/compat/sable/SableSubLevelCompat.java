@@ -27,6 +27,9 @@ import net.ty.createcraftedbeginning.platform.SubLevelBridge.Service;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -69,7 +72,52 @@ public final class SableSubLevelCompat implements Service {
         if (length <= SAT_EPSILON) {
             return fallback;
         }
+
         return vector.scale(1 / length);
+    }
+
+    @Override
+    public <T> @Nullable T findAt(Level level, BlockPos origin, BlockPos sample, Function<BlockPos, @Nullable T> query) {
+        SableCompanion companion = SableCompanion.INSTANCE;
+        SubLevelAccess source = companion.getContaining(level, origin);
+        Position sampleCenter = Vec3.atCenterOf(sample);
+        return companion.runIncludingSubLevels(level, sampleCenter, true, source, (subLevel, pos) -> query.apply(pos));
+    }
+
+    @Override
+    public boolean testLocalFrames(Level level, Vec3 position, Vec3 direction, double radius, BiPredicate<Vec3, Vec3> query) {
+        if (query.test(position, direction)) {
+            return true;
+        }
+
+        BoundingBox3d bounds = new BoundingBox3d(new AABB(position, position).inflate(radius));
+        for (SubLevelAccess subLevel : SableCompanion.INSTANCE.getAllIntersecting(level, bounds)) {
+            Pose3dc pose = subLevel.logicalPose();
+            if (!query.test(pose.transformPositionInverse(position), pose.transformNormalInverse(direction))) {
+                continue;
+            }
+
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean testLocalBounds(Level level, AABB bounds, Predicate<AABB> query) {
+        if (query.test(bounds)) {
+            return true;
+        }
+
+        BoundingBox3d worldBounds = new BoundingBox3d(bounds);
+        for (SubLevelAccess subLevel : SableCompanion.INSTANCE.getAllIntersecting(level, worldBounds)) {
+            AABB localBounds = worldBounds.transformInverse(subLevel.logicalPose(), new BoundingBox3d()).toMojang();
+            if (!query.test(localBounds)) {
+                continue;
+            }
+
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -232,9 +280,9 @@ public final class SableSubLevelCompat implements Service {
         }
 
         @Override
-        public boolean intersects(Entity entity) {
+        public boolean intersects(Entity entity, AABB localBounds) {
             SubLevelAccess entitySubLevel = SableCompanion.INSTANCE.getContaining(entity);
-            OrientedBox entityBounds = createOrientedBox(entity.getBoundingBox(), entitySubLevel);
+            OrientedBox entityBounds = createOrientedBox(localBounds, entitySubLevel);
             return intersects(bounds, entityBounds, rotation, absoluteRotation, translatedCenter);
         }
     }

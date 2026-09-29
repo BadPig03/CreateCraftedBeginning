@@ -34,10 +34,10 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineGeometry;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineGeometry.NozzlePort;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils.NozzlePort;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -54,49 +54,6 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
     public TeslaTurbineNozzleBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(CLOCKWISE, false));
-    }
-
-    public static boolean isInvalidPlacement(BlockGetter level, Direction inwardDirection, BlockPos nozzlePos) {
-        BlockPos structurePos = nozzlePos.relative(inwardDirection);
-        BlockState structureState = level.getBlockState(structurePos);
-        if (!(structureState.getBlock() instanceof TeslaTurbineStructuralBlock)) {
-            return true;
-        }
-
-        Axis structureAxis = structureState.getValue(TeslaTurbineStructuralBlock.AXIS);
-        if (structureAxis == inwardDirection.getAxis()) {
-            return true;
-        }
-
-        TeslaTurbineStructuralPosition structurePosition = structureState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION);
-        return TeslaTurbineStructuralPosition.isMid(structurePosition) || hasOtherNozzle(level, structurePos, nozzlePos, structureAxis, structurePosition);
-    }
-
-    static boolean hasOtherNozzle(BlockGetter level, BlockPos structurePos, BlockPos nozzlePos, Axis structureAxis, TeslaTurbineStructuralPosition structurePosition) {
-        for (Direction candidateDirection : TeslaTurbineStructuralPosition.getPossiblePosition(structurePosition, structureAxis)) {
-            BlockPos candidatePos = structurePos.relative(candidateDirection);
-            if (candidatePos.equals(nozzlePos)) {
-                continue;
-            }
-
-            if (level.getBlockState(candidatePos).getBlock() instanceof TeslaTurbineNozzleBlock) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean isClockwise(Level level, Direction inwardDirection, BlockPos nozzlePos) {
-        BlockPos structurePos = nozzlePos.relative(inwardDirection);
-        BlockState structureState = level.getBlockState(structurePos);
-        Axis structureAxis = structureState.getValue(TeslaTurbineStructuralBlock.AXIS);
-        BlockPos masterPos = TeslaTurbineStructuralBlock.getMaster(structurePos, structureState);
-        NozzlePort port = TeslaTurbineUtils.findNozzlePort(masterPos, structureAxis, nozzlePos);
-        if (port == null) {
-            throw new IllegalArgumentException("Invalid Tesla Turbine nozzle position: " + nozzlePos);
-        }
-
-        return port.clockwise();
     }
 
     @Override
@@ -127,6 +84,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
         if (player != null && player.isShiftKeyDown()) {
             return null;
         }
+
         return ProperWaterloggedBlock.withWater(level, placementState.setValue(FACING, inwardDirection.getOpposite()).setValue(CLOCKWISE, isClockwise(level, inwardDirection, nozzlePos)), nozzlePos);
     }
 
@@ -168,6 +126,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
         if (!state.getValue(WATERLOGGED)) {
             return Fluids.EMPTY.defaultFluidState();
         }
+
         return Fluids.WATER.defaultFluidState();
     }
 
@@ -177,6 +136,7 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
         if (facing.getAxis() == Axis.Y) {
             return CCBShapes.TESLA_TURBINE_NOZZLE_VERTICAL.get(facing);
         }
+
         return CCBShapes.TESLA_TURBINE_NOZZLE.get(facing);
     }
 
@@ -203,6 +163,50 @@ public class TeslaTurbineNozzleBlock extends DirectionalBlock implements IBE<Tes
     @Override
     public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
         return null;
+    }
+
+    public static boolean isInvalidPlacement(BlockGetter level, Direction inwardDirection, BlockPos nozzlePos) {
+        BlockPos structurePos = nozzlePos.relative(inwardDirection);
+        BlockState structureState = level.getBlockState(structurePos);
+        if (!(structureState.getBlock() instanceof TeslaTurbineStructuralBlock)) {
+            return true;
+        }
+
+        Axis structureAxis = structureState.getValue(TeslaTurbineStructuralBlock.AXIS);
+        if (structureAxis == inwardDirection.getAxis()) {
+            return true;
+        }
+
+        TeslaTurbineStructuralPosition structurePosition = structureState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION);
+        return TeslaTurbineStructuralPosition.isMid(structurePosition) || hasOtherNozzle(level, structurePos, nozzlePos, structureAxis, structurePosition);
+    }
+
+    static boolean hasOtherNozzle(BlockGetter level, BlockPos structurePos, BlockPos nozzlePos, Axis structureAxis, TeslaTurbineStructuralPosition structurePosition) {
+        for (Direction candidateDirection : TeslaTurbineStructuralPosition.getPossiblePosition(structurePosition, structureAxis)) {
+            BlockPos candidatePos = structurePos.relative(candidateDirection);
+            if (candidatePos.equals(nozzlePos)) {
+                continue;
+            }
+
+            if (level.getBlockState(candidatePos).getBlock() instanceof TeslaTurbineNozzleBlock) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isClockwise(Level level, Direction inwardDirection, BlockPos nozzlePos) {
+        BlockPos structurePos = nozzlePos.relative(inwardDirection);
+        BlockState structureState = level.getBlockState(structurePos);
+        Axis structureAxis = structureState.getValue(TeslaTurbineStructuralBlock.AXIS);
+        BlockPos masterPos = TeslaTurbineStructuralBlock.getMaster(structurePos, structureState);
+        NozzlePort port = TeslaTurbineGeometry.findNozzlePort(masterPos, structureAxis, nozzlePos);
+        if (port == null) {
+            throw new IllegalArgumentException("Tesla turbine nozzle position " + nozzlePos + " is invalid for master " + masterPos + " on axis " + structureAxis + '.');
+        }
+
+        return port.clockwise();
     }
 
     private void scheduleValidation(Level level, BlockPos nozzlePos) {

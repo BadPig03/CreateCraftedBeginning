@@ -1,9 +1,12 @@
 {
-	"credit": "Made with Blockbench",
-	"parent": "minecraft:block/cube_all",
+	"parent": "minecraft:block/cube",
 	"textures": {
-		"1": "createcraftedbeginning:block/airtight_sheet_block",
-		"all": "createcraftedbeginning:block/airtight_pipe/casing_side",
-		"particle": "createcraftedbeginning:block/airtight_sheet_block"
+		"down": "createcraftedbeginning:block/airtight_pipe/casing_side",
+		"up": "createcraftedbeginning:block/airtight_pipe/casing_side",
+		"north": "createcraftedbeginning:block/airtight_pipe/casing_single",
+		"south": "createcraftedbeginning:block/airtight_pipe/casing_single",
+		"west": "createcraftedbeginning:block/airtight_pipe/casing_single",
+		"east": "createcraftedbeginning:block/airtight_pipe/casing_single",
+		"particle": "createcraftedbeginning:block/airtight_pipe/casing_single"
 	}
 }

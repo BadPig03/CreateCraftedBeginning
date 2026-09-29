@@ -30,6 +30,17 @@ public class CCBStress extends ConfigBase {
     protected final Map<ResourceLocation, ConfigValue<Double>> capacities = new HashMap<>();
     protected final Map<ResourceLocation, ConfigValue<Double>> impacts = new HashMap<>();
 
+    @Override
+    public void registerAll(Builder builder) {
+        registerValues(builder, "stress_impact", Comments.impact, DEFAULT_IMPACTS, impacts);
+        registerValues(builder, "stress_capacity", Comments.capacity, DEFAULT_CAPACITIES, capacities);
+    }
+
+    @Override
+    public String getName() {
+        return "kinetics";
+    }
+
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> setImpact(double value) {
         return registerDefault(DEFAULT_IMPACTS, value);
@@ -38,6 +49,16 @@ public class CCBStress extends ConfigBase {
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> setCapacity(double value) {
         return registerDefault(DEFAULT_CAPACITIES, value);
+    }
+
+    @Nullable
+    public DoubleSupplier getImpact(Block block) {
+        return getValue(block, impacts);
+    }
+
+    @Nullable
+    public DoubleSupplier getCapacity(Block block) {
+        return getValue(block, capacities);
     }
 
     private static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> registerDefault(Object2DoubleMap<ResourceLocation> defaults, double value) {
@@ -54,12 +75,12 @@ public class CCBStress extends ConfigBase {
             return;
         }
 
-        throw new IllegalStateException("Blocks from other mods cannot be added to Create: Crafted Beginning's stress configuration.");
+        throw new IllegalStateException("Blocks from mod '" + builder.getOwner().getModid() + "' cannot be added to Create: Crafted Beginning's stress configuration.");
     }
 
     private static void registerValues(Builder builder, String name, String comment, Object2DoubleMap<ResourceLocation> defaults, Map<ResourceLocation, ConfigValue<Double>> values) {
         builder.comment(".", Comments.su, comment).push(name);
-        defaults.forEach((id, value) -> values.put(id, builder.define(id.getPath(), value)));
+        defaults.forEach((id, value) -> values.put(id, builder.defineInRange(id.getPath(), value, 0, Double.MAX_VALUE)));
         builder.pop();
     }
 
@@ -69,34 +90,14 @@ public class CCBStress extends ConfigBase {
         if (value == null) {
             return null;
         }
+
         return value::get;
     }
 
-    @Override
-    public void registerAll(Builder builder) {
-        registerValues(builder, "impact", Comments.impact, DEFAULT_IMPACTS, impacts);
-        registerValues(builder, "capacity", Comments.capacity, DEFAULT_CAPACITIES, capacities);
-    }
-
-    @Override
-    public String getName() {
-        return "stressValues";
-    }
-
-    @Nullable
-    public DoubleSupplier getImpact(Block block) {
-        return getValue(block, impacts);
-    }
-
-    @Nullable
-    public DoubleSupplier getCapacity(Block block) {
-        return getValue(block, capacities);
-    }
-
     protected static class Comments {
-        private static final String su = "[in Stress Units]";
+        private static final String su = "[Unit: base SU per RPM]";
 
-        private static final String impact = "Configure the stress impact of individual mechanical blocks. Stress impact scales proportionally with rotational speed.";
-        private static final String capacity = "Configure the stress capacity of individual kinetic sources.";
+        private static final String impact = "Base stress impact of each mechanical block per RPM. Actual stress consumption scales with absolute rotation speed. A value of 0 removes the configured stress impact.";
+        private static final String capacity = "Base stress capacity of each kinetic source per RPM. Actual capacity also depends on absolute rotation speed and source-specific scaling, such as turbine state or received Optical Power. A value of 0 removes the configured capacity.";
     }
 }

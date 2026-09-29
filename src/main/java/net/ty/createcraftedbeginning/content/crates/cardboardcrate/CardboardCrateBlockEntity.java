@@ -21,11 +21,7 @@ public class CardboardCrateBlockEntity extends CratesBlockEntity {
     private CCBAdvancementBehaviour advancementBehaviour;
 
     public CardboardCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state, () -> CCBConfig.server().crates.maxCardboardCapacity.get(), CardboardCrateBlockEntity::isPackage);
-    }
-
-    static boolean isPackage(ItemStack stack) {
-        return !stack.isEmpty() && stack.getItem() instanceof PackageItem;
+        super(type, pos, state, () -> CCBConfig.server().storage.cardboardCrate.itemCapacity.get(), CardboardCrateBlockEntity::isPackage);
     }
 
     @Override
@@ -38,6 +34,10 @@ public class CardboardCrateBlockEntity extends CratesBlockEntity {
         super.addBehaviours(behaviours);
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.CUT_FROM_THE_SAME_CARDBOARD);
         behaviours.add(advancementBehaviour);
+    }
+
+    static boolean isPackage(ItemStack stack) {
+        return !stack.isEmpty() && stack.getItem() instanceof PackageItem;
     }
 
     void awardPackageDisposal() {

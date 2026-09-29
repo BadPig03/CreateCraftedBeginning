@@ -9,6 +9,7 @@ import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.util.Mth;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
@@ -21,18 +22,18 @@ public class EndIncinerationParticle extends TextureSheetParticle {
     private EndIncinerationParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
         super(level, x, y, z, xSpeed, ySpeed, zSpeed);
         gravity = 0;
-        friction = 0.96f;
+        friction = 0.96F;
         xd = xSpeed;
         yd = ySpeed;
         zd = zSpeed;
-        quadSize *= random.nextFloat() * 2 + 0.2f;
+        quadSize *= random.nextFloat() * 2 + 0.2F;
         lifetime = (int) (16 / (random.nextDouble() * 0.8 + 0.2));
     }
 
     @Override
     public float getQuadSize(float scaleFactor) {
         float progress = (age + scaleFactor) / lifetime;
-        return quadSize * (1 - progress * progress);
+        return quadSize * (1 - Mth.square(progress));
     }
 
     @Override

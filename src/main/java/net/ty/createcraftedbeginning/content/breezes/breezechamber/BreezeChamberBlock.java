@@ -10,13 +10,10 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
-import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -24,9 +21,7 @@ import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -44,34 +39,27 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.IAirtightPipeDrain;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeDrain;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtighttank.IChamberGasTank;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.ChamberGasTank;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
-import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IBE<BreezeChamberBlockEntity>, SimpleWaterloggedBlock, IWrenchable, IAirtightComponent, IAirtightPipeDrain {
+public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IBE<BreezeChamberBlockEntity>, SimpleWaterloggedBlock, IWrenchable, GasConnectable, AirtightPipeDrain {
     public static final EnumProperty<WindLevel> WIND_LEVEL = EnumProperty.create("wind_level", WindLevel.class);
 
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
@@ -79,52 +67,6 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     public BreezeChamberBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(WIND_LEVEL, WindLevel.CALM));
-    }
-
-    static WindLevel getWindLevelOf(BlockState blockState) {
-        return blockState.getValue(WIND_LEVEL);
-    }
-
-    static InteractionResultHolder<ItemStack> tryInsert(Level level, BlockPos chamberPos, ItemStack inputStack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
-        if (!(level.getBlockEntity(chamberPos) instanceof BreezeChamberBlockEntity chamber)) {
-            return InteractionResultHolder.fail(ItemStack.EMPTY);
-        }
-
-        InteractionResultHolder<ItemStack> insertionResult = chamber.tryUpdateChargerByItem(inputStack, forceOverflow, simulate);
-        if (insertionResult.getResult() != InteractionResult.SUCCESS) {
-            return InteractionResultHolder.fail(ItemStack.EMPTY);
-        }
-
-        if (doNotConsume) {
-            return InteractionResultHolder.success(ItemStack.EMPTY);
-        }
-
-        ItemStack remainder = insertionResult.getObject();
-        if (remainder.isEmpty()) {
-            FoodProperties foodProperties = inputStack.getItem().getFoodProperties(inputStack, null);
-            if (foodProperties != null) {
-                remainder = foodProperties.usingConvertsTo().orElse(ItemStack.EMPTY);
-            }
-            if (remainder.isEmpty()) {
-                remainder = inputStack.hasCraftingRemainingItem() ? inputStack.getCraftingRemainingItem() : ItemStack.EMPTY;
-            }
-        }
-        if (simulate || level.isClientSide) {
-            return InteractionResultHolder.success(remainder);
-        }
-
-        inputStack.shrink(1);
-        return InteractionResultHolder.success(remainder);
-    }
-
-    private static ItemInteractionResult setGoggles(BreezeChamberBlockEntity chamber, boolean hasGoggles) {
-        if (chamber.hasGoggles() == hasGoggles) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        }
-
-        chamber.setGoggles(hasGoggles);
-        chamber.notifyUpdate();
-        return ItemInteractionResult.SUCCESS;
     }
 
     @Override
@@ -205,6 +147,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         if (!state.getValue(WATERLOGGED)) {
             return Fluids.EMPTY.defaultFluidState();
         }
+
         return Fluids.WATER.defaultFluidState();
     }
 
@@ -214,26 +157,8 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     }
 
     @Override
-    public List<ItemStack> getDrops(BlockState state, LootParams.@NotNull Builder params) {
-        List<ItemStack> drops = super.getDrops(state, params);
-        if (!(params.getParameter(LootContextParams.BLOCK_ENTITY) instanceof BreezeChamberBlockEntity chamber) || chamber.getWindRemainingTime() == 0) {
-            return drops;
-        }
-
-        for (ItemStack drop : drops) {
-            if (!drop.is(asItem())) {
-                continue;
-            }
-
-            chamber.saveToItem(drop);
-            break;
-        }
-        return drops;
-    }
-
-    @Override
     public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        return level.getBlockEntity(pos.below()) instanceof IChamberGasTank;
+        return level.getBlockEntity(pos.below()) instanceof ChamberGasTank;
     }
 
     @Override
@@ -251,6 +176,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         if (context != CollisionContext.empty()) {
             return getShape(blockState, level, blockPos, context);
         }
+
         return CCBShapes.CHAMBER_BLOCK_SPECIAL_COLLISION_SHAPE;
     }
 
@@ -266,7 +192,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
             return;
         }
 
-        level.playLocalSound(pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f, SoundEvents.BREEZE_IDLE_GROUND, SoundSource.BLOCKS, 0.1f, random.nextFloat() * 0.7f + 0.6f, false);
+        level.playLocalSound(pos.getX() + 0.5F, pos.getY() + 0.5F, pos.getZ() + 0.5F, SoundEvents.BREEZE_IDLE_GROUND, SoundSource.BLOCKS, 0.1F, random.nextFloat() * 0.7F + 0.6F, false);
     }
 
     @Override
@@ -283,63 +209,12 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
-        if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber)) {
-            return;
-        }
-
-        chamber.loadFromItem(stack);
-    }
-
-    @Override
-    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        if (!level.isClientSide && player.isCreative() && player.isShiftKeyDown() && level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber && chamber.getWindRemainingTime() != 0) {
-            ItemStack chamberItem = new ItemStack(this);
-            chamber.saveToItem(chamberItem);
-            Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, chamberItem);
-        }
-        super.playerWillDestroy(level, pos, state, player);
-        return state;
     }
 
     @Override
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         builder.add(FACING, WATERLOGGED, WIND_LEVEL);
         super.createBlockStateDefinition(builder);
-    }
-
-    @Override
-    public void appendHoverText(ItemStack chamberStack, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
-        int remainingTime = chamberStack.getOrDefault(CCBDataComponents.BREEZE_TIME, 0);
-        WindLevel windLevel = WindLevel.CALM;
-        if (remainingTime > 0) {
-            windLevel = WindLevel.GALE;
-        }
-        else if (remainingTime < 0) {
-            windLevel = WindLevel.ILL;
-        }
-        tooltips.add(CCBLang.translate("gui.breeze_chamber.state").style(ChatFormatting.GRAY).add(CCBLang.translate(windLevel.getTranslatable()).style(windLevel.getChatFormatting())).component());
-        if (remainingTime == 0) {
-            return;
-        }
-
-        boolean isCreative = chamberStack.getOrDefault(CCBDataComponents.BREEZE_CREATIVE, false);
-        if (isCreative) {
-            tooltips.add(CCBLang.translate("gui.breeze_chamber.time").style(ChatFormatting.GRAY).add(CCBLang.translate("gui.gas_container.infinity").style(ChatFormatting.GOLD)).component());
-            return;
-        }
-
-        tooltips.add(CCBLang.translate("gui.breeze_chamber.time").style(ChatFormatting.GRAY).add(CCBLang.seconds(Mth.abs(remainingTime), context.tickRate()).style(ChatFormatting.GOLD)).component());
-    }
-
-    @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
-        ItemStack chamberItem = new ItemStack(this);
-        if (!(level.getBlockEntity(pos) instanceof BreezeChamberBlockEntity chamber) || chamber.getWindRemainingTime() == 0 || !player.isShiftKeyDown()) {
-            return chamberItem;
-        }
-
-        chamber.saveToItem(chamberItem);
-        return chamberItem;
     }
 
     @Override
@@ -357,18 +232,64 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         return true;
     }
 
+    static WindLevel getWindLevelOf(BlockState blockState) {
+        return blockState.getValue(WIND_LEVEL);
+    }
+
+    static InteractionResultHolder<ItemStack> tryInsert(Level level, BlockPos chamberPos, ItemStack inputStack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
+        if (!(level.getBlockEntity(chamberPos) instanceof BreezeChamberBlockEntity chamber)) {
+            return InteractionResultHolder.fail(ItemStack.EMPTY);
+        }
+
+        InteractionResultHolder<ItemStack> insertionResult = chamber.tryUpdateChargerByItem(inputStack, forceOverflow, simulate);
+        if (insertionResult.getResult() != InteractionResult.SUCCESS) {
+            return InteractionResultHolder.fail(ItemStack.EMPTY);
+        }
+
+        if (doNotConsume) {
+            return InteractionResultHolder.success(ItemStack.EMPTY);
+        }
+
+        ItemStack remainder = insertionResult.getObject();
+        if (remainder.isEmpty()) {
+            FoodProperties foodProperties = inputStack.getItem().getFoodProperties(inputStack, null);
+            if (foodProperties != null) {
+                remainder = foodProperties.usingConvertsTo().orElse(ItemStack.EMPTY);
+            }
+            if (remainder.isEmpty()) {
+                remainder = inputStack.hasCraftingRemainingItem() ? inputStack.getCraftingRemainingItem() : ItemStack.EMPTY;
+            }
+        }
+        if (simulate || level.isClientSide) {
+            return InteractionResultHolder.success(remainder);
+        }
+
+        inputStack.shrink(1);
+        return InteractionResultHolder.success(remainder);
+    }
+
+    private static ItemInteractionResult setGoggles(BreezeChamberBlockEntity chamber, boolean hasGoggles) {
+        if (chamber.hasGoggles() == hasGoggles) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        chamber.setGoggles(hasGoggles);
+        chamber.notifyUpdate();
+        return ItemInteractionResult.SUCCESS;
+    }
+
     public enum WindLevel implements StringRepresentable {
         ILL,
         CALM,
         GALE;
 
-        boolean isActive() {
-            return ordinal() > CALM.ordinal();
-        }
-
         @Override
         public String getSerializedName() {
             return Lang.asId(name());
+        }
+
+        boolean isActive() {
+            return ordinal() > CALM.ordinal();
         }
 
         @Contract(pure = true)

@@ -19,11 +19,7 @@ public class ZombificationEffect extends MobEffect {
 
     @Override
     public boolean applyEffectTick(LivingEntity livingEntity, int amplifier) {
-        if (livingEntity.hasEffect(CCBMobEffects.ZOMBIFICATION_IMMUNITY)) {
-            return true;
-        }
-
-        if (!(livingEntity instanceof AbstractPiglin) && !(livingEntity instanceof Hoglin)) {
+        if (livingEntity.hasEffect(CCBMobEffects.ZOMBIFICATION_IMMUNITY) || !(livingEntity instanceof AbstractPiglin) && !(livingEntity instanceof Hoglin)) {
             return true;
         }
 

@@ -5,11 +5,14 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasTransporter;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.GasTransportNode;
+import net.ty.createcraftedbeginning.gas.telemetry.GasPressureTelemetryTarget;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -17,61 +20,54 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasTransporter {
-    private static final int LAZY_TICK_RATE = 10;
-
-    private final AirtightPumpPressureController pressureController;
+public class AirtightPumpBlockEntity extends KineticBlockEntity implements GasTransportNode, GasPressureTelemetryTarget {
+    private final AirtightPumpPerformanceController performanceController;
+    private final AirtightPumpDisplay display;
     private CCBAdvancementBehaviour advancementBehaviour;
 
     public AirtightPumpBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        pressureController = new AirtightPumpPressureController(this);
-        setLazyTickRate(LAZY_TICK_RATE);
+        performanceController = new AirtightPumpPerformanceController(this);
+        display = new AirtightPumpDisplay(this);
     }
 
     @Override
-    public void tick() {
-        if (level == null) {
+    public void acceptPressureTelemetry(long minPressurePa, long maxPressurePa) {
+        if (level == null || level.isClientSide || isOverStressed() || maxPressurePa <= minPressurePa || getPumpMaxPressureBoostPa() <= 0 || getPumpFlowRateLimit() <= 0) {
             return;
         }
 
-        pressureController.beforeTick();
-        super.tick();
-        pressureController.afterTick();
+        advancementBehaviour.awardPlayer(CCBAdvancements.TAKE_A_DEEP_BREATH);
     }
 
     @Override
-    public void onSpeedChanged(float previousSpeed) {
-        super.onSpeedChanged(previousSpeed);
-        if (!pressureController.shouldHandleSpeedChange(previousSpeed)) {
-            return;
-        }
-
-        if (pressureController.hasRequiredSpeed() && advancementBehaviour != null) {
-            advancementBehaviour.awardPlayer(CCBAdvancements.TAKE_A_DEEP_BREATH);
-        }
-        pressureController.rebuildPressure();
+    public void clearPressureTelemetry() {
     }
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         super.addBehaviours(behaviours);
 
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.TAKE_A_DEEP_BREATH, CCBAdvancements.GASEOUS_VARIATIONS, CCBAdvancements.MINTY_FRESH);
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.TAKE_A_DEEP_BREATH, CCBAdvancements.GASEOUS_VARIATIONS);
         behaviours.add(advancementBehaviour);
 
-        behaviours.add(new AirtightPumpTransportBehaviour(this));
+        behaviours.add(createTransportBehaviour());
     }
 
     @Override
-    public void lazyTick() {
-        super.lazyTick();
-        pressureController.lazyTick();
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        boolean added = display.addToGoggleTooltip(tooltip);
+        if (!added) {
+            return false;
+        }
+
+        addStressImpactStats(tooltip, calculateStressApplied());
+        return true;
     }
 
     @Override
-    public boolean canTransport(Level level, BlockState state, BlockPos pos, Direction direction) {
-        return pressureController.canTransport(state, direction);
+    public boolean allowsGasTransport(Level level, BlockState state, BlockPos pos, Direction direction) {
+        return performanceController.allowsGasTransport(state, direction);
     }
 
     @Override
@@ -79,27 +75,19 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements IGasT
         return advancementBehaviour;
     }
 
-    public void updatePipesOnSide(Direction direction) {
-        pressureController.updatePipesOnSide(direction);
+    public long getPumpMaxPressureBoostPa() {
+        return performanceController.getPumpMaxPressureBoostPa();
     }
 
-    void markPressureUpdate() {
-        pressureController.markPressureUpdate();
+    public long getPumpFlowRateLimit() {
+        return performanceController.getPumpFlowRateLimit();
     }
 
-    boolean isPumpRunning() {
-        return pressureController.isPumpRunning();
+    AirtightPumpPerformanceController getPerformanceController() {
+        return performanceController;
     }
 
-    boolean isSideAccessible(Direction direction) {
-        return pressureController.isSideAccessible(direction);
-    }
-
-    boolean isFront(Direction direction) {
-        return pressureController.isFront(direction);
-    }
-
-    float getPumpPressure() {
-        return pressureController.getPumpPressure();
+    private GasTransportBehaviour createTransportBehaviour() {
+        return new AirtightPumpTransportBehaviour(this);
     }
 }

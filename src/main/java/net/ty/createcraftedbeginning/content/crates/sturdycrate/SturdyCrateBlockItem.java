@@ -7,6 +7,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -28,6 +29,7 @@ public class SturdyCrateBlockItem extends BlockItem {
         if (!stack.has(CCBDataComponents.STURDY_CRATE_CONTENTS)) {
             return super.getMaxStackSize(stack);
         }
+
         return 1;
     }
 
@@ -43,7 +45,8 @@ public class SturdyCrateBlockItem extends BlockItem {
             return;
         }
 
-        ItemEntity replacement = new ItemEntity(level, itemEntity.getX(), itemEntity.getY(), itemEntity.getZ(), crateStack.copy(), itemEntity.getDeltaMovement().x, itemEntity.getDeltaMovement().y, itemEntity.getDeltaMovement().z);
+        Vec3 movement = itemEntity.getDeltaMovement();
+        ItemEntity replacement = new ItemEntity(level, itemEntity.getX(), itemEntity.getY(), itemEntity.getZ(), crateStack.copy(), movement.x, movement.y, movement.z);
         replacement.setTarget(itemEntity.getTarget());
         replacement.setDefaultPickUpDelay();
         level.addFreshEntity(replacement);

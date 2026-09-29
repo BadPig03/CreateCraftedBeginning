@@ -42,29 +42,24 @@ import java.util.function.Supplier;
 public class CCBSoundEvents {
     public static final Map<ResourceLocation, SoundEntry> ALL = new HashMap<>();
 
-    public static final SoundEntry DENY = create("deny").playExisting(SoundEvents.NOTE_BLOCK_BASS::value, 1, 0.5f).subtitle("Declining boop").category(SoundSource.PLAYERS).build();
-    public static final SoundEntry INJECTING = create("injecting").playExisting(SoundEvents.BREEZE_CHARGE, 0.75f, 1).subtitle("Gas injects").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry SHEET_ADDED = create("sheet_added").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75f, 1).subtitle("Airtight Sheet added").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry SHEET_REMOVED = create("sheet_removed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75f, 1).subtitle("Airtight Sheet removed").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry ROTOR_ADDED = create("rotor_added").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75f, 1).playExisting(SoundEvents.HEAVY_CORE_PLACE, 0.75f, 1).subtitle("Rotor added").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry ROTOR_REMOVED = create("rotor_removed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75f, 1).playExisting(SoundEvents.HEAVY_CORE_BREAK, 0.75f, 1).subtitle("Rotor removed").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry CANISTER_ADDED = create("canister_added").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75f, 1).playExisting(SoundEvents.HEAVY_CORE_PLACE, 0.75f, 1.25f).subtitle("Gas Canister added").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry CANISTER_REMOVED = create("canister_removed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75f, 1).playExisting(SoundEvents.HEAVY_CORE_BREAK, 0.75f, 1.25f).subtitle("Gas Canister removed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry DENY = create("deny").playExisting(SoundEvents.NOTE_BLOCK_BASS::value, 1, 0.5F).subtitle("Declining boop").category(SoundSource.PLAYERS).build();
+    public static final SoundEntry INJECTING = create("injecting").playExisting(SoundEvents.BREEZE_CHARGE, 0.75F, 1).subtitle("Gas injects").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry SHEET_ADDED = create("sheet_added").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75F, 1).subtitle("Airtight Sheet added").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry SHEET_REMOVED = create("sheet_removed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75F, 1).subtitle("Airtight Sheet removed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry ROTOR_ADDED = create("rotor_added").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75F, 1).playExisting(SoundEvents.HEAVY_CORE_PLACE, 0.75F, 1).subtitle("Rotor added").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry ROTOR_REMOVED = create("rotor_removed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75F, 1).playExisting(SoundEvents.HEAVY_CORE_BREAK, 0.75F, 1).subtitle("Rotor removed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry CANISTER_ADDED = create("canister_added").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75F, 1).playExisting(SoundEvents.HEAVY_CORE_PLACE, 0.75F, 1.25F).subtitle("Gas Canister added").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry CANISTER_REMOVED = create("canister_removed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75F, 1).playExisting(SoundEvents.HEAVY_CORE_BREAK, 0.75F, 1.25F).subtitle("Gas Canister removed").category(SoundSource.BLOCKS).build();
     public static final SoundEntry WIND_CHARGE_LAUNCH = create("wind_charge_launch").playExisting(SoundEvents.WIND_CHARGE_THROW, 1, 2).subtitle("Wind charge launched").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry AIRTIGHT_ARMOR_EQUIP = create("airtight_armor_equip").playExisting(SoundEvents.ARMOR_EQUIP_NETHERITE.value(), 0.9f, 1.4f).playExisting(SoundEvents.HEAVY_CORE_HIT, 0.9f, 1.4f).subtitle("Airtight equipments clinks").category(SoundSource.PLAYERS).build();
-    public static final SoundEntry AIRTIGHT_JETPACK_LAUNCH = create("airtight_jetpack_launch").playExisting(SoundEvents.WIND_CHARGE_BURST.value(), 1, 1).subtitle("Airtight jetpack launches").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry AIR_VENT_OUTLET_OPENED = create("air_vent_outlet_opened").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75f, 1).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.75f, 1).subtitle("Air Vent Outlet opened").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry AIR_VENT_OUTLET_CLOSED = create("air_vent_outlet_closed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75f, 1).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.75f, 1).subtitle("Air Vent Outlet closed").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry AIR_VENT_OUTLET_PLACED = create("air_vent_outlet_placed").playExisting(SoundEvents.NETHERITE_BLOCK_PLACE, 0.75f, 1).subtitle("Air Vent Outlet placed").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry AIR_VENT_OUTLET_REMOVED = create("air_vent_outlet_removed").playExisting(SoundEvents.NETHERITE_BLOCK_BREAK, 0.75f, 1).subtitle("Air Vent Outlet removed").category(SoundSource.BLOCKS).build();
-    public static final SoundEntry REACTOR_KETTLE_MIXING = create("reactor_kettle_mixing").subtitle("Reactor Kettle Mixing noises").playExisting(SoundEvents.GILDED_BLACKSTONE_BREAK, 0.125f, 0.5f).playExisting(SoundEvents.NETHERRACK_BREAK, 0.125f, 0.5f).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.125f, 0.5f).category(SoundSource.BLOCKS).build();
-    public static final SoundEntry FORGING_PRESS_PRESSED = create("forging_press_pressed").subtitle("Forging Press clangs").playExisting(SoundEvents.ANVIL_LAND, 0.1f, 1).playExisting(SoundEvents.ITEM_BREAK, 0.4f, 1).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.35f, 1).category(SoundSource.BLOCKS).build();
-    public static final SoundEntry GAS_DRAINAGE = create("gas_drainage").subtitle("Gas Drainage").playExisting(SoundEvents.BREEZE_WHIRL, 0.45f, 1).category(SoundSource.BLOCKS).build();
-
-    @Contract("_ -> new")
-    private static SoundEntryBuilder create(String name) {
-        return create(CCBAPI.asResource(name));
-    }
+    public static final SoundEntry AIRTIGHT_ARMOR_EQUIP = create("airtight_armor_equip").playExisting(SoundEvents.ARMOR_EQUIP_NETHERITE.value(), 0.9F, 1.4F).playExisting(SoundEvents.HEAVY_CORE_HIT, 0.9F, 1.4F).subtitle("Airtight equipments clinks").category(SoundSource.PLAYERS).build();
+    public static final SoundEntry AIRTIGHT_JETPACK_LAUNCH = create("airtight_jetpack_launch").playExisting(SoundEvents.WIND_CHARGE_BURST.value(), 1, 1).subtitle("Airtight jetpack launches").category(SoundSource.PLAYERS).build();
+    public static final SoundEntry AIR_VENT_OUTLET_OPENED = create("air_vent_outlet_opened").playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, 0.75F, 1).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.75F, 1).subtitle("Air Vent Outlet opened").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry AIR_VENT_OUTLET_CLOSED = create("air_vent_outlet_closed").playExisting(SoundEvents.ITEM_FRAME_REMOVE_ITEM, 0.75F, 1).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.75F, 1).subtitle("Air Vent Outlet closed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry AIR_VENT_OUTLET_PLACED = create("air_vent_outlet_placed").playExisting(SoundEvents.NETHERITE_BLOCK_PLACE, 0.75F, 1).subtitle("Air Vent Outlet placed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry AIR_VENT_OUTLET_REMOVED = create("air_vent_outlet_removed").playExisting(SoundEvents.NETHERITE_BLOCK_BREAK, 0.75F, 1).subtitle("Air Vent Outlet removed").category(SoundSource.BLOCKS).build();
+    public static final SoundEntry REACTOR_KETTLE_MIXING = create("reactor_kettle_mixing").subtitle("Reactor Kettle Mixing noises").playExisting(SoundEvents.GILDED_BLACKSTONE_BREAK, 0.125F, 0.5F).playExisting(SoundEvents.NETHERRACK_BREAK, 0.125F, 0.5F).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.125F, 0.5F).category(SoundSource.BLOCKS).build();
+    public static final SoundEntry FORGING_PRESS_PRESSED = create("forging_press_pressed").subtitle("Forging Press clangs").playExisting(SoundEvents.ANVIL_LAND, 0.1F, 1).playExisting(SoundEvents.ITEM_BREAK, 0.4F, 1).playExisting(SoundEvents.NETHERITE_BLOCK_HIT, 0.35F, 1).category(SoundSource.BLOCKS).build();
+    public static final SoundEntry GAS_DRAINAGE = create("gas_drainage").subtitle("Gas Drainage").playExisting(SoundEvents.BREEZE_WHIRL, 0.45F, 1).category(SoundSource.BLOCKS).build();
 
     @Contract("_ -> new")
     public static SoundEntryBuilder create(ResourceLocation id) {
@@ -85,20 +80,25 @@ public class CCBSoundEvents {
     }
 
     public static void playItemPickup(Player player) {
-        player.level().playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1 + player.level().random.nextFloat());
+        player.level().playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2F, 1 + player.level().random.nextFloat());
     }
 
     public static void prepare() {
         ALL.values().forEach(SoundEntry::prepare);
     }
 
-    public abstract static class SoundEntry {
-        protected ResourceLocation id;
-        protected String subtitle;
-        protected SoundSource category;
-        protected int attenuationDistance;
+    @Contract("_ -> new")
+    private static SoundEntryBuilder create(String name) {
+        return create(CCBAPI.asResource(name));
+    }
 
-        public SoundEntry(ResourceLocation id, String subtitle, SoundSource category, int attenuationDistance) {
+    public abstract static class SoundEntry {
+        protected final ResourceLocation id;
+        protected final @Nullable String subtitle;
+        protected final SoundSource category;
+        protected final int attenuationDistance;
+
+        public SoundEntry(ResourceLocation id, @Nullable String subtitle, SoundSource category, int attenuationDistance) {
             this.id = id;
             this.subtitle = subtitle;
             this.category = category;
@@ -127,7 +127,7 @@ public class CCBSoundEvents {
             return subtitle != null;
         }
 
-        public String getSubtitle() {
+        public @Nullable String getSubtitle() {
             return subtitle;
         }
 
@@ -149,6 +149,10 @@ public class CCBSoundEvents {
             play(world, entity, pos, 1, 1);
         }
 
+        public void play(Level world, Player entity, Vec3 pos, float volume, float pitch) {
+            play(world, entity, pos.x(), pos.y(), pos.z(), volume, pitch);
+        }
+
         public void playFrom(Entity entity) {
             playFrom(entity, 1, 1);
         }
@@ -159,10 +163,6 @@ public class CCBSoundEvents {
             }
 
             play(entity.level(), null, entity.blockPosition(), volume, pitch);
-        }
-
-        public void play(Level world, Player entity, Vec3 pos, float volume, float pitch) {
-            play(world, entity, pos.x(), pos.y(), pos.z(), volume, pitch);
         }
 
         public void playAt(Level world, Vec3i pos, float volume, float pitch, boolean fade) {
@@ -205,13 +205,13 @@ public class CCBSoundEvents {
 
     public record ConfiguredSoundEvent(Supplier<SoundEvent> event, float volume, float pitch) {}
 
-    public static class SoundEntryBuilder {
-        protected ResourceLocation id;
-        protected String subtitle = "unregistered";
-        protected SoundSource category = SoundSource.BLOCKS;
-        protected List<ConfiguredSoundEvent> wrappedEvents;
-        protected List<ResourceLocation> variants;
-        protected int attenuationDistance;
+    public static final class SoundEntryBuilder {
+        private final ResourceLocation id;
+        private @Nullable String subtitle = "unregistered";
+        private SoundSource category = SoundSource.BLOCKS;
+        private final List<ConfiguredSoundEvent> wrappedEvents;
+        private final List<ResourceLocation> variants;
+        private int attenuationDistance;
 
         public SoundEntryBuilder(ResourceLocation id) {
             wrappedEvents = new ArrayList<>();
@@ -272,13 +272,13 @@ public class CCBSoundEvents {
         }
     }
 
-    private static class WrappedSoundEntry extends SoundEntry {
+    private static final class WrappedSoundEntry extends SoundEntry {
         private final List<ConfiguredSoundEvent> wrappedEvents;
         private final List<CompiledSoundEvent> compiledEvents;
 
-        public WrappedSoundEntry(ResourceLocation id, String subtitle, List<ConfiguredSoundEvent> wrappedEvents, SoundSource category, int attenuationDistance) {
+        public WrappedSoundEntry(ResourceLocation id, @Nullable String subtitle, List<ConfiguredSoundEvent> wrappedEvents, SoundSource category, int attenuationDistance) {
             super(id, subtitle, category, attenuationDistance);
-            this.wrappedEvents = wrappedEvents;
+            this.wrappedEvents = List.copyOf(wrappedEvents);
             compiledEvents = new ArrayList<>();
         }
 
@@ -339,20 +339,24 @@ public class CCBSoundEvents {
         }
 
         @Contract("_ -> new")
-        protected ResourceLocation getIdOf(int i) {
-            return ResourceLocation.fromNamespaceAndPath(id.getNamespace(), i == 0 ? id.getPath() : id.getPath() + "_compounded_" + i);
+        private ResourceLocation getIdOf(int i) {
+            if (i == 0) {
+                return ResourceLocation.fromNamespaceAndPath(id.getNamespace(), id.getPath());
+            }
+
+            return ResourceLocation.fromNamespaceAndPath(id.getNamespace(), id.getPath() + "_compounded_" + i);
         }
 
         private record CompiledSoundEvent(DeferredHolder<SoundEvent, SoundEvent> event, float volume, float pitch) {}
     }
 
-    private static class CustomSoundEntry extends SoundEntry {
-        protected List<ResourceLocation> variants;
-        protected DeferredHolder<SoundEvent, SoundEvent> event;
+    private static final class CustomSoundEntry extends SoundEntry {
+        private final List<ResourceLocation> variants;
+        private DeferredHolder<SoundEvent, SoundEvent> event;
 
-        public CustomSoundEntry(ResourceLocation id, List<ResourceLocation> variants, String subtitle, SoundSource category, int attenuationDistance) {
+        public CustomSoundEntry(ResourceLocation id, List<ResourceLocation> variants, @Nullable String subtitle, SoundSource category, int attenuationDistance) {
             super(id, subtitle, category, attenuationDistance);
-            this.variants = variants;
+            this.variants = List.copyOf(variants);
         }
 
         @Override

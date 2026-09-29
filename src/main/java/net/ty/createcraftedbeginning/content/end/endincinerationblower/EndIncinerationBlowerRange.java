@@ -7,7 +7,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -18,7 +17,7 @@ final class EndIncinerationBlowerRange {
     }
 
     static float getMaxRange() {
-        return CCBMathUtils.clampNonNegative(CCBConfig.server().endDevices.maxRange.getF(), 32);
+        return Mth.clamp(CCBConfig.server().machines.endIncinerationBlower.maxRadius.getF(), 0.0F, 32);
     }
 
     static float calculateRange(float speed) {
@@ -36,7 +35,8 @@ final class EndIncinerationBlowerRange {
         if (absSpeed < mediumSpeed) {
             return 0;
         }
-        return CCBMathUtils.clampNonNegative(absSpeed / mediumSpeed - 0.5f, maxRange);
+
+        return Mth.clamp(absSpeed / mediumSpeed - 0.5F, 0.0F, maxRange);
     }
 
     static int calculateBlockRadius(float speed) {

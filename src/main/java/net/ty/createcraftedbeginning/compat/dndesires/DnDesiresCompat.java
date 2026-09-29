@@ -5,7 +5,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor.ARGB32;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
-import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionFilterColors;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.BiConsumer;
@@ -17,7 +17,7 @@ public final class DnDesiresCompat {
     }
 
     public static void register() {
-        GasInjectionChamberUtils.registerFanProcessingColor(CCBCompatMods.DNDESIRES.asResource("seething"), ARGB32.average(0xFF64C9FD, 0xFF3F74E8));
+        GasInjectionFilterColors.registerFanProcessingColor(CCBCompatMods.DNDESIRES.asResource("seething"), ARGB32.average(0xFF64C9FD, 0xFF3F74E8));
     }
 
     public static void registerJeiFanProcessingCategories(BiConsumer<ResourceLocation, ResourceLocation> registrar) {

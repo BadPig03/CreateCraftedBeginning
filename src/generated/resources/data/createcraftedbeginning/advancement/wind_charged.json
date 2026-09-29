@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:updraft",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:wind_charged_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

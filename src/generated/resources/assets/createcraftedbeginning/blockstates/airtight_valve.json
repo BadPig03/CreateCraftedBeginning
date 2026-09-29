@@ -1,0 +1,140 @@
+{
+  "variants": {
+    "axis=x,directional_facing=east,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=east,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=north,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=north,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=null,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=null,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=south,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=south,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=west,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,directional_facing=west,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,directional_facing=east,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "y": 90
+    },
+    "axis=y,directional_facing=east,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "y": 90
+    },
+    "axis=y,directional_facing=north,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed"
+    },
+    "axis=y,directional_facing=north,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open"
+    },
+    "axis=y,directional_facing=null,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed"
+    },
+    "axis=y,directional_facing=null,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open"
+    },
+    "axis=y,directional_facing=south,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "y": 180
+    },
+    "axis=y,directional_facing=south,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "y": 180
+    },
+    "axis=y,directional_facing=west,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "y": 270
+    },
+    "axis=y,directional_facing=west,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "y": 270
+    },
+    "axis=z,directional_facing=east,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=east,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=north,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=north,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=null,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=null,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=south,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=south,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=west,open=false": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_closed",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,directional_facing=west,open=true": {
+      "model": "createcraftedbeginning:block/airtight_valve/block_open",
+      "x": 90,
+      "y": 180
+    }
+  }
+}

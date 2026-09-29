@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthatch;
 
 import com.mojang.serialization.MapCodec;
+import com.simibubi.create.AllBlocks;
 import com.simibubi.create.api.schematic.requirement.SpecialBlockItemRequirement;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
@@ -50,11 +51,11 @@ import net.neoforged.neoforge.common.Tags.Items;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gascanisters.AirtightHatchCanisters;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
+import net.ty.createcraftedbeginning.api.canister.AirtightHatchCanisters;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
+import net.ty.createcraftedbeginning.gas.interaction.GasInteractionFeedback;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
@@ -74,14 +75,6 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
     public AirtightHatchBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(CANISTER_TYPE, CanisterType.EMPTY));
-    }
-
-    static boolean hasValidAttachment(LevelReader level, BlockPos hatchPos, BlockState hatchState) {
-        Direction facing = hatchState.getValue(FACING);
-        BlockPos targetPos = hatchPos.relative(facing);
-        BlockState targetState = level.getBlockState(targetPos);
-        Direction targetFace = facing.getOpposite();
-        return canSupportCenter(level, targetPos, targetFace) && targetState.getBlock() instanceof IAirtightComponent component && component.canConnectOnFace(targetPos, targetState, targetFace);
     }
 
     @Override
@@ -181,6 +174,10 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
             return ItemInteractionResult.SUCCESS;
         }
 
+        if (stack.is(AllBlocks.MECHANICAL_ARM.asItem())) {
+            return ItemInteractionResult.CONSUME;
+        }
+
         boolean isWrench = stack.is(Items.TOOLS_WRENCH);
         if (player.isShiftKeyDown() && isWrench) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
@@ -190,14 +187,15 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
             return ItemInteractionResult.FAIL;
         }
 
-        if (!hatch.isEmpty()) {
-            if (!isWrench) {
-                if (!stack.isEmpty()) {
-                    GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
-                }
-                return ItemInteractionResult.FAIL;
+        boolean occupied = !hatch.isEmpty();
+        if (occupied && !isWrench) {
+            if (!stack.isEmpty()) {
+                GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.invalid_item", stack.getHoverName());
             }
+            return ItemInteractionResult.FAIL;
+        }
 
+        if (occupied) {
             if (!hatch.giveCanisterToPlayer(player)) {
                 return ItemInteractionResult.FAIL;
             }
@@ -212,14 +210,14 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
             }
 
             if (!stack.isEmpty()) {
-                GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_item", stack.getHoverName());
+                GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.invalid_item", stack.getHoverName());
             }
             return ItemInteractionResult.FAIL;
         }
 
         Direction facing = state.getValue(FACING);
-        if (level.getCapability(GasHandler.BLOCK, pos.relative(facing), facing.getOpposite()) == null || !hasValidAttachment(level, pos, state)) {
-            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_face");
+        if (level.getCapability(GasCapabilities.BLOCK, pos.relative(facing), facing.getOpposite()) == null || !hasValidAttachment(level, pos, state)) {
+            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.invalid_face");
             return ItemInteractionResult.FAIL;
         }
 
@@ -236,6 +234,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         if (!state.getValue(WATERLOGGED)) {
             return Fluids.EMPTY.defaultFluidState();
         }
+
         return Fluids.WATER.getSource(false);
     }
 
@@ -296,6 +295,14 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
     @Override
     public BlockEntityType<? extends AirtightHatchBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.AIRTIGHT_HATCH.get();
+    }
+
+    static boolean hasValidAttachment(LevelReader level, BlockPos hatchPos, BlockState hatchState) {
+        Direction facing = hatchState.getValue(FACING);
+        BlockPos targetPos = hatchPos.relative(facing);
+        BlockState targetState = level.getBlockState(targetPos);
+        Direction targetFace = facing.getOpposite();
+        return canSupportCenter(level, targetPos, targetFace) && targetState.getBlock() instanceof GasConnectable component && component.canConnectOnFace(targetPos, targetState, targetFace);
     }
 
     public enum CanisterType implements StringRepresentable {

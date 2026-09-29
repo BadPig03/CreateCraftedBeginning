@@ -4,7 +4,11 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
+import net.ty.createcraftedbeginning.gas.storage.GasTankState;
+import net.ty.createcraftedbeginning.gas.storage.SmartGasTank;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -12,7 +16,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 final class AirtightHatchSerialization {
     private static final String COMPOUND_KEY_CANISTER = "Canister";
-    private static final String COMPOUND_KEY_CAPACITY = "Capacity";
+    private static final String COMPOUND_KEY_VOLUME = "Volume";
+    private static final String COMPOUND_KEY_MAX_PRESSURE = "MaxPressure";
 
     private final AirtightHatchBlockEntity hatch;
     private final AirtightHatchCanisterManager canisterManager;
@@ -24,7 +29,9 @@ final class AirtightHatchSerialization {
 
     void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
-            CCBNbtUtils.putLong(compoundTag, COMPOUND_KEY_CAPACITY, hatch.getHatchCapacity());
+            SmartGasTank gasTank = hatch.getGasTankBehaviour().getPrimaryHandler();
+            compoundTag.putLong(COMPOUND_KEY_VOLUME, gasTank.getVolume());
+            compoundTag.putLong(COMPOUND_KEY_MAX_PRESSURE, gasTank.getMaxPressurePa());
             return;
         }
 
@@ -32,23 +39,34 @@ final class AirtightHatchSerialization {
             return;
         }
 
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_CANISTER, canisterManager.getStoredCanister().saveOptional(provider));
-        CCBNbtUtils.putLong(compoundTag, COMPOUND_KEY_CAPACITY, hatch.getHatchCapacity());
+        compoundTag.put(COMPOUND_KEY_CANISTER, canisterManager.getStoredCanister().saveOptional(provider));
     }
 
-    void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    void prepareForRead(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
-            if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CAPACITY)) {
-                hatch.getGasTankBehaviour().getPrimaryHandler().setCapacity(Math.max(0, CCBNbtUtils.getLong(compoundTag, COMPOUND_KEY_CAPACITY)));
+            if (!compoundTag.contains(COMPOUND_KEY_VOLUME) || !compoundTag.contains(COMPOUND_KEY_MAX_PRESSURE)) {
+                return;
             }
+
+            long volume = Math.max(0, compoundTag.getLong(COMPOUND_KEY_VOLUME));
+            long maxPressurePa = Math.max(0, compoundTag.getLong(COMPOUND_KEY_MAX_PRESSURE));
+            prepareTankForRead(new GasTankLimits(volume, maxPressurePa));
             return;
         }
 
-        ItemStack storedCanister = CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CANISTER) ? ItemStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_CANISTER)) : ItemStack.EMPTY;
+        ItemStack storedCanister = compoundTag.contains(COMPOUND_KEY_CANISTER) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CANISTER)) : ItemStack.EMPTY;
         canisterManager.setStoredCanister(storedCanister);
-        if (!canisterManager.isEmpty() && CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CAPACITY)) {
-            hatch.getGasTankBehaviour().getPrimaryHandler().setCapacity(Math.max(0, CCBNbtUtils.getLong(compoundTag, COMPOUND_KEY_CAPACITY)));
+        prepareTankForRead(canisterManager.getStoredCanisterLimits());
+    }
+
+    private void prepareTankForRead(GasTankLimits limits) {
+        SmartGasTankBehaviour tankBehaviour = hatch.getGasTankBehaviour();
+        tankBehaviour.beginMutation();
+        try {
+            tankBehaviour.getPrimaryHandler().tryApplyState(new GasTankState(limits, GasStack.EMPTY)).requireAccepted();
         }
-        canisterManager.updateCapacity(false);
+        finally {
+            tankBehaviour.endMutation();
+        }
     }
 }

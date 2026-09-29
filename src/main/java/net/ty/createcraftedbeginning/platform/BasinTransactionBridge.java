@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.platform;
 
 import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.platform.access.BasinTransactionAccess;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +20,7 @@ public final class BasinTransactionBridge {
         if (!(basin instanceof BasinTransactionAccess access)) {
             return null;
         }
+
         return new TransactionHandle(access);
     }
 
@@ -27,6 +29,14 @@ public final class BasinTransactionBridge {
 
         private TransactionHandle(BasinTransactionAccess access) {
             this.access = access;
+        }
+
+        public List<ItemStack> snapshotItemOverflow() {
+            return access.ccb$copyTransactionItemOverflow();
+        }
+
+        public void restoreItemOverflow(List<ItemStack> snapshot) {
+            access.ccb$restoreTransactionItemOverflow(snapshot);
         }
 
         public List<FluidStack> snapshotFluidOverflow() {

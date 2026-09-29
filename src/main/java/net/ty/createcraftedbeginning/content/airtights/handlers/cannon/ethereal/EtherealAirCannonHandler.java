@@ -6,7 +6,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -24,7 +23,7 @@ import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContex
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.CannonAnimationType;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.CannonModelType;
-import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonUtils;
+import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonBlast;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -35,15 +34,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EtherealAirCannonHandler implements AirtightCannonHandler, AirtightCannonVisualHandler {
-    protected static final float DEFAULT_RADIUS = 1;
     protected static final int DEFAULT_DURATION = 100;
-
-    protected static void addLevitation(List<LivingEntity> entities, int duration, int amplifier, float multiplier) {
-        int scaledDuration = Math.round(duration * multiplier);
-        for (LivingEntity entity : entities) {
-            entity.addEffect(new MobEffectInstance(MobEffects.LEVITATION, scaledDuration, amplifier));
-        }
-    }
 
     @Override
     public ItemStack getRenderIcon(Level level) {
@@ -51,18 +42,8 @@ public class EtherealAirCannonHandler implements AirtightCannonHandler, Airtight
     }
 
     @Override
-    public void renderTrailParticles(Level level, Vec3 pos) {
+    public void renderTrailParticles(Level level, Vec3 pos, Vec3 velocity) {
         level.addParticle(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 0, 0, 0);
-        RandomSource random = level.getRandom();
-        for (int i = 0; i < random.nextInt(2, 4); i++) {
-            double offsetX = (random.nextDouble() - 0.5) * 0.6;
-            double offsetY = (random.nextDouble() - 0.5) * 0.6;
-            double offsetZ = (random.nextDouble() - 0.5) * 0.6;
-            level.addParticle(ParticleTypes.DRAGON_BREATH, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, (random.nextDouble() - 0.5) * 0.02, random.nextDouble() * 0.02 + 0.01, (random.nextDouble() - 0.5) * 0.02);
-            if (random.nextFloat() < 0.25f) {
-                level.addParticle(ParticleTypes.PORTAL, pos.x, pos.y + 0.2, pos.z, 0, 0, 0);
-            }
-        }
     }
 
     @Override
@@ -72,12 +53,12 @@ public class EtherealAirCannonHandler implements AirtightCannonHandler, Airtight
 
     @Override
     public CannonModelType getModelType() {
-        return CannonModelType.ETHEREAL;
+        return CannonModelType.WITH_WIND_ROTATED;
     }
 
     @Override
     public CannonAnimationType getAnimationType() {
-        return CannonAnimationType.ETHEREAL_Z;
+        return CannonAnimationType.WITH_WIND_Z;
     }
 
     @Override
@@ -87,16 +68,16 @@ public class EtherealAirCannonHandler implements AirtightCannonHandler, Airtight
 
     @Override
     public final void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
-        float radius = DEFAULT_RADIUS * context.effectMultiplier();
-        DamageSource explosionDamageSource = CCBDamageTypes.source(DamageTypes.MAGIC, level, context.projectile());
-        level.explode(context.projectile(), explosionDamageSource, AirtightCannonUtils.createDamageCalculator(context), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
-        List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, radius, context);
+        float multiplier = context.effectMultiplier();
+        DamageSource explosionDamageSource = CCBDamageTypes.source(DamageTypes.MAGIC, level, context.projectile(), context.owner());
+        level.explode(context.projectile(), explosionDamageSource, AirtightCannonBlast.createDamageCalculator(context), pos.x(), pos.y(), pos.z(), multiplier, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
+        List<LivingEntity> entities = AirtightCannonBlast.getNearbyEntities(level, pos, multiplier, context);
         applyAdditionalEffects(level, entities, explosionDamageSource, context);
     }
 
     @Override
     public float getGasConsumptionMultiplier() {
-        return 0.8f;
+        return 0.6F;
     }
 
     @Override
@@ -104,7 +85,9 @@ public class EtherealAirCannonHandler implements AirtightCannonHandler, Airtight
         tooltip.add(CCBLang.translate("gui.airtight_cannon.ethereal_air").style(ChatFormatting.DARK_GREEN).component());
     }
 
-    protected void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
-        addLevitation(entities, DEFAULT_DURATION, 0, context.effectMultiplier());
+    @Override
+    public void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
+        int duration = Math.round(DEFAULT_DURATION * context.effectMultiplier());
+        AirtightCannonBlast.applyEffects(entities, () -> new MobEffectInstance(MobEffects.LEVITATION, duration, 0));
     }
 }

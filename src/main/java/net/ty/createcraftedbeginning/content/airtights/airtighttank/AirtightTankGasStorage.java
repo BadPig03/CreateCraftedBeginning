@@ -1,11 +1,13 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.EmptyGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment.PressureModel;
+import net.ty.createcraftedbeginning.gas.storage.GasTank;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -13,24 +15,27 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class AirtightTankGasStorage {
+    private static final GasStorageHandler EMPTY_HANDLER = new GasTank(0, 0);
+
     private final AbstractAirtightTankBlockEntity owner;
-    private final IGasHandler gasCapability = new ControllerAwareGasHandler();
-    private GasTank tankInventory;
+    private final GasStorageHandler gasCapability = new ControllerAwareGasHandler();
+
+    private GasStorageHandler tankInventory;
 
     AirtightTankGasStorage(AbstractAirtightTankBlockEntity owner) {
         this.owner = owner;
     }
 
-    void initialize(GasTank tankInventory) {
+    void initialize(GasStorageHandler tankInventory) {
         this.tankInventory = tankInventory;
         refreshCapability();
     }
 
-    GasTank getTankInventory() {
+    GasStorageHandler getTankInventory() {
         return tankInventory;
     }
 
-    IGasHandler getCapability() {
+    GasStorageHandler getCapability() {
         return gasCapability;
     }
 
@@ -42,15 +47,50 @@ final class AirtightTankGasStorage {
         owner.invalidateGasCapabilities();
     }
 
-    void onGasStackChanged(GasStack ignored) {
-        if (!owner.isController() || owner.getLevel() == null || owner.getLevel().isClientSide) {
+    void onTankStateChanged() {
+        if (!owner.isController()) {
+            return;
+        }
+
+        Level level = owner.getLevel();
+        if (level == null || level.isClientSide) {
             return;
         }
 
         owner.notifyUpdate();
     }
 
-    private final class ControllerAwareGasHandler implements IGasHandler {
+    private final class ControllerAwareGasHandler implements GasStorageHandler {
+        @Override
+        public GasPressureCompartment getPressureCompartment(int tank) {
+            return resolveHandler().getPressureCompartment(tank);
+        }
+
+        @Override
+        public long getTankVolume(int tank) {
+            return resolveHandler().getTankVolume(tank);
+        }
+
+        @Override
+        public long getTankPressurePa(int tank) {
+            return resolveHandler().getTankPressurePa(tank);
+        }
+
+        @Override
+        public long getTankMaxPressurePa(int tank) {
+            return resolveHandler().getTankMaxPressurePa(tank);
+        }
+
+        @Override
+        public long getTankMaxAmount(int tank) {
+            return resolveHandler().getTankMaxAmount(tank);
+        }
+
+        @Override
+        public PressureModel getTankPressureModel(int tank) {
+            return resolveHandler().getTankPressureModel(tank);
+        }
+
         @Override
         public boolean isGasValid(int tank, GasStack stack) {
             return resolveHandler().isGasValid(tank, stack);
@@ -87,22 +127,28 @@ final class AirtightTankGasStorage {
         }
 
         @Override
-        public long getTankCapacity(int tank) {
-            return resolveHandler().getTankCapacity(tank);
+        public AtomicFillResult tryFillAtomicallyFromPressure(List<GasStack> resources, long sourcePressurePa, GasAction action) {
+            return resolveHandler().tryFillAtomicallyFromPressure(resources, sourcePressurePa, action);
         }
 
-        private IGasHandler resolveHandler() {
+        private GasStorageHandler resolveHandler() {
             if (owner.isRemoved()) {
-                return EmptyGasHandler.INSTANCE;
+                return EMPTY_HANDLER;
             }
+
             if (owner.isController()) {
-                return tankInventory != null ? tankInventory : EmptyGasHandler.INSTANCE;
+                if (tankInventory == null) {
+                    return EMPTY_HANDLER;
+                }
+
+                return tankInventory;
             }
 
             AbstractAirtightTankBlockEntity controllerTank = owner.getControllerBE();
             if (controllerTank == null || controllerTank.isRemoved() || !controllerTank.isController()) {
-                return EmptyGasHandler.INSTANCE;
+                return EMPTY_HANDLER;
             }
+
             return controllerTank.getTankInventory();
         }
     }

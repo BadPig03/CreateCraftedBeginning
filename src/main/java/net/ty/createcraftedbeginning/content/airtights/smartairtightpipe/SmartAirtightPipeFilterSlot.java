@@ -11,8 +11,8 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe.DirectionalFacing;
+import net.ty.createcraftedbeginning.gas.network.DirectionalGasPipe;
+import net.ty.createcraftedbeginning.gas.network.DirectionalGasPipe.DirectionalFacing;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -26,7 +26,7 @@ final class SmartAirtightPipeFilterSlot extends ValueBoxTransform {
             return VecHelper.voxelSpace(8, 14.5, 8);
         }
 
-        DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
+        DirectionalFacing facing = state.getValue(DirectionalGasPipe.DIRECTIONAL_FACING);
         return switch (facing) {
             case SOUTH -> VecHelper.voxelSpace(8, 8, 1.5);
             case WEST -> VecHelper.voxelSpace(14.5, 8, 8);
@@ -36,10 +36,10 @@ final class SmartAirtightPipeFilterSlot extends ValueBoxTransform {
     }
 
     @Override
-    public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack ms) {
+    public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack poseStack) {
         Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
-        DirectionalFacing facing = state.getValue(IDirectionalPipe.DIRECTIONAL_FACING);
-        TransformStack<PoseTransformStack> transform = TransformStack.of(ms);
+        DirectionalFacing facing = state.getValue(DirectionalGasPipe.DIRECTIONAL_FACING);
+        TransformStack<PoseTransformStack> transform = TransformStack.of(poseStack);
         int yAngle = DirectionalFacing.getYAngle(facing);
         switch (axis) {
             case Y -> transform.rotateYDegrees(yAngle);
@@ -50,6 +50,6 @@ final class SmartAirtightPipeFilterSlot extends ValueBoxTransform {
 
     @Override
     public float getScale() {
-        return super.getScale() * 1.02f;
+        return super.getScale() * 1.02F;
     }
 }

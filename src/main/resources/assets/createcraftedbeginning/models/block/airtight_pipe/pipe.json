@@ -1,6 +1,6 @@
 {
 	"credit": "Made with Blockbench",
-	"parent": "block/block",
+	"parent": "minecraft:block/block",
 	"render_type": "minecraft:cutout_mipped",
 	"ambientocclusion": false,
 	"textures": {

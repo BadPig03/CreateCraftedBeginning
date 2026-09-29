@@ -17,8 +17,8 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
+import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,35 +26,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEntity>, IWrenchable, IAirtightComponent {
+public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEntity>, IWrenchable, GasConnectable {
     static final BooleanProperty TOP = BooleanProperty.create("top");
     static final BooleanProperty BOTTOM = BooleanProperty.create("bottom");
 
     public AirtightTankBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(TOP, true).setValue(BOTTOM, true));
-    }
-
-    public static void updateTankState(Level level, BlockPos tankPos) {
-        if (level.isClientSide) {
-            return;
-        }
-
-        if (!(level.getBlockState(tankPos).getBlock() instanceof AirtightTankBlock tankBlock)) {
-            return;
-        }
-
-        AirtightTankBlockEntity tank = tankBlock.getBlockEntity(level, tankPos);
-        if (tank == null) {
-            return;
-        }
-
-        AirtightTankBlockEntity controller = tank.getControllerBE();
-        if (controller == null) {
-            return;
-        }
-
-        controller.updateTankState();
     }
 
     @Override
@@ -74,15 +52,14 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.hasBlockEntity() || state.is(newState.getBlock())) {
+        if (!state.hasBlockEntity() || state.is(newState.getBlock()) || !(level.getBlockEntity(pos) instanceof AirtightTankBlockEntity tank)) {
             return;
         }
 
-        if (!(level.getBlockEntity(pos) instanceof AirtightTankBlockEntity tank)) {
-            return;
+        if (!isMoving && tank.isController() && tank.getWidth() == 1 && tank.getHeight() == 1) {
+            tank.releaseContentsOnRemoval();
         }
-
-        GasConnectivityHandler.splitMultiOnRemoval(tank);
+        GasTankMultiblockConnectivity.splitMultiblockOnRemoval(tank, !isMoving);
         level.removeBlockEntity(pos);
     }
 
@@ -116,5 +93,23 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
     @Override
     public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return true;
+    }
+
+    public static void updateTankState(Level level, BlockPos tankPos) {
+        if (level.isClientSide || !(level.getBlockState(tankPos).getBlock() instanceof AirtightTankBlock tankBlock)) {
+            return;
+        }
+
+        AirtightTankBlockEntity tank = tankBlock.getBlockEntity(level, tankPos);
+        if (tank == null) {
+            return;
+        }
+
+        AirtightTankBlockEntity controller = tank.getControllerBE();
+        if (controller == null) {
+            return;
+        }
+
+        controller.updateTankState();
     }
 }

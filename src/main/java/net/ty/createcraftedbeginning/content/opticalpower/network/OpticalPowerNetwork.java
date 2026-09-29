@@ -1,14 +1,16 @@
 package net.ty.createcraftedbeginning.content.opticalpower.network;
 
+import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerSource.Source;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -52,13 +54,7 @@ public final class OpticalPowerNetwork {
     }
 
     public static int getMaxNetworkPowerPoints() {
-        return Math.max(1, OpticalPowerUnits.toPowerPoints(CCBConfig.server().opticalPower.maxNetworkPowerSu.get()));
-    }
-
-    private static int getMaxCoherentSources() {
-        int configuredNetworkLimit = getMaxNetworkPowerPoints();
-        int sourcesNeededForConfiguredLimit = (configuredNetworkLimit + MAX_CONSUMER_POWER_POINTS - 1) / MAX_CONSUMER_POWER_POINTS;
-        return Math.max(DEFAULT_MAX_COHERENT_SOURCES, sourcesNeededForConfiguredLimit);
+        return Math.max(1, OpticalPowerUnits.toPowerPoints(CCBConfig.server().opticalPower.network.maxNetworkPowerSu.get()));
     }
 
     public static OpticalPowerNetwork scan(Level level, BlockPos startConsumer) {
@@ -102,7 +98,7 @@ public final class OpticalPowerNetwork {
                 consumers.add(current.immutable());
             }
 
-            for (Direction direction : Direction.values()) {
+            for (Direction direction : Iterate.directions) {
                 BlockPos neighbor = current.relative(direction);
                 if (!level.isLoaded(neighbor)) {
                     continue;
@@ -113,6 +109,7 @@ public final class OpticalPowerNetwork {
                     if (!canConsumerConnect(currentState, direction)) {
                         continue;
                     }
+
                     if (isFiber(neighborState) && OpticalFiberBlock.isConnected(neighborState, direction.getOpposite())) {
                         frontier.addLast(neighbor.immutable());
                     }
@@ -169,54 +166,6 @@ public final class OpticalPowerNetwork {
         return new OpticalPowerNetwork(List.copyOf(nodes), List.copyOf(consumers), Map.copyOf(sources), Set.copyOf(sourceDependencies), false);
     }
 
-    private static OpticalPowerNetwork empty() {
-        return new OpticalPowerNetwork(List.of(), List.of(), Map.of(), Set.of(), false);
-    }
-
-    private static @Nullable SourceEntry resolveSource(Level level, BlockPos pos, BlockState state) {
-        if (state.getBlock() instanceof OpticalPowerSource sourceProvider) {
-            Source source = sourceProvider.getOpticalPowerSource(level, pos, state);
-            return new SourceEntry(pos.immutable(), source, source.powerPoints(), false);
-        }
-
-        if (state.getLightEmission(level, pos) < FULL_LIGHT_LEVEL || !state.isCollisionShapeFullBlock(level, pos)) {
-            return null;
-        }
-
-        Source source = new Source(pos, ORDINARY_LIGHT_POWER_POINTS);
-        return new SourceEntry(pos.immutable(), source, source.powerPoints(), true);
-    }
-
-    private static void enqueueFibersTouchingSource(Level level, Source source, Deque<BlockPos> frontier, Set<BlockPos> visited) {
-        for (BlockPos dependency : source.dependencies()) {
-            for (Direction direction : Direction.values()) {
-                BlockPos fiberPos = dependency.relative(direction);
-                if (visited.contains(fiberPos) || !level.isLoaded(fiberPos)) {
-                    continue;
-                }
-
-                BlockState fiberState = level.getBlockState(fiberPos);
-                if (!isFiber(fiberState) || !OpticalFiberBlock.isConnected(fiberState, direction.getOpposite())) {
-                    continue;
-                }
-
-                frontier.addLast(fiberPos.immutable());
-            }
-        }
-    }
-
-    private static boolean isFiber(BlockState state) {
-        return state.getBlock() instanceof OpticalFiberBlock;
-    }
-
-    private static boolean isConsumer(BlockState state) {
-        return state.getBlock() instanceof OpticalPowerConsumer;
-    }
-
-    private static boolean canConsumerConnect(BlockState state, Direction side) {
-        return state.getBlock() instanceof OpticalPowerConsumer consumer && consumer.canConnectOpticalPower(state, side);
-    }
-
     public RefreshResult refreshDynamicSources(Level level) {
         boolean changed = false;
         for (SourceEntry entry : sources.values()) {
@@ -252,6 +201,7 @@ public final class OpticalPowerNetwork {
         if (effectivePowerPoints == previousEffectivePowerPoints) {
             return RefreshResult.UNCHANGED;
         }
+
         return RefreshResult.CHANGED;
     }
 
@@ -264,6 +214,7 @@ public final class OpticalPowerNetwork {
         if (consumerIndex < 0) {
             return 0;
         }
+
         return getAllocatedPowerPoints(consumerIndex);
     }
 
@@ -295,6 +246,60 @@ public final class OpticalPowerNetwork {
         return sources.values().stream().anyMatch(source -> source.source().dynamic());
     }
 
+    private static int getMaxCoherentSources() {
+        int configuredNetworkLimit = getMaxNetworkPowerPoints();
+        int requiredSources = Mth.positiveCeilDiv(configuredNetworkLimit, MAX_CONSUMER_POWER_POINTS);
+        return Math.max(DEFAULT_MAX_COHERENT_SOURCES, requiredSources);
+    }
+
+    private static OpticalPowerNetwork empty() {
+        return new OpticalPowerNetwork(List.of(), List.of(), Map.of(), Set.of(), false);
+    }
+
+    private static @Nullable SourceEntry resolveSource(Level level, BlockPos pos, BlockState state) {
+        if (state.getBlock() instanceof OpticalPowerSource sourceProvider) {
+            Source source = sourceProvider.getOpticalPowerSource(level, pos, state);
+            return new SourceEntry(pos.immutable(), source, source.powerPoints(), false);
+        }
+
+        if (state.getLightEmission(level, pos) < FULL_LIGHT_LEVEL || !state.isCollisionShapeFullBlock(level, pos)) {
+            return null;
+        }
+
+        Source source = new Source(pos, ORDINARY_LIGHT_POWER_POINTS);
+        return new SourceEntry(pos.immutable(), source, source.powerPoints(), true);
+    }
+
+    private static void enqueueFibersTouchingSource(Level level, Source source, Deque<BlockPos> frontier, Set<BlockPos> visited) {
+        for (BlockPos dependency : source.dependencies()) {
+            for (Direction direction : Iterate.directions) {
+                BlockPos fiberPos = dependency.relative(direction);
+                if (visited.contains(fiberPos) || !level.isLoaded(fiberPos)) {
+                    continue;
+                }
+
+                BlockState fiberState = level.getBlockState(fiberPos);
+                if (!isFiber(fiberState) || !OpticalFiberBlock.isConnected(fiberState, direction.getOpposite())) {
+                    continue;
+                }
+
+                frontier.addLast(fiberPos.immutable());
+            }
+        }
+    }
+
+    private static boolean isFiber(BlockState state) {
+        return state.getBlock() instanceof OpticalFiberBlock;
+    }
+
+    private static boolean isConsumer(BlockState state) {
+        return state.getBlock() instanceof OpticalPowerConsumer;
+    }
+
+    private static boolean canConsumerConnect(BlockState state, Direction side) {
+        return state.getBlock() instanceof OpticalPowerConsumer consumer && consumer.canConnectOpticalPower(state, side);
+    }
+
     private void recalculateEffectivePowerPoints() {
         if (scanLimitExceeded) {
             effectivePowerPoints = 0;
@@ -304,7 +309,7 @@ public final class OpticalPowerNetwork {
         int ordinarySource = sources.values().stream().anyMatch(SourceEntry::ordinary) ? ORDINARY_LIGHT_POWER_POINTS : 0;
         long coherentSources = sources.values().stream().filter(source -> !source.ordinary()).map(SourceEntry::currentPowerPoints).filter(points -> points > 0).sorted(Comparator.reverseOrder()).limit(getMaxCoherentSources()).mapToLong(Integer::longValue).sum();
 
-        effectivePowerPoints = CCBMathUtils.clampToNonNegativeInt(ordinarySource + coherentSources);
+        effectivePowerPoints = BoundedMath.clampToNonNegativeInt(ordinarySource + coherentSources);
     }
 
     public enum RefreshResult {

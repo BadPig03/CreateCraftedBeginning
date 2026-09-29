@@ -7,28 +7,16 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CCBServer extends ConfigBase {
-    @SuppressWarnings("unused")
-    public final ConfigGroup infrastructure = group(0, "infrastructure", Comments.infrastructure);
-    public final CCBStress stressValues = nested(0, CCBStress::new, Comments.stress);
-    public final CCBOpticalPower opticalPower = nested(0, CCBOpticalPower::new, Comments.opticalPower);
-    public final CCBCrates crates = nested(0, CCBCrates::new, Comments.crates);
-    public final CCBAirtights airtights = nested(0, CCBAirtights::new, Comments.airtights);
-    public final CCBEquipments equipments = nested(0, CCBEquipments::new, Comments.equipments);
-    public final CCBEndDevices endDevices = nested(0, CCBEndDevices::new, Comments.endDevices);
+public final class CCBServer extends ConfigBase {
+    public final CCBStress kinetics = nested(0, CCBStress::new, "Kinetics");
+    public final CCBGas gas = nested(0, CCBGas::new, "Gas");
+    public final CCBMachines machines = nested(0, CCBMachines::new, "Machines");
+    public final CCBEquipment equipment = nested(0, CCBEquipment::new, "Equipment");
+    public final CCBStorage storage = nested(0, CCBStorage::new, "Storage");
+    public final CCBOpticalPower opticalPower = nested(0, CCBOpticalPower::new, "Optical Power");
 
     @Override
     public String getName() {
         return "server";
-    }
-
-    private static class Comments {
-        private static final String infrastructure = "Core settings for Create: Crafted Beginning.";
-        private static final String stress = "Fine-tune the kinetic properties of individual components.";
-        private static final String opticalPower = "Settings for the Optical Power system.";
-        private static final String crates = "Settings for crates added by Create: Crafted Beginning.";
-        private static final String airtights = "Settings for airtight blocks and items added by Create: Crafted Beginning.";
-        private static final String equipments = "Settings for equipment added by Create: Crafted Beginning.";
-        private static final String endDevices = "Settings for endgame mechanical devices added by Create: Crafted Beginning.";
     }
 }

@@ -28,68 +28,6 @@ import java.util.UUID;
 public final class EndSculkSilencerMovementBehaviour implements MovementBehaviour {
     private static final short MOVING_RANGE = 1;
 
-    static float getAnimationAngle(MovementContext context, float partialTicks) {
-        return getAnimationState(context).angle.getValue(partialTicks);
-    }
-
-    private static AnimationState getAnimationState(MovementContext context) {
-        if (context.temporaryData instanceof AnimationState animationState) {
-            return animationState;
-        }
-
-        AnimationState animationState = new AnimationState();
-        context.temporaryData = animationState;
-        return animationState;
-    }
-
-    private static void tickAnimation(MovementContext context) {
-        AnimationState animationState = getAnimationState(context);
-        float targetAnimationSpeed = context.disabled ? 0 : EndSculkSilencerBlockEntity.calculateAnimationTargetSpeed(SpeedLevel.FAST.getSpeedValue());
-        animationState.speed.chase(targetAnimationSpeed, context.disabled ? 0.2 : 0.1, Chaser.EXP);
-        animationState.speed.tickChaser();
-        animationState.angle.setValue(animationState.angle.getValue() + animationState.speed.getValue());
-    }
-
-    private static void removeRegistration(MovementContext context) {
-        if (!(context.world instanceof ServerLevel serverLevel)) {
-            return;
-        }
-
-        BlockPos registrationPos = getRegistrationPos(context);
-        if (registrationPos == null) {
-            return;
-        }
-
-        GlobalEndSculkSilencerManager.removeMoving(serverLevel, registrationPos);
-    }
-
-    private static @Nullable BlockPos getRegistrationPos(MovementContext context) {
-        if (context.contraption.entity == null) {
-            return null;
-        }
-
-        UUID contraptionId = context.contraption.entity.getUUID();
-        long registrationSeed = contraptionId.getMostSignificantBits();
-        registrationSeed ^= Long.rotateLeft(contraptionId.getLeastSignificantBits(), 23);
-        registrationSeed ^= Long.rotateLeft(context.localPos.asLong(), 41);
-        long registrationHash = mix64(registrationSeed);
-        return new BlockPos(unpackSignedCoordinate(registrationHash), -2048, unpackSignedCoordinate(registrationHash >>> 26));
-    }
-
-    private static int unpackSignedCoordinate(long packedCoordinate) {
-        int coordinate = (int) (packedCoordinate & 0x3FFFFFF);
-        if (coordinate < 0x2000000) {
-            return coordinate;
-        }
-        return coordinate - 0x4000000;
-    }
-
-    private static long mix64(long value) {
-        value = (value ^ value >>> 30) * 0xBF58476D1CE4E5B9L;
-        value = (value ^ value >>> 27) * 0x94D049BB133111EBL;
-        return value ^ value >>> 31;
-    }
-
     @Override
     public void tick(MovementContext context) {
         if (context.world.isClientSide) {
@@ -151,6 +89,69 @@ public final class EndSculkSilencerMovementBehaviour implements MovementBehaviou
     @OnlyIn(Dist.CLIENT)
     public ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld simulationWorld, MovementContext movementContext) {
         return new EndSculkSilencerActorVisual(visualizationContext, simulationWorld, movementContext);
+    }
+
+    static float getAnimationAngle(MovementContext context, float partialTicks) {
+        return getAnimationState(context).angle.getValue(partialTicks);
+    }
+
+    private static AnimationState getAnimationState(MovementContext context) {
+        if (context.temporaryData instanceof AnimationState animationState) {
+            return animationState;
+        }
+
+        AnimationState animationState = new AnimationState();
+        context.temporaryData = animationState;
+        return animationState;
+    }
+
+    private static void tickAnimation(MovementContext context) {
+        AnimationState animationState = getAnimationState(context);
+        float targetAnimationSpeed = context.disabled ? 0 : EndSculkSilencerBlockEntity.calculateAnimationTargetSpeed(SpeedLevel.FAST.getSpeedValue());
+        animationState.speed.chase(targetAnimationSpeed, context.disabled ? 0.2 : 0.1, Chaser.EXP);
+        animationState.speed.tickChaser();
+        animationState.angle.setValue(animationState.angle.getValue() + animationState.speed.getValue());
+    }
+
+    private static void removeRegistration(MovementContext context) {
+        if (!(context.world instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        BlockPos registrationPos = getRegistrationPos(context);
+        if (registrationPos == null) {
+            return;
+        }
+
+        GlobalEndSculkSilencerManager.removeMoving(serverLevel, registrationPos);
+    }
+
+    private static @Nullable BlockPos getRegistrationPos(MovementContext context) {
+        if (context.contraption.entity == null) {
+            return null;
+        }
+
+        UUID contraptionId = context.contraption.entity.getUUID();
+        long registrationSeed = contraptionId.getMostSignificantBits();
+        registrationSeed ^= Long.rotateLeft(contraptionId.getLeastSignificantBits(), 23);
+        registrationSeed ^= Long.rotateLeft(context.localPos.asLong(), 41);
+        long registrationHash = mix64(registrationSeed);
+        return new BlockPos(unpackSignedCoordinate(registrationHash), -2048, unpackSignedCoordinate(registrationHash >>> 26));
+    }
+
+    private static int unpackSignedCoordinate(long packedCoordinate) {
+        int coordinate = (int) (packedCoordinate & 0x3FFFFFF);
+        if (coordinate < 0x2000000) {
+            return coordinate;
+        }
+
+        return coordinate - 0x4000000;
+    }
+
+    private static long mix64(long value) {
+        value = (value ^ value >>> 30) * 0xBF58476D1CE4E5B9L;
+        value = (value ^ value >>> 27) * 0x94D049BB133111EBL;
+        return value ^ value >>> 31;
     }
 
     private static final class AnimationState {

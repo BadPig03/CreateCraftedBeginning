@@ -15,7 +15,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Con
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -26,25 +26,25 @@ public class EndSculkSilencerRenderer extends KineticBlockEntityRenderer<EndScul
         super(context);
     }
 
+    @Override
+    protected void renderSafe(EndSculkSilencerBlockEntity silencer, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        SuperByteBuffer core = getRotatedModel(silencer, silencer.getBlockState());
+        float angle = silencer.getAnimation().getValue(partialTicks) * Mth.DEG_TO_RAD;
+
+        poseStack.pushPose();
+        poseStack.translate(0, 0.5, 0);
+        core.rotateCentered(angle, Axis.X).rotateCentered(angle, Axis.Y).rotateCentered(Mth.PI / 4, Axis.Z).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
+        poseStack.popPose();
+    }
+
+    @Override
+    protected SuperByteBuffer getRotatedModel(EndSculkSilencerBlockEntity silencer, BlockState blockState) {
+        return CachedBuffers.partial(CCBPartialModels.END_SCULK_SILENCER_CORE, blockState);
+    }
+
     static void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer, float angleDegrees) {
         SuperByteBuffer core = CachedBuffers.partial(CCBPartialModels.END_SCULK_SILENCER_CORE, context.state);
         float angle = angleDegrees * Mth.DEG_TO_RAD;
         core.transform(matrices.getModel()).translate(0, 0.5, 0).rotateCentered(angle, Axis.X).rotateCentered(angle, Axis.Y).rotateCentered(Mth.PI / 4, Axis.Z).light(LevelRenderer.getLightColor(renderWorld, context.localPos)).useLevelLight(context.world, matrices.getWorld()).renderInto(matrices.getViewProjection(), buffer.getBuffer(RenderType.cutoutMipped()));
-    }
-
-    @Override
-    protected void renderSafe(EndSculkSilencerBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        SuperByteBuffer core = getRotatedModel(be, be.getBlockState());
-        float angle = be.getAnimation().getValue(partialTicks) * Mth.DEG_TO_RAD;
-
-        ms.pushPose();
-        ms.translate(0, 0.5, 0);
-        core.rotateCentered(angle, Axis.X).rotateCentered(angle, Axis.Y).rotateCentered(Mth.PI / 4, Axis.Z).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
-        ms.popPose();
-    }
-
-    @Override
-    protected SuperByteBuffer getRotatedModel(EndSculkSilencerBlockEntity be, BlockState blockState) {
-        return CachedBuffers.partial(CCBPartialModels.END_SCULK_SILENCER_CORE, blockState);
     }
 }

@@ -5,6 +5,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -15,9 +16,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.TickingAirtightUpgrade;
-import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
@@ -37,16 +38,6 @@ enum SpectralUpgrade implements TickingAirtightUpgrade {
     private static final int SCAN_INTERVAL = 20;
     private static final int EFFECT_DURATION = 60;
     private static final int REFRESH_THRESHOLD = 20;
-
-    private static List<LivingEntity> getNearbyEntities(Player player) {
-        BlockPos origin = player.getOnPos();
-        AABB scanBounds = new AABB(origin).inflate(RADIUS);
-        return player.level().getEntitiesOfClass(LivingEntity.class, scanBounds, target -> isValidTarget(origin, target));
-    }
-
-    private static boolean isValidTarget(BlockPos origin, LivingEntity target) {
-        return !(target instanceof Player) && target.isAlive() && !target.isRemoved() && origin.closerToCenterThan(target.position(), RADIUS);
-    }
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
@@ -94,7 +85,7 @@ enum SpectralUpgrade implements TickingAirtightUpgrade {
     }
 
     @Override
-    public Item getUpgradeItem() {
+    public Item getDefaultUpgradeItem() {
         return Items.SPECTRAL_ARROW;
     }
 
@@ -122,7 +113,7 @@ enum SpectralUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public boolean shouldApplyEffect(Player player, ItemStack item) {
-        return player.tickCount % SCAN_INTERVAL == 0;
+        return Mth.isMultipleOf(player.tickCount, SCAN_INTERVAL);
     }
 
     @Override
@@ -132,5 +123,15 @@ enum SpectralUpgrade implements TickingAirtightUpgrade {
         }
 
         applyEffect(player);
+    }
+
+    private static List<LivingEntity> getNearbyEntities(Player player) {
+        BlockPos origin = player.getOnPos();
+        AABB scanBounds = new AABB(origin).inflate(RADIUS);
+        return player.level().getEntitiesOfClass(LivingEntity.class, scanBounds, target -> isValidTarget(origin, target));
+    }
+
+    private static boolean isValidTarget(BlockPos origin, LivingEntity target) {
+        return !(target instanceof Player) && target.isAlive() && !target.isRemoved() && origin.closerToCenterThan(target.position(), RADIUS);
     }
 }

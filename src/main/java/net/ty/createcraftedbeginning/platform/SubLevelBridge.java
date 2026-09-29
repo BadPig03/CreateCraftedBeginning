@@ -7,8 +7,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -51,11 +55,34 @@ public final class SubLevelBridge {
         return service.createEntityArea(level, origin, localBounds);
     }
 
-    @FunctionalInterface
-    public interface EntityArea {
-        boolean intersects(Entity entity);
+    public static <T> @Nullable T findAt(Level level, BlockPos origin, BlockPos sample, Function<BlockPos, @Nullable T> query) {
+        return service.findAt(level, origin, sample, pos -> {
+            if (!level.isLoaded(pos)) {
+                return null;
+            }
+
+            return query.apply(pos);
+        });
     }
 
+    public static boolean testLocalFrames(Level level, Vec3 position, Vec3 direction, double radius, BiPredicate<Vec3, Vec3> query) {
+        return service.testLocalFrames(level, position, direction, radius, query);
+    }
+
+    public static boolean testLocalBounds(Level level, AABB bounds, Predicate<AABB> query) {
+        return service.testLocalBounds(level, bounds, query);
+    }
+
+    @FunctionalInterface
+    public interface EntityArea {
+        boolean intersects(Entity entity, AABB entityBounds);
+
+        default boolean intersects(Entity entity) {
+            return intersects(entity, entity.getBoundingBox());
+        }
+    }
+
+    @FunctionalInterface
     public interface CoordinateTransform {
         Vec3 transformPosition(Position position);
 
@@ -69,6 +96,18 @@ public final class SubLevelBridge {
     }
 
     public interface Service {
+        default boolean testLocalBounds(Level level, AABB bounds, Predicate<AABB> query) {
+            return query.test(bounds);
+        }
+
+        default boolean testLocalFrames(Level level, Vec3 position, Vec3 direction, double radius, BiPredicate<Vec3, Vec3> query) {
+            return query.test(position, direction);
+        }
+
+        default <T> @Nullable T findAt(Level level, BlockPos origin, BlockPos sample, Function<BlockPos, @Nullable T> query) {
+            return query.apply(sample);
+        }
+
         default Projection resolve(Level level, Position position) {
             return new Projection(new Vec3(position.x(), position.y(), position.z()), false);
         }
@@ -90,7 +129,7 @@ public final class SubLevelBridge {
         }
 
         default EntityArea createEntityArea(Level level, BlockPos origin, AABB localBounds) {
-            return entity -> localBounds.intersects(entity.getBoundingBox());
+            return (entity, entityBounds) -> localBounds.intersects(entityBounds);
         }
     }
 

@@ -1,0 +1,36 @@
+package net.ty.createcraftedbeginning.api.canister.event;
+
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.bus.api.Event;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public class GasTypeChangedEvent extends Event {
+    private final Player player;
+    private final Gas currentGasType;
+    private final Gas previousGasType;
+
+    public GasTypeChangedEvent(Player player, Gas currentGasType, Gas previousGasType) {
+        this.player = player;
+        this.currentGasType = currentGasType;
+        this.previousGasType = previousGasType;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    @SuppressWarnings("unused")
+    public Gas getCurrentGasType() {
+        return currentGasType;
+    }
+
+    @SuppressWarnings("unused")
+    public Gas getPreviousGasType() {
+        return previousGasType;
+    }
+}

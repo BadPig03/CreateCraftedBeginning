@@ -15,10 +15,11 @@ import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
+import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -27,20 +28,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlockEntity implements ThresholdSwitchObservable, IGasInventoryIdentifierProvider {
+public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlockEntity implements ThresholdSwitchObservable, GasInventoryIdentifierProvider {
     public AirtightForgingPressStructuralShaftBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredContext) -> shaft.getItemCapability());
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredDirection) -> shaft.getFluidCapability());
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredDirection) -> shaft.getGasCapability());
-    }
-
-    public static boolean isUpperStore(BlockState blockState) {
-        AirtightForgingPressStructuralPosition structuralPosition = blockState.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
-        return structuralPosition.isUpperStore() && structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER;
     }
 
     @Override
@@ -52,7 +42,7 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
 
         IItemHandlerModifiable itemHandler = getItemCapability();
         IFluidHandler fluidHandler = getFluidCapability();
-        IGasHandler gasHandler = getGasCapability();
+        GasHandler gasHandler = getGasCapability();
         if (itemHandler == null || fluidHandler == null || gasHandler == null) {
             return 0;
         }
@@ -64,10 +54,12 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         for (int tank = 0; tank < fluidHandler.getTanks(); tank++) {
             totalCapacity += fluidHandler.getTankCapacity(tank);
         }
-        for (int tank = 0; tank < gasHandler.getTanks(); tank++) {
-            totalCapacity += gasHandler.getTankCapacity(tank);
+        if (gasHandler instanceof GasStorageHandler storageGasHandler) {
+            for (int tank = 0; tank < storageGasHandler.getTanks(); tank++) {
+                totalCapacity += storageGasHandler.getTankMaxAmount(tank);
+            }
         }
-        return CCBMathUtils.clampToNonNegativeInt(totalCapacity);
+        return BoundedMath.clampToNonNegativeInt(totalCapacity);
     }
 
     @Override
@@ -84,7 +76,7 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
 
         IItemHandlerModifiable itemHandler = getItemCapability();
         IFluidHandler fluidHandler = getFluidCapability();
-        IGasHandler gasHandler = getGasCapability();
+        GasHandler gasHandler = getGasCapability();
         if (itemHandler == null || fluidHandler == null || gasHandler == null) {
             return 0;
         }
@@ -99,25 +91,37 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         for (int tank = 0; tank < gasHandler.getTanks(); tank++) {
             storedAmount += gasHandler.getGasInTank(tank).getAmount();
         }
-        return CCBMathUtils.clampToNonNegativeInt(storedAmount);
+        return BoundedMath.clampToNonNegativeInt(storedAmount);
     }
 
     @Override
     public MutableComponent format(int value) {
-        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
+        return CCBLang.text(String.valueOf(value) + ' ').add(CCBLang.translate("gui.threshold.items")).component();
     }
 
     @Override
     public @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction ignoredDirection) {
-        BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
+        BlockPos masterPos = AirtightForgingPressStructural.getMaster(getBlockPos(), getBlockState());
         return new Single(masterPos);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredContext) -> shaft.getItemCapability());
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredDirection) -> shaft.getFluidCapability());
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredDirection) -> shaft.getGasCapability());
+    }
+
+    public static boolean isUpperStore(BlockState blockState) {
+        AirtightForgingPressStructuralPosition structuralPosition = blockState.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
+        return structuralPosition.isUpperStore() && structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER;
+    }
+
     @Nullable AirtightForgingPressBlockEntity getMasterBlockEntity() {
-        BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
+        BlockPos masterPos = AirtightForgingPressStructural.getMaster(getBlockPos(), getBlockState());
         if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity press)) {
             return null;
         }
+
         return press;
     }
 
@@ -130,6 +134,7 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         if (press == null || !isUpperStore(getBlockState())) {
             return null;
         }
+
         return press.getAdditionInventory();
     }
 
@@ -138,14 +143,16 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         if (press == null || !isUpperStore(getBlockState())) {
             return null;
         }
+
         return press.getFluidCapability();
     }
 
-    private @Nullable IGasHandler getGasCapability() {
+    private @Nullable GasHandler getGasCapability() {
         AirtightForgingPressBlockEntity press = getMasterBlockEntity();
         if (press == null || !isUpperStore(getBlockState())) {
             return null;
         }
+
         return press.getGasCapability();
     }
 }

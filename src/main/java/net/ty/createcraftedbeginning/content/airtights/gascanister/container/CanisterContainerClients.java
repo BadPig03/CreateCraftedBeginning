@@ -4,17 +4,18 @@ import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.CanisterDisplayColors;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers.CanisterSupplierSnapshot;
 import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -30,8 +31,8 @@ public final class CanisterContainerClients {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static void updateDisplayedGasState(GasStack content, long capacity, int packType, boolean creative) {
-        syncedDisplayedGasState = DisplayedGasState.synced(content, capacity, packType, creative);
+    public static void updateDisplayedGasState(GasStack content, long maxAmount, long pressurePa, int packType, boolean creative) {
+        syncedDisplayedGasState = DisplayedGasState.synced(content, maxAmount, pressurePa, packType, creative);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -47,7 +48,7 @@ public final class CanisterContainerClients {
     @OnlyIn(Dist.CLIENT)
     public static boolean isBarVisible() {
         DisplayedGasState displayedState = getDisplayedGasState();
-        return !displayedState.content().isEmpty() && (displayedState.creative() || displayedState.capacity() > 0);
+        return !displayedState.content().isEmpty() && (displayedState.creative() || displayedState.maxAmount() > 0);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -56,7 +57,23 @@ public final class CanisterContainerClients {
         if (gasRatio == 0) {
             return 0;
         }
-        return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, gasRatio);
+
+        return Color.mixColors(CanisterDisplayColors.COLOR_CYAN, CanisterDisplayColors.COLOR_WHITE, gasRatio);
+    }
+
+    public static int getBarColor(ItemStack canister) {
+        if (!(canister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+            return 0;
+        }
+
+        long amount = canisterContents.getGasInTank(0).getAmount();
+        long maxAmount = canisterContents.getTankMaxAmount(0);
+        if (amount == 0 || maxAmount == 0) {
+            return 0;
+        }
+
+        float gasRatio = Mth.clamp((float) amount / maxAmount, 0.0F, 1.0F);
+        return Color.mixColors(CanisterDisplayColors.COLOR_CYAN, CanisterDisplayColors.COLOR_WHITE, gasRatio);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -65,12 +82,38 @@ public final class CanisterContainerClients {
         if (gasRatio == 0) {
             return 0;
         }
+
+        return Math.round(BAR_WIDTH * gasRatio);
+    }
+
+    public static int getBarWidth(ItemStack canister) {
+        if (!(canister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+            return 0;
+        }
+
+        long amount = canisterContents.getGasInTank(0).getAmount();
+        long maxAmount = canisterContents.getTankMaxAmount(0);
+        if (amount == 0 || maxAmount == 0) {
+            return 0;
+        }
+
+        float gasRatio = Mth.clamp((float) amount / maxAmount, 0.0F, 1.0F);
         return Math.round(BAR_WIDTH * gasRatio);
     }
 
     @OnlyIn(Dist.CLIENT)
     public static GasStack getDisplayedGasContent() {
         return getDisplayedGasState().content().copy();
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static long getDisplayedGasPressurePa() {
+        return getDisplayedGasState().pressurePa();
+    }
+
+    public static Gas getStoredGasType(Player player) {
+        ResourceLocation gasId = NBTHelper.readResourceLocation(player.getPersistentData(), COMPOUND_KEY_STORED_GAS_TYPE);
+        return Gas.findById(gasId);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -84,10 +127,11 @@ public final class CanisterContainerClients {
             return 1;
         }
 
-        if (displayedState.capacity() <= 0) {
+        if (displayedState.maxAmount() <= 0) {
             return 0;
         }
-        return CCBMathUtils.clampUnit((float) displayedState.content().getAmount() / displayedState.capacity());
+
+        return Mth.clamp((float) displayedState.content().getAmount() / displayedState.maxAmount(), 0.0F, 1.0F);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -102,63 +146,30 @@ public final class CanisterContainerClients {
             return syncedState;
         }
 
-        var fallbackGasInfo = CanisterContainerSuppliers.getFirstCanisterSupplierPair(player);
-        GasStack gasContent = fallbackGasInfo.getFirst();
+        CanisterSupplierSnapshot fallbackGasInfo = CanisterContainerSuppliers.getFirstCanisterSupplierSnapshot(player);
+        GasStack gasContent = fallbackGasInfo.content();
         if (gasContent.isEmpty()) {
             return DisplayedGasState.EMPTY;
         }
-        return DisplayedGasState.fallback(gasContent, fallbackGasInfo.getSecond().getFirst(), fallbackGasInfo.getSecond().getSecond());
+
+        return DisplayedGasState.fallback(gasContent, fallbackGasInfo.maxAmount(), fallbackGasInfo.pressurePa(), fallbackGasInfo.creative());
     }
 
-    public static int getBarColor(ItemStack canister) {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
-            return 0;
-        }
-
-        long amount = canisterContents.getGasInTank(0).getAmount();
-        long capacity = canisterContents.getTankCapacity(0);
-        if (amount == 0 || capacity == 0) {
-            return 0;
-        }
-
-        float gasRatio = CCBMathUtils.clampUnit((float) amount / capacity);
-        return Color.mixColors(GasCanisterUtils.COLOR_CYAN, GasCanisterUtils.COLOR_WHITE, gasRatio);
-    }
-
-    public static int getBarWidth(ItemStack canister) {
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
-            return 0;
-        }
-
-        long amount = canisterContents.getGasInTank(0).getAmount();
-        long capacity = canisterContents.getTankCapacity(0);
-        if (amount == 0 || capacity == 0) {
-            return 0;
-        }
-
-        float gasRatio = CCBMathUtils.clampUnit((float) amount / capacity);
-        return Math.round(BAR_WIDTH * gasRatio);
-    }
-
-    public static Gas getStoredGasType(Player player) {
-        ResourceLocation gasId = NBTHelper.readResourceLocation(player.getPersistentData(), COMPOUND_KEY_STORED_GAS_TYPE);
-        return Gas.getGasTypeByName(gasId);
-    }
-
-    public record DisplayedGasState(GasStack content, long capacity, int packType, boolean creative, boolean synced) {
-        private static final DisplayedGasState EMPTY = new DisplayedGasState(GasStack.EMPTY, -1, -1, false, false);
-        private static final DisplayedGasState UNSYNCED = new DisplayedGasState(GasStack.EMPTY, -1, -1, false, false);
+    public record DisplayedGasState(GasStack content, long maxAmount, long pressurePa, int packType, boolean creative, boolean synced) {
+        private static final DisplayedGasState EMPTY = new DisplayedGasState(GasStack.EMPTY, -1, 0, -1, false, false);
+        private static final DisplayedGasState UNSYNCED = new DisplayedGasState(GasStack.EMPTY, -1, 0, -1, false, false);
 
         public DisplayedGasState {
             content = content.copy();
+            pressurePa = Math.max(0, pressurePa);
         }
 
-        private static DisplayedGasState synced(GasStack content, long capacity, int packType, boolean creative) {
-            return new DisplayedGasState(content, capacity, packType, creative, true);
+        private static DisplayedGasState synced(GasStack content, long maxAmount, long pressurePa, int packType, boolean creative) {
+            return new DisplayedGasState(content, maxAmount, pressurePa, packType, creative, true);
         }
 
-        private static DisplayedGasState fallback(GasStack content, long capacity, boolean creative) {
-            return new DisplayedGasState(content, capacity, -1, creative, false);
+        private static DisplayedGasState fallback(GasStack content, long maxAmount, long pressurePa, boolean creative) {
+            return new DisplayedGasState(content, maxAmount, pressurePa, -1, creative, false);
         }
     }
 }

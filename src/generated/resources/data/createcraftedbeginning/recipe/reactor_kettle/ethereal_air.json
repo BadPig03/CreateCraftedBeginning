@@ -1,5 +1,11 @@
 {
   "type": "createcraftedbeginning:reactor_kettle",
+  "gas_results": [
+    {
+      "amount": 1000,
+      "id": "createcraftedbeginning:ethereal_air"
+    }
+  ],
   "ingredients": [
     {
       "item": "createcraftedbeginning:breeze_core"
@@ -8,7 +14,7 @@
       "tag": "c:end_stones"
     }
   ],
-  "processing_time": 200,
+  "processing_time": 50,
   "results": [
     {
       "id": "createcraftedbeginning:breeze_core"
@@ -16,10 +22,6 @@
     {
       "chance": 0.25,
       "id": "minecraft:gravel"
-    },
-    {
-      "amount": 10,
-      "id": "createcraftedbeginning:ethereal_air"
     }
   ],
   "temperature": "superchilled"

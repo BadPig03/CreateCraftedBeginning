@@ -1,12 +1,17 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver;
 
+import com.simibubi.create.api.stress.BlockStressValues;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
 import net.ty.createcraftedbeginning.api.enginehandlers.AirtightEngineHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
+import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -23,7 +28,7 @@ public final class AirtightAssemblyDriverCore {
     private final AirtightAssemblyDriverTooltipBuilder tooltipBuilder;
     private final AirtightAssemblyDriverController controller;
     private final AirtightAssemblyDriverSerialization serialization;
-    private final IGasHandler gasHandler;
+    private final GasPressureBoundary gasHandler;
 
     public AirtightAssemblyDriverCore() {
         flowMeter = new AirtightAssemblyDriverFlowMeter(this);
@@ -34,6 +39,19 @@ public final class AirtightAssemblyDriverCore {
         gasHandler = new AirtightAssemblyDriverGasHandler(flowMeter);
         controller = new AirtightAssemblyDriverController(this);
         serialization = new AirtightAssemblyDriverSerialization(this);
+    }
+
+    public static double getStressCapacityPerGasUnit(double workFactor) {
+        if (!GasConsumptionMath.isFinite(workFactor) || workFactor <= 0) {
+            return 0;
+        }
+
+        double engineCapacity = BlockStressValues.getCapacity(CCBBlocks.AIRTIGHT_ENGINE_BLOCK.get());
+        if (!GasConsumptionMath.isFinite(engineCapacity) || engineCapacity <= 0) {
+            return 0;
+        }
+
+        return AirtightEngineBlockEntity.BASE_ROTATION_SPEED * engineCapacity * workFactor / AirtightAssemblyDriverFlowMeter.SUPPLY_PER_LEVEL;
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip) {
@@ -55,6 +73,10 @@ public final class AirtightAssemblyDriverCore {
 
     public boolean isActive() {
         return structureManager.isActive();
+    }
+
+    public boolean isUsingSteam() {
+        return flowMeter.getGasType().is(CCBGases.STEAM);
     }
 
     public int getCurrentLevel() {
@@ -97,7 +119,7 @@ public final class AirtightAssemblyDriverCore {
         return controller;
     }
 
-    IGasHandler getGasHandler() {
+    GasPressureBoundary getGasHandler() {
         return gasHandler;
     }
 

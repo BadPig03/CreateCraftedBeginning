@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpipe;
 
 import com.simibubi.create.content.decoration.bracket.BracketedBlockEntityBehaviour;
-import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.model.BakedModelWrapperWithData;
 import net.createmod.catnip.data.Iterate;
@@ -12,21 +11,16 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.neoforged.neoforge.client.ChunkRenderTypeSet;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelData.Builder;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 import net.neoforged.neoforge.common.util.TriState;
-import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.foundation.client.AirtightPipeAttachmentPartial;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,7 +31,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
+public final class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
     private static final ModelProperty<PipeModelData> PIPE_PROPERTY = new ModelProperty<>();
 
     private final boolean ambientOcclusion;
@@ -47,80 +41,25 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         this.ambientOcclusion = ambientOcclusion;
     }
 
-    @Contract("_ -> new")
-    public static AirtightPipeAttachmentModel withAO(BakedModel template) {
-        return new AirtightPipeAttachmentModel(template, true);
-    }
-
-    private static void addQuads(List<BakedQuad> quads, @Nullable BlockState state, @Nullable Direction side, RandomSource random, ModelData modelData, PipeModelData pipeData, @Nullable RenderType renderType) {
-        BakedModel bracketModel = pipeData.getBracket();
-        if (bracketModel != null) {
-            quads.addAll(bracketModel.getQuads(state, side, random, modelData, renderType));
-        }
-
-        for (Direction direction : Iterate.directions) {
-            AirtightPipeAttachmentTypes attachmentType = pipeData.getAttachment(direction);
-            for (AirtightPipeAttachmentPartial partial : getPartials(attachmentType)) {
-                BakedModel attachmentModel = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get();
-                quads.addAll(attachmentModel.getQuads(state, side, random, modelData, renderType));
-            }
-        }
-    }
-
-    private static AirtightPipeAttachmentTypes getFallbackAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
-        BlockPos adjacentPos = pos.relative(direction);
-        BlockState adjacentState = level.getBlockState(adjacentPos);
-        Block adjacentBlock = adjacentState.getBlock();
-        if (state.getBlock() instanceof AirtightPumpBlock) {
-            if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, adjacentPos, adjacentState, direction.getOpposite())) {
-                return AirtightPipeAttachmentTypes.DRAIN;
-            }
-            return AirtightPipeAttachmentTypes.NONE;
-        }
-
-        if (!state.hasProperty(BlockStateProperties.AXIS)) {
-            return AirtightPipeAttachmentTypes.NONE;
-        }
-
-        Axis pipeAxis = state.getValue(BlockStateProperties.AXIS);
-        if (pipeAxis != direction.getAxis()) {
-            return AirtightPipeAttachmentTypes.NONE;
-        }
-
-        if (adjacentBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(adjacentState) == pipeAxis) {
-            return AirtightPipeAttachmentTypes.NONE;
-        }
-
-        if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, adjacentPos, adjacentState, direction.getOpposite())) {
-            return AirtightPipeAttachmentTypes.DRAIN;
-        }
-        return AirtightPipeAttachmentTypes.RIM;
-    }
-
-    private static AirtightPipeAttachmentPartial[] getPartials(AirtightPipeAttachmentTypes attachmentType) {
-        return switch (attachmentType) {
-            case NONE -> new AirtightPipeAttachmentPartial[0];
-            case RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.RIM};
-            case DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.DRAIN};
-        };
-    }
-
     @Override
     protected Builder gatherModelData(Builder builder, BlockAndTintGetter level, BlockPos pos, BlockState state, ModelData blockEntityData) {
         PipeModelData pipeData = new PipeModelData();
-        if (state.hasProperty(AirtightPipeBlock.CASED) && state.getValue(AirtightPipeBlock.CASED)) {
-            return builder.with(PIPE_PROPERTY, pipeData);
-        }
-
+        boolean cased = state.hasProperty(AirtightPipeBlock.CASED) && state.getValue(AirtightPipeBlock.CASED);
         GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
-        BracketedBlockEntityBehaviour bracket = BlockEntityBehaviour.get(level, pos, BracketedBlockEntityBehaviour.TYPE);
+        BracketedBlockEntityBehaviour bracket = cased ? null : BlockEntityBehaviour.get(level, pos, BracketedBlockEntityBehaviour.TYPE);
         for (Direction direction : Iterate.directions) {
-            AirtightPipeAttachmentTypes attachmentType = transport == null ? getFallbackAttachment(level, pos, state, direction) : transport.getRenderedRimAttachment(level, pos, state, direction);
+            AirtightPipeAttachmentTypes attachmentType = AirtightPipeAttachments.resolve(level, pos, state, direction, transport);
+            if (cased && attachmentType == AirtightPipeAttachmentTypes.RIM) {
+                attachmentType = AirtightPipeAttachmentTypes.NONE;
+            }
+
             pipeData.putAttachment(direction, attachmentType);
         }
+
         if (bracket != null) {
             pipeData.putBracket(bracket.getBracket());
         }
+
         return builder.with(PIPE_PROPERTY, pipeData);
     }
 
@@ -134,6 +73,7 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
         if (!ambientOcclusion) {
             return TriState.FALSE;
         }
+
         return TriState.TRUE;
     }
 
@@ -150,7 +90,20 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
             return quads;
         }
 
-        addQuads(quads, state, side, random, modelData, pipeData, renderType);
+        BakedModel bracketModel = pipeData.getBracket();
+        if (bracketModel != null) {
+            quads.addAll(bracketModel.getQuads(state, side, random, modelData, renderType));
+        }
+
+        for (Direction direction : Iterate.directions) {
+            AirtightPipeAttachmentTypes attachmentType = pipeData.getAttachment(direction);
+            Direction modelDirection = getAttachmentModelDirection(attachmentType, direction);
+            for (AirtightPipeAttachmentPartial partial : getPartials(attachmentType)) {
+                BakedModel attachmentModel = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(modelDirection).get();
+                quads.addAll(attachmentModel.getQuads(state, side, random, modelData, renderType));
+            }
+        }
+
         return quads;
     }
 
@@ -169,15 +122,42 @@ public class AirtightPipeAttachmentModel extends BakedModelWrapperWithData {
 
         for (Direction direction : Iterate.directions) {
             AirtightPipeAttachmentTypes attachmentType = pipeData.getAttachment(direction);
+            Direction modelDirection = getAttachmentModelDirection(attachmentType, direction);
             for (AirtightPipeAttachmentPartial partial : getPartials(attachmentType)) {
-                BakedModel attachmentModel = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(direction).get();
+                BakedModel attachmentModel = CCBPartialModels.AIRTIGHT_PIPE_ATTACHMENTS.get(partial).get(modelDirection).get();
                 renderTypes.add(attachmentModel.getRenderTypes(state, random, modelData));
             }
         }
+
         return ChunkRenderTypeSet.union(renderTypes);
     }
 
-    private static class PipeModelData {
+    @Contract("_ -> new")
+    public static AirtightPipeAttachmentModel withAO(BakedModel template) {
+        return new AirtightPipeAttachmentModel(template, true);
+    }
+
+    private static AirtightPipeAttachmentPartial[] getPartials(AirtightPipeAttachmentTypes attachmentType) {
+        return switch (attachmentType) {
+            case NONE -> new AirtightPipeAttachmentPartial[0];
+            case RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.RIM};
+            case DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.DRAIN};
+            case INLET_RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.INLET_RIM};
+            case INLET_DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.INLET_DRAIN};
+            case OUTLET_RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.OUTLET_RIM};
+            case OUTLET_DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.OUTLET_DRAIN};
+        };
+    }
+
+    private static Direction getAttachmentModelDirection(AirtightPipeAttachmentTypes attachmentType, Direction connectionDirection) {
+        if (attachmentType != AirtightPipeAttachmentTypes.INLET_RIM && attachmentType != AirtightPipeAttachmentTypes.INLET_DRAIN) {
+            return connectionDirection;
+        }
+
+        return connectionDirection.getOpposite();
+    }
+
+    private static final class PipeModelData {
         private final AirtightPipeAttachmentTypes[] attachments;
         @Nullable
         private BakedModel bracket;

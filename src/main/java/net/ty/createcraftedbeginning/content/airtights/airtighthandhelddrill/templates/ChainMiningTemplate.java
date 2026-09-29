@@ -22,6 +22,32 @@ import java.util.stream.Stream;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 class ChainMiningTemplate extends BaseTemplate {
+    @Override
+    public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
+        int blockLimit = CCBConfig.server().equipment.airtightHandheldDrill.chainMiningMaxBlocks.get();
+        return collect(level, basePos, baseState, blockLimit);
+    }
+
+    @Override
+    public boolean usesSpatialParameters() {
+        return false;
+    }
+
+    @Override
+    public int getMinValue(int index) {
+        return 1;
+    }
+
+    @Override
+    public int getMaxValue(int index) {
+        return 8;
+    }
+
+    @Override
+    Stream<BlockPos> getBaseAreaStream(int @NotNull [] miningSize) {
+        return Stream.of(BlockPos.ZERO);
+    }
+
     private static Set<BlockPos> collect(Level level, BlockPos origin, BlockState originState, int requestedLimit) {
         if (originState.isAir()) {
             return Set.of();
@@ -83,31 +109,5 @@ class ChainMiningTemplate extends BaseTemplate {
             positions.add(BlockPos.of(packedPositions.getLong(index)));
         }
         return positions;
-    }
-
-    @Override
-    public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
-        int blockLimit = CCBConfig.server().equipments.chainMiningMaxBlocks.get();
-        return collect(level, basePos, baseState, blockLimit);
-    }
-
-    @Override
-    public boolean usesSpatialParameters() {
-        return false;
-    }
-
-    @Override
-    public int getMinValue(int index) {
-        return 1;
-    }
-
-    @Override
-    public int getMaxValue(int index) {
-        return 8;
-    }
-
-    @Override
-    Stream<BlockPos> getBaseAreaStream(int @NotNull [] miningSize) {
-        return Stream.of(BlockPos.ZERO);
     }
 }

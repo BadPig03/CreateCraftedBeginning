@@ -1,13 +1,16 @@
 {
   "type": "createcraftedbeginning:gas_injection",
+  "gas_ingredients": [
+    {
+      "amount": 250,
+      "ingredient": {
+        "gas": "createcraftedbeginning:energized_ethereal_air"
+      }
+    }
+  ],
   "ingredients": [
     {
       "item": "minecraft:brown_mushroom_block"
-    },
-    {
-      "type": "createcraftedbeginning:single",
-      "amount": 100,
-      "gas": "createcraftedbeginning:energized_ethereal_air"
     }
   ],
   "results": [

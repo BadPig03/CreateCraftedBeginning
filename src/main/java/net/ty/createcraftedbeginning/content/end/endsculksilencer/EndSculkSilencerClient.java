@@ -30,7 +30,7 @@ public final class EndSculkSilencerClient {
 
     private static void tick(EndSculkSilencerBlockEntity silencer) {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !silencer.isShowingOutline() || !GogglesItem.isWearingGoggles(player) || !CCBConfig.client().enableEndSculkSilencerOutline.get()) {
+        if (player == null || !silencer.isShowingOutline() || !GogglesItem.isWearingGoggles(player) || !CCBConfig.client().outlines.showEndSculkSilencerChunks.get()) {
             return;
         }
 
@@ -46,6 +46,6 @@ public final class EndSculkSilencerClient {
             return;
         }
 
-        Outliner.getInstance().chaseAABB(silencer, EndSculkSilencerBlockEntity.calculateArea(player.level(), projection.blockPos(), activeRange)).colored(PonderPalette.INPUT.getColor()).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.0625f);
+        Outliner.getInstance().chaseAABB(silencer, EndSculkSilencerBlockEntity.calculateArea(player.level(), projection.blockPos(), activeRange)).colored(PonderPalette.INPUT.getColor()).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.0625F);
     }
 }

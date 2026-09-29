@@ -2,11 +2,11 @@ package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtighta
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverStructureScanner.ScanResult;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -36,26 +36,6 @@ class AirtightAssemblyDriverStructureManager {
 
     AirtightAssemblyDriverStructureManager(AirtightAssemblyDriverCore driverCore) {
         this.driverCore = driverCore;
-    }
-
-    private static int getMaxAttachedSurfaceBlocks() {
-        int width = AirtightTankBlockEntity.getConfiguredMaxWidth();
-        int length = AirtightTankBlockEntity.getConfiguredMaxLength();
-        return 2 * (width * width + 2 * width * length);
-    }
-
-    private static int getMaxAttachedChambers() {
-        int width = AirtightTankBlockEntity.getConfiguredMaxWidth();
-        int length = AirtightTankBlockEntity.getConfiguredMaxLength();
-        return width * Math.max(width, length);
-    }
-
-    private static int getMaxAttachedWindChargingLevel() {
-        return getMaxAttachedChambers() * MAX_LEVEL;
-    }
-
-    private static int readBoundedInt(CompoundTag compoundTag, String key, int max) {
-        return CCBMathUtils.clampNonNegative(CCBNbtUtils.getIntOrDefault(compoundTag, key, 0), max);
     }
 
     void tick(AirtightTankBlockEntity controller) {
@@ -124,13 +104,13 @@ class AirtightAssemblyDriverStructureManager {
     }
 
     CompoundTag writeClient() {
-        CompoundTag tag = new CompoundTag();
-        CCBNbtUtils.putInt(tag, COMPOUND_KEY_ATTACHED_ENGINES, attachedEngines);
-        CCBNbtUtils.putInt(tag, COMPOUND_KEY_ATTACHED_OUTLETS, attachedOutlets);
-        CCBNbtUtils.putInt(tag, COMPOUND_KEY_ATTACHED_CHAMBERS, attachedChambers);
-        CCBNbtUtils.putInt(tag, COMPOUND_KEY_ATTACHED_WIND_CHARGING_LEVEL, attachedWindChargingLevel);
-        CCBNbtUtils.putBoolean(tag, COMPOUND_KEY_STRUCTURE_VALID, structureValid);
-        return tag;
+        CompoundTag compoundTag = new CompoundTag();
+        compoundTag.putInt(COMPOUND_KEY_ATTACHED_ENGINES, attachedEngines);
+        compoundTag.putInt(COMPOUND_KEY_ATTACHED_OUTLETS, attachedOutlets);
+        compoundTag.putInt(COMPOUND_KEY_ATTACHED_CHAMBERS, attachedChambers);
+        compoundTag.putInt(COMPOUND_KEY_ATTACHED_WIND_CHARGING_LEVEL, attachedWindChargingLevel);
+        compoundTag.putBoolean(COMPOUND_KEY_STRUCTURE_VALID, structureValid);
+        return compoundTag;
     }
 
     void readClient(CompoundTag compoundTag) {
@@ -138,10 +118,26 @@ class AirtightAssemblyDriverStructureManager {
         attachedEngines = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_ENGINES, maxAttachedSurfaceBlocks);
         attachedOutlets = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_OUTLETS, maxAttachedSurfaceBlocks);
         attachedChambers = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_CHAMBERS, getMaxAttachedChambers());
-        attachedWindChargingLevel = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_WIND_CHARGING_LEVEL, getMaxAttachedWindChargingLevel());
-        structureValid = CCBNbtUtils.getBoolean(compoundTag, COMPOUND_KEY_STRUCTURE_VALID);
+        attachedWindChargingLevel = readBoundedInt(compoundTag, COMPOUND_KEY_ATTACHED_WIND_CHARGING_LEVEL, getMaxAttachedChambers() * MAX_LEVEL);
+        structureValid = compoundTag.getBoolean(COMPOUND_KEY_STRUCTURE_VALID);
         evaluationRequired = false;
         evaluationCooldown = 0;
+    }
+
+    private static int getMaxAttachedSurfaceBlocks() {
+        int width = AirtightTankBlockEntity.getConfiguredMaxWidth();
+        int length = AirtightTankBlockEntity.getConfiguredMaxLength();
+        return 2 * (Mth.square(width) + 2 * width * length);
+    }
+
+    private static int getMaxAttachedChambers() {
+        int width = AirtightTankBlockEntity.getConfiguredMaxWidth();
+        int length = AirtightTankBlockEntity.getConfiguredMaxLength();
+        return width * Math.max(width, length);
+    }
+
+    private static int readBoundedInt(CompoundTag compoundTag, String key, int max) {
+        return Mth.clamp(NbtValues.getIntOrDefault(compoundTag, key, 0), 0, max);
     }
 
     private void evaluate(AirtightTankBlockEntity controller) {

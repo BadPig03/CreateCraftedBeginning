@@ -10,8 +10,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,10 +28,6 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
         super(type, pos, state);
         connection = new TeslaTurbineNozzleConnection(this);
         tooltip = new TeslaTurbineNozzleTooltip(this);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.TESLA_TURBINE_NOZZLE.get(), TeslaTurbineNozzleBlockEntity::getGasCapability);
     }
 
     @Override
@@ -56,7 +52,11 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
         connection.scheduleValidation();
     }
 
-    private @Nullable IGasHandler getGasCapability(@Nullable Direction accessDirection) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.TESLA_TURBINE_NOZZLE.get(), TeslaTurbineNozzleBlockEntity::getGasCapability);
+    }
+
+    private @Nullable GasHandler getGasCapability(@Nullable Direction accessDirection) {
         return connection.getGasCapability(accessDirection);
     }
 }

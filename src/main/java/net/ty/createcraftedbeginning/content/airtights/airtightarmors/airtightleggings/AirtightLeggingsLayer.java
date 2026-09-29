@@ -18,7 +18,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -29,6 +29,27 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightLeggingsLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
     private AirtightLeggingsLayer(RenderLayerParent<T, M> renderer) {
         super(renderer);
+    }
+
+    @Override
+    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int light, LivingEntity entity, float yaw, float pitch, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+        if (!(getParentModel() instanceof HumanoidModel<?> model) || !(entity instanceof Player player) || !player.getItemBySlot(EquipmentSlot.LEGS).is(CCBItems.AIRTIGHT_LEGGINGS)) {
+            return;
+        }
+
+        VertexConsumer consumer = bufferSource.getBuffer(Sheets.cutoutBlockSheet());
+        SuperByteBuffer shield = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_SHIELD, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());
+        poseStack.pushPose();
+        model.body.translateAndRotate(poseStack);
+        poseStack.translate(0.5, 0.75, 0);
+        shield.rotateZ(Mth.PI).disableDiffuse().light(light).renderInto(poseStack, consumer);
+        poseStack.popPose();
+    }
+
+    public static void registerOnAll(EntityRenderDispatcher dispatcher) {
+        for (EntityRenderer<? extends Player> renderer : dispatcher.getSkinMap().values()) {
+            registerOn(renderer);
+        }
     }
 
     private static void registerOn(EntityRenderer<?> renderer) {
@@ -45,26 +66,5 @@ public class AirtightLeggingsLayer<T extends LivingEntity, M extends EntityModel
         }
 
         renderer.addLayer(new AirtightLeggingsLayer<>(renderer));
-    }
-
-    public static void registerOnAll(EntityRenderDispatcher dispatcher) {
-        for (EntityRenderer<? extends Player> renderer : dispatcher.getSkinMap().values()) {
-            registerOn(renderer);
-        }
-    }
-
-    @Override
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int light, LivingEntity entity, float yaw, float pitch, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
-        if (!(getParentModel() instanceof HumanoidModel<?> model) || !(entity instanceof Player player) || !player.getItemBySlot(EquipmentSlot.LEGS).is(CCBItems.AIRTIGHT_LEGGINGS)) {
-            return;
-        }
-
-        VertexConsumer consumer = bufferSource.getBuffer(Sheets.cutoutBlockSheet());
-        SuperByteBuffer shield = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_SHIELD, CCBBlocks.GAS_CANISTER_BLOCK.getDefaultState());
-        poseStack.pushPose();
-        model.body.translateAndRotate(poseStack);
-        poseStack.translate(0.5, 0.75, 0);
-        shield.rotateZ(Mth.PI).disableDiffuse().light(light).renderInto(poseStack, consumer);
-        poseStack.popPose();
     }
 }

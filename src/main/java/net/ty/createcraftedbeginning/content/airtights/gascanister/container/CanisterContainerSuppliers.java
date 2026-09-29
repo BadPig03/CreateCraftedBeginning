@@ -1,14 +1,13 @@
 package net.ty.createcraftedbeginning.content.airtights.gascanister.container;
 
-import net.createmod.catnip.data.Pair;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
+import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
+import net.ty.createcraftedbeginning.api.canister.GasCanisterContainer;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterItem;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterItem;
@@ -29,25 +28,25 @@ import java.util.function.Function;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CanisterContainerSuppliers {
-    private static final List<Function<Player, List<IGasCanisterContainer>>> CANISTER_CONTAINER_SUPPLIERS = new ArrayList<>();
+    private static final List<ContainerSupplier> CANISTER_CONTAINER_SUPPLIERS = new ArrayList<>();
     private static final Map<Player, SupplierCache> SUPPLIER_CACHE = Collections.synchronizedMap(new WeakHashMap<>());
 
     static {
-        addCanisterContainerSuppliers(CanisterContainerSuppliers::getCanisterContainersInInventory);
+        addCanisterContainerSuppliers(CanisterContainerSuppliers::getCanisterContainersInInventory, SupplyOrder.CONTAINER_PRIORITY);
     }
 
     private CanisterContainerSuppliers() {
     }
 
-    public static void addCanisterContainerSuppliers(Function<Player, List<IGasCanisterContainer>> supplier) {
-        CANISTER_CONTAINER_SUPPLIERS.add(supplier);
+    public static void addCanisterContainerSuppliers(Function<Player, List<GasCanisterContainer>> supplier, SupplyOrder order) {
+        CANISTER_CONTAINER_SUPPLIERS.add(new ContainerSupplier(supplier, order));
         synchronized (SUPPLIER_CACHE) {
             SUPPLIER_CACHE.clear();
         }
     }
 
     public static boolean isValidCanisterContainer(ItemStack itemStack) {
-        return !itemStack.isEmpty() && itemStack.getCapability(GasHandler.ITEM) != null;
+        return !itemStack.isEmpty() && itemStack.getCapability(CanisterCapabilities.ITEM) != null;
     }
 
     public static boolean isValidGasCanister(ItemStack itemStack) {
@@ -58,7 +57,7 @@ public final class CanisterContainerSuppliers {
         return isValidCanisterContainer(itemStack) && (itemStack.is(CCBItems.CREATIVE_GAS_CANISTER) || itemStack.getItem() instanceof CreativeGasCanisterItem);
     }
 
-    public static @Unmodifiable List<IGasCanisterContainer> getAllSuppliers(Player player) {
+    public static @Unmodifiable List<GasCanisterContainer> getAllSuppliers(Player player) {
         Level level = player.level();
         long gameTime = level.getGameTime();
         synchronized (SUPPLIER_CACHE) {
@@ -68,44 +67,52 @@ public final class CanisterContainerSuppliers {
             }
         }
 
-        List<IGasCanisterContainer> containers = new ArrayList<>();
-        Set<IGasCanisterContainer> seenContainers = Collections.newSetFromMap(new IdentityHashMap<>());
-        Map<ItemStack, Integer> stackIndexes = new IdentityHashMap<>();
-        for (Function<Player, List<IGasCanisterContainer>> supplier : CANISTER_CONTAINER_SUPPLIERS) {
-            List<IGasCanisterContainer> suppliedContainers = supplier.apply(player);
-            if (suppliedContainers == null) {
+        List<SuppliedContainer> supplied = new ArrayList<>();
+        for (ContainerSupplier source : CANISTER_CONTAINER_SUPPLIERS) {
+            List<GasCanisterContainer> containers = source.supplier().apply(player);
+            if (containers == null) {
                 continue;
             }
 
-            for (IGasCanisterContainer container : suppliedContainers) {
-                if (container == null || !seenContainers.add(container)) {
+            for (GasCanisterContainer container : containers) {
+                if (container == null) {
                     continue;
                 }
 
-                ItemStack stack = container.getContainer();
-                if (stack.isEmpty()) {
-                    containers.add(container);
-                    continue;
-                }
-
-                Integer existingIndex = stackIndexes.get(stack);
-                if (existingIndex == null) {
-                    stackIndexes.put(stack, containers.size());
-                    containers.add(container);
-                    continue;
-                }
-
-                IGasCanisterContainer existingContainer = containers.get(existingIndex);
-                if (container.getPriority() <= existingContainer.getPriority()) {
-                    continue;
-                }
-
-                containers.set(existingIndex, container);
+                supplied.add(new SuppliedContainer(container, source.order()));
             }
         }
 
-        containers.sort((firstContainer, secondContainer) -> Integer.compare(secondContainer.getPriority(), firstContainer.getPriority()));
-        List<IGasCanisterContainer> resolvedContainers = List.copyOf(containers);
+        supplied.sort((first, second) -> {
+            int sourceOrder = first.order().compareTo(second.order());
+            if (sourceOrder != 0) {
+                return sourceOrder;
+            }
+
+            if (first.order() == SupplyOrder.SLOT_ORDER) {
+                return 0;
+            }
+
+            return Integer.compare(second.container().getPriority(), first.container().getPriority());
+        });
+        List<GasCanisterContainer> containers = new ArrayList<>();
+        Set<GasCanisterContainer> seenContainers = Collections.newSetFromMap(new IdentityHashMap<>());
+        Set<ItemStack> seenStacks = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (SuppliedContainer entry : supplied) {
+            GasCanisterContainer container = entry.container();
+            if (!seenContainers.add(container)) {
+                continue;
+            }
+
+            ItemStack stack = container.getContainer();
+            if (!stack.isEmpty() && !seenStacks.add(stack)) {
+                continue;
+            }
+
+            containers.add(container);
+        }
+
+        List<GasCanisterContainer> resolvedContainers = List.copyOf(containers);
         synchronized (SUPPLIER_CACHE) {
             SUPPLIER_CACHE.put(player, new SupplierCache(level, gameTime, resolvedContainers));
         }
@@ -113,7 +120,7 @@ public final class CanisterContainerSuppliers {
     }
 
     public static GasStack getFirstAvailableGasContent(Player player) {
-        for (IGasCanisterContainer container : getAllSuppliers(player)) {
+        for (GasCanisterContainer container : getAllSuppliers(player)) {
             for (int tankIndex = 0; tankIndex < container.getTanks(); tankIndex++) {
                 GasStack gasContent = container.getGasInTank(tankIndex);
                 if (gasContent.isEmpty()) {
@@ -130,41 +137,35 @@ public final class CanisterContainerSuppliers {
         return !getAllSuppliers(player).isEmpty();
     }
 
-    static void invalidateCache(Player player) {
+    public static void invalidateCache(Player player) {
         synchronized (SUPPLIER_CACHE) {
             SUPPLIER_CACHE.remove(player);
         }
     }
 
-    static Pair<GasStack, Pair<Long, Boolean>> getFirstCanisterSupplierPair(Player player) {
-        for (IGasCanisterContainer container : getAllSuppliers(player)) {
-            if (container instanceof GasCanisterPackContainerContents packContents) {
-                Pair<GasStack, Pair<Long, Boolean>> packContent = packContents.getFirstNonEmptyPair();
-                if (!packContent.getFirst().isEmpty()) {
-                    return packContent;
-                }
-
-                continue;
-            }
-
+    static CanisterSupplierSnapshot getFirstCanisterSupplierSnapshot(Player player) {
+        for (GasCanisterContainer container : getAllSuppliers(player)) {
             for (int tankIndex = 0; tankIndex < container.getTanks(); tankIndex++) {
                 GasStack gasContent = container.getGasInTank(tankIndex);
                 if (gasContent.isEmpty()) {
                     continue;
                 }
 
-                boolean isCreative = container instanceof CreativeGasCanisterContainerContents;
-                return Pair.of(gasContent, Pair.of(container.getTankCapacity(tankIndex), isCreative));
+                boolean creative = container instanceof CreativeGasCanisterContainerContents;
+                if (container instanceof GasCanisterPackContainerContents packContents) {
+                    creative = packContents.isCreative(tankIndex);
+                }
+                return new CanisterSupplierSnapshot(gasContent, container.getTankMaxAmount(tankIndex), container.getTankPressurePa(tankIndex), creative);
             }
         }
-        return Pair.of(GasStack.EMPTY, Pair.of(0L, false));
+        return CanisterSupplierSnapshot.EMPTY;
     }
 
-    private static List<IGasCanisterContainer> getCanisterContainersInInventory(Player player) {
-        List<IGasCanisterContainer> containers = new ArrayList<>();
+    private static List<GasCanisterContainer> getCanisterContainersInInventory(Player player) {
+        List<GasCanisterContainer> containers = new ArrayList<>();
         ItemStack offhand = player.getOffhandItem();
         if (!offhand.isEmpty()) {
-            IGasCanisterContainer container = offhand.getCapability(GasHandler.ITEM);
+            GasCanisterContainer container = offhand.getCapability(CanisterCapabilities.ITEM);
             if (container != null) {
                 containers.add(container);
             }
@@ -177,7 +178,7 @@ public final class CanisterContainerSuppliers {
                 continue;
             }
 
-            IGasCanisterContainer container = stack.getCapability(GasHandler.ITEM);
+            GasCanisterContainer container = stack.getCapability(CanisterCapabilities.ITEM);
             if (container == null) {
                 continue;
             }
@@ -187,5 +188,22 @@ public final class CanisterContainerSuppliers {
         return containers;
     }
 
-    private record SupplierCache(Level level, long gameTime, List<IGasCanisterContainer> containers) {}
+    record CanisterSupplierSnapshot(GasStack content, long maxAmount, long pressurePa, boolean creative) {
+        private static final CanisterSupplierSnapshot EMPTY = new CanisterSupplierSnapshot(GasStack.EMPTY, 0, 0, false);
+
+        CanisterSupplierSnapshot {
+            content = content.copy();
+        }
+    }
+
+    public enum SupplyOrder {
+        SLOT_ORDER,
+        CONTAINER_PRIORITY
+    }
+
+    private record ContainerSupplier(Function<Player, List<GasCanisterContainer>> supplier, SupplyOrder order) {}
+
+    private record SuppliedContainer(GasCanisterContainer container, SupplyOrder order) {}
+
+    private record SupplierCache(Level level, long gameTime, List<GasCanisterContainer> containers) {}
 }

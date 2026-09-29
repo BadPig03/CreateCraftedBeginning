@@ -13,9 +13,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.TickingAirtightUpgrade;
-import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
@@ -40,6 +40,7 @@ public enum InvisibilityUpgrade implements TickingAirtightUpgrade {
         if (gasCost == 0) {
             return List.of(CCBLang.translateDirect("gui.gas_consumption.supply_require_only"));
         }
+
         return List.of(CCBLang.translateDirect("gui.gas_consumption_per_second", gasCost));
     }
 
@@ -85,11 +86,11 @@ public enum InvisibilityUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public int getGasConsumptionPerSecond(Player player, ItemStack item) {
-        return CCBConfig.server().equipments.invisibilityConsumption.get();
+        return CCBConfig.server().equipment.airtightChestplate.invisibilityGasPerSecond.get();
     }
 
     @Override
-    public Item getUpgradeItem() {
+    public Item getDefaultUpgradeItem() {
         return AllItems.CARDBOARD_CHESTPLATE.asItem();
     }
 

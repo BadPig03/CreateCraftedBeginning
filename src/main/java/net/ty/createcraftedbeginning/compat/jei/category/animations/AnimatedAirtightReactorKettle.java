@@ -5,10 +5,10 @@ import com.mojang.math.Axis;
 import com.simibubi.create.compat.jei.category.animations.AnimatedKinetics;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralPosition;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -23,14 +23,15 @@ public class AnimatedAirtightReactorKettle extends AnimatedKinetics {
         this.closed = closed;
     }
 
+    @SuppressWarnings("ConstantExpression")
     @Override
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
 
         poseStack.translate(xOffset, yOffset, 192);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5f));
-        poseStack.mulPose(Axis.YP.rotationDegrees(22.5f));
+        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
+        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 for (int k = -1; k <= 1; k++) {
@@ -43,10 +44,10 @@ public class AnimatedAirtightReactorKettle extends AnimatedKinetics {
                     if (position.isCog()) {
                         blockElement(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION, position)).atLocal(i, -j, k).scale(SCALE).render(graphics);
                         blockElement(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_COGS).rotateBlock(0, getCurrentAngle() * 2, 0).atLocal(i, -j, k).scale(SCALE).render(graphics);
+                        continue;
                     }
-                    else {
-                        blockElement(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION, position)).atLocal(i, -j, k).scale(SCALE).render(graphics);
-                    }
+
+                    blockElement(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION, position)).atLocal(i, -j, k).scale(SCALE).render(graphics);
                 }
             }
         }

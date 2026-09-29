@@ -26,19 +26,22 @@
       "y": 90
     },
     "axis=y,directional_facing=east": {
-      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_east"
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "y": 90
     },
     "axis=y,directional_facing=north": {
-      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_north"
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block"
     },
     "axis=y,directional_facing=null": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block"
     },
     "axis=y,directional_facing=south": {
-      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_south"
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "y": 180
     },
     "axis=y,directional_facing=west": {
-      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_west"
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "y": 270
     },
     "axis=z,directional_facing=east": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",

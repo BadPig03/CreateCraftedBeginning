@@ -1,8 +1,10 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
+import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -57,6 +59,7 @@ public final class BreezeCoolerController {
         if (level == null) {
             return;
         }
+
         if (level.isClientSide) {
             cooler.refreshClientCoolingPredictionBase();
             return;
@@ -153,7 +156,7 @@ public final class BreezeCoolerController {
 
         cooler.setChanged();
         long syncPhase = level.getGameTime() + cooler.getBlockPos().asLong();
-        if (Math.floorMod(syncPhase, COOLING_STATE_SYNC_INTERVAL) != 0) {
+        if (Mth.positiveModulo(syncPhase, COOLING_STATE_SYNC_INTERVAL) != 0) {
             return;
         }
 
@@ -166,13 +169,18 @@ public final class BreezeCoolerController {
             return;
         }
 
-        BlockState currentBlockState = cooler.getBlockState();
+        BlockState currentState = cooler.getBlockState();
         FrostLevel frostLevel = cooler.getCurrentState().getFrostLevel();
-        if (currentBlockState.getValue(BreezeCoolerBlock.FROST_LEVEL) == frostLevel) {
+        if (currentState.getValue(BreezeCoolerBlock.FROST_LEVEL) == frostLevel) {
             return;
         }
 
-        level.setBlockAndUpdate(cooler.getBlockPos(), currentBlockState.setValue(BreezeCoolerBlock.FROST_LEVEL, frostLevel));
+        level.setBlockAndUpdate(cooler.getBlockPos(), currentState.setValue(BreezeCoolerBlock.FROST_LEVEL, frostLevel));
+        if (level.isClientSide || !(level.getBlockEntity(cooler.getBlockPos().above()) instanceof BasinBlockEntity basin)) {
+            return;
+        }
+
+        basin.notifyChangeOfContents();
     }
 
     public enum CoolingSyncMode {

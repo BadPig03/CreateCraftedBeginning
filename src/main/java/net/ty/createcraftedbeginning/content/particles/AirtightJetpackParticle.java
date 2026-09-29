@@ -30,8 +30,8 @@ public class AirtightJetpackParticle extends TextureSheetParticle {
         xd = xSpeed;
         yd = ySpeed;
         zd = zSpeed;
-        quadSize = 0.12f * (random.nextFloat() * random.nextFloat() + 1);
-        lifetime = (int) (8 / ((double) random.nextFloat() * 0.8 + 0.2)) + 2;
+        quadSize = 0.12F * (random.nextFloat() * random.nextFloat() + 1);
+        lifetime = (int) (8 / (random.nextFloat() * 0.8 + 0.2)) + 2;
         setSpriteFromAge(sprites);
     }
 
@@ -75,7 +75,7 @@ public class AirtightJetpackParticle extends TextureSheetParticle {
             }
 
             AirtightJetpackParticle particle = new AirtightJetpackParticle(level, x, y, z, xSpeed, ySpeed, zSpeed, sprites);
-            particle.setColor(0.964f, 0.964f, 0.964f);
+            particle.setColor(0.964F, 0.964F, 0.964F);
             return particle;
         }
     }

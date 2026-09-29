@@ -12,7 +12,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.util.FakePlayer;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,10 +29,41 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
     private final Set<CCBAdvancement> advancements;
     private UUID playerId;
 
-    public CCBAdvancementBehaviour(SmartBlockEntity be, CCBAdvancement... advancements) {
-        super(be);
+    public CCBAdvancementBehaviour(SmartBlockEntity blockEntity, CCBAdvancement... advancements) {
+        super(blockEntity);
         this.advancements = new HashSet<>();
         addAll(advancements);
+    }
+
+    @Override
+    public BehaviourType<?> getType() {
+        return TYPE;
+    }
+
+    @Override
+    public void initialize() {
+        super.initialize();
+        removeAwarded();
+    }
+
+    @Override
+    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        if (!compoundTag.contains(COMPOUND_KEY_OWNER)) {
+            return;
+        }
+
+        playerId = compoundTag.getUUID(COMPOUND_KEY_OWNER);
+    }
+
+    @Override
+    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        if (playerId == null) {
+            return;
+        }
+
+        compoundTag.putUUID(COMPOUND_KEY_OWNER, playerId);
     }
 
     public static void setPlacedBy(Level level, BlockPos pos, @Nullable LivingEntity entity) {
@@ -70,6 +100,7 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
         if (playerId == null) {
             return null;
         }
+
         return getWorld().getPlayerByUUID(playerId);
     }
 
@@ -81,37 +112,6 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
         playerId = id;
         removeAwarded();
         blockEntity.setChanged();
-    }
-
-    @Override
-    public BehaviourType<?> getType() {
-        return TYPE;
-    }
-
-    @Override
-    public void initialize() {
-        super.initialize();
-        removeAwarded();
-    }
-
-    @Override
-    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.read(compoundTag, provider, clientPacket);
-        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_OWNER)) {
-            return;
-        }
-
-        playerId = CCBNbtUtils.getUUID(compoundTag, COMPOUND_KEY_OWNER);
-    }
-
-    @Override
-    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.write(compoundTag, provider, clientPacket);
-        if (playerId == null) {
-            return;
-        }
-
-        CCBNbtUtils.putUUID(compoundTag, COMPOUND_KEY_OWNER, playerId);
     }
 
     private void removeAwarded() {

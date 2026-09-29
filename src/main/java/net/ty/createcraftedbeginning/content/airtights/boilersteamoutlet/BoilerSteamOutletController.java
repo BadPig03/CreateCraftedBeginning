@@ -4,8 +4,8 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletExtractionMeter.TickResult;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -57,6 +57,17 @@ final class BoilerSteamOutletController {
         level.destroyBlock(outlet.getBlockPos(), true);
     }
 
+    void invalidateCurrentProduction() {
+        production.invalidateCurrentTick();
+        outlet.clearBufferedSteam();
+        outlet.setChanged();
+        outlet.sendData();
+    }
+
+    long getMaximumOutputAmount() {
+        return production.getMaximumOutputAmount();
+    }
+
     void ensureCurrentTick() {
         if (!production.ensureCurrentTick()) {
             return;
@@ -76,6 +87,14 @@ final class BoilerSteamOutletController {
 
     void recordExtraction(GasStack drained, GasAction action) {
         if (!extractionMeter.recordExtraction(drained, action)) {
+            return;
+        }
+
+        outlet.setChanged();
+    }
+
+    void restoreExtraction(GasStack restored, GasAction action) {
+        if (!extractionMeter.restoreExtraction(restored, action)) {
             return;
         }
 

@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:flywheel",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:miracle_of_engineering_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

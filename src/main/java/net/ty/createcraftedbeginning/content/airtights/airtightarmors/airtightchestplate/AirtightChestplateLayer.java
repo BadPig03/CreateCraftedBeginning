@@ -20,9 +20,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.CreativeFlightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.ElytraUpgrade;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -33,28 +33,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
     private AirtightChestplateLayer(RenderLayerParent<T, M> renderer) {
         super(renderer);
-    }
-
-    private static void registerOn(EntityRenderer<?> renderer) {
-        if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer)) {
-            return;
-        }
-
-        registerOnLiving(livingRenderer);
-    }
-
-    private static <T extends LivingEntity, M extends EntityModel<T>> void registerOnLiving(LivingEntityRenderer<T, M> renderer) {
-        if (!(renderer.getModel() instanceof HumanoidModel<?>)) {
-            return;
-        }
-
-        renderer.addLayer(new AirtightChestplateLayer<>(renderer));
-    }
-
-    public static void registerOnAll(EntityRenderDispatcher dispatcher) {
-        for (EntityRenderer<? extends Player> renderer : dispatcher.getSkinMap().values()) {
-            registerOn(renderer);
-        }
     }
 
     @Override
@@ -89,5 +67,27 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
         }
 
         poseStack.popPose();
+    }
+
+    public static void registerOnAll(EntityRenderDispatcher dispatcher) {
+        for (EntityRenderer<? extends Player> renderer : dispatcher.getSkinMap().values()) {
+            registerOn(renderer);
+        }
+    }
+
+    private static void registerOn(EntityRenderer<?> renderer) {
+        if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer)) {
+            return;
+        }
+
+        registerOnLiving(livingRenderer);
+    }
+
+    private static <T extends LivingEntity, M extends EntityModel<T>> void registerOnLiving(LivingEntityRenderer<T, M> renderer) {
+        if (!(renderer.getModel() instanceof HumanoidModel<?>)) {
+            return;
+        }
+
+        renderer.addLayer(new AirtightChestplateLayer<>(renderer));
     }
 }

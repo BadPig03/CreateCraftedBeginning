@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:mini_tunnel_borer",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:even_harder_than_obsidian_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

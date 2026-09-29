@@ -23,15 +23,20 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasUnits;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.gas.behaviour.OverpressureBehaviour;
+import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.gas.overpressure.PressureRuptureService;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -42,7 +47,7 @@ import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchambe
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable, IGasInventoryIdentifierProvider {
+public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable, GasInventoryIdentifierProvider {
     static final int NOZZLE_TIME = 15;
     static final int NOZZLE_PART_TIME = 15;
     static final int NOZZLE_IDLE_TIME = 5;
@@ -55,8 +60,9 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     private final GasInjectionChamberController controller;
     private final GasInjectionChamberSerialization serialization;
 
+    private OverpressureBehaviour overpressureBehaviour;
     private SmartGasTankBehaviour tankBehaviour;
-    private IGasHandler exposedGasHandler;
+    private GasHandler exposedGasHandler;
     private boolean basinCheckScheduled = true;
 
     public GasInjectionChamberBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
@@ -72,26 +78,27 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         serialization = new GasInjectionChamberSerialization(this, operation, filter, visualState, display);
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.GAS_INJECTION_CHAMBER.get(), (blockEntity, direction) -> direction == Direction.UP ? blockEntity.exposedGasHandler : null);
-    }
-
-    private static long getMaxCapacity() {
-        return CCBConfig.server().airtights.maxGasInjectionChamberCapacity.get() * GasAmounts.MILLIBUCKETS_PER_BUCKET;
-    }
-
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        tankBehaviour = SmartGasTankBehaviour.single(this, getMaxCapacity()).whenGasUpdates(this::scheduleBasinCheck);
-        exposedGasHandler = tankBehaviour.getCapability();
-        BeltProcessingBehaviour beltProcessing = new BeltProcessingBehaviour(this).whenItemEnters(this::onItemEntered).whileItemHeld(this::onItemHeld);
+        tankBehaviour = SmartGasTankBehaviour.single(this, CCBConfig.server().machines.gasInjectionChamber.gasVolume.get() * GasUnits.LITERS_PER_KILOLITER, GasPressureLimits.HARD_PRESSURE_PA).whenTankUpdates(this::scheduleBasinCheck);
         behaviours.add(tankBehaviour);
+
+        exposedGasHandler = tankBehaviour.getCapability();
+
+        overpressureBehaviour = new OverpressureBehaviour(this, this::getCurrentGasPressurePa);
+        behaviours.add(overpressureBehaviour);
+
+        BeltProcessingBehaviour beltProcessing = new BeltProcessingBehaviour(this).whenItemEnters(this::onItemEntered).whileItemHeld(this::onItemHeld);
         behaviours.add(beltProcessing);
     }
 
     @Override
     public void tick() {
         super.tick();
+        if (ruptureIfOverstressed()) {
+            return;
+        }
+
         controller.tick();
     }
 
@@ -164,7 +171,17 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         if (direction != Direction.UP) {
             return null;
         }
+
         return new MultiFace(worldPosition, Set.of(Direction.UP));
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.GAS_INJECTION_CHAMBER.get(), (blockEntity, direction) -> direction == Direction.UP ? blockEntity.exposedGasHandler : null);
+    }
+
+    @Internal
+    public SmartGasTankBehaviour getGasTankBehaviour() {
+        return tankBehaviour;
     }
 
     float getRenderedProcessingTicks(float partialTicks) {
@@ -183,6 +200,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         if (level == null || !level.isClientSide) {
             return operation.type == FAN_PROCESSING;
         }
+
         return filter.isClientLocked();
     }
 
@@ -224,11 +242,7 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return true;
     }
 
-    SmartGasTankBehaviour getGasTankBehaviour() {
-        return tankBehaviour;
-    }
-
-    IGasTank getGasTank() {
+    GasPressureCompartment getGasTank() {
         return tankBehaviour.getPrimaryHandler();
     }
 
@@ -236,9 +250,30 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         return getGasTank().getGasStack();
     }
 
+    OverpressureBehaviour getOverpressureBehaviour() {
+        return overpressureBehaviour;
+    }
+
     void clearOperationState() {
         operation.clearTransientOperation();
         filter.setClientLocked(false);
+    }
+
+    private boolean ruptureIfOverstressed() {
+        if (level == null || level.isClientSide || overpressureBehaviour.getFailureReadyChannel() < 0) {
+            return false;
+        }
+
+        PressureRuptureService.rupture(level, worldPosition, getGasTank());
+        return true;
+    }
+
+    private long getCurrentGasPressurePa() {
+        if (tankBehaviour == null) {
+            return GasPressure.VACUUM_PA;
+        }
+
+        return tankBehaviour.getPrimaryHandler().getPressurePa();
     }
 
     private ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {

@@ -33,9 +33,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPropagator;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
+import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
@@ -45,31 +46,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightEncasedPipeBlockEntity>, IWrenchable, IAirtightComponent {
-    private static final float PIPE_APOTHEM = 0.5f;
+public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightEncasedPipeBlockEntity>, IWrenchable, GasConnectable {
+    private static final float PIPE_APOTHEM = 0.5F;
 
     public AirtightEncasedPipeBlock(Properties properties) {
         super(PIPE_APOTHEM, properties);
         registerDefaultState(defaultBlockState().setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false).setValue(UP, false).setValue(DOWN, false));
-    }
-
-    static boolean isOpenAt(BlockState state, Direction direction) {
-        return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
-    }
-
-    static boolean hasPlacementConnection(Level level, BlockPos pos, Direction direction) {
-        BlockPos adjacentPos = pos.relative(direction);
-        BlockState adjacentState = level.getBlockState(adjacentPos);
-        return !adjacentState.isAir() && (!adjacentState.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(adjacentState)) && GasTransportBehaviour.isValidAirtightComponents(level, adjacentPos, adjacentState, direction);
-    }
-
-    private static void markConnectionsDirty(Level level, BlockPos pos) {
-        GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
-        if (transport == null) {
-            return;
-        }
-
-        transport.markConnectionsDirty();
     }
 
     @Override
@@ -95,6 +77,11 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
+        if (level.isClientSide || entity instanceof Player player && player.isShiftKeyDown()) {
+            return;
+        }
+
+        openReciprocalEncasedConnections(level, pos, state);
     }
 
     @Override
@@ -106,7 +93,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
-        Direction changedSide = GasPropagator.getChangedNeighbourSide(level, pos, neighborPos);
+        Direction changedSide = GasConnectionResolver.getChangedNeighborFace(level, pos, neighborPos);
         if (changedSide == null || !isOpenAt(state, changedSide)) {
             return;
         }
@@ -128,7 +115,11 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock()) && !level.isClientSide) {
-            GasPropagator.propagatePipe(level, pos);
+            GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
+            if (transport != null) {
+                transport.finalizePendingTransfersBeforeBlockRemoval();
+            }
+            GasNetworkTopology.invalidate(level, pos);
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }
@@ -145,7 +136,7 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
 
     @Override
     public void tick(BlockState blockState, ServerLevel level, BlockPos blockPos, RandomSource random) {
-        GasPropagator.propagateChangedPipe(level, blockPos);
+        GasNetworkTopology.invalidate(level, blockPos);
     }
 
     @Override
@@ -188,5 +179,47 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     @Override
     public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return currentState.getValue(PROPERTY_BY_DIRECTION.get(localFace));
+    }
+
+    static boolean hasPlacementConnection(Level level, BlockPos pos, Direction direction) {
+        BlockPos adjacentPos = pos.relative(direction);
+        BlockState adjacentState = level.getBlockState(adjacentPos);
+        return adjacentState.getBlock() instanceof AirtightEncasedPipeBlock || !adjacentState.isAir() && (!adjacentState.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(adjacentState)) && GasTransportBehaviour.isValidConnectionTarget(level, adjacentPos, adjacentState, direction);
+    }
+
+    private static boolean isOpenAt(BlockState state, Direction direction) {
+        return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
+    }
+
+    private static void openReciprocalEncasedConnections(Level level, BlockPos pos, BlockState state) {
+        for (Direction direction : Iterate.directions) {
+            if (!isOpenAt(state, direction)) {
+                continue;
+            }
+
+            BlockPos adjacentPos = pos.relative(direction);
+            BlockState adjacentState = level.getBlockState(adjacentPos);
+            if (!(adjacentState.getBlock() instanceof AirtightEncasedPipeBlock)) {
+                continue;
+            }
+
+            Property<Boolean> oppositeProperty = PROPERTY_BY_DIRECTION.get(direction.getOpposite());
+            if (adjacentState.getValue(oppositeProperty)) {
+                continue;
+            }
+
+            level.setBlockAndUpdate(adjacentPos, adjacentState.setValue(oppositeProperty, true));
+            markConnectionsDirty(level, adjacentPos);
+            level.scheduleTick(adjacentPos, adjacentState.getBlock(), 1, TickPriority.HIGH);
+        }
+    }
+
+    private static void markConnectionsDirty(Level level, BlockPos pos) {
+        GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
+        if (transport == null) {
+            return;
+        }
+
+        transport.markConnectionsDirty();
     }
 }

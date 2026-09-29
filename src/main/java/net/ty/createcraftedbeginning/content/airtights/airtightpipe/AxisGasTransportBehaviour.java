@@ -1,17 +1,13 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpipe;
 
-import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Direction.Axis;
-import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -23,8 +19,8 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
     }
 
     @Override
-    public boolean canHaveFlowToward(BlockState state, Direction direction) {
-        if (!canHaveFlowTowardWithoutLevel(state, direction)) {
+    public boolean canConnectOnFace(BlockState state, Direction direction) {
+        if (!isConnectionFaceEnabled(state, direction)) {
             return false;
         }
 
@@ -34,31 +30,11 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
         }
 
         BlockPos adjacentPos = blockEntity.getBlockPos().relative(direction);
-        return level.isLoaded(adjacentPos) && isValidAirtightComponents(level, adjacentPos, level.getBlockState(adjacentPos), direction);
+        return level.isLoaded(adjacentPos) && isValidConnectionTarget(level, adjacentPos, level.getBlockState(adjacentPos), direction);
     }
 
     @Override
-    public boolean canHaveFlowTowardWithoutLevel(BlockState state, Direction direction) {
+    public boolean isConnectionFaceEnabled(BlockState state, Direction direction) {
         return state.getValue(BlockStateProperties.AXIS) == direction.getAxis();
-    }
-
-    @Override
-    public AirtightPipeAttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
-        if (isIncorrectAxis(state, direction)) {
-            return AirtightPipeAttachmentTypes.NONE;
-        }
-
-        BlockPos adjacentPos = pos.relative(direction);
-        BlockState adjacentState = level.getBlockState(adjacentPos);
-        Block adjacentBlock = adjacentState.getBlock();
-        Axis pipeAxis = state.getValue(BlockStateProperties.AXIS);
-        if (adjacentBlock instanceof IAxisPipe axisPipe && axisPipe.getAxis(adjacentState) == pipeAxis) {
-            return AirtightPipeAttachmentTypes.NONE;
-        }
-
-        if (adjacentBlock instanceof IAirtightPipeDrain drain && drain.shouldRenderDrain(level, adjacentPos, adjacentState, direction.getOpposite())) {
-            return AirtightPipeAttachmentTypes.DRAIN;
-        }
-        return AirtightPipeAttachmentTypes.RIM;
     }
 }

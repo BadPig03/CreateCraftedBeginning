@@ -5,7 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.item.DyeColor;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
-import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionFilterColors;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.BiConsumer;
@@ -20,11 +20,11 @@ public final class CreateDragonsPlusCompat {
 
     public static void register() {
         for (DyeColor dyeColor : DyeColor.values()) {
-            GasInjectionChamberUtils.registerFanProcessingColor(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("coloring_" + dyeColor.getName()), 0xFF000000 | dyeColor.getFireworkColor());
+            GasInjectionFilterColors.registerFanProcessingColor(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("coloring_" + dyeColor.getName()), 0xFF000000 | dyeColor.getFireworkColor());
         }
-        GasInjectionChamberUtils.registerFanProcessingColor(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("ending"), ARGB32.average(0xFFB700D2, 0xFFDF00F9));
-        GasInjectionChamberUtils.registerFanProcessingColor(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("sanding"), 0xFFDBD3A0);
-        GasInjectionChamberUtils.registerFanProcessingColor(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("freezing"), ARGB32.average(0xFFFFFFFF, 0xFF8ADCE8));
+        GasInjectionFilterColors.registerFanProcessingColor(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("ending"), ARGB32.average(0xFFB700D2, 0xFFDF00F9));
+        GasInjectionFilterColors.registerFanProcessingColor(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("sanding"), 0xFFDBD3A0);
+        GasInjectionFilterColors.registerFanProcessingColor(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("freezing"), ARGB32.average(0xFFFFFFFF, 0xFF8ADCE8));
     }
 
     public static void registerJeiFanProcessingCategories(BiConsumer<ResourceLocation, ResourceLocation> registrar) {

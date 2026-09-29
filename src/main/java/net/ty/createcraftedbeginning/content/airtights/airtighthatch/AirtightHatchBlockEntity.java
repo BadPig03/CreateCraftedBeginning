@@ -18,13 +18,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
-import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.ICreativeGasContainer;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeGasContainer;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +33,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ICreativeGasContainer, ThresholdSwitchObservable {
+public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, CreativeGasContainer, ThresholdSwitchObservable {
     private static final int LAZY_TICK_RATE = 20;
     private final AirtightHatchCanisterManager canisterManager;
     private final AirtightHatchController controller;
@@ -41,6 +41,7 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     private final AirtightHatchDisplay display;
     private SmartGasTankBehaviour tankBehaviour;
     private ScrollOptionBehaviour<AirtightHatchTransferMode> hatchTransferMode;
+    private AirtightHatchTargetPressureBehaviour targetPressure;
 
     public AirtightHatchBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -51,16 +52,16 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         display = new AirtightHatchDisplay(this);
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_HATCH.get(), (hatch, context) -> hatch.tankBehaviour.getCapability());
-    }
-
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        tankBehaviour = SmartGasTankBehaviour.single(this, 0).forbidExtraction().forbidInsertion();
+        tankBehaviour = SmartGasTankBehaviour.single(this, 0, 0).forbidExtraction().forbidInsertion();
         behaviours.add(tankBehaviour);
+
         hatchTransferMode = new ScrollOptionBehaviour<>(AirtightHatchTransferMode.class, CCBLang.translateDirect("gui.airtight_hatch.transfer_mode"), this, new AirtightHatchValueBox());
         behaviours.add(hatchTransferMode);
+
+        targetPressure = new AirtightHatchTargetPressureBehaviour(this);
+        behaviours.add(targetPressure);
     }
 
     @Override
@@ -77,15 +78,15 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     @Override
-    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         serialization.write(compoundTag, provider, clientPacket);
     }
 
     @Override
-    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+    public void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        serialization.prepareForRead(compoundTag, provider, clientPacket);
         super.read(compoundTag, provider, clientPacket);
-        serialization.read(compoundTag, provider, clientPacket);
     }
 
     @Override
@@ -130,10 +131,39 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         if (!level.isClientSide) {
             return canisterManager.isCreative();
         }
+
         return blockState.getValue(AirtightHatchBlock.CANISTER_TYPE) == CanisterType.CREATIVE;
     }
 
-    @Nullable IGasHandler getTargetGasHandler(Level level) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_HATCH.get(), (hatch, context) -> hatch.tankBehaviour.getCapability());
+    }
+
+    public ItemStack createCanisterItemStack() {
+        return canisterManager.createCanisterItemStack();
+    }
+
+    public boolean isEmpty() {
+        return getCanisterType() == CanisterType.EMPTY;
+    }
+
+    public boolean installCanister(ItemStack sourceStack) {
+        return canisterManager.installCanister(sourceStack);
+    }
+
+    public SmartGasTankBehaviour getGasTankBehaviour() {
+        return tankBehaviour;
+    }
+
+    public long getTargetPressurePa() {
+        return targetPressure.getTargetPressurePa();
+    }
+
+    public void setTargetPressurePa(long pressurePa) {
+        targetPressure.setTargetPressurePa(pressurePa);
+    }
+
+    @Nullable GasHandler getTargetGasHandler(Level level) {
         BlockState hatchState = getBlockState();
         BlockPos hatchPos = getBlockPos();
         if (!AirtightHatchBlock.hasValidAttachment(level, hatchPos, hatchState)) {
@@ -142,19 +172,11 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
 
         Direction facing = hatchState.getValue(AirtightHatchBlock.FACING);
         BlockPos targetPos = hatchPos.relative(facing);
-        return level.getCapability(GasHandler.BLOCK, targetPos, facing.getOpposite());
-    }
-
-    ItemStack createCanisterItemStack() {
-        return canisterManager.createCanisterItemStack();
+        return level.getCapability(GasCapabilities.BLOCK, targetPos, facing.getOpposite());
     }
 
     boolean giveCanisterToPlayer(Player player) {
         return canisterManager.giveCanisterToPlayer(player);
-    }
-
-    boolean isEmpty() {
-        return getCanisterType() == CanisterType.EMPTY;
     }
 
     boolean isCreative() {
@@ -165,20 +187,29 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         return tankBehaviour.getPrimaryHandler().getGasStack().copy();
     }
 
-    long getHatchCapacity() {
-        return tankBehaviour.getPrimaryHandler().getCapacity();
+    boolean canInstallCanisterFromAutomation(ItemStack sourceStack) {
+        Level level = getLevel();
+        return level != null && !level.isClientSide && getTargetGasHandler(level) != null && canisterManager.canInstallCanister(sourceStack);
     }
 
-    boolean installCanister(ItemStack sourceStack) {
-        return canisterManager.installCanister(sourceStack);
-    }
-
-    SmartGasTankBehaviour getGasTankBehaviour() {
-        return tankBehaviour;
+    ItemStack removeCanisterForAutomation() {
+        return canisterManager.removeCanister();
     }
 
     int getTransferModeValue() {
         return hatchTransferMode.getValue();
+    }
+
+    long getCanisterMaxPressurePa() {
+        if (tankBehaviour == null) {
+            return 0;
+        }
+
+        return tankBehaviour.getPrimaryHandler().getMaxPressurePa();
+    }
+
+    boolean isTargetPressureControlActive() {
+        return !isEmpty() && !isCreative() && AirtightHatchTransferMode.fromValue(getTransferModeValue()) == AirtightHatchTransferMode.TARGET_PRESSURE;
     }
 
     void resetTransferMode() {
@@ -194,10 +225,12 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         if (level != null && !level.isClientSide) {
             return canisterManager.getStoredCanisterType();
         }
+
         return getBlockState().getValue(AirtightHatchBlock.CANISTER_TYPE);
     }
+
     private void updateTransferModeRange() {
-        int maxModeValue = isCreative() ? AirtightHatchTransferMode.OUTPUT_ONLY.ordinal() : AirtightHatchTransferMode.STAY_HALF.ordinal();
+        int maxModeValue = isCreative() ? AirtightHatchTransferMode.OUTPUT_ONLY.ordinal() : AirtightHatchTransferMode.TARGET_PRESSURE.ordinal();
         hatchTransferMode.between(AirtightHatchTransferMode.NO_TRANSFER.ordinal(), maxModeValue);
     }
 }

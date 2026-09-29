@@ -23,6 +23,7 @@ final class CrateFilterController {
         if (filterItem.isEmpty()) {
             return ItemStack.EMPTY;
         }
+
         return filterItem.copyWithCount(1);
     }
 

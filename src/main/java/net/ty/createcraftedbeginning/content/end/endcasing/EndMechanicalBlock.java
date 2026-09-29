@@ -42,6 +42,7 @@ public abstract class EndMechanicalBlock extends KineticBlock {
         if (!(context.getLevel().getBlockState(context.getClickedPos().below()).getBlock() instanceof EndCasingBlock)) {
             return null;
         }
+
         return placementState;
     }
 

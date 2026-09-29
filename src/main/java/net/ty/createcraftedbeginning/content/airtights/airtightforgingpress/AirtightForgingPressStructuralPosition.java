@@ -7,6 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.level.block.Rotation;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -76,6 +77,18 @@ public enum AirtightForgingPressStructuralPosition implements StringRepresentabl
 
     public boolean isShaft() {
         return isShaft;
+    }
+
+    AirtightForgingPressStructuralPosition rotate(Rotation rotation) {
+        BlockPos rotatedOffset = masterOffset.rotate(rotation);
+        for (AirtightForgingPressStructuralPosition position : ALL) {
+            if (!position.masterOffset.equals(rotatedOffset)) {
+                continue;
+            }
+
+            return position;
+        }
+        throw new IllegalStateException("Invalid rotated forging press offset: " + rotatedOffset + '.');
     }
 
     boolean isLowerStore() {

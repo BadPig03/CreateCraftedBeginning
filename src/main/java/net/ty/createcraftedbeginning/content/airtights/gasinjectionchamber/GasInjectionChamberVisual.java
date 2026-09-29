@@ -9,7 +9,7 @@ import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Nullable;
 
@@ -88,7 +88,7 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
         float processingTicks = blockEntity.getRenderedProcessingTicks(partialTick);
         float nozzleOffset = GasInjectionChamberRenderer.getNozzleSqueeze(processingTicks);
         float nozzlePartOffset = GasInjectionChamberRenderer.getNozzleSqueezePart(processingTicks);
-        if (filterInstancesChanged || nozzleOffset != lastNozzleOffset || nozzlePartOffset != lastPartOffset) {
+        if (filterInstancesChanged || Float.compare(nozzleOffset, lastNozzleOffset) != 0 || Float.compare(nozzlePartOffset, lastPartOffset) != 0) {
             updateTransforms(nozzleOffset, nozzlePartOffset);
             lastNozzleOffset = nozzleOffset;
             lastPartOffset = nozzlePartOffset;

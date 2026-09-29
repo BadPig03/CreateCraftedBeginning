@@ -9,6 +9,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -17,14 +18,16 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock.Action;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
+import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.ExperienceConversionUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.LiquidReplacementUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.MagnetUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.SilkTouchUpgrade;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
+import net.ty.createcraftedbeginning.gas.interaction.GasInteractionFeedback;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -34,6 +37,31 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
 final class AirtightHandheldDrillEvents {
     private AirtightHandheldDrillEvents() {
+    }
+
+    @SubscribeEvent
+    private static void onLiquidBreak(BreakEvent event) {
+        Player player = event.getPlayer();
+        ItemStack drill = player.getMainHandItem();
+        if (!(event.getState().getBlock() instanceof LiquidBlock) || !drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+            return;
+        }
+
+        if (!LiquidReplacementUpgrade.INSTANCE.canApply(drill)) {
+            event.setCanceled(true);
+            return;
+        }
+
+        if (AirtightHandheldDrillMining.isAdditionalBlockBreak()) {
+            return;
+        }
+
+        float breakSpeed = AirtightHandheldDrillMining.calculateFinalBreakSpeed(1, player, drill, event.getPos());
+        if (!(breakSpeed < 0)) {
+            return;
+        }
+
+        event.setCanceled(true);
     }
 
     @SubscribeEvent
@@ -49,7 +77,7 @@ final class AirtightHandheldDrillEvents {
         }
 
         BlockPos blockPos = event.getPos();
-        float drillBreakSpeed = AirtightHandheldDrillUtils.calculateFinalBreakSpeed(1, player, drill, blockPos);
+        float drillBreakSpeed = AirtightHandheldDrillMining.calculateFinalBreakSpeed(1, player, drill, blockPos);
         if (drillBreakSpeed >= 0) {
             return;
         }
@@ -57,10 +85,10 @@ final class AirtightHandheldDrillEvents {
         if (drillBreakSpeed == -1) {
             GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
             if (gasContent.isEmpty()) {
-                GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas");
+                GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas");
             }
             else {
-                GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
+                GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
             }
             return;
         }
@@ -69,7 +97,7 @@ final class AirtightHandheldDrillEvents {
             return;
         }
 
-        GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.invalid_mining_target");
+        GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.invalid_mining_target");
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -86,7 +114,7 @@ final class AirtightHandheldDrillEvents {
         ServerLevel level = event.getLevel();
         BlockPos blockPos = event.getPos();
         BlockState blockState = event.getState();
-        ItemStack silkTouchTool = AirtightHandheldDrillUtils.createDrillUsedTool(drill, level);
+        ItemStack silkTouchTool = AirtightHandheldDrillMining.createDrillUsedTool(drill, level);
         event.getDrops().clear();
         for (ItemStack dropStack : Block.getDrops(blockState, level, blockPos, event.getBlockEntity(), player, silkTouchTool)) {
             if (dropStack.isEmpty()) {
@@ -100,10 +128,19 @@ final class AirtightHandheldDrillEvents {
         event.setDroppedExperience(experience);
     }
 
+    @SubscribeEvent
+    private static void onDrillLiquidReplacement(BlockDropsEvent event) {
+        if (!(event.getBreaker() instanceof Player) || !LiquidReplacementUpgrade.INSTANCE.canApply(event.getTool())) {
+            return;
+        }
+
+        AirtightHandheldDrillMining.clearRemainingLiquid(event.getLevel(), event.getPos(), event.getState());
+    }
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     private static void onDrillBlockDropUpgrades(BlockDropsEvent event) {
         ItemStack drill = event.getTool();
-        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
+        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL) || event.getState().getBlock() instanceof LiquidBlock) {
             return;
         }
 
@@ -152,7 +189,7 @@ final class AirtightHandheldDrillEvents {
         }
 
         float currentBreakSpeed = event.getNewSpeed();
-        float drillBreakSpeed = Math.max(0, AirtightHandheldDrillUtils.calculateFinalBreakSpeed(currentBreakSpeed, player, drill, blockPos));
+        float drillBreakSpeed = Math.max(0, AirtightHandheldDrillMining.calculateFinalBreakSpeed(currentBreakSpeed, player, drill, blockPos));
         if (currentBreakSpeed == drillBreakSpeed) {
             return;
         }

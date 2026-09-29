@@ -9,8 +9,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasVirtualUtils;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
+import net.ty.createcraftedbeginning.client.stockkeeper.GasRequestTooltips;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.VirtualGasItems;
 import net.ty.createcraftedbeginning.platform.access.client.StockKeeperRequestScreenAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,7 +26,7 @@ import java.util.List;
 public abstract class GuiGraphicsMixin {
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "renderTooltip(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;II)V", at = @At("HEAD"), cancellable = true)
-    private void ccb$renderTooltip(Font font, ItemStack stack, int mouseX, int mouseY, CallbackInfo ci) {
+    private void ccb$renderTooltip(Font font, ItemStack stack, int mouseX, int mouseY, CallbackInfo callback) {
         if (!(Minecraft.getInstance().screen instanceof StockKeeperRequestScreen requestScreen) || !(requestScreen instanceof StockKeeperRequestScreenAccess accessor)) {
             return;
         }
@@ -47,24 +47,28 @@ public abstract class GuiGraphicsMixin {
         else {
             int row = hoveredSlot.getFirst();
             int column = hoveredSlot.getSecond();
-            if (row >= 0 && row < requestScreen.displayedItems.size()) {
-                List<BigItemStack> rowItems = requestScreen.displayedItems.get(row);
-                if (column >= 0 && column < rowItems.size()) {
-                    entry = rowItems.get(column);
-                }
+            if (row < 0 || row >= requestScreen.displayedItems.size()) {
+                return;
             }
+
+            List<BigItemStack> rowItems = requestScreen.displayedItems.get(row);
+            if (column < 0 || column >= rowItems.size()) {
+                return;
+            }
+
+            entry = rowItems.get(column);
         }
         if (entry == null) {
             return;
         }
 
-        if (!GasVirtualUtils.isVirtualItem(entry.stack) || !ItemStack.isSameItemSameComponents(stack, entry.stack)) {
+        if (!VirtualGasItems.isVirtualItem(entry.stack) || !ItemStack.isSameItemSameComponents(stack, entry.stack)) {
             return;
         }
 
-        List<Component> tooltip = GasRequestClientUtils.getTooltipLines(requestScreen, entry, orderHovered);
+        List<Component> tooltip = GasRequestTooltips.getTooltipLines(requestScreen, entry, orderHovered);
         GuiGraphics guiGraphics = (GuiGraphics) (Object) this;
         guiGraphics.renderComponentTooltip(font, tooltip, mouseX, mouseY, stack);
-        ci.cancel();
+        callback.cancel();
     }
 }

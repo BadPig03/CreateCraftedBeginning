@@ -24,7 +24,7 @@ public abstract class CreativeModeTabMixin {
 
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "buildContents", at = @At("RETURN"))
-    private void ccb$buildContents(ItemDisplayParameters parameters, CallbackInfo ci) {
+    private void ccb$buildContents(ItemDisplayParameters parameters, CallbackInfo callback) {
         CreativeModeTab tab = (CreativeModeTab) (Object) this;
         if (tab != CCBCreativeTabs.CREATIVE_TAB.get()) {
             return;

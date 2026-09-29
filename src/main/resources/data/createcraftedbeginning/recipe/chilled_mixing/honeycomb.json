@@ -1,0 +1,19 @@
+{
+  "type": "createcraftedbeginning:chilled_mixing",
+  "ingredients": [
+    {
+      "type": "neoforge:single",
+      "amount": 250,
+      "fluid": "create:honey"
+    },
+    {
+      "item": "minecraft:paper"
+    }
+  ],
+  "processing_time": 100,
+  "results": [
+    {
+      "id": "minecraft:honeycomb"
+    }
+  ]
+}

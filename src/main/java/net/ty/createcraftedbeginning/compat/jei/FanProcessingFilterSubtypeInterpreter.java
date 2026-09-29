@@ -5,7 +5,7 @@ import mezz.jei.api.ingredients.subtypes.UidContext;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberUtils;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberFilterItem;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -17,11 +17,11 @@ public enum FanProcessingFilterSubtypeInterpreter implements ISubtypeInterpreter
 
     @Override
     public @Nullable Object getSubtypeData(ItemStack ingredient, UidContext context) {
-        return GasInjectionChamberUtils.getFanProcessingTypeId(ingredient).orElse(null);
+        return GasInjectionChamberFilterItem.getFanProcessingTypeId(ingredient).orElse(null);
     }
 
     @Override
     public String getLegacyStringSubtypeInfo(ItemStack ingredient, UidContext context) {
-        return GasInjectionChamberUtils.getFanProcessingTypeId(ingredient).map(ResourceLocation::toString).orElse("");
+        return GasInjectionChamberFilterItem.getFanProcessingTypeId(ingredient).map(ResourceLocation::toString).orElse("");
     }
 }

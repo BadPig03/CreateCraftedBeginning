@@ -19,11 +19,11 @@ public class UltrawarmAirArmorsHandler implements AirtightArmorsHandler {
 
     @Override
     public float getConsumptionMultiplier(EquipmentSlot slot) {
-        return 0.9f;
+        return 0.8F;
     }
 
     @Override
     public float getMultiplierForBoostingElytra() {
-        return 0.6f;
+        return 0.75F;
     }
 }

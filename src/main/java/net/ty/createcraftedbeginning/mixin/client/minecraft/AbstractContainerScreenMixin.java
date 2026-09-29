@@ -6,7 +6,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
+import net.ty.createcraftedbeginning.client.stockkeeper.RedstoneRequesterInteraction;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,15 +25,15 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
 
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "slotClicked", at = @At("HEAD"), cancellable = true)
-    private void ccb$slotClicked(@Nullable Slot slot, int slotId, int mouseButton, ClickType clickType, CallbackInfo ci) {
+    private void ccb$slotClicked(@Nullable Slot slot, int slotId, int mouseButton, ClickType clickType, CallbackInfo callback) {
         if (!(menu instanceof RedstoneRequesterMenu requesterMenu)) {
             return;
         }
 
-        if (!GasRequestClientUtils.onSlotClicked((AbstractContainerScreen<?>) (Object) this, requesterMenu, slot, mouseButton, clickType)) {
+        if (!new RedstoneRequesterInteraction((AbstractContainerScreen<?>) (Object) this, requesterMenu).onSlotClicked(slot, mouseButton, clickType)) {
             return;
         }
 
-        ci.cancel();
+        callback.cancel();
     }
 }

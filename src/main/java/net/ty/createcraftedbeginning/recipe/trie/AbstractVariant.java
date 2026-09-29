@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.recipe.trie;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.material.Fluid;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.Gas;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -26,8 +26,8 @@ public sealed interface AbstractVariant {
         }
 
         @Override
-        public boolean equals(Object obj) {
-            return obj instanceof AbstractItem other && item == other.item;
+        public boolean equals(Object object) {
+            return object instanceof AbstractItem other && item == other.item;
         }
     }
 
@@ -46,8 +46,8 @@ public sealed interface AbstractVariant {
         }
 
         @Override
-        public boolean equals(Object obj) {
-            return obj instanceof AbstractFluid other && fluid == other.fluid;
+        public boolean equals(Object object) {
+            return object instanceof AbstractFluid other && fluid == other.fluid;
         }
     }
 
@@ -66,8 +66,8 @@ public sealed interface AbstractVariant {
         }
 
         @Override
-        public boolean equals(Object obj) {
-            return obj instanceof AbstractGas other && gasType == other.gasType;
+        public boolean equals(Object object) {
+            return object instanceof AbstractGas other && gasType == other.gasType;
         }
     }
 }

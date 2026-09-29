@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades;
 
-import com.simibubi.create.AllItems;
 import net.createmod.catnip.data.Couple;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
@@ -12,9 +11,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.TickingAirtightUpgrade;
-import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBMobEffects;
@@ -36,10 +35,11 @@ public enum CreativeFlightUpgrade implements TickingAirtightUpgrade {
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
-        int gasCost = CCBConfig.server().equipments.creativeFlightConsumption.get();
+        int gasCost = CCBConfig.server().equipment.airtightChestplate.creativeFlightGasPerSecond.get();
         if (gasCost == 0) {
             return List.of(CCBLang.translateDirect("gui.gas_consumption.supply_require_only"));
         }
+
         return List.of(CCBLang.translateDirect("gui.airtight_chestplate.creative_flight_upgrade.gas_cost.flying", gasCost));
     }
 
@@ -88,12 +88,13 @@ public enum CreativeFlightUpgrade implements TickingAirtightUpgrade {
         if (!player.getAbilities().flying) {
             return 0;
         }
-        return CCBConfig.server().equipments.creativeFlightConsumption.get();
+
+        return CCBConfig.server().equipment.airtightChestplate.creativeFlightGasPerSecond.get();
     }
 
     @Override
-    public Item getUpgradeItem() {
-        return AllItems.NETHERITE_BACKTANK.asItem();
+    public Item getDefaultUpgradeItem() {
+        return CCBItems.GAS_CANISTER_PACK.asItem();
     }
 
     @Override

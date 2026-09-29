@@ -58,7 +58,7 @@ final class TeslaTurbineController {
         }
 
         turbine.getAdvancementBehaviour().awardPlayer(CCBAdvancements.GENIUS_ENGINEER);
-        if (core.getLevelCalculator().getCurrentLevel() != TeslaTurbineUtils.MAX_LEVEL) {
+        if (core.getLevelCalculator().getCurrentLevel() != TeslaTurbineBlock.MAX_LEVEL) {
             return;
         }
 
@@ -85,9 +85,13 @@ final class TeslaTurbineController {
     }
 
     float getGeneratedSpeed() {
-        int flowDirectionMultiplier = core.getFlowMeter().isClockwiseFlow() ? -1 : 1;
+        if (!core.getStructureManager().isActive()) {
+            return 0;
+        }
+
+        int directionMultiplier = core.getFlowMeter().isClockwiseFlow() ? -1 : 1;
         int axisDirectionMultiplier = turbine.getBlockState().getValue(TeslaTurbineBlock.AXIS) == Axis.Z ? -1 : 1;
-        return TeslaTurbineUtils.BASE_ROTATION_SPEED * core.getLevelCalculator().getCurrentLevel() * flowDirectionMultiplier * axisDirectionMultiplier;
+        return TeslaTurbineBlock.BASE_ROTATION_SPEED * core.getLevelCalculator().getCurrentLevel() * directionMultiplier * axisDirectionMultiplier;
     }
 
     private void refreshGeneratedRotationIfNeeded() {

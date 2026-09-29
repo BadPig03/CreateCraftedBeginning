@@ -9,7 +9,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.nio.charset.StandardCharsets;
@@ -41,12 +40,12 @@ final class EndIncinerationBlowerOwner {
             return;
         }
 
-        CCBNbtUtils.putUUID(compoundTag, COMPOUND_KEY_OWNER, ownerId);
+        compoundTag.putUUID(COMPOUND_KEY_OWNER, ownerId);
     }
 
     void read(CompoundTag compoundTag) {
-        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_OWNER)) {
-            ownerId = CCBNbtUtils.getUUID(compoundTag, COMPOUND_KEY_OWNER);
+        if (compoundTag.contains(COMPOUND_KEY_OWNER)) {
+            ownerId = compoundTag.getUUID(COMPOUND_KEY_OWNER);
         }
         else {
             ownerId = null;

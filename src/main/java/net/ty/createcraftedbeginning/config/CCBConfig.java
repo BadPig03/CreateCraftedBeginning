@@ -49,6 +49,18 @@ public class CCBConfig {
         return client;
     }
 
+    @SubscribeEvent
+    public static void onLoad(Loading event) {
+        CONFIGS.values().stream().filter(config -> config.specification == event.getConfig().getSpec()).forEach(ConfigBase::onLoad);
+        BlockStressValues.RPM.invalidate();
+    }
+
+    @SubscribeEvent
+    public static void onReload(Reloading event) {
+        CONFIGS.values().stream().filter(config -> config.specification == event.getConfig().getSpec()).forEach(ConfigBase::onReload);
+        BlockStressValues.RPM.invalidate();
+    }
+
     private static <T extends ConfigBase> @NotNull T register(Supplier<T> factory, Type type) {
         Pair<T, ModConfigSpec> pair = new Builder().configure(builder -> {
             T config = factory.get();
@@ -60,17 +72,5 @@ public class CCBConfig {
         config.specification = pair.getRight();
         CONFIGS.put(type, config);
         return config;
-    }
-
-    @SubscribeEvent
-    public static void onLoad(Loading event) {
-        CONFIGS.values().stream().filter(config -> config.specification == event.getConfig().getSpec()).forEach(ConfigBase::onLoad);
-        BlockStressValues.RPM.invalidate();
-    }
-
-    @SubscribeEvent
-    public static void onReload(Reloading event) {
-        CONFIGS.values().stream().filter(config -> config.specification == event.getConfig().getSpec()).forEach(ConfigBase::onReload);
-        BlockStressValues.RPM.invalidate();
     }
 }

@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -18,8 +18,8 @@ final class AirtightEncasedPipeTransportBehaviour extends GasTransportBehaviour 
     }
 
     @Override
-    public boolean canHaveFlowToward(BlockState state, Direction direction) {
-        if (!canHaveFlowTowardWithoutLevel(state, direction)) {
+    public boolean canConnectOnFace(BlockState state, Direction direction) {
+        if (!isConnectionFaceEnabled(state, direction)) {
             return false;
         }
 
@@ -34,11 +34,11 @@ final class AirtightEncasedPipeTransportBehaviour extends GasTransportBehaviour 
         }
 
         BlockState adjacentState = level.getBlockState(adjacentPos);
-        return isValidAirtightComponents(level, adjacentPos, adjacentState, direction);
+        return isValidConnectionTarget(level, adjacentPos, adjacentState, direction);
     }
 
     @Override
-    public boolean canHaveFlowTowardWithoutLevel(BlockState state, Direction direction) {
+    public boolean isConnectionFaceEnabled(BlockState state, Direction direction) {
         return state.getValue(AirtightEncasedPipeBlock.PROPERTY_BY_DIRECTION.get(direction));
     }
 }

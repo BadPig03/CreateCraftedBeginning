@@ -1,19 +1,19 @@
 package net.ty.createcraftedbeginning.compat.jei.category;
 
+import com.simibubi.create.compat.jei.category.CreateRecipeCategory;
+import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
-import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
-import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedGasInjectionChamber;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
+import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedGasInjectionChamber;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -35,8 +35,7 @@ public class GasInjectionCategory extends CCBRecipeCategory<GasInjectionRecipe> 
     public void draw(GasInjectionRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         CCBJEITextures.JEI_SHADOW.render(graphics, 62, 57);
         CCBJEITextures.JEI_DOWN_ARROW.render(graphics, 126, 29);
-
-        if (recipe.isFluidInjection()) {
+        if (!recipe.canProcessOnBelt()) {
             basinChamber.draw(graphics, background.getWidth() / 2 - 13, 22);
             return;
         }
@@ -46,17 +45,22 @@ public class GasInjectionCategory extends CCBRecipeCategory<GasInjectionRecipe> 
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, GasInjectionRecipe recipe, IFocusGroup focuses) {
-        SizedGasIngredient gasIngredient = recipe.getGasIngredient();
-        List<GasStack> gases = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
-        builder.addSlot(RecipeIngredientRole.INPUT, 27, 32).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gases).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
-
-        if (recipe.isFluidInjection()) {
+        GasRecipeRequirement gasRequirement = recipe.getGasRequirement();
+        List<GasStack> gases = Arrays.stream(gasRequirement.getGases()).map(GasStack::copy).toList();
+        builder.addSlot(RecipeIngredientRole.INPUT, 27, 32).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gases).addRichTooltipCallback((view, tooltip) -> addGasRequirementTooltip(tooltip, gasRequirement));
+        if (recipe.hasFluidInput()) {
             addFluidSlot(builder, 27, 51, recipe.getFluidIngredient());
+        }
+        else {
+            builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredient());
+        }
+
+        if (recipe.hasFluidOutput()) {
             addFluidSlot(builder, 132, 51, recipe.getFluidResult());
             return;
         }
 
-        builder.addSlot(RecipeIngredientRole.INPUT, 27, 51).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredient());
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 132, 51).setBackground(getRenderedSlot(), -1, -1).addItemStack(getResultItem(recipe));
+        ProcessingOutput output = recipe.getRollableResults().getFirst();
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 132, 51).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(CreateRecipeCategory.addStochasticTooltip(output));
     }
 }

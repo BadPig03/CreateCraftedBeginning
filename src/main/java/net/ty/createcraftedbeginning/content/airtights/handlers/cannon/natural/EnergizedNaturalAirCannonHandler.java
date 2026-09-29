@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item.TooltipContext;
@@ -16,9 +17,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContext;
-import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonUtils;
+import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonBlast;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -34,10 +36,10 @@ public class EnergizedNaturalAirCannonHandler extends NaturalAirCannonHandler {
     }
 
     @Override
-    public void renderTrailParticles(Level level, Vec3 pos) {
-        super.renderTrailParticles(level, pos);
+    public void renderTrailParticles(Level level, Vec3 pos, Vec3 velocity) {
+        level.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), pos.x, pos.y, pos.z, 0, 0, 0);
         RandomSource random = level.getRandom();
-        for (int i = 0; i < random.nextInt(2, 4); i++) {
+        for (int i = 0; i < random.nextInt(3, 5); i++) {
             level.addParticle(ParticleTypes.WHITE_ASH, pos.x, pos.y, pos.z, 0, 0, 0);
         }
     }
@@ -48,8 +50,13 @@ public class EnergizedNaturalAirCannonHandler extends NaturalAirCannonHandler {
     }
 
     @Override
+    public float getRotationSpeed() {
+        return super.getRotationSpeed() * 2;
+    }
+
+    @Override
     public float getGasConsumptionMultiplier() {
-        return 0.8f;
+        return super.getGasConsumptionMultiplier() * 0.75F;
     }
 
     @Override
@@ -58,13 +65,12 @@ public class EnergizedNaturalAirCannonHandler extends NaturalAirCannonHandler {
     }
 
     @Override
-    protected boolean hasAdditionalEffects() {
-        return true;
-    }
-
-    @Override
-    protected void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
-        float baseBonusDamage = ENERGIZED_BONUS_DAMAGE * context.effectMultiplier();
-        AirtightCannonUtils.applyBonusDamage(entities, explosionDamageSource, entity -> entity.hasEffect(MobEffects.WIND_CHARGED) ? baseBonusDamage * 2 : baseBonusDamage);
+    public void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
+        super.applyAdditionalEffects(level, entities, explosionDamageSource, context);
+        float multiplier = context.effectMultiplier();
+        int duration = Math.round(DEFAULT_DURATION * multiplier);
+        float baseBonusDamage = ENERGIZED_BONUS_DAMAGE * multiplier;
+        AirtightCannonBlast.applyEffects(entities, () -> new MobEffectInstance(MobEffects.WIND_CHARGED, duration, 0));
+        AirtightCannonBlast.applyBonusDamage(entities, explosionDamageSource, entity -> baseBonusDamage);
     }
 }

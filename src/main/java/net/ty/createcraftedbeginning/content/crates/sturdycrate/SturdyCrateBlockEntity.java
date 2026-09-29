@@ -21,7 +21,7 @@ public class SturdyCrateBlockEntity extends FilteredCrateBlockEntity {
     private CCBAdvancementBehaviour advancementBehaviour;
 
     public SturdyCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state, () -> CCBConfig.server().crates.maxSturdyCapacity.get());
+        super(type, pos, state, () -> CCBConfig.server().storage.sturdyCrate.itemCapacity.get());
     }
 
     @Override

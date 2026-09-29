@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.breezes.breezechamber;
 
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.item.ItemStack;
@@ -11,10 +12,8 @@ import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTank
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity.ChargerType;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates.CreativeChamberState;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
-import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
-import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipeLookup;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipeLookup.WindChargingData;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -90,11 +89,12 @@ final class BreezeChamberController {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
 
-        WindChargingData chargingData = WindChargingRecipe.getWindChargingData(level, stack);
+        WindChargingData chargingData = WindChargingRecipeLookup.resolveWindChargingData(level, stack);
         InteractionResult interactionResult = chamber.getChamberStateInternal().onItemInsert(chamber, stack, chargingData, forceOverflow, simulate);
         if (interactionResult != InteractionResult.SUCCESS) {
             return InteractionResultHolder.fail(ItemStack.EMPTY);
         }
+
         return InteractionResultHolder.success(chargingData.recipeResult().copy());
     }
 
@@ -106,23 +106,11 @@ final class BreezeChamberController {
 
         chamber.setChanged();
         long syncPhase = level.getGameTime() + chamber.getBlockPos().asLong();
-        if (Math.floorMod(syncPhase, WIND_STATE_SYNC_INTERVAL) != 0) {
+        if (Mth.positiveModulo(syncPhase, WIND_STATE_SYNC_INTERVAL) != 0) {
             return;
         }
 
         chamber.notifyUpdate();
-    }
-
-    void loadFromItem(ItemStack stack) {
-        int maxWindCapacity = BreezeChamberBlockEntity.getMaxWindCapacity();
-        int remainingTime = CCBMathUtils.clampMagnitude(stack.getOrDefault(CCBDataComponents.BREEZE_TIME, 0), maxWindCapacity);
-        boolean isCreative = stack.getOrDefault(CCBDataComponents.BREEZE_CREATIVE, false);
-        chamber.setChamberState(BreezeChamberSerialization.stateForItem(remainingTime, isCreative));
-        if (remainingTime == 0) {
-            return;
-        }
-
-        chamber.playSound(remainingTime < 0);
     }
 
     void switchToGaleState() {

@@ -7,7 +7,8 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.minecraft.util.Mth;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverLevelCalculator.LevelKey;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
@@ -27,6 +28,13 @@ class AirtightAssemblyDriverTooltipBuilder {
         this.driverCore = driverCore;
     }
 
+    void addToGoggleTooltip(List<Component> tooltip) {
+        AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
+        addStatusLine(levelCalculator.getCurrentLevel(), tooltip);
+        addProgressBars(levelCalculator.getLevels(), tooltip);
+        addDetailedInfo(tooltip);
+    }
+
     private static void addStatusLine(int currentLevel, List<Component> tooltip) {
         MutableComponent levelText = createLevelText(currentLevel);
         CCBLang.translate("gui.airtight_assembly_driver.status", levelText.withStyle(ChatFormatting.GREEN)).forGoggles(tooltip);
@@ -40,14 +48,15 @@ class AirtightAssemblyDriverTooltipBuilder {
         if (currentLevel == AirtightAssemblyDriverCore.MAX_LEVEL) {
             return CCBLang.translateDirect("gui.airtight_assembly_driver.max_level");
         }
+
         return CCBLang.translateDirect("gui.airtight_assembly_driver.level", String.valueOf(currentLevel));
     }
 
-    private static void addProgressBars(Map<LevelKey, Integer> levels, List<Component> tooltip) {
-        int minValue = levels.getOrDefault(LevelKey.MIN_VALUE, 0);
-        int maxValue = levels.getOrDefault(LevelKey.MAX_VALUE, AirtightAssemblyDriverCore.MAX_LEVEL);
+    private static void addProgressBars(Map<LevelKey, Double> levels, List<Component> tooltip) {
+        double minValue = levels.getOrDefault(LevelKey.MIN_VALUE, 0.0);
+        double maxValue = levels.getOrDefault(LevelKey.MAX_VALUE, (double) AirtightAssemblyDriverCore.MAX_LEVEL);
         List<MutableComponent> labels = List.of(createLabel("supply"), createLabel("wind_charging"), createLabel("residue"));
-        List<MutableComponent> bars = List.of(createProgressBar(levels.getOrDefault(LevelKey.SUPPLY, 0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.WIND_CHARGING, 0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.RESIDUE, 0), minValue, maxValue));
+        List<MutableComponent> bars = List.of(createProgressBar(levels.getOrDefault(LevelKey.SUPPLY, 0.0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.WIND_CHARGING, 0.0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.RESIDUE, 0.0), minValue, maxValue));
         if (ClientRenderBridge.addAlignedTooltipBars(tooltip, 1, labels, bars)) {
             return;
         }
@@ -62,17 +71,34 @@ class AirtightAssemblyDriverTooltipBuilder {
         return CCBLang.translateDirect("gui.airtight_assembly_driver." + labelKey).withStyle(ChatFormatting.GRAY);
     }
 
-    private static MutableComponent createProgressBar(int currentLevel, int minLevel, int maxLevel) {
-        int lowerPadding = Math.max(0, minLevel - 1);
-        int minimumMarker = minLevel > 0 ? 1 : 0;
-        int filledBars = Math.max(0, currentLevel - minLevel);
-        int emptyBars = Math.max(0, maxLevel - currentLevel);
-        int upperPadding = Math.max(0, Math.min(AirtightAssemblyDriverCore.MAX_LEVEL - maxLevel, (maxLevel / 4 + 1) * 4 - maxLevel));
-        return Component.empty().append(createBars(lowerPadding, ChatFormatting.DARK_GREEN)).append(createBars(minimumMarker, ChatFormatting.GREEN)).append(createBars(filledBars, ChatFormatting.DARK_GREEN)).append(createBars(emptyBars, ChatFormatting.DARK_RED)).append(createBars(upperPadding, ChatFormatting.DARK_GRAY));
-    }
+    private static MutableComponent createProgressBar(double level, double minimumLevel, double maximumLevel) {
+        int completedSegments = Mth.floor(level);
+        int occupiedSegments = Mth.ceil(level);
+        int minimumSegment = Mth.ceil(minimumLevel);
+        int maximumSegments = Mth.ceil(maximumLevel);
+        int totalSegments = Math.min(AirtightAssemblyDriverCore.MAX_LEVEL, (Mth.floor(maximumLevel) / 4 + 1) * 4);
+        MutableComponent bar = Component.empty();
+        for (int segment = 1; segment <= totalSegments; segment++) {
+            ChatFormatting color;
+            if (segment > maximumSegments) {
+                color = ChatFormatting.DARK_GRAY;
+            }
+            else if (segment > occupiedSegments) {
+                color = ChatFormatting.DARK_RED;
+            }
+            else if (segment > completedSegments) {
+                color = ChatFormatting.YELLOW;
+            }
+            else if (segment == minimumSegment) {
+                color = ChatFormatting.GREEN;
+            }
+            else {
+                color = ChatFormatting.DARK_GREEN;
+            }
+            bar.append(Component.literal("|").withStyle(color));
+        }
 
-    private static MutableComponent createBars(int count, ChatFormatting formatting) {
-        return Component.literal("|".repeat(count)).withStyle(formatting);
+        return bar;
     }
 
     private static void addGasInfo(AirtightAssemblyDriverFlowMeter flowMeter, List<Component> tooltip) {
@@ -105,13 +131,6 @@ class AirtightAssemblyDriverTooltipBuilder {
         MutableComponent engineText = engineCount == 1 ? CCBLang.translate("gui.airtight_assembly_driver.via_one_engine").style(ChatFormatting.DARK_GRAY).component() : CCBLang.translate("gui.airtight_assembly_driver.via_engines", engineCount).style(ChatFormatting.DARK_GRAY).component();
         stressText.append(engineText);
         CCBLang.builder().add(stressText).forGoggles(tooltip, 1);
-    }
-
-    void addToGoggleTooltip(List<Component> tooltip) {
-        AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
-        addStatusLine(levelCalculator.getCurrentLevel(), tooltip);
-        addProgressBars(levelCalculator.getLevels(), tooltip);
-        addDetailedInfo(tooltip);
     }
 
     private void addDetailedInfo(List<Component> tooltip) {

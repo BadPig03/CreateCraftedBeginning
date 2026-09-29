@@ -16,6 +16,13 @@ repositories {
     mavenCentral()
 
     maven {
+        url = "https://maven.theillusivec4.top/"
+        content {
+            includeGroup "top.theillusivec4.curios"
+        }
+    }
+
+    maven {
         url = "https://cursemaven.com"
         content {
             includeGroup "curse.maven"
@@ -81,6 +88,30 @@ base {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
+def compatProfile = providers.gradleProperty('compatProfile').orElse('development').get()
+if (!(compatProfile in ['development', 'minimal', 'full'])) {
+    throw new GradleException("Unknown compatibility profile '${compatProfile}'; use development, minimal or full.")
+}
+
+configurations {
+    developmentRuntime {
+        canBeConsumed = false
+        canBeResolved = false
+    }
+    compatRuntime {
+        canBeConsumed = false
+        canBeResolved = false
+        extendsFrom configurations.developmentRuntime
+    }
+    runtimeClasspath {
+        if (compatProfile == 'full') {
+            extendsFrom configurations.compatRuntime
+        } else if (compatProfile == 'development') {
+            extendsFrom configurations.developmentRuntime
+        }
+    }
+}
+
 neoForge {
     version = project.neo_version
 
@@ -113,6 +144,10 @@ neoForge {
         }
 
         configureEach {
+            if (compatProfile != 'development') {
+                gameDirectory = layout.buildDirectory.dir("compat-runs/${compatProfile}/${name}")
+            }
+
             systemProperty 'forge.logging.markers', 'REGISTRIES'
 
             logLevel = org.slf4j.event.Level.DEBUG
@@ -126,13 +161,19 @@ neoForge {
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+def generatedLangDir = layout.projectDirectory.dir("src/generated/resources/assets/${mod_id}/lang").asFile
+def manualLangDir = layout.projectDirectory.dir("src/main/resources/assets/${mod_id}/lang").asFile
 
-configurations {
-    runtimeClasspath.extendsFrom localRuntime
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+    exclude { entry ->
+        entry.file.parentFile == generatedLangDir && new File(manualLangDir, entry.file.name).isFile()
+    }
 }
 
 dependencies {
+    compileOnly("top.theillusivec4.curios:curios-neoforge:${curios_version}:api")
+    developmentRuntime("top.theillusivec4.curios:curios-neoforge:${curios_version}")
     implementation("com.tterrag.registrate:Registrate:${registrate_version}")
 
     jarJar(api("dev.ryanhcode.sable-companion:sable-companion-common-${minecraft_version}:[${sable_companion_version},)")) {
@@ -141,9 +182,8 @@ dependencies {
         }
     }
 
-    api("dev.latvian.mods:kubejs-neoforge:$kubejs_version")
-    interfaceInjectionData("dev.latvian.mods:kubejs-neoforge:$kubejs_version")
-    localRuntime("dev.latvian.mods:kubejs-neoforge:$kubejs_version")
+    compileOnly("dev.latvian.mods:kubejs-neoforge:$kubejs_version")
+    developmentRuntime("dev.latvian.mods:kubejs-neoforge:$kubejs_version")
 
     compileOnly("dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}")
 
@@ -151,15 +191,16 @@ dependencies {
     implementation("net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}")
     runtimeOnly("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
 
-    implementation "maven.modrinth:jade:${jade_version}"
+    compileOnly("maven.modrinth:jade:${jade_version}")
+    developmentRuntime("maven.modrinth:jade:${jade_version}")
 
-    // Optional at runtime: compile against Functional Storage/Titanium without forcing either mod
-    // into CCB's published dependency graph.
     compileOnly("curse.maven:functional-storage-556861:6930104")
     compileOnly("com.hrznstudio:titanium:1.21-4.0.42")
+    compatRuntime("curse.maven:functional-storage-556861:6930104")
+    compatRuntime("com.hrznstudio:titanium:1.21-4.0.42")
 
-    compileOnly("mezz.jei:jei-1.21.1-neoforge-api:${jei_version}")
-    runtimeOnly("mezz.jei:jei-1.21.1-neoforge:${jei_version}")
+    compileOnly("mezz.jei:jei-1.21.1-neoforge:${jei_version}")
+    developmentRuntime("mezz.jei:jei-1.21.1-neoforge:${jei_version}")
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
@@ -175,7 +216,8 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
                              mod_authors            : mod_authors,
                              mod_description        : mod_description,
                              jei_version            : jei_version,
-                             kubejs_version         : kubejs_version]
+                             kubejs_version         : kubejs_version,
+                             curios_version         : curios_version]
     inputs.properties replaceProperties
     expand replaceProperties
     from "src/main/templates"

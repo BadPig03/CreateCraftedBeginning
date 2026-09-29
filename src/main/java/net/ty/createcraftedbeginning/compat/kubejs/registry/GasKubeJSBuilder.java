@@ -4,8 +4,8 @@ import dev.latvian.mods.kubejs.registry.BuilderBase;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasBuilder;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasBuilder;
 import net.ty.createcraftedbeginning.registry.CCBRegistries;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -17,6 +17,20 @@ public class GasKubeJSBuilder extends BuilderBase<Gas> {
 
     public GasKubeJSBuilder(ResourceLocation id) {
         super(id);
+    }
+
+    @Override
+    public Gas createObject() {
+        return new Gas(builder);
+    }
+
+    @Override
+    public GasKubeJSBuilder tag(ResourceLocation[] locations) {
+        super.tag(locations);
+        for (ResourceLocation location : locations) {
+            builder.tag(TagKey.create(CCBRegistries.GAS_REGISTRY_KEY, location));
+        }
+        return this;
     }
 
     @SuppressWarnings("unused")
@@ -36,26 +50,9 @@ public class GasKubeJSBuilder extends BuilderBase<Gas> {
         return this;
     }
 
+    @SuppressWarnings("unused")
     public GasKubeJSBuilder alpha(int alpha) {
         builder.alpha(alpha);
         return this;
-    }
-
-    public GasKubeJSBuilder tag(ResourceLocation location) {
-        return tag(new ResourceLocation[]{location});
-    }
-
-    @Override
-    public GasKubeJSBuilder tag(ResourceLocation[] locations) {
-        super.tag(locations);
-        for (ResourceLocation location : locations) {
-            builder.tag(TagKey.create(CCBRegistries.GAS_REGISTRY_KEY, location));
-        }
-        return this;
-    }
-
-    @Override
-    public Gas createObject() {
-        return new Gas(builder);
     }
 }

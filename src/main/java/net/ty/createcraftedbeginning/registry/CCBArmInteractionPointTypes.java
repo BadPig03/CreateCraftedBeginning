@@ -8,6 +8,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressInteractionPoint.ForgingPressType;
+import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchInteractionPoint.AirtightHatchType;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleInteractionPoint.ReactorKettleType;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerInteractionPoint.GasPackagerType;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberInteractionPoint.BreezeChamberType;
@@ -22,17 +23,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CCBArmInteractionPointTypes {
     private static final DeferredRegister<ArmInteractionPointType> TYPES = DeferredRegister.create(CreateBuiltInRegistries.ARM_INTERACTION_POINT_TYPE, CCBAPI.MOD_ID);
 
-    public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> BREEZE_COOLER = register("breeze_cooler", new BreezeCoolerType());
-    public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> BREEZE_CHAMBER = register("breeze_chamber", new BreezeChamberType());
-    public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> AIRTIGHT_REACTOR_KETTLE = register("airtight_reactor_kettle", new ReactorKettleType());
-    public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> AIRTIGHT_FORGING_PRESS = register("airtight_forging_press", new ForgingPressType());
-    public static DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> GAS_PACKAGER = register("gas_packager", new GasPackagerType());
-
-    private static <T extends ArmInteractionPointType> @NotNull DeferredHolder<ArmInteractionPointType, T> register(String key, T type) {
-        return TYPES.register(key, () -> type);
-    }
+    private static final DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> BREEZE_COOLER = register("breeze_cooler", new BreezeCoolerType());
+    private static final DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> BREEZE_CHAMBER = register("breeze_chamber", new BreezeChamberType());
+    private static final DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> AIRTIGHT_REACTOR_KETTLE = register("airtight_reactor_kettle", new ReactorKettleType());
+    private static final DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> AIRTIGHT_FORGING_PRESS = register("airtight_forging_press", new ForgingPressType());
+    private static final DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> AIRTIGHT_HATCH = register("airtight_hatch", new AirtightHatchType());
+    private static final DeferredHolder<ArmInteractionPointType, ? extends ArmInteractionPointType> GAS_PACKAGER = register("gas_packager", new GasPackagerType());
 
     public static void register(IEventBus modBus) {
         TYPES.register(modBus);
+    }
+
+    private static <T extends ArmInteractionPointType> @NotNull DeferredHolder<ArmInteractionPointType, T> register(String key, T type) {
+        return TYPES.register(key, () -> type);
     }
 }

@@ -1,9 +1,10 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
-import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
+import net.ty.createcraftedbeginning.recipe.CoolingRecipeLookup;
+import net.ty.createcraftedbeginning.recipe.CoolingRecipeLookup.CoolingData;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -21,18 +22,19 @@ final class BreezeCoolerRecipeCache {
     }
 
     CoolingData getFluidCoolingData(FluidStack fluidStack) {
-        if (cooler.getLevel() == null || fluidStack.isEmpty()) {
+        Level level = cooler.getLevel();
+        if (level == null || fluidStack.isEmpty()) {
             return CoolingData.EMPTY;
         }
 
-        long gameTime = cooler.getLevel().getGameTime();
+        long gameTime = level.getGameTime();
         boolean isSameFluid = !cachedFluid.isEmpty() && FluidStack.isSameFluidSameComponents(cachedFluid, fluidStack);
         if (isSameFluid && gameTime < expiry) {
             return cachedData;
         }
 
         cachedFluid = fluidStack.copyWithAmount(1);
-        cachedData = CoolingRecipe.getCoolingTime(cooler.getLevel(), null, fluidStack);
+        cachedData = CoolingRecipeLookup.findCoolingData(level, null, fluidStack);
         expiry = gameTime + CACHE_INTERVAL;
         return cachedData;
     }

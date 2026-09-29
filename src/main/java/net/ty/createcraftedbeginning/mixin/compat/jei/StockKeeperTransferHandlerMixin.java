@@ -1,22 +1,15 @@
 package net.ty.createcraftedbeginning.mixin.compat.jei;
 
 import com.simibubi.create.compat.jei.StockKeeperTransferHandler;
-import com.simibubi.create.content.logistics.BigItemStack;
-import com.simibubi.create.content.logistics.packager.InventorySummary;
 import com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestMenu;
-import com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
-import mezz.jei.api.recipe.transfer.IRecipeTransferError.Type;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.ty.createcraftedbeginning.client.stockkeeper.GasCraftableBigItemStack;
-import net.ty.createcraftedbeginning.client.stockkeeper.StockKeeperCrafting;
-import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperTransfers.OutputTarget;
-import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperTransfers;
+import net.ty.createcraftedbeginning.compat.jei.stockkeeper.StockKeeperTransfers;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.List;
 
 @SuppressWarnings("MethodMayBeStatic")
 @ParametersAreNonnullByDefault
@@ -32,74 +24,11 @@ import java.util.List;
 @Mixin(value = StockKeeperTransferHandler.class, remap = false)
 public abstract class StockKeeperTransferHandlerMixin {
     @Inject(method = "transferRecipeOnClient", at = @At("HEAD"), cancellable = true, order = 900)
-    private void ccb$transferRecipeOnClient(StockKeeperRequestMenu container, RecipeHolder<Recipe<?>> recipeHolder, IRecipeSlotsView recipeSlots, Player player, boolean maxTransfer, boolean doTransfer, CallbackInfoReturnable<@Nullable IRecipeTransferError> cir) {
+    private void ccb$transferRecipeOnClient(StockKeeperRequestMenu container, RecipeHolder<Recipe<?>> recipeHolder, IRecipeSlotsView recipeSlots, Player player, boolean maxTransfer, boolean doTransfer, CallbackInfoReturnable<@Nullable IRecipeTransferError> callback) {
         if (!(StockKeeperTransfers.containsGasIngredient(recipeSlots, RecipeIngredientRole.INPUT) || StockKeeperTransfers.containsGasIngredient(recipeSlots, RecipeIngredientRole.OUTPUT))) {
             return;
         }
 
-        if (!(container.screenReference instanceof StockKeeperRequestScreen screen)) {
-            cir.setReturnValue(() -> Type.INTERNAL);
-            return;
-        }
-
-        InventorySummary summary = screen.getMenu().contentHolder.getLastClientsideStockSnapshotAsSummary();
-        if (summary == null) {
-            cir.setReturnValue(() -> Type.INTERNAL);
-            return;
-        }
-
-        List<BigItemStack> requirements = StockKeeperTransfers.collectRequirements(recipeSlots, summary, screen.itemsToOrder);
-        if (requirements == null || requirements.isEmpty()) {
-            cir.setReturnValue(StockKeeperTransfers.throwError("gui.stock_keeper.not_in_stock"));
-            return;
-        }
-
-        Recipe<?> recipe = recipeHolder.value();
-        OutputTarget outputTarget = StockKeeperTransfers.getOutputTarget(recipeSlots, player, recipe);
-        if (outputTarget == null) {
-            cir.setReturnValue(() -> Type.INTERNAL);
-            return;
-        }
-
-        GasCraftableBigItemStack existing = screen.recipesToOrder.stream().filter(entry -> entry instanceof GasCraftableBigItemStack gasRecipe && gasRecipe.matches(recipe, outputTarget.displayStack())).map(entry -> (GasCraftableBigItemStack) entry).findFirst().orElse(null);
-        boolean isNewEntry = existing == null;
-        if (isNewEntry && screen.recipesToOrder.size() >= 9) {
-            cir.setReturnValue(StockKeeperTransfers.throwError("gui.stock_keeper.slots_full"));
-            return;
-        }
-
-        GasCraftableBigItemStack entry = existing;
-        if (entry == null) {
-            entry = new GasCraftableBigItemStack(outputTarget.displayStack(), recipe, outputTarget.outputPerCraft(), requirements);
-        }
-        if (!StockKeeperCrafting.canFitNewOrderTypes(screen.itemsToOrder, entry.getRequirements())) {
-            cir.setReturnValue(StockKeeperTransfers.throwError("gui.stock_keeper.slots_full"));
-            return;
-        }
-
-        int maxSets = StockKeeperCrafting.getMaxAdditionalSets(summary, screen.itemsToOrder, entry.getRequirements());
-        int requestedSets = maxTransfer ? maxSets : 1;
-        if (requestedSets <= 0) {
-            cir.setReturnValue(StockKeeperTransfers.throwError("gui.stock_keeper.not_in_stock"));
-            return;
-        }
-
-        if (!doTransfer) {
-            cir.setReturnValue(null);
-            return;
-        }
-
-        if (isNewEntry) {
-            screen.recipesToOrder.add(entry);
-        }
-        if (StockKeeperCrafting.requestCraftable(screen, entry, entry.getOutputPerCraft() * requestedSets)) {
-            cir.setReturnValue(null);
-            return;
-        }
-
-        if (isNewEntry) {
-            screen.recipesToOrder.remove(entry);
-        }
-        cir.setReturnValue(StockKeeperTransfers.throwError("gui.stock_keeper.not_in_stock"));
+        callback.setReturnValue(StockKeeperTransfers.transfer(container, recipeHolder.value(), recipeSlots, player, maxTransfer, doTransfer));
     }
 }

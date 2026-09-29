@@ -6,11 +6,11 @@
   "loops": 1,
   "results": [
     {
-      "chance": 75,
+      "chance": 90,
       "id": "createcraftedbeginning:airtight_cannon"
     },
     {
-      "chance": 25,
+      "chance": 10,
       "id": "createcraftedbeginning:breeze_core"
     }
   ],

@@ -25,7 +25,6 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.registry.CCBParticleTypes;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -35,6 +34,41 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     private static final String COMPOUND_KEY_CONDUCTOR = "Conductor";
     private static CameraEntityProvider cameraEntityProvider = context -> null;
+
+    @Override
+    public void tick(MovementContext context) {
+        if (!context.world.isClientSide()) {
+            return;
+        }
+
+        RandomSource random = context.world.getRandom();
+        Vec3 particlePos = context.position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125F).multiply(1, 0, 1));
+        if (random.nextInt(3) == 0 && context.motion.length() < 0.015625F) {
+            context.world.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
+        }
+        LerpedFloat headAngle = getHeadAngle(context);
+        boolean shouldTurnQuickly = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
+        float currentAngle = headAngle.getValue();
+        float targetAngle = getTargetAngle(context);
+        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5F, shouldTurnQuickly ? Chaser.EXP : Chaser.exp(5));
+        headAngle.tickChaser();
+    }
+
+    @Override
+    public @Nullable ItemStack canBeDisabledVia(MovementContext context) {
+        return null;
+    }
+
+    @Override
+    public boolean disableBlockEntityRendering() {
+        return true;
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
+        BreezeChamberRenderer.renderInContraption(context, matrices, buffer, getHeadAngle(context), shouldRenderHat(context), renderWorld);
+    }
 
     public static void setCameraEntityProvider(CameraEntityProvider provider) {
         cameraEntityProvider = provider;
@@ -53,7 +87,11 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     private static float getTargetAngle(MovementContext context) {
         if (shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0) && context.contraption.entity instanceof CarriageContraptionEntity carriage) {
             float movementAngle = AngleHelper.deg(-Mth.atan2(context.relativeMotion.x, context.relativeMotion.z));
-            return carriage.getInitialOrientation().getAxis() == Axis.X ? movementAngle + 180 : movementAngle;
+            if (carriage.getInitialOrientation().getAxis() == Axis.X) {
+                return movementAngle + 180;
+            }
+
+            return movementAngle;
         }
 
         Entity cameraEntity = cameraEntityProvider.getCameraEntity(context);
@@ -67,12 +105,12 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
 
     private static boolean shouldRenderHat(MovementContext context) {
         CompoundTag movementData = context.data;
-        if (CCBNbtUtils.contains(movementData, COMPOUND_KEY_CONDUCTOR)) {
-            return CCBNbtUtils.getBoolean(movementData, COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
+        if (movementData.contains(COMPOUND_KEY_CONDUCTOR)) {
+            return movementData.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
         }
 
-        CCBNbtUtils.putBoolean(movementData, COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
-        return CCBNbtUtils.getBoolean(movementData, COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
+        movementData.putBoolean(COMPOUND_KEY_CONDUCTOR, determineIfConducting(context));
+        return movementData.getBoolean(COMPOUND_KEY_CONDUCTOR) && context.contraption.entity instanceof CarriageContraptionEntity carriage && carriage.hasSchedule();
     }
 
     private static boolean determineIfConducting(MovementContext context) {
@@ -90,41 +128,6 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void tick(MovementContext context) {
-        if (!context.world.isClientSide()) {
-            return;
-        }
-
-        RandomSource random = context.world.getRandom();
-        Vec3 particlePos = context.position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
-        if (random.nextInt(3) == 0 && context.motion.length() < 0.015625f) {
-            context.world.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
-        }
-        LerpedFloat headAngle = getHeadAngle(context);
-        boolean shouldTurnQuickly = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
-        float currentAngle = headAngle.getValue();
-        float targetAngle = getTargetAngle(context);
-        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5f, shouldTurnQuickly ? Chaser.EXP : Chaser.exp(5));
-        headAngle.tickChaser();
-    }
-
-    @Override
-    public @Nullable ItemStack canBeDisabledVia(MovementContext context) {
-        return null;
-    }
-
-    @Override
-    public boolean disableBlockEntityRendering() {
-        return true;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
-        BreezeChamberRenderer.renderInContraption(context, matrices, buffer, getHeadAngle(context), shouldRenderHat(context), renderWorld);
     }
 
     @FunctionalInterface

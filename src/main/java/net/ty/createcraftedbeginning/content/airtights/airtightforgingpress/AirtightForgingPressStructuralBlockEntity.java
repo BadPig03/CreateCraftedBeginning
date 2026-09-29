@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -35,14 +35,6 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
     public AirtightForgingPressStructuralBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         setLazyTickRate(10);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL.get(), (structural, ignoredContext) -> structural.getItemCapability());
-    }
-
-    public static boolean isLowerStore(BlockState blockState) {
-        return blockState.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).isLowerStore();
     }
 
     @Override
@@ -87,7 +79,7 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
             maxItemCount += itemHandler.getSlotLimit(slot);
         }
-        return CCBMathUtils.clampToNonNegativeInt(maxItemCount);
+        return BoundedMath.clampToNonNegativeInt(maxItemCount);
     }
 
     @Override
@@ -111,12 +103,20 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
             storedItemCount += itemHandler.getStackInSlot(slot).getCount();
         }
-        return CCBMathUtils.clampToNonNegativeInt(storedItemCount);
+        return BoundedMath.clampToNonNegativeInt(storedItemCount);
     }
 
     @Override
     public MutableComponent format(int value) {
-        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
+        return CCBLang.text(String.valueOf(value) + ' ').add(CCBLang.translate("gui.threshold.items")).component();
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL.get(), (structural, ignoredContext) -> structural.getItemCapability());
+    }
+
+    public static boolean isLowerStore(BlockState blockState) {
+        return blockState.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).isLowerStore();
     }
 
     void syncFilterFromMaster(ItemStack filterStack) {
@@ -127,16 +127,18 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         syncingFilter = true;
         try {
             filteringBehaviour.setFilter(filterStack);
-        } finally {
+        }
+        finally {
             syncingFilter = false;
         }
     }
 
     @Nullable AirtightForgingPressBlockEntity getMasterBlockEntity() {
-        BlockPos masterPos = AirtightForgingPressUtils.getMaster(getBlockPos(), getBlockState());
+        BlockPos masterPos = AirtightForgingPressStructural.getMaster(getBlockPos(), getBlockState());
         if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity press)) {
             return null;
         }
+
         return press;
     }
 
@@ -145,6 +147,7 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         if (press == null || !isLowerStore(getBlockState())) {
             return null;
         }
+
         return press.getInputOutputCapability();
     }
 
@@ -153,7 +156,7 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
             return;
         }
 
-        AirtightForgingPressUtils.updateRecipeFilter(this, filterStack);
+        AirtightForgingPressInteraction.updateRecipeFilter(this, filterStack);
     }
 
     private static class AirtightForgingPressValueBox extends Sided {

@@ -5,13 +5,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameRules.BooleanValue;
-import net.ty.createcraftedbeginning.api.weatherflares.IWeatherFlare;
+import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlare;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AnchorFlareItem extends Item implements IWeatherFlare {
+public class AnchorFlareItem extends Item implements WeatherFlare {
     public AnchorFlareItem(Properties properties) {
         super(properties);
     }

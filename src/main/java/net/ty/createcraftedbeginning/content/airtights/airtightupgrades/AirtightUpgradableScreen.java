@@ -23,8 +23,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
-import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
+import net.ty.createcraftedbeginning.client.gui.CCBGUITextures;
+import net.ty.createcraftedbeginning.client.gui.CCBIcons;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,10 +62,6 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
     protected AirtightUpgradableScreen(T container, Inventory inv, Component title, CCBGUITextures background) {
         super(container, inv, title);
         this.background = background;
-    }
-
-    protected static boolean isMouseOverSlot(int mouseX, int mouseY, int x, int y) {
-        return mouseX >= x && mouseY >= y && mouseX < x + 18 && mouseY < y + 18;
     }
 
     @Override
@@ -110,42 +106,6 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         return ImmutableList.of(new Rect2i(leftPos + 2 + background.getWidth(), topPos + background.getHeight() - 48, 48, 48));
     }
 
-    private void renderButtonTooltip(GuiGraphics guiGraphics, ScreenButtonConfig buttonConfig, int mouseX, int mouseY) {
-        IconButton upgradeButton = buttonConfig.getIconButton();
-        List<Component> tooltipLines = new ArrayList<>(List.of(buttonConfig.getTitle()));
-        Item upgradeItem = buttonConfig.getUpgradeItem();
-        if (!upgradeButton.isActive() && upgradeItem != null) {
-            tooltipLines.add(UPGRADE_NOT_INSTALLED.plainCopy().append(upgradeItem.getDescription()).withStyle(ChatFormatting.RED));
-        }
-
-        if (buttonConfig.canBeInstalled()) {
-            tooltipLines.add(UPGRADE_CAN_BE_INSTALLED.plainCopy().withStyle(ChatFormatting.GOLD));
-        }
-        else if (upgradeButton.isActive()) {
-            boolean isEnabled = buttonConfig.isEnabled();
-            Component statusLabel = isEnabled ? OPTION_ENABLED : OPTION_DISABLED;
-            ChatFormatting statusColor = isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED;
-            tooltipLines.add(statusLabel.plainCopy().withStyle(statusColor));
-        }
-
-        boolean isShiftDown = hasShiftDown();
-        Component shiftKey = CCBLang.translateDirect("gui.key.shift").withStyle(isShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY);
-        tooltipLines.add(CCBLang.translateDirect("gui.hold_for_description", shiftKey).withStyle(ChatFormatting.DARK_GRAY));
-        if (isShiftDown) {
-            tooltipLines.addAll(TooltipHelper.cutTextComponent(buttonConfig.getDescription(), Palette.ALL_GRAY));
-            List<Component> gasConsumptionLines = buttonConfig.getComponents();
-            if (!gasConsumptionLines.isEmpty()) {
-                tooltipLines.add(CommonComponents.EMPTY);
-                tooltipLines.add(CCBLang.translateDirect("gui.gas_consumption").withStyle(ChatFormatting.GRAY));
-                for (Component gasConsumptionLine : gasConsumptionLines) {
-                    tooltipLines.add(gasConsumptionLine.plainCopy().withStyle(ChatFormatting.GRAY));
-                }
-            }
-        }
-
-        guiGraphics.renderTooltip(font, tooltipLines, Optional.empty(), mouseX, mouseY);
-    }
-
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         int inventoryX = getLeftOfCentered(PLAYER_INVENTORY.getWidth()) + 1;
@@ -158,6 +118,10 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         guiGraphics.drawString(font, itemName, titleX, topPos + 4, 0xFFFFFF, false);
 
         GuiGameElement.of(menu.contentHolder).scale(4).at(leftPos + background.getWidth() + 2, topPos + background.getHeight() - 48, -200).render(guiGraphics);
+    }
+
+    protected static boolean isMouseOverSlot(int mouseX, int mouseY, int x, int y) {
+        return mouseX >= x && mouseY >= y && mouseX < x + 18 && mouseY < y + 18;
     }
 
     protected void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY) {
@@ -197,7 +161,7 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         }
 
         ItemStack upgradeStack = menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX);
-        if (upgrade.testUpgradeItem(upgradeStack)) {
+        if (upgrade.testUpgradeItem(upgradeStack, menu.player.level())) {
             CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(upgradeId, true));
             return;
         }
@@ -207,6 +171,42 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
 
     protected abstract void updateStates();
 
+    private void renderButtonTooltip(GuiGraphics guiGraphics, ScreenButtonConfig buttonConfig, int mouseX, int mouseY) {
+        IconButton upgradeButton = buttonConfig.getIconButton();
+        List<Component> tooltipLines = new ArrayList<>(List.of(buttonConfig.getTitle()));
+        Item upgradeItem = buttonConfig.getUpgradeItem();
+        if (!upgradeButton.isActive() && upgradeItem != null) {
+            tooltipLines.add(UPGRADE_NOT_INSTALLED.plainCopy().append(upgradeItem.getDescription()).withStyle(ChatFormatting.RED));
+        }
+
+        if (buttonConfig.canBeInstalled()) {
+            tooltipLines.add(UPGRADE_CAN_BE_INSTALLED.plainCopy().withStyle(ChatFormatting.GOLD));
+        }
+        else if (upgradeButton.isActive()) {
+            boolean isEnabled = buttonConfig.isEnabled();
+            Component statusLabel = isEnabled ? OPTION_ENABLED : OPTION_DISABLED;
+            ChatFormatting statusColor = isEnabled ? ChatFormatting.DARK_GREEN : ChatFormatting.RED;
+            tooltipLines.add(statusLabel.plainCopy().withStyle(statusColor));
+        }
+
+        boolean isShiftDown = hasShiftDown();
+        Component shiftKey = CCBLang.translateDirect("gui.key.shift").withStyle(isShiftDown ? ChatFormatting.WHITE : ChatFormatting.GRAY);
+        tooltipLines.add(CCBLang.translateDirect("gui.hold_for_description", shiftKey).withStyle(ChatFormatting.DARK_GRAY));
+        if (isShiftDown) {
+            tooltipLines.addAll(TooltipHelper.cutTextComponent(buttonConfig.getDescription(), Palette.ALL_GRAY));
+            List<Component> gasConsumptionLines = buttonConfig.getComponents();
+            if (!gasConsumptionLines.isEmpty()) {
+                tooltipLines.add(CommonComponents.EMPTY);
+                tooltipLines.add(CCBLang.translateDirect("gui.gas_consumption").withStyle(ChatFormatting.GRAY));
+                for (Component gasConsumptionLine : gasConsumptionLines) {
+                    tooltipLines.add(gasConsumptionLine.plainCopy().withStyle(ChatFormatting.GRAY));
+                }
+            }
+        }
+
+        guiGraphics.renderTooltip(font, tooltipLines, Optional.empty(), mouseX, mouseY);
+    }
+
     protected static class ScreenButtonConfig {
         private final IconButton iconButton;
         private final Component title;
@@ -214,17 +214,16 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         private final Supplier<Boolean> enabledSupplier;
         private final Supplier<Boolean> installableSupplier;
         private final Supplier<List<Component>> componentsSupplier;
-        @Nullable
-        private final Item upgradeItem;
+        private final Supplier<@Nullable Item> upgradeItemSupplier;
 
-        public ScreenButtonConfig(IconButton iconButton, Component title, Component description, Supplier<Boolean> enabledSupplier, Supplier<Boolean> installableSupplier, Supplier<List<Component>> componentsSupplier, @Nullable Item upgradeItem) {
+        public ScreenButtonConfig(IconButton iconButton, Component title, Component description, Supplier<Boolean> enabledSupplier, Supplier<Boolean> installableSupplier, Supplier<List<Component>> componentsSupplier, Supplier<@Nullable Item> upgradeItemSupplier) {
             this.iconButton = iconButton;
             this.title = title;
             this.description = description;
             this.enabledSupplier = enabledSupplier;
             this.installableSupplier = installableSupplier;
             this.componentsSupplier = componentsSupplier;
-            this.upgradeItem = upgradeItem;
+            this.upgradeItemSupplier = upgradeItemSupplier;
         }
 
         private IconButton getIconButton() {
@@ -253,7 +252,7 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
 
         @Nullable
         private Item getUpgradeItem() {
-            return upgradeItem;
+            return upgradeItemSupplier.get();
         }
     }
 }

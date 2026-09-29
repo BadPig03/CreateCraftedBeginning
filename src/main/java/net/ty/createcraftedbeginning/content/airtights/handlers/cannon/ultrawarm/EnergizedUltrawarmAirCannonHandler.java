@@ -15,7 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContext;
-import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonUtils;
+import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonBlast;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -33,7 +33,7 @@ public class EnergizedUltrawarmAirCannonHandler extends UltrawarmAirCannonHandle
     }
 
     @Override
-    public void renderTrailParticles(Level level, Vec3 pos) {
+    public void renderTrailParticles(Level level, Vec3 pos, Vec3 velocity) {
         RandomSource random = level.getRandom();
         for (int i = 0; i < random.nextInt(2, 4); i++) {
             double offsetX = (random.nextDouble() - 0.5) * 0.6;
@@ -41,7 +41,7 @@ public class EnergizedUltrawarmAirCannonHandler extends UltrawarmAirCannonHandle
             double offsetZ = (random.nextDouble() - 0.5) * 0.6;
             level.addParticle(ParticleTypes.SOUL_FIRE_FLAME, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, (random.nextDouble() - 0.5) * 0.02, random.nextDouble() * 0.02 + 0.01, (random.nextDouble() - 0.5) * 0.02);
             level.addParticle(ParticleTypes.WARPED_SPORE, pos.x, pos.y, pos.z, 0, 0, 0);
-            if (!(random.nextFloat() < 0.25f)) {
+            if (!(random.nextFloat() < 0.25F)) {
                 continue;
             }
 
@@ -55,8 +55,13 @@ public class EnergizedUltrawarmAirCannonHandler extends UltrawarmAirCannonHandle
     }
 
     @Override
+    public float getRotationSpeed() {
+        return super.getRotationSpeed() * 2;
+    }
+
+    @Override
     public float getGasConsumptionMultiplier() {
-        return 0.72f;
+        return super.getGasConsumptionMultiplier() * 0.75F;
     }
 
     @Override
@@ -65,10 +70,14 @@ public class EnergizedUltrawarmAirCannonHandler extends UltrawarmAirCannonHandle
     }
 
     @Override
-    protected void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
-        List<LivingEntity> longBurningEntities = entities.stream().filter(entity -> entity.getRemainingFireTicks() >= THRESHOLD).toList();
+    protected int getIgnitionDuration() {
+        return super.getIgnitionDuration() * 2;
+    }
+
+    @Override
+    public void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
         super.applyAdditionalEffects(level, entities, explosionDamageSource, context);
         float baseBonusDamage = ENERGIZED_BONUS_DAMAGE * context.effectMultiplier();
-        AirtightCannonUtils.applyBonusDamage(entities, explosionDamageSource, entity -> longBurningEntities.contains(entity) ? baseBonusDamage * 2 : baseBonusDamage);
+        AirtightCannonBlast.applyBonusDamage(entities, explosionDamageSource, entity -> baseBonusDamage);
     }
 }

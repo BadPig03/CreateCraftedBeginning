@@ -21,11 +21,10 @@ import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplie
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.functionalstorage.registry.CCBFunctionalStorageBlockEntities;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -48,28 +47,6 @@ public final class GasDrawerBlock extends Drawer<GasDrawerBlockEntity> {
         super("gas_drawer_" + drawerType.getSlots(), properties, GasDrawerBlockEntity.class);
         this.drawerType = drawerType;
         registerDefaultState(defaultBlockState().setValue(FACING_HORIZONTAL_CUSTOM, Direction.NORTH).setValue(FACING_ALL, Direction.DOWN).setValue(DrawerBlock.LOCKED, false));
-    }
-
-    private static void appendUpgradesTooltip(CompoundTag tileTag, List<Component> tooltip) {
-        tooltip.add(UPGRADES_HEADER);
-        boolean hasUpgrades = false;
-        if (CCBNbtUtils.getBoolean(tileTag, COMPOUND_KEY_CREATIVE)) {
-            tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.is_creative").withStyle(ChatFormatting.LIGHT_PURPLE)));
-            hasUpgrades = true;
-        }
-        if (CCBNbtUtils.getBoolean(tileTag, COMPOUND_KEY_VOID)) {
-            tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.is_void").withStyle(ChatFormatting.BLUE)));
-            hasUpgrades = true;
-        }
-        if (hasUpgrades) {
-            return;
-        }
-
-        tooltip.add(NO_UPGRADES_ENTRY);
-    }
-
-    public static GasStack readStoredGas(CompoundTag tileTag, int slot, Provider provider) {
-        return GasDrawerStorage.readStoredGas(CCBNbtUtils.getCompound(tileTag, GasDrawerStorage.COMPOUND_KEY_STORAGE), slot, provider);
     }
 
     @Override
@@ -104,9 +81,31 @@ public final class GasDrawerBlock extends Drawer<GasDrawerBlockEntity> {
         return DrawerBlock.getDefaultHitShapes(drawerType, state);
     }
 
+    public static GasStack readStoredGas(CompoundTag tileTag, int slot, Provider provider) {
+        return GasDrawerStorage.readStoredGas(tileTag.getCompound(GasDrawerStorage.COMPOUND_KEY_STORAGE), slot, provider);
+    }
+
+    private static void appendUpgradesTooltip(CompoundTag tileTag, List<Component> tooltip) {
+        tooltip.add(UPGRADES_HEADER);
+        boolean hasUpgrades = false;
+        if (tileTag.getBoolean(COMPOUND_KEY_CREATIVE)) {
+            tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.is_creative").withStyle(ChatFormatting.LIGHT_PURPLE)));
+            hasUpgrades = true;
+        }
+        if (tileTag.getBoolean(COMPOUND_KEY_VOID)) {
+            tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.is_void").withStyle(ChatFormatting.BLUE)));
+            hasUpgrades = true;
+        }
+        if (hasUpgrades) {
+            return;
+        }
+
+        tooltip.add(NO_UPGRADES_ENTRY);
+    }
+
     private void appendContentsTooltip(CompoundTag tileTag, List<Component> tooltip) {
         tooltip.add(CONTENTS_HEADER);
-        CompoundTag storageTag = CCBNbtUtils.getCompound(tileTag, GasDrawerStorage.COMPOUND_KEY_STORAGE);
+        CompoundTag storageTag = tileTag.getCompound(GasDrawerStorage.COMPOUND_KEY_STORAGE);
         boolean hasContents = false;
         for (int slot = 0; slot < drawerType.getSlots(); slot++) {
             GasStack storedGas = GasDrawerStorage.readStoredGas(storageTag, slot, Utils.registryAccess());
@@ -115,7 +114,7 @@ public final class GasDrawerBlock extends Drawer<GasDrawerBlockEntity> {
             }
 
             hasContents = true;
-            tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.literal(GasAmounts.formatCompact(storedGas.getAmount())).withStyle(ChatFormatting.YELLOW)).append(Component.literal(" ")).append(storedGas.getHoverName().copy().withStyle(ChatFormatting.GOLD)));
+            tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.literal(GasUnitFormat.formatCompact(storedGas.getAmount())).withStyle(ChatFormatting.YELLOW)).append(Component.literal(" ")).append(storedGas.getHoverName().copy().withStyle(ChatFormatting.GOLD)));
             if (storedGas.isComponentsPatchEmpty()) {
                 continue;
             }

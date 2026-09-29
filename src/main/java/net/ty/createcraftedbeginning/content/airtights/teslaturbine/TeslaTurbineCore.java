@@ -4,7 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -19,8 +19,6 @@ class TeslaTurbineCore {
     private final TeslaTurbineFlowMeter flowMeter;
     private final TeslaTurbineController controller;
     private final TeslaTurbineSerialization serialization;
-    private final IGasHandler clockwiseHandler;
-    private final IGasHandler counterClockwiseHandler;
 
     TeslaTurbineCore(TeslaTurbineBlockEntity turbine) {
         this.turbine = turbine;
@@ -30,8 +28,6 @@ class TeslaTurbineCore {
         tooltipBuilder = new TeslaTurbineTooltipBuilder(this);
         controller = new TeslaTurbineController(this, turbine);
         serialization = new TeslaTurbineSerialization(this);
-        clockwiseHandler = new TeslaTurbineGasHandler(flowMeter, true);
-        counterClockwiseHandler = new TeslaTurbineGasHandler(flowMeter, false);
     }
 
     void tick() {
@@ -95,11 +91,8 @@ class TeslaTurbineCore {
         serialization.read(compoundTag, provider, clientPacket);
     }
 
-    IGasHandler createGasHandler(boolean clockwise) {
-        if (!clockwise) {
-            return counterClockwiseHandler;
-        }
-        return clockwiseHandler;
+    GasHandler createGasHandler(boolean clockwise) {
+        return new TeslaTurbineGasHandler(turbine, flowMeter, clockwise);
     }
 
     TeslaTurbineBlockEntity getTurbine() {

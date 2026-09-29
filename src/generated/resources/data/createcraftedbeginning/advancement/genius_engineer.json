@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:debris_craft",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:genius_engineer_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

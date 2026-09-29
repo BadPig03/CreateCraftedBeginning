@@ -14,9 +14,8 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
+import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -57,10 +56,10 @@ public class CreativeAirtightTankItem extends BlockItem {
         }
 
         CompoundTag blockEntityTag = blockEntityData.copyTag();
-        CCBNbtUtils.remove(blockEntityTag, COMPOUND_KEY_WIDTH);
-        CCBNbtUtils.remove(blockEntityTag, COMPOUND_KEY_HEIGHT);
-        CCBNbtUtils.remove(blockEntityTag, COMPOUND_KEY_CONTROLLER_POS);
-        CCBNbtUtils.remove(blockEntityTag, COMPOUND_KEY_LAST_KNOWN_POS);
+        blockEntityTag.remove(COMPOUND_KEY_WIDTH);
+        blockEntityTag.remove(COMPOUND_KEY_HEIGHT);
+        blockEntityTag.remove(COMPOUND_KEY_CONTROLLER_POS);
+        blockEntityTag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
         itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(blockEntityTag));
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }
@@ -84,7 +83,7 @@ public class CreativeAirtightTankItem extends BlockItem {
             return;
         }
 
-        CreativeAirtightTankBlockEntity placedOnTank = GasConnectivityHandler.partAt(CCBBlockEntities.CREATIVE_AIRTIGHT_TANK.get(), level, placedOnPos);
+        CreativeAirtightTankBlockEntity placedOnTank = GasTankMultiblockConnectivity.partAt(CCBBlockEntities.CREATIVE_AIRTIGHT_TANK.get(), level, placedOnPos);
         if (placedOnTank == null) {
             return;
         }
@@ -123,11 +122,12 @@ public class CreativeAirtightTankItem extends BlockItem {
                     continue;
                 }
 
-                if (!targetState.canBeReplaced()) {
-                    return INVALID_PLACEMENT;
+                if (targetState.canBeReplaced()) {
+                    tanksToPlace++;
+                    continue;
                 }
 
-                tanksToPlace++;
+                return INVALID_PLACEMENT;
             }
         }
         return tanksToPlace;

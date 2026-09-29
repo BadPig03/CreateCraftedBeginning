@@ -16,10 +16,11 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBMixinConfigPlugin implements IMixinConfigPlugin {
-    private static final String BASIN_TRANSACTION_ACCESS_MIXIN = "net.ty.createcraftedbeginning.mixin.server.create.BasinTransactionAccessMixin";
-    private static final boolean BASIN_TRANSACTION_ACCESS_AVAILABLE = hasFieldResource("com.simibubi.create.content.processing.basin.BasinBlockEntity", "spoutputFluidBuffer", "Ljava/util/List;");
+    private static final String BASIN_TRANSACTION_ACCESS_MIXIN = "net.ty.createcraftedbeginning.mixin.common.create.BasinTransactionAccessMixin";
+    private static final boolean BASIN_TRANSACTION_ACCESS_AVAILABLE = hasFieldResource("com.simibubi.create.content.processing.basin.BasinBlockEntity", "spoutputBuffer", "Ljava/util/List;") && hasFieldResource("com.simibubi.create.content.processing.basin.BasinBlockEntity", "spoutputFluidBuffer", "Ljava/util/List;");
     private static final boolean JEI_RECIPE_TRANSFER_AVAILABLE = hasClassResource("mezz.jei.api.recipe.transfer.IRecipeTransferError");
     private static final boolean FUNCTIONAL_STORAGE_AVAILABLE = hasClassResource("com.buuz135.functionalstorage.FunctionalStorage");
+    private static final boolean SABLE_ASSEMBLY_AVAILABLE = hasClassResource("dev.ryanhcode.sable.api.SubLevelAssemblyHelper");
 
     private static boolean hasClassResource(String className) {
         ClassLoader classLoader = CCBMixinConfigPlugin.class.getClassLoader();
@@ -68,6 +69,9 @@ public final class CCBMixinConfigPlugin implements IMixinConfigPlugin {
         }
         else if (mixinClassName.startsWith("net.ty.createcraftedbeginning.mixin.compat.functionalstorage.")) {
             return FUNCTIONAL_STORAGE_AVAILABLE;
+        }
+        else if (mixinClassName.startsWith("net.ty.createcraftedbeginning.mixin.compat.sable.")) {
+            return SABLE_ASSEMBLY_AVAILABLE;
         }
         return true;
     }

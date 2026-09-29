@@ -53,11 +53,12 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
         if (structuralPosition.isCog()) {
             return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION, structuralPosition);
         }
+
         return CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION, structuralPosition);
     }
 
     private static boolean isMatchingStructure(BlockState state, AirtightReactorKettleStructuralPosition structuralPosition) {
-        return state.getBlock() instanceof IAirtightReactorKettleStructural structural && state.getValue(structural.getStructuralPosition()) == structuralPosition;
+        return state.getBlock() instanceof AirtightReactorKettleStructural structural && state.getValue(structural.getStructuralPosition()) == structuralPosition;
     }
 
     @Override
@@ -77,7 +78,33 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (isMoving) {
+            super.onRemove(state, level, pos, newState, true);
+            return;
+        }
+
         IBE.onRemove(state, level, pos, newState);
+        if (level.isClientSide || state.is(newState.getBlock())) {
+            return;
+        }
+
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    if (x == 0 && y == 0 && z == 0) {
+                        continue;
+                    }
+
+                    BlockPos structuralPos = pos.offset(x, y, z);
+                    BlockState structuralState = level.getBlockState(structuralPos);
+                    if (!isMatchingStructure(structuralState, AirtightReactorKettleStructuralPosition.fromOffset(x, y, z))) {
+                        continue;
+                    }
+
+                    level.destroyBlock(structuralPos, false);
+                }
+            }
+        }
     }
 
     @Override
@@ -125,6 +152,7 @@ public class AirtightReactorKettleBlock extends Block implements IBE<AirtightRea
         if (state == null || !canPlaceStructure(context.getLevel(), context.getClickedPos())) {
             return null;
         }
+
         return state;
     }
 

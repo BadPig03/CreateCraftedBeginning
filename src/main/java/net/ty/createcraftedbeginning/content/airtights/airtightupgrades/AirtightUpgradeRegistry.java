@@ -32,23 +32,8 @@ public final class AirtightUpgradeRegistry {
         this.name = name;
     }
 
-    static @Nullable AirtightUpgrade getGlobalById(ResourceLocation id) {
-        return GLOBAL_REGISTRY.get(id);
-    }
-
     public @Nullable AirtightUpgrade getById(ResourceLocation id) {
         return upgradesById.get(id);
-    }
-
-    public @Nullable AirtightUpgrade getByStack(ItemStack stack) {
-        for (AirtightUpgrade upgrade : orderedUpgrades) {
-            if (!upgrade.testUpgradeItem(stack)) {
-                continue;
-            }
-
-            return upgrade;
-        }
-        return null;
     }
 
     public List<AirtightUpgrade> getAll() {
@@ -73,7 +58,7 @@ public final class AirtightUpgradeRegistry {
 
     public void registerAll(AirtightUpgrade... upgrades) {
         if (registered) {
-            throw new IllegalStateException("Airtight upgrade registry '" + name + "' has already been registered");
+            throw new IllegalStateException("Airtight upgrade registry '" + name + "' has already been registered.");
         }
 
         List<AirtightUpgrade> registeredUpgrades = List.copyOf(Arrays.asList(upgrades.clone()));
@@ -82,15 +67,15 @@ public final class AirtightUpgradeRegistry {
         for (AirtightUpgrade upgrade : registeredUpgrades) {
             ResourceLocation upgradeId = upgrade.getID();
             if (!upgradeIds.add(upgradeId)) {
-                throw new IllegalArgumentException("Duplicate airtight upgrade id '" + upgradeId + "' in registry '" + name + '\'');
+                throw new IllegalArgumentException("Duplicate airtight upgrade id '" + upgradeId + "' in registry '" + name + "'.");
             }
 
             if (GLOBAL_REGISTRY.containsKey(upgradeId)) {
-                throw new IllegalArgumentException("Airtight upgrade id '" + upgradeId + "' is already registered");
+                throw new IllegalArgumentException("Airtight upgrade id '" + upgradeId + "' is already registered.");
             }
 
             if (upgrade.startsEnabled() && !upgrade.startsInstalled()) {
-                throw new IllegalArgumentException("Airtight upgrade '" + upgradeId + "' cannot start enabled before it is installed");
+                throw new IllegalArgumentException("Airtight upgrade '" + upgradeId + "' cannot start enabled before it is installed.");
             }
 
             newUpgradesById.put(upgradeId, upgrade);
@@ -107,6 +92,7 @@ public final class AirtightUpgradeRegistry {
             newTickingUpgrades.add(tickingUpgrade);
         }
 
+        registeredUpgrades.forEach(AirtightUpgradeMaterials::register);
         GLOBAL_REGISTRY.putAll(newUpgradesById);
         upgradesById = Map.copyOf(newUpgradesById);
         orderedUpgrades = registeredUpgrades;

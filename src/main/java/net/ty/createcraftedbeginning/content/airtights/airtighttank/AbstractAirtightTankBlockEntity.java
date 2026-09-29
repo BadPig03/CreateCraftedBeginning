@@ -10,12 +10,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasTank;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasTankMultiBlockEntityContainer;
+import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockPart;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -23,7 +22,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity implements IGasTankMultiBlockEntityContainer {
+public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity implements GasTankMultiblockPart {
     private final AirtightTankMultiblockController multiblockController;
     private final AirtightTankGasStorage gasStorage;
 
@@ -31,18 +30,6 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         super(type, pos, state);
         multiblockController = new AirtightTankMultiblockController(this);
         gasStorage = new AirtightTankGasStorage(this);
-    }
-
-    static int configuredMaxLength() {
-        return Math.max(1, CCBConfig.server().airtights.maxAirtightTankLength.get());
-    }
-
-    static int configuredMaxWidth() {
-        return Math.max(1, CCBConfig.server().airtights.maxAirtightTankWidth.get());
-    }
-
-    protected static int calculateCoords(BlockPos pos, Axis axis) {
-        return axis.choose(pos.getX(), pos.getY(), pos.getZ());
     }
 
     @Override
@@ -165,8 +152,8 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
     }
 
     @Override
-    public IGasTank getTank(int tank) {
-        return getTankInventory();
+    public GasPressureCompartment getTank(int tank) {
+        return getTankInventory().getPressureCompartment(tank);
     }
 
     @Override
@@ -176,25 +163,24 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
 
     @Override
     public GasStack getGas(int tank) {
-        return getTankInventory().getGasStack().copy();
+        return getTankInventory().getGasInTank(tank).copy();
     }
 
-    @Override
-    public long getTankSize(int tank) {
-        return capacityPerBlock();
-    }
-
-    public GasTank getTankInventory() {
+    public GasStorageHandler getTankInventory() {
         return gasStorage.getTankInventory();
     }
 
-    public IGasHandler getCapability() {
+    public GasStorageHandler getCapability() {
         return gasStorage.getCapability();
+    }
+
+    protected static int calculateCoords(BlockPos pos, Axis axis) {
+        return axis.choose(pos.getX(), pos.getY(), pos.getZ());
     }
 
     protected abstract void updateMultiBlockState();
 
-    protected final void initializeTank(GasTank tankInventory) {
+    protected final void initializeTank(GasStorageHandler tankInventory) {
         gasStorage.initialize(tankInventory);
     }
 
@@ -202,8 +188,8 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         multiblockController.updateConnectivity();
     }
 
-    protected final void onGasStackChanged(GasStack ignored) {
-        gasStorage.onGasStackChanged(ignored);
+    protected final void onTankStateChanged() {
+        gasStorage.onTankStateChanged();
     }
 
     protected final void invalidateRenderBounds() {
@@ -214,7 +200,16 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
 
     protected abstract void resetStandaloneBlockState();
 
-    protected abstract long capacityPerBlock();
+    @SuppressWarnings("unused")
+    protected abstract long volumePerBlock();
+
+    static int configuredMaxLength() {
+        return Math.max(1, CCBConfig.server().machines.airtightTank.maxHeight.get());
+    }
+
+    static int configuredMaxWidth() {
+        return Math.max(1, CCBConfig.server().machines.airtightTank.maxWidth.get());
+    }
 
     void tickController() {
     }

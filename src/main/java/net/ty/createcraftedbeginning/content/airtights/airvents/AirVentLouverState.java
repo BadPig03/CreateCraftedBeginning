@@ -1,12 +1,14 @@
 package net.ty.createcraftedbeginning.content.airtights.airvents;
 
+import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock.VentState;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.UnaryOperator;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -18,18 +20,31 @@ final class AirVentLouverState {
     private int louverMask;
     private int openedMask;
 
+    static void transformNbt(CompoundTag tag, UnaryOperator<BlockPos> transform) {
+        AirVentLouverState original = new AirVentLouverState();
+        original.load(tag);
+        AirVentLouverState transformed = new AirVentLouverState();
+        BlockPos origin = transform.apply(BlockPos.ZERO);
+        for (Direction direction : Iterate.directions) {
+            BlockPos offset = transform.apply(BlockPos.ZERO.relative(direction)).subtract(origin);
+            Direction target = Direction.getNearest(offset.getX(), offset.getY(), offset.getZ());
+            transformed.setLouverState(target, original.getLouverState(direction));
+        }
+        transformed.save(tag);
+    }
+
     private static int directionMask(Direction direction) {
         return 1 << direction.get3DDataValue();
     }
 
     void load(CompoundTag compoundTag) {
-        louverMask = CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_LOUVER_MASK) & VALID_DIRECTION_MASK;
-        openedMask = CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_OPENED_MASK) & louverMask;
+        louverMask = compoundTag.getInt(COMPOUND_KEY_LOUVER_MASK) & VALID_DIRECTION_MASK;
+        openedMask = compoundTag.getInt(COMPOUND_KEY_OPENED_MASK) & louverMask;
     }
 
     void save(CompoundTag compoundTag) {
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_LOUVER_MASK, louverMask);
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_OPENED_MASK, openedMask);
+        compoundTag.putInt(COMPOUND_KEY_LOUVER_MASK, louverMask);
+        compoundTag.putInt(COMPOUND_KEY_OPENED_MASK, openedMask);
     }
 
     VentState getLouverState(Direction direction) {
@@ -40,6 +55,7 @@ final class AirVentLouverState {
         if (!isLouverOpen(direction)) {
             return VentState.CLOSED;
         }
+
         return VentState.OPENED;
     }
 
@@ -56,6 +72,7 @@ final class AirVentLouverState {
         if (louverMask == 0) {
             return 0;
         }
+
         return louverMask & ~connectionMask & VALID_DIRECTION_MASK;
     }
 
@@ -64,11 +81,23 @@ final class AirVentLouverState {
     }
 
     boolean toggleLouver(Direction direction) {
-        return setLouverState(direction, hasLouver(direction) ? VentState.EMPTY : VentState.CLOSED);
+        if (hasLouver(direction)) {
+            return setLouverState(direction, VentState.EMPTY);
+        }
+
+        return setLouverState(direction, VentState.CLOSED);
     }
 
     boolean toggleLouverOpen(Direction direction) {
-        return hasLouver(direction) && setLouverState(direction, isLouverOpen(direction) ? VentState.CLOSED : VentState.OPENED);
+        if (!hasLouver(direction)) {
+            return false;
+        }
+
+        if (isLouverOpen(direction)) {
+            return setLouverState(direction, VentState.CLOSED);
+        }
+
+        return setLouverState(direction, VentState.OPENED);
     }
 
     boolean setLouverState(Direction direction, VentState louverState) {

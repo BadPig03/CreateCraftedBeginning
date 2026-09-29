@@ -1,12 +1,14 @@
 {
   "type": "createcraftedbeginning:residue_generation",
-  "ingredients": [
+  "gas_ingredients": [
     {
-      "type": "createcraftedbeginning:single",
       "amount": 1,
-      "gas": "createcraftedbeginning:ultrawarm_air"
+      "ingredient": {
+        "gas": "createcraftedbeginning:ultrawarm_air"
+      }
     }
   ],
+  "ingredients": [],
   "results": [
     {
       "id": "create:cinder_flour"

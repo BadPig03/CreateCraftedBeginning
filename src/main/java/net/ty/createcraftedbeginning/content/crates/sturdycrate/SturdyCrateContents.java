@@ -27,16 +27,12 @@ public record SturdyCrateContents(ItemStack content, int count, ItemStack filter
         filterItem = filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1);
     }
 
-    @Contract(" -> new")
-    static SturdyCrateContents empty() {
-        return new SturdyCrateContents(ItemStack.EMPTY, 0, ItemStack.EMPTY);
-    }
-
     @Override
     public ItemStack content() {
         if (content.isEmpty()) {
             return ItemStack.EMPTY;
         }
+
         return content.copy();
     }
 
@@ -45,6 +41,7 @@ public record SturdyCrateContents(ItemStack content, int count, ItemStack filter
         if (filterItem.isEmpty()) {
             return ItemStack.EMPTY;
         }
+
         return filterItem.copy();
     }
 
@@ -58,15 +55,20 @@ public record SturdyCrateContents(ItemStack content, int count, ItemStack filter
         return Objects.hash(ItemStack.hashItemAndComponents(content), count, ItemStack.hashItemAndComponents(filterItem));
     }
 
+    @Contract(" -> new")
+    static SturdyCrateContents empty() {
+        return new SturdyCrateContents(ItemStack.EMPTY, 0, ItemStack.EMPTY);
+    }
+
+    boolean hasData() {
+        return hasInventory() || hasFilter();
+    }
+
     private boolean hasInventory() {
         return !content.isEmpty() && count > 0;
     }
 
     private boolean hasFilter() {
         return !filterItem.isEmpty();
-    }
-
-    boolean hasData() {
-        return hasInventory() || hasFilter();
     }
 }

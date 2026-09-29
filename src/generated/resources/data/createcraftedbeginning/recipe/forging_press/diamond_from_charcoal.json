@@ -1,16 +1,20 @@
 {
   "type": "createcraftedbeginning:forging_press",
+  "gas_ingredients": [
+    {
+      "amount": 2500,
+      "ingredient": {
+        "gas": "createcraftedbeginning:energized_ultrawarm_air"
+      },
+      "minimum_pressure": 1000000
+    }
+  ],
   "ingredients": [
     {
       "item": "minecraft:charcoal"
     },
     {
       "item": "minecraft:heavy_core"
-    },
-    {
-      "type": "createcraftedbeginning:single",
-      "amount": 250,
-      "gas": "createcraftedbeginning:pressurized_energized_ultrawarm_air"
     }
   ],
   "results": [

@@ -18,9 +18,11 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Con
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonRenderHelper;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -31,46 +33,58 @@ public class GasRepackagerRenderer extends SmartBlockEntityRenderer<GasRepackage
         super(context);
     }
 
-    static PartialModel getTrayModel(BlockState state) {
-        if (state.getBlock() instanceof GasRepackagerBlock) {
-            return CCBPartialModels.GAS_PACKAGER_TRAY_REGULAR;
-        }
-        return CCBPartialModels.GAS_PACKAGER_TRAY_DEFRAG;
-    }
-
-    static PartialModel getHatchModel(GasRepackagerBlockEntity be) {
-        return isHatchOpen(be) ? CCBPartialModels.GAS_PACKAGER_HATCH_OPEN : CCBPartialModels.GAS_PACKAGER_HATCH_CLOSED;
-    }
-
-    private static boolean isHatchOpen(GasRepackagerBlockEntity be) {
-        return be.animationTicks > (be.animationInward ? 1 : 5) && be.animationTicks < PackagerBlockEntity.CYCLE - (be.animationInward ? 5 : 1);
-    }
-
     @Override
-    protected void renderSafe(GasRepackagerBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        super.renderSafe(be, partialTicks, ms, buffer, light, overlay);
+    protected void renderSafe(GasRepackagerBlockEntity repackager, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        super.renderSafe(repackager, partialTicks, poseStack, buffer, light, overlay);
 
-        float trayOffset = be.getTrayOffset(partialTicks);
-        BlockState blockState = be.getBlockState();
+        float trayOffset = repackager.getTrayOffset(partialTicks);
+        BlockState blockState = repackager.getBlockState();
         Direction facing = blockState.getValue(PackagerBlock.FACING).getOpposite();
-        if (!VisualizationManager.supportsVisualization(be.getLevel())) {
-            SuperByteBuffer hatch = CachedBuffers.partial(getHatchModel(be), blockState);
-            hatch.translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(0.5)).rotateYCenteredDegrees(AngleHelper.horizontalAngle(facing)).rotateXCenteredDegrees(AngleHelper.verticalAngle(facing)).light(light).renderInto(ms, buffer.getBuffer(RenderType.solid()));
+        Level level = repackager.getLevel();
+        if (!VisualizationManager.supportsVisualization(level)) {
+            SuperByteBuffer hatch = CachedBuffers.partial(getHatchModel(repackager), blockState);
+            hatch.translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(0.5)).rotateYCenteredDegrees(AngleHelper.horizontalAngle(facing)).rotateXCenteredDegrees(AngleHelper.verticalAngle(facing)).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.solid()));
 
             SuperByteBuffer tray = CachedBuffers.partial(getTrayModel(blockState), blockState);
-            tray.translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).rotateYCenteredDegrees(facing.toYRot()).light(light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+            tray.translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).rotateYCenteredDegrees(facing.toYRot()).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
         }
 
-        ItemStack renderedBox = be.getRenderedBox();
+        ItemStack renderedBox = repackager.getRenderedBox();
         if (renderedBox.isEmpty()) {
             return;
         }
 
-        ms.pushPose();
+        poseStack.pushPose();
 
-        TransformStack.of(ms).translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).translate(0.5, 0.5, 0.5).rotateYDegrees(facing.toYRot()).translate(0, 0.125, 0).scale(1.5f, 1.5f, 1.5f);
-        Minecraft.getInstance().getItemRenderer().renderStatic(null, renderedBox, ItemDisplayContext.FIXED, false, ms, buffer, be.getLevel(), light, overlay, 0);
+        float balloonScale = BalloonRenderHelper.getLinearScale(renderedBox, level, repackager.getBlockPos());
+        TransformStack.of(poseStack).translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).translate(0.5, 0.5, 0.5).rotateYDegrees(facing.toYRot()).translate(0, 0.125, 0).scale(1.5F, 1.5F, 1.5F);
+        BalloonRenderHelper.applyBottomAnchoredFixedItemScale(poseStack, balloonScale);
+        Minecraft.getInstance().getItemRenderer().renderStatic(null, renderedBox, ItemDisplayContext.FIXED, false, poseStack, buffer, level, light, overlay, 0);
 
-        ms.popPose();
+        poseStack.popPose();
+    }
+
+    static PartialModel getTrayModel(BlockState state) {
+        if (state.getBlock() instanceof GasRepackagerBlock) {
+            return CCBPartialModels.GAS_PACKAGER_TRAY_REGULAR;
+        }
+
+        return CCBPartialModels.GAS_PACKAGER_TRAY_DEFRAG;
+    }
+
+    static PartialModel getHatchModel(GasRepackagerBlockEntity repackager) {
+        if (!isHatchOpen(repackager)) {
+            return CCBPartialModels.GAS_PACKAGER_HATCH_CLOSED;
+        }
+
+        return CCBPartialModels.GAS_PACKAGER_HATCH_OPEN;
+    }
+
+    private static boolean isHatchOpen(GasRepackagerBlockEntity repackager) {
+        if (repackager.animationInward) {
+            return repackager.animationTicks > 1 && repackager.animationTicks < PackagerBlockEntity.CYCLE - 5;
+        }
+
+        return repackager.animationTicks > 5 && repackager.animationTicks < PackagerBlockEntity.CYCLE - 1;
     }
 }

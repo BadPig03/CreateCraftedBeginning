@@ -8,7 +8,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -31,7 +31,7 @@ public class AirtightPipeBlockEntity extends AbstractAirtightPipeBlockEntity {
     }
 
     @Override
-    public boolean canTransport(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
+    public boolean allowsGasTransport(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
         return AxisGasPipeBlock.isOpenAt(blockState, direction);
     }
 }

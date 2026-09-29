@@ -2,11 +2,9 @@ package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.lang.LangBuilder;
-import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -19,7 +17,9 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
+import net.ty.createcraftedbeginning.recipe.CoolingRecipeLookup.CoolingData;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -36,7 +36,8 @@ final class BreezeCoolerDisplay {
     }
 
     boolean addToGoggleTooltip(List<Component> tooltip) {
-        if (cooler.getLevel() == null || cooler.isStockKeeper()) {
+        Level level = cooler.getLevel();
+        if (level == null || cooler.isStockKeeper()) {
             return false;
         }
 
@@ -45,14 +46,18 @@ final class BreezeCoolerDisplay {
         CCBLang.translate("gui.breeze_cooler.current_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.translate(frostLevel.getTranslatable()).style(frostLevel.getChatFormatting()).forGoggles(tooltip, 1);
         int remainingCoolingTime = cooler.getCoolRemainingTime();
-        if (remainingCoolingTime > 0) {
+        if (remainingCoolingTime > 0 && GoggleTooltip.isVisible(tooltip, Section.BREEZE_TIME)) {
             CCBLang.translate("gui.breeze_cooler.remaining_time").style(ChatFormatting.GRAY).forGoggles(tooltip);
             if (cooler.isCreative()) {
                 CCBLang.translate("gui.fluid_container.infinity").style(ChatFormatting.GREEN).forGoggles(tooltip, 1);
             }
             else {
-                CCBLang.seconds(remainingCoolingTime, cooler.getLevel().tickRateManager().tickrate()).style(ChatFormatting.GREEN).forGoggles(tooltip, 1);
+                CCBLang.seconds(remainingCoolingTime, level.tickRateManager().tickrate()).style(ChatFormatting.GREEN).forGoggles(tooltip, 1);
             }
+        }
+
+        if (!GoggleTooltip.isVisible(tooltip, Section.FLUID_STORAGE)) {
+            return true;
         }
 
         IFluidHandler fluidTank = cooler.getTankInventory();
@@ -67,46 +72,51 @@ final class BreezeCoolerDisplay {
             CCBLang.fluidName(storedFluid).style(ChatFormatting.WHITE).forGoggles(tooltip, 1);
             CCBLang.number(storedFluid.getAmount()).add(millibuckets).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(CCBLang.number(fluidTank.getTankCapacity(0)).add(millibuckets).style(ChatFormatting.DARK_GRAY)).forGoggles(tooltip, 1);
         }
-        if (!isLiquidInvalid()) {
-            return true;
+        return true;
+    }
+
+    boolean addToTooltip(List<Component> tooltip) {
+        if (cooler.getLevel() == null || cooler.isStockKeeper() || !isLiquidInvalid()) {
+            return false;
         }
 
-        tooltip.add(CommonComponents.EMPTY);
         CCBLang.translate("gui.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
         CCBLang.addToGoggles(tooltip, "gui.breeze_cooler.invalid_fluid");
         return true;
     }
 
     void spawnParticles() {
-        if (cooler.getLevel() == null) {
+        Level level = cooler.getLevel();
+        if (level == null) {
             return;
         }
 
-        RandomSource random = cooler.getLevel().getRandom();
+        RandomSource random = level.getRandom();
         if (random.nextInt(2) != 0) {
             return;
         }
 
         Vec3 center = VecHelper.getCenterOf(cooler.getBlockPos());
-        Vec3 particlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125f).multiply(1, 0, 1));
-        boolean isTopOpen = cooler.getLevel().getBlockState(cooler.getBlockPos().above()).getCollisionShape(cooler.getLevel(), cooler.getBlockPos().above()).isEmpty();
+        Vec3 particlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125F).multiply(1, 0, 1));
+        boolean isTopOpen = level.getBlockState(cooler.getBlockPos().above()).getCollisionShape(level, cooler.getBlockPos().above()).isEmpty();
         if (isTopOpen || random.nextInt(4) == 0) {
-            cooler.getLevel().addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
+            level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
         }
-        Vec3 chilledParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize().scale((isTopOpen ? 0.25 : 0.5) + random.nextDouble() * 0.125)).add(0, 0.5, 0);
+        Vec3 chilledParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5F).multiply(1, 0.25, 1).normalize().scale((isTopOpen ? 0.25 : 0.5) + random.nextDouble() * 0.125)).add(0, 0.5, 0);
         if (!cooler.getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED)) {
             return;
         }
 
-        cooler.getLevel().addParticle(ParticleTypes.SNOWFLAKE, chilledParticlePos.x, chilledParticlePos.y, chilledParticlePos.z, 0, isTopOpen ? 0.0625 : random.nextDouble() * 0.0125, 0);
+        level.addParticle(ParticleTypes.SNOWFLAKE, chilledParticlePos.x, chilledParticlePos.y, chilledParticlePos.z, 0, isTopOpen ? 0.0625 : random.nextDouble() * 0.0125, 0);
     }
 
     void playSound() {
-        if (cooler.getLevel() == null) {
+        Level level = cooler.getLevel();
+        if (level == null) {
             return;
         }
 
-        cooler.getLevel().playSound(null, cooler.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, 0.125f + cooler.getLevel().random.nextFloat() * 0.125f, 0.75f - cooler.getLevel().random.nextFloat() * 0.25f);
+        level.playSound(null, cooler.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, 0.125F + level.random.nextFloat() * 0.125F, 0.75F - level.random.nextFloat() * 0.25F);
     }
 
     void spawnParticleBurst() {
@@ -118,7 +128,7 @@ final class BreezeCoolerDisplay {
         Vec3 center = VecHelper.getCenterOf(cooler.getBlockPos());
         RandomSource random = level.random;
         for (int i = 0; i < 20; i++) {
-            Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5f).multiply(1, 0.25, 1).normalize();
+            Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5F).multiply(1, 0.25, 1).normalize();
             Vec3 particlePos = center.add(offset.scale(0.5 + random.nextDouble() * 0.125)).add(0, 0.125, 0);
             Vec3 velocity = offset.scale(0.03125);
             level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, velocity.x, velocity.y, velocity.z);
@@ -126,16 +136,9 @@ final class BreezeCoolerDisplay {
     }
 
     void tickAnimation(float targetAngle) {
-        boolean isAttached = cooler.getBlockState().getValue(BreezeCoolerBlock.ATTACHED);
-        if (isAttached) {
-            float facingAngle = (AngleHelper.horizontalAngle(cooler.getBlockState().getOptionalValue(BreezeCoolerBlock.FACING).orElse(Direction.SOUTH)) + 180) % 360;
-            cooler.getHeadAngle().chase(facingAngle, 0.125f, Chaser.EXP);
-        }
-        else {
-            cooler.getHeadAngle().chase(targetAngle, 0.25f, Chaser.exp(5));
-        }
+        cooler.getHeadAngle().chase(targetAngle, 0.25F, Chaser.exp(5));
         cooler.getHeadAngle().tickChaser();
-        cooler.getHeadAnimationInternal().chase(isAttached ? 1 : 0, 0.25f, Chaser.exp(0.25f));
+        cooler.getHeadAnimationInternal().chase(0, 0.25F, Chaser.exp(0.25F));
         cooler.getHeadAnimationInternal().tickChaser();
     }
 

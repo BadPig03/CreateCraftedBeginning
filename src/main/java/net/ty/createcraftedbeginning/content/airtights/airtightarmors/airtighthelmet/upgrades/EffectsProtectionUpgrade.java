@@ -13,9 +13,9 @@ import net.minecraft.world.item.Items;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePowerMode;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.GlobalAirtightUpgradesConsumptionManager;
-import net.ty.createcraftedbeginning.foundation.gui.AirtightUpgradeIcon;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
@@ -28,6 +28,8 @@ import java.util.List;
 public enum EffectsProtectionUpgrade implements AirtightUpgrade {
     INSTANCE;
 
+    private static final float BASE_GAS_MULTIPLIER = 0.5F;
+
     private static final ResourceLocation ID = CCBAPI.asResource("effects_protection");
     private static final Couple<Integer> OFFSET = Couple.create(36, 31);
 
@@ -36,6 +38,7 @@ public enum EffectsProtectionUpgrade implements AirtightUpgrade {
         if (getGasConsumptionMultiplier(player) == 0) {
             return List.of(CCBLang.translateDirect("gui.gas_consumption.supply_require_only"));
         }
+
         return List.of(CCBLang.translateDirect("gui.airtight_helmet.effects_protection_upgrade.gas_cost"));
     }
 
@@ -80,7 +83,7 @@ public enum EffectsProtectionUpgrade implements AirtightUpgrade {
     }
 
     @Override
-    public Item getUpgradeItem() {
+    public Item getDefaultUpgradeItem() {
         return Items.MILK_BUCKET;
     }
 
@@ -95,7 +98,7 @@ public enum EffectsProtectionUpgrade implements AirtightUpgrade {
 
     @Override
     public float getGasConsumptionMultiplier(Player player) {
-        return CCBConfig.server().equipments.effectsProtectionMultiplier.getF();
+        return BASE_GAS_MULTIPLIER * CCBConfig.server().equipment.airtightHelmet.effectsProtectionGasMultiplier.getF();
     }
 
     @Override
@@ -112,6 +115,7 @@ public enum EffectsProtectionUpgrade implements AirtightUpgrade {
         if (player.level().isClientSide) {
             return GlobalAirtightUpgradesConsumptionManager.canConsumeGas(player, this, EquipmentSlot.HEAD, gasConsumption, armorHandler -> armorHandler.canCureEffect(incomingEffect));
         }
+
         return GlobalAirtightUpgradesConsumptionManager.tryConsumeGas(player, this, EquipmentSlot.HEAD, gasConsumption, armorHandler -> armorHandler.canCureEffect(incomingEffect));
     }
 }

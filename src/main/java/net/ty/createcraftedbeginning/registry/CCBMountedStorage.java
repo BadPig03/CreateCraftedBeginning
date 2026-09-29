@@ -1,11 +1,11 @@
 package net.ty.createcraftedbeginning.registry;
 
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
+import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankMountedStorageType;
 import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeAirtightTankMountedStorageType;
-import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
 import net.ty.createcraftedbeginning.content.crates.CrateMountedStorageType;
 import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateMountedStorage;
@@ -15,7 +15,8 @@ import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrat
 import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateMountedStorage;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateMountedStorage;
-import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrate;
+import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageType;
+import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateExtensions;
 import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +26,7 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBMountedStorage {
-    private static final CCBRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
+    private static final CreateRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
 
     public static final RegistryEntry<MountedItemStorageType<?>, CrateMountedStorageType<AndesiteCrateBlockEntity, AndesiteCrateMountedStorage>> ANDESITE_CRATE = simpleItem("andesite_crate", () -> new CrateMountedStorageType<>(AndesiteCrateMountedStorage.CODEC, AndesiteCrateBlockEntity.class, AndesiteCrateMountedStorage::fromBlockEntity));
     public static final RegistryEntry<MountedItemStorageType<?>, CrateMountedStorageType<BrassCrateBlockEntity, BrassCrateMountedStorage>> BRASS_CRATE = simpleItem("brass_crate", () -> new CrateMountedStorageType<>(BrassCrateMountedStorage.CODEC, BrassCrateBlockEntity.class, BrassCrateMountedStorage::fromBlockEntity));
@@ -36,14 +37,14 @@ public class CCBMountedStorage {
     public static final RegistryEntry<MountedGasStorageType<?>, AirtightTankMountedStorageType> HORIZONTAL_AIRTIGHT_TANK = simpleGas("horizontal_airtight_tank", AirtightTankMountedStorageType::new);
     public static final RegistryEntry<MountedGasStorageType<?>, CreativeAirtightTankMountedStorageType> CREATIVE_AIRTIGHT_TANK = simpleGas("creative_airtight_tank", CreativeAirtightTankMountedStorageType::new);
 
+    public static void register() {
+    }
+
     private static <T extends MountedItemStorageType<?>> @NotNull RegistryEntry<MountedItemStorageType<?>, T> simpleItem(String name, Supplier<T> supplier) {
         return CCB_REGISTRATE.mountedItemStorage(name, supplier).register();
     }
 
     private static <T extends MountedGasStorageType<?>> @NotNull RegistryEntry<MountedGasStorageType<?>, T> simpleGas(String name, Supplier<T> supplier) {
-        return CCB_REGISTRATE.mountedGasStorage(name, supplier).register();
-    }
-
-    public static void register() {
+        return CCBRegistrateExtensions.mountedGasStorage(CCB_REGISTRATE, name, supplier).register();
     }
 }

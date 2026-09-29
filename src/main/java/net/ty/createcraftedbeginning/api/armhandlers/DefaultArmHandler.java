@@ -7,7 +7,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class DefaultArmHandler {
-    public static final AirtightArmStats INSTANCE = new AirtightArmStats(1, 2, 2, 0.5f);
+    public static final AirtightArmStats INSTANCE = new AirtightArmStats(1, 2, 2, 0.5F);
 
     private DefaultArmHandler() {
     }

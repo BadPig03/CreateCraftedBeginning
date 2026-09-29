@@ -11,7 +11,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.Gas;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Supplier;
@@ -35,7 +35,7 @@ public class AirtightCannonWindChargeItem extends Item {
             shoot(level, player);
         }
 
-        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WIND_CHARGE_THROW, SoundSource.NEUTRAL, 0.5f, 0.4f / (level.getRandom().nextFloat() * 0.4f + 0.8f));
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WIND_CHARGE_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
         player.getCooldowns().addCooldown(this, COOLDOWN);
         player.awardStat(Stats.ITEM_USED.get(this));
         windChargeStack.consume(1, player);
@@ -52,7 +52,7 @@ public class AirtightCannonWindChargeItem extends Item {
         windCharge.setOwner(player);
         windCharge.setDeltaMovement(launchMotion);
         windCharge.setMultiplier(1);
-        windCharge.setKnockback(0.1f);
+        windCharge.setKnockback(0.1F);
 
         level.addFreshEntity(windCharge);
     }

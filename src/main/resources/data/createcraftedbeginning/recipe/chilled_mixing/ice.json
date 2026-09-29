@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:chilled_mixing",
+  "ingredients": [
+    {
+      "type": "neoforge:single",
+      "amount": 1000,
+      "fluid": "minecraft:water"
+    }
+  ],
+  "processing_time": 100,
+  "results": [
+    {
+      "id": "minecraft:ice"
+    }
+  ]
+}

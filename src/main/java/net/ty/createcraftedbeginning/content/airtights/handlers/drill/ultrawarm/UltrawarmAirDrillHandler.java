@@ -23,12 +23,12 @@ public class UltrawarmAirDrillHandler implements AirtightDrillHandler {
 
     @Override
     public int getDamageAddition() {
-        return 0;
+        return 1;
     }
 
     @Override
     public float getConsumptionMultiplier() {
-        return 0.9f;
+        return 0.8F;
     }
 
     @Override

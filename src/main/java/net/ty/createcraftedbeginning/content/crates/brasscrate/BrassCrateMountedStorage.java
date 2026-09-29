@@ -22,7 +22,7 @@ public class BrassCrateMountedStorage extends FilteredCrateMountedItemStorage<Br
     }
 
     private BrassCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count, ItemStack filterItem) {
-        super(type, BrassCrateBlockEntity.class, content, count, filterItem, () -> CCBConfig.server().crates.maxBrassCapacity.get());
+        super(type, BrassCrateBlockEntity.class, content, count, filterItem, () -> CCBConfig.server().storage.brassCrate.itemCapacity.get());
     }
 
     public static BrassCrateMountedStorage fromBlockEntity(BrassCrateBlockEntity crate) {

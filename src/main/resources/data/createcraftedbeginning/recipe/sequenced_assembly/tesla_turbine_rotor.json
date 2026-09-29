@@ -17,7 +17,7 @@
           "item": "createcraftedbeginning:incomplete_tesla_turbine_rotor"
         },
         {
-          "type": "fluid_stack",
+          "type": "neoforge:single",
           "amount": 500,
           "fluid": "minecraft:lava"
         }

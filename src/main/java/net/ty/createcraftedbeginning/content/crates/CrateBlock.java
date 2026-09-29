@@ -35,6 +35,7 @@ public abstract class CrateBlock<T extends CratesBlockEntity> extends Horizontal
         if (placementState == null) {
             return null;
         }
+
         return placementState.setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
@@ -76,7 +77,8 @@ public abstract class CrateBlock<T extends CratesBlockEntity> extends Horizontal
         if (!blockEntityClass.isInstance(blockEntity)) {
             return 0;
         }
-        return CrateContainersUtils.calculateRedstoneSignal(blockEntityClass.cast(blockEntity).getHandler());
+
+        return blockEntityClass.cast(blockEntity).getHandler().calculateRedstoneSignal();
     }
 
     @Override
@@ -85,6 +87,6 @@ public abstract class CrateBlock<T extends CratesBlockEntity> extends Horizontal
     }
 
     protected void onCrateRemoved(Level level, BlockPos pos, T crate, boolean isMoving) {
-        CrateContainersUtils.dropContents(level, pos.getX(), pos.getY(), pos.getZ(), crate.getHandler());
+        crate.getHandler().dropContents(level, pos.getX(), pos.getY(), pos.getZ());
     }
 }

@@ -8,7 +8,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.compat.functionalstorage.ControllerGasHandler;
 import net.ty.createcraftedbeginning.compat.functionalstorage.access.GasConnectedDrawersAccess;
 import net.ty.createcraftedbeginning.compat.functionalstorage.access.GasControllerAccess;
@@ -31,18 +31,18 @@ public abstract class StorageControllerTileMixin implements GasControllerAccess 
     @Unique
     private ControllerGasHandler ccb$gasHandler;
 
+    @Override
+    public GasHandler ccb$getGasHandler() {
+        return ccb$gasHandler;
+    }
+
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void ccb$init(BasicTileBlock<?> base, BlockEntityType<?> entityType, BlockPos pos, BlockState state, CallbackInfo ci) {
+    private void ccb$init(BasicTileBlock<?> base, BlockEntityType<?> entityType, BlockPos pos, BlockState state, CallbackInfo callback) {
         ccb$gasHandler = new ControllerGasHandler();
     }
 
     @ModifyExpressionValue(method = "serverTick", at = @At(value = "INVOKE", target = "Lcom/buuz135/functionalstorage/util/ConnectedDrawers;getExtensions()I"))
     private int ccb$serverTick(int original) {
         return original + ((GasConnectedDrawersAccess) connectedDrawers).ccb$getGasHandlers().size();
-    }
-
-    @Override
-    public IGasHandler ccb$getGasHandler() {
-        return ccb$gasHandler;
     }
 }

@@ -2,11 +2,13 @@ package net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackage
 
 import com.simibubi.create.content.logistics.BigItemStack;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerUtils.Candidate;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerUtils.ExtractionResult;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerUtils.GasGroupCandidates;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerUtils.ScanResult;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonPackingLimits;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerExtraction.ExtractionResult;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerScan.Candidate;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerScan.GasGroupCandidates;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerScan.ScanResult;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -22,36 +24,50 @@ final class GasRepackagerController {
     }
 
     void attemptToRepackage(IItemHandler targetInv) {
-        ScanResult scanResult = GasRepackagerUtils.scanPackages(targetInv);
-        if (tryHandleCompletedOrder(targetInv, scanResult) || tryRepackageSimpleGasGroup(targetInv, scanResult)) {
+        ScanResult scanResult = GasRepackagerScan.scanPackages(targetInv);
+        long ambientPressurePa = blockEntity.ambientPressurePa();
+        if (tryHandleCompletedOrder(targetInv, scanResult, ambientPressurePa) || tryRepackageSimpleGasGroup(targetInv, scanResult, ambientPressurePa)) {
             return;
         }
 
         passThroughFirstReadyPackage(targetInv, scanResult);
     }
 
-    private boolean tryHandleCompletedOrder(IItemHandler targetInv, ScanResult scan) {
+    private boolean tryHandleCompletedOrder(IItemHandler targetInv, ScanResult scan, long ambientPressurePa) {
         for (Entry<Integer, List<Candidate>> orderEntry : scan.orderedPackagesByOrder().entrySet()) {
             int orderId = orderEntry.getKey();
             List<Candidate> candidates = orderEntry.getValue();
-            if (!GasRepackagerUtils.isOrderComplete(candidates)) {
+            if (!GasRepackagerPlanner.isOrderComplete(candidates)) {
                 continue;
             }
 
             boolean hasGasPackage = candidates.stream().anyMatch(Candidate::isGasPackage);
-            List<BigItemStack> outputPackages;
-            if (hasGasPackage) {
-                boolean hasNonStandalonePackage = candidates.stream().anyMatch(candidate -> !GasRepackagerUtils.isStandaloneFinalOrderPackage(candidate.box()));
-                if (!hasNonStandalonePackage) {
-                    continue;
+            if (!hasGasPackage) {
+                blockEntity.attemptVanillaItemRepackage(targetInv);
+                return true;
+            }
+
+            if (BalloonPackingLimits.getLocalPackingLimit(ambientPressurePa) <= 0) {
+                if (!extractCandidatesTransactionally(targetInv, candidates)) {
+                    return false;
                 }
 
-                outputPackages = GasRepackagerUtils.createMixedOrderOutput(orderId, candidates);
-            }
-            else {
-                outputPackages = GasRepackagerUtils.createItemOrderPassThroughOutput(candidates);
+                GasRepackagerPlanner.sortByOrderPosition(candidates).forEach(candidate -> blockEntity.acceptPassThroughPackage(candidate.box()));
+                return true;
             }
 
+            boolean hasNonStandalonePackage = candidates.stream().anyMatch(candidate -> !GasRepackagerScan.isStandaloneFinalOrderPackage(candidate.box()));
+            boolean needsLocalGasRepack = GasRepackagerPlanner.needsLocalGasRepack(candidates, ambientPressurePa);
+            if (!hasNonStandalonePackage && !needsLocalGasRepack) {
+                continue;
+            }
+
+            Level level = blockEntity.getLevel();
+            if (level == null) {
+                continue;
+            }
+
+            List<BigItemStack> outputPackages = GasRepackagerOutputs.createMixedOrderOutput(orderId, candidates, ambientPressurePa, level.getRandom());
             if (outputPackages.isEmpty()) {
                 continue;
             }
@@ -60,26 +76,18 @@ final class GasRepackagerController {
                 return false;
             }
 
-            if (hasGasPackage) {
-                blockEntity.enqueueRepackagedBoxes(outputPackages);
-            }
-            else {
-                blockEntity.enqueuePassThroughBoxes(outputPackages);
-            }
+            blockEntity.enqueueRepackagedBoxes(outputPackages);
             return true;
         }
+
         return false;
     }
 
-    private boolean tryRepackageSimpleGasGroup(IItemHandler targetInv, ScanResult scan) {
+    private boolean tryRepackageSimpleGasGroup(IItemHandler targetInv, ScanResult scan, long ambientPressurePa) {
         for (GasGroupCandidates group : scan.simpleGroups()) {
-            if (group.candidates().size() < 2) {
-                continue;
-            }
-
             String address = blockEntity.resolveGasOutputAddress(group.address());
-            List<BigItemStack> outputPackages = GasRepackagerUtils.createBalloons(group.outputTemplate(), group.contents(), address);
-            if (!GasRepackagerUtils.isRepackUseful(group, outputPackages)) {
+            List<BigItemStack> outputPackages = GasRepackagerOutputs.createBalloons(group.gas(), address, ambientPressurePa);
+            if (!GasRepackagerPlanner.isRepackUseful(group, outputPackages)) {
                 continue;
             }
 
@@ -90,6 +98,7 @@ final class GasRepackagerController {
             blockEntity.enqueueRepackagedBoxes(outputPackages);
             return true;
         }
+
         return false;
     }
 
@@ -103,7 +112,7 @@ final class GasRepackagerController {
     }
 
     private boolean extractCandidatesTransactionally(IItemHandler targetInv, List<Candidate> candidates) {
-        ExtractionResult extractionResult = GasRepackagerUtils.extractCandidates(targetInv, candidates);
+        ExtractionResult extractionResult = GasRepackagerExtraction.extractCandidates(targetInv, candidates);
         if (extractionResult.committed()) {
             return true;
         }

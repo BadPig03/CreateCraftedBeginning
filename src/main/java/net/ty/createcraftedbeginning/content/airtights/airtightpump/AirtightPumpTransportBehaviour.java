@@ -1,18 +1,15 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpump;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentTypes;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.IAirtightPipeDrain;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasPipeConnection;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.GasTransportEdgeProperties;
+import net.ty.createcraftedbeginning.gas.network.GasTransportPressureDrive;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collection;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -25,35 +22,36 @@ final class AirtightPumpTransportBehaviour extends GasTransportBehaviour {
     }
 
     @Override
-    public boolean canHaveFlowToward(BlockState state, Direction direction) {
-        return canHaveFlowTowardWithoutLevel(state, direction);
+    public boolean canConnectOnFace(BlockState state, Direction direction) {
+        return isConnectionFaceEnabled(state, direction);
     }
 
     @Override
-    public boolean canHaveFlowTowardWithoutLevel(BlockState state, Direction direction) {
-        return pump.isSideAccessible(direction);
+    public boolean isConnectionFaceEnabled(BlockState state, Direction direction) {
+        return pump.getPerformanceController().isSideAccessible(direction);
     }
 
     @Override
-    public AirtightPipeAttachmentTypes getRenderedRimAttachment(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction) {
-        BlockPos adjacentPos = pos.relative(direction);
-        BlockState adjacentState = level.getBlockState(adjacentPos);
-        if (!(adjacentState.getBlock() instanceof IAirtightPipeDrain drain) || !drain.shouldRenderDrain(level, adjacentPos, adjacentState, direction.getOpposite())) {
-            return AirtightPipeAttachmentTypes.NONE;
-        }
-        return AirtightPipeAttachmentTypes.DRAIN;
+    public boolean allowsInboundFlow(BlockState state, Direction direction) {
+        return isConnectionFaceEnabled(state, direction) && direction == pump.getPerformanceController().getPumpInletDirection();
     }
 
     @Override
-    protected void beforeFlowUpdate(Level level, BlockPos pos, Collection<GasPipeConnection> connections) {
-        if (level.isClientSide && !pump.isVirtual() || !level.isLoaded(pos) || pump.isRemoved()) {
-            return;
+    public boolean allowsOutboundFlow(BlockState state, Direction direction) {
+        return isConnectionFaceEnabled(state, direction) && direction == pump.getPerformanceController().getPumpOutletDirection();
+    }
+
+    @Override
+    public GasTransportEdgeProperties getTransportEdgeProperties(BlockState state, Direction entryFace, Direction exitFace, GasStack gasStack) {
+        long resistanceUnits = getFlowResistanceUnits(state, entryFace, exitFace);
+        AirtightPumpPerformanceController controller = pump.getPerformanceController();
+        if (entryFace != controller.getPumpInletDirection() || exitFace != controller.getPumpOutletDirection()) {
+            return GasTransportEdgeProperties.passive(resistanceUnits);
         }
 
-        float pressure = pump.getPumpPressure();
-        for (GasPipeConnection connection : connections) {
-            Direction direction = connection.getSide();
-            connection.setPumpPressure(AirtightPumpPressureController.isPullingOnSide(pump.isFront(direction)), pressure);
-        }
+        long maxPressureBoostPa = Math.max(GasPressure.VACUUM_PA, pump.getPumpMaxPressureBoostPa());
+        long flowRateLimit = Math.max(0, pump.getPumpFlowRateLimit());
+        double pumpCurveConductance = maxPressureBoostPa <= GasPressure.VACUUM_PA || flowRateLimit <= 0 ? Double.NaN : (double) flowRateLimit / maxPressureBoostPa;
+        return new GasTransportEdgeProperties(resistanceUnits, GasTransportPressureDrive.pressureBoost(maxPressureBoostPa), flowRateLimit, GasPressure.REFERENCE_PRESSURE_PA, pumpCurveConductance, true, true);
     }
 }

@@ -8,6 +8,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public enum CannonModelType {
     CORE_ONLY,
-    NATURAL,
-    ETHEREAL
+    WITH_WIND,
+    WITH_WIND_ROTATED
 }

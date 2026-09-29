@@ -1,7 +1,8 @@
 package net.ty.createcraftedbeginning.content.airtights.handlers.arm;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandlerUtils;
+import net.ty.createcraftedbeginning.api.armhandlers.AirtightArmHandlers;
+import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfiles;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -10,25 +11,21 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CCBAirtightArmHandlers {
     public static void register() {
-        AirtightArmHandlerUtils.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), 1, 2, 2, 0.5f);
-        AirtightArmHandlerUtils.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), 0.8f, 4, 4, 1);
-        AirtightArmHandlerUtils.register(CCBGases.PRESSURIZED_NATURAL_AIR.get().getResourceLocation(), 0.65f, 4, 4, 1);
-        AirtightArmHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_NATURAL_AIR.get().getResourceLocation(), 0.5f, 8, 8, 2);
+        AirtightArmHandlers.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 1, 2, 2, 0.5F);
+        AirtightArmHandlers.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 0.75F, 4, 4, 1);
 
-        AirtightArmHandlerUtils.register(CCBGases.ULTRAWARM_AIR.get().getResourceLocation(), 0.75f, 2, 2, 0.5f);
-        AirtightArmHandlerUtils.register(CCBGases.ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), 0.6f, 4, 4, 1);
-        AirtightArmHandlerUtils.register(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get().getResourceLocation(), 0.4875f, 4, 4, 1);
-        AirtightArmHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), 0.15f, 8, 8, 2);
+        AirtightArmHandlers.register(CCBGases.ULTRAWARM_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 0.8F, 3, 3, 0.75F);
+        AirtightArmHandlers.register(CCBGases.ENERGIZED_ULTRAWARM_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 0.6F, 6, 6, 1.5F);
 
-        AirtightArmHandlerUtils.register(CCBGases.ETHEREAL_AIR.get().getResourceLocation(), 0.5f, 2, 2, 0.5f);
-        AirtightArmHandlerUtils.register(CCBGases.ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), 0.4f, 4, 4, 1);
-        AirtightArmHandlerUtils.register(CCBGases.PRESSURIZED_ETHEREAL_AIR.get().getResourceLocation(), 0.325f, 4, 4, 1);
-        AirtightArmHandlerUtils.register(CCBGases.PRESSURIZED_ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), 0.1f, 8, 8, 2);
+        AirtightArmHandlers.register(CCBGases.ETHEREAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 0.6F, 4, 4, 1);
+        AirtightArmHandlers.register(CCBGases.ENERGIZED_ETHEREAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 0.45F, 8, 8, 2);
 
-        AirtightArmHandlerUtils.register(CCBGases.MOIST_AIR.get().getResourceLocation(), 1, 2, 2, 0.5f);
-        AirtightArmHandlerUtils.register(CCBGases.SPORE_AIR.get().getResourceLocation(), 1, 2, 2, 0.5f);
-        AirtightArmHandlerUtils.register(CCBGases.SCULK_AIR.get().getResourceLocation(), 1, 2, 2, 0.5f);
+        AirtightArmHandlers.register(CCBGases.MOIST_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 1, 2, 2, 0.5F);
+        AirtightArmHandlers.register(CCBGases.SPORE_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 1, 2, 2, 0.5F);
+        AirtightArmHandlers.register(CCBGases.SCULK_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 1, 2, 2, 0.5F);
 
-        AirtightArmHandlerUtils.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), 0, 64, 64, 5);
+        AirtightArmHandlers.register(CCBGases.STEAM.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 0.9F, 2.5F, 2.5F, 0.75F);
+
+        AirtightArmHandlers.register(CCBGases.CREATIVE_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 0, 64, 64, 5);
     }
 }

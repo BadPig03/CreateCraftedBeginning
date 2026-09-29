@@ -12,7 +12,7 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.AngleHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirVentVisual extends AbstractBlockEntityVisual<AirVentBlockEntity> implements SimpleDynamicVisual {
-    private static final float LOUVER_SURFACE_OFFSET = 0.001953125f;
+    private static final float LOUVER_SURFACE_OFFSET = 0.001953125F;
 
     private final TransformedInstance[] louvers = new TransformedInstance[Direction.values().length];
     private final TransformedInstance[] innerLouvers = new TransformedInstance[Direction.values().length];
@@ -50,6 +50,34 @@ public class AirVentVisual extends AbstractBlockEntityVisual<AirVentBlockEntity>
 
             consumer.accept(louver);
         }
+    }
+
+    @Override
+    public void update(float partialTick) {
+        syncLouvers();
+    }
+
+    @Override
+    protected void _delete() {
+        deleteLouvers(louvers);
+        deleteLouvers(innerLouvers);
+    }
+
+    @Override
+    public void beginFrame(Context context) {
+        syncLouvers();
+    }
+
+    @Override
+    public void updateLight(float partialTick) {
+        relight(louvers);
+        relight(innerLouvers);
+    }
+
+    @Override
+    public void collectCrumblingInstances(Consumer<Instance> consumer) {
+        collectCrumblingInstances(consumer, louvers);
+        collectCrumblingInstances(consumer, innerLouvers);
     }
 
     private void syncLouvers() {
@@ -107,37 +135,5 @@ public class AirVentVisual extends AbstractBlockEntityVisual<AirVentBlockEntity>
     private void orientLouver(TransformedInstance louver, Direction direction, float surfaceOffset) {
         Direction louverFacing = direction.getOpposite();
         louver.setIdentityTransform().translate(getVisualPosition()).translate(direction.getStepX() * surfaceOffset, direction.getStepY() * surfaceOffset, direction.getStepZ() * surfaceOffset).rotateYCentered(AngleHelper.rad(AngleHelper.horizontalAngle(louverFacing))).rotateXCentered(AngleHelper.rad(AngleHelper.verticalAngle(louverFacing))).setChanged();
-    }
-
-    @Override
-    public void update(float partialTick) {
-        syncLouvers();
-    }
-
-    @Override
-    protected void _delete() {
-        deleteLouvers(louvers);
-        deleteLouvers(innerLouvers);
-    }
-
-    @Override
-    public void beginFrame(Context context) {
-        if (!isVisible(context.frustum()) || doDistanceLimitThisFrame(context)) {
-            return;
-        }
-
-        syncLouvers();
-    }
-
-    @Override
-    public void updateLight(float partialTick) {
-        relight(louvers);
-        relight(innerLouvers);
-    }
-
-    @Override
-    public void collectCrumblingInstances(Consumer<Instance> consumer) {
-        collectCrumblingInstances(consumer, louvers);
-        collectCrumblingInstances(consumer, innerLouvers);
     }
 }

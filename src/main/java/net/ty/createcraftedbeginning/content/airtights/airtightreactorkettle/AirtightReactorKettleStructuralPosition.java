@@ -2,9 +2,11 @@ package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.level.block.Rotation;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -89,8 +91,19 @@ public enum AirtightReactorKettleStructuralPosition implements StringRepresentab
         };
     }
 
+    @Contract(pure = true)
+    @Override
+    public String getSerializedName() {
+        return Lang.asId(name());
+    }
+
     public boolean isCog() {
         return isCog;
+    }
+
+    AirtightReactorKettleStructuralPosition rotate(Rotation rotation) {
+        BlockPos offset = BlockPos.ZERO.offset(getPosition()).multiply(-1).rotate(rotation);
+        return fromOffset(offset.getX(), offset.getY(), offset.getZ());
     }
 
     boolean canStore() {
@@ -112,11 +125,5 @@ public enum AirtightReactorKettleStructuralPosition implements StringRepresentab
     @Contract(value = " -> new", pure = true)
     Vec3i getPosition() {
         return new Vec3i(x, y, z);
-    }
-
-    @Contract(pure = true)
-    @Override
-    public String getSerializedName() {
-        return Lang.asId(name());
     }
 }

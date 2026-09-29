@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.portablegasinterface;
 
+
+
 import dev.engine_room.flywheel.api.instance.Instance;
 import dev.engine_room.flywheel.api.visual.DynamicVisual;
 import dev.engine_room.flywheel.api.visual.TickableVisual;
@@ -25,10 +27,6 @@ public class PortableGasInterfaceVisual extends AbstractBlockEntityVisual<Portab
         instance.beginFrame(blockEntity.getExtensionDistance(partialTick));
     }
 
-    private boolean isLit() {
-        return blockEntity.isConnected();
-    }
-
     @Override
     public void tick(TickableVisual.Context context) {
         instance.tick(isLit());
@@ -52,5 +50,9 @@ public class PortableGasInterfaceVisual extends AbstractBlockEntityVisual<Portab
     @Override
     public void collectCrumblingInstances(Consumer<Instance> consumer) {
         instance.collectCrumblingInstances(consumer);
+    }
+
+    private boolean isLit() {
+        return blockEntity.isConnected();
     }
 }

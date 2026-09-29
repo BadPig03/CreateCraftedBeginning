@@ -12,8 +12,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -66,20 +66,8 @@ public class CCBLang extends Lang {
         if (totalSeconds < 1) {
             return builder().translate("gui.ticks", ticks);
         }
+
         return formatSeconds(Mth.floor(totalSeconds));
-    }
-
-    private static LangBuilder formatSeconds(int totalSeconds) {
-        if (totalSeconds < 60) {
-            return builder().translate("gui.seconds", totalSeconds);
-        }
-
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-        if (seconds == 0) {
-            return builder().translate("gui.minutes", minutes);
-        }
-        return builder().translate("gui.minutes_seconds", minutes, seconds);
     }
 
     public static MutableComponent translateDirect(String translationKey, Object... args) {
@@ -98,5 +86,19 @@ public class CCBLang extends Lang {
         for (Component tooltipLine : TooltipHelper.cutTextComponent(translateDirect(translationKey, args), Palette.GRAY_AND_WHITE)) {
             builder().add(tooltipLine.copy()).forGoggles(tooltip);
         }
+    }
+
+    private static LangBuilder formatSeconds(int totalSeconds) {
+        if (totalSeconds < 60) {
+            return builder().translate("gui.seconds", totalSeconds);
+        }
+
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        if (seconds == 0) {
+            return builder().translate("gui.minutes", minutes);
+        }
+
+        return builder().translate("gui.minutes_seconds", minutes, seconds);
     }
 }

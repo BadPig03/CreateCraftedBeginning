@@ -1,10 +1,5 @@
 package net.ty.createcraftedbeginning.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.simibubi.create.infrastructure.config.AllConfigs;
-import net.createmod.catnip.animation.AnimationTickHolder;
-import net.createmod.catnip.render.DefaultSuperRenderTypeBuffer;
-import net.createmod.catnip.render.SuperRenderTypeBuffer;
 import net.createmod.ponder.foundation.PonderIndex;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -23,14 +18,11 @@ import net.neoforged.neoforge.client.event.RecipesUpdatedEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.client.CCBCreativeTabBanners.BannerLayout;
-import net.ty.createcraftedbeginning.client.contents.GasCanisterPackClientOverrides;
-import net.ty.createcraftedbeginning.client.contents.GasFilteringRenderer;
+import net.ty.createcraftedbeginning.client.gas.GasFilteringRenderer;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateFirstPersonRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateLayer;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.AirtightLeggingsLayer;
@@ -41,12 +33,12 @@ import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.Airtigh
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillOutlineRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlay;
+import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackClientOverrides;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
-import net.ty.createcraftedbeginning.foundation.client.outliner.CCBOutliner;
 import net.ty.createcraftedbeginning.platform.client.CreativeInventoryBridge;
 import net.ty.createcraftedbeginning.platform.client.CreativeInventoryBridge.View;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
+import net.ty.createcraftedbeginning.recipe.ReactorKettleBrewingRecipes;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.PositionedSection;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabs;
@@ -70,6 +62,7 @@ public class CCBClientEvents {
     @SubscribeEvent
     public static void onRecipesUpdated(RecipesUpdatedEvent event) {
         BreezeChamberRecipeIndex.rebuild(event.getRecipeManager());
+        ReactorKettleBrewingRecipes.invalidateCaches();
     }
 
     @SubscribeEvent
@@ -80,15 +73,6 @@ public class CCBClientEvents {
     @SubscribeEvent
     public static void onTickPre(Pre event) {
         onTick(true);
-    }
-
-    @SubscribeEvent
-    public static void onRenderWorld(RenderLevelStageEvent event) {
-        if (event.getStage() != Stage.AFTER_PARTICLES) {
-            return;
-        }
-
-        onRenderWorld(event.getPoseStack());
     }
 
     @SubscribeEvent
@@ -104,15 +88,6 @@ public class CCBClientEvents {
     }
 
     @SubscribeEvent
-    public static void addToItemTooltip(ItemTooltipEvent event) {
-        if (event.getEntity() == null || !AllConfigs.client().tooltips.get()) {
-            return;
-        }
-
-        CCBClientRecipeUtils.addSequencedAssemblyTooltip(event);
-    }
-
-    @SubscribeEvent
     public static void onRegisterAdditionalModels(RegisterAdditional event) {
         CCBPartialModels.registerBalloons();
     }
@@ -124,6 +99,7 @@ public class CCBClientEvents {
             if (tintIndex != 0) {
                 return 0xFFFFFFFF;
             }
+
             return stack.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF);
         }, CCBItems.GAS_INJECTION_CHAMBER_FILTER.get());
     }
@@ -170,16 +146,6 @@ public class CCBClientEvents {
         AirtightExtendArmRenderHandler.INSTANCE.tick();
         AirtightHandheldDrillRenderHandler.INSTANCE.tick();
 
-        CCBOutliner.INSTANCE.tickOutlines();
     }
 
-    private static void onRenderWorld(PoseStack poseStack) {
-        poseStack.pushPose();
-
-        SuperRenderTypeBuffer buffer = DefaultSuperRenderTypeBuffer.getInstance();
-        CCBOutliner.INSTANCE.renderOutlines(poseStack, buffer, Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(), AnimationTickHolder.getPartialTicks());
-        buffer.draw();
-
-        poseStack.popPose();
-    }
 }

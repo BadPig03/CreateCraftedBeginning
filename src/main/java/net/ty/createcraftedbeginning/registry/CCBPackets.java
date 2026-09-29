@@ -10,16 +10,16 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.drainagehandlers.AirtightDrainageHandlerUtils;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseHandlers;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.AirtightChestplateElytraBoostPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonPacket;
+import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerFailurePacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillGhostItemSubmitPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillParametersPacket;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeMaterialsSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeSyncPacket;
-import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedStorageSyncWithGasPacket;
-import net.ty.createcraftedbeginning.content.airtights.gas.GasAreaOutlinePacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlayPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClientPacket;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;
@@ -27,6 +27,8 @@ import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterGhostI
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreenPacket;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerResetPacket;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerUpdatePacket;
+import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageSyncPacket;
+import net.ty.createcraftedbeginning.gas.visual.GasAreaOutlinePacket;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -36,6 +38,7 @@ import java.util.Locale;
 @MethodsReturnNonnullByDefault
 public enum CCBPackets implements PacketTypeProvider {
     AIRTIGHT_CANNON(AirtightCannonPacket.class, AirtightCannonPacket.STREAM_CODEC),
+    AIRTIGHT_FRACTIONATION_TOWER_FAILURE(AirtightFractionationTowerFailurePacket.class, AirtightFractionationTowerFailurePacket.STREAM_CODEC),
 
     AIRTIGHT_HANDHELD_DRILL_PARAMETERS(AirtightHandheldDrillParametersPacket.class, AirtightHandheldDrillParametersPacket.STREAM_CODEC),
     AIRTIGHT_HANDHELD_DRILL_GHOST_ITEM_SUBMIT(AirtightHandheldDrillGhostItemSubmitPacket.class, AirtightHandheldDrillGhostItemSubmitPacket.STREAM_CODEC),
@@ -43,6 +46,7 @@ public enum CCBPackets implements PacketTypeProvider {
     AIRTIGHT_BOOST_ELYTRA(AirtightChestplateElytraBoostPacket.class, AirtightChestplateElytraBoostPacket.STREAM_CODEC),
 
     AIRTIGHT_UPGRADE(AirtightUpgradePacket.class, AirtightUpgradePacket.STREAM_CODEC),
+    AIRTIGHT_UPGRADE_MATERIALS_SYNC(AirtightUpgradeMaterialsSyncPacket.class, AirtightUpgradeMaterialsSyncPacket.STREAM_CODEC),
     AIRTIGHT_UPGRADE_MENU_SYNC(AirtightUpgradeMenuSyncPacket.class, AirtightUpgradeMenuSyncPacket.STREAM_CODEC),
     AIRTIGHT_UPGRADE_SYNC(AirtightUpgradeSyncPacket.class, AirtightUpgradeSyncPacket.STREAM_CODEC),
 
@@ -57,7 +61,7 @@ public enum CCBPackets implements PacketTypeProvider {
     END_SCULK_SILENCER_RESET(EndSculkSilencerResetPacket.class, EndSculkSilencerResetPacket.STREAM_CODEC),
     END_SCULK_SILENCER_UPDATE(EndSculkSilencerUpdatePacket.class, EndSculkSilencerUpdatePacket.STREAM_CODEC),
 
-    MOUNTED_STORAGE_SYNC_WITH_GAS(MountedStorageSyncWithGasPacket.class, MountedStorageSyncWithGasPacket.STREAM_CODEC);
+    MOUNTED_GAS_STORAGE_SYNC(MountedGasStorageSyncPacket.class, MountedGasStorageSyncPacket.STREAM_CODEC);
 
     private final PacketType<?> type;
 
@@ -66,16 +70,16 @@ public enum CCBPackets implements PacketTypeProvider {
         type = new PacketType<>(new Type<>(CCBAPI.asResource(name)), clazz, codec);
     }
 
-    public static void register() {
-        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 4);
-        Arrays.stream(values()).map(packet -> packet.type).forEach(packetRegistry::registerPacket);
-        packetRegistry.registerAllPackets();
-        AirtightDrainageHandlerUtils.registerOutlineSender(GasAreaOutlinePacket::send);
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public <T extends CustomPacketPayload> Type<T> getType() {
         return (Type<T>) type.type();
+    }
+
+    public static void register() {
+        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 7);
+        Arrays.stream(values()).map(packet -> packet.type).forEach(packetRegistry::registerPacket);
+        packetRegistry.registerAllPackets();
+        GasReleaseHandlers.registerOutlineSender(GasAreaOutlinePacket::send);
     }
 }

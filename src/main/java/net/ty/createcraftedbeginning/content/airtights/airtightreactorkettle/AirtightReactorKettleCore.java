@@ -3,13 +3,14 @@ package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-class AirtightReactorKettleCore {
+public class AirtightReactorKettleCore {
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";
 
     private final AirtightReactorKettleBlockEntity kettle;
@@ -20,6 +21,11 @@ class AirtightReactorKettleCore {
         this.kettle = kettle;
         structureManager = new AirtightReactorKettleStructureManager(kettle);
         tooltipBuilder = new AirtightReactorKettleTooltipBuilder(this, kettle);
+    }
+
+    @Internal
+    public AirtightReactorKettleStructureManager getStructureManager() {
+        return structureManager;
     }
 
     void lazyTick() {
@@ -33,16 +39,12 @@ class AirtightReactorKettleCore {
 
     CompoundTag write() {
         CompoundTag compoundTag = new CompoundTag();
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
+        compoundTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
         return compoundTag;
     }
 
     void read(CompoundTag compoundTag) {
-        structureManager.read(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_STRUCTURE_MANAGER));
-    }
-
-    AirtightReactorKettleStructureManager getStructureManager() {
-        return structureManager;
+        structureManager.read(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
     }
 
     AirtightReactorKettleTooltipBuilder getTooltipBuilder() {

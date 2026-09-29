@@ -1,26 +1,26 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 
-import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.platform.CatnipServices;
-import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightReactorKettleAnimationState {
+public final class AirtightReactorKettleAnimationState {
     private final AirtightReactorKettleBlockEntity kettle;
     private final LerpedFloat ingredientRotation = LerpedFloat.angular().startWithValue(0);
     private final LerpedFloat ingredientRotationSpeed = LerpedFloat.linear().startWithValue(0);
@@ -28,7 +28,8 @@ final class AirtightReactorKettleAnimationState {
     private final LerpedFloat mixerRotationSpeed = LerpedFloat.linear().startWithValue(0);
     private final LerpedFloat windowDistance = LerpedFloat.linear().startWithValue(0.5);
 
-    AirtightReactorKettleAnimationState(AirtightReactorKettleBlockEntity kettle) {
+    @Internal
+    public AirtightReactorKettleAnimationState(AirtightReactorKettleBlockEntity kettle) {
         this.kettle = kettle;
     }
 
@@ -41,10 +42,7 @@ final class AirtightReactorKettleAnimationState {
     }
 
     void updateTargets(boolean moving, int operatingTicks, boolean windowsOpen) {
-        float rotationSpeed = CCBMathUtils.clampMagnitude(kettle.getCore().getStructureManager().getSpeed() * 0.5f, 64);
-        if (kettle.getLevel() instanceof PonderLevel) {
-            rotationSpeed = SpeedLevel.FAST.getSpeedValue() * 0.5f;
-        }
+        float rotationSpeed = BoundedMath.clampMagnitude(kettle.getController().getAnimationKineticSpeed() * 0.5F, 64);
 
         boolean isProcessing = operatingTicks > 15 && operatingTicks <= AirtightReactorKettleController.PROCESSING_STARTED;
         float targetIngredientSpeed = 0;
@@ -52,7 +50,7 @@ final class AirtightReactorKettleAnimationState {
         if (moving) {
             targetMixerSpeed = isProcessing ? rotationSpeed * 2 : rotationSpeed / 2;
             if (isProcessing) {
-                targetIngredientSpeed = rotationSpeed * 0.5f;
+                targetIngredientSpeed = rotationSpeed * 0.5F;
             }
         }
 
@@ -84,17 +82,17 @@ final class AirtightReactorKettleAnimationState {
             return;
         }
 
-        float absoluteSpeed = Mth.abs(kettle.getCore().getStructureManager().getSpeed());
+        float absoluteSpeed = Mth.abs(kettle.getController().getAnimationKineticSpeed());
         if (absoluteSpeed == 0) {
             return;
         }
 
-        float pitch = Mth.clamp(absoluteSpeed / 256 + 0.45f, 0.85f, 1);
+        float pitch = Mth.clamp(absoluteSpeed / 256 + 0.45F, 0.85F, 1);
         SoundScapes.play(AmbienceGroup.KINETIC, kettle.getBlockPos(), pitch);
-        if (absoluteSpeed <= 64 && AnimationTickHolder.getTicks() % 2 == 0 || kettle.getController().getOperatingTicks() != AirtightReactorKettleController.PROCESSING_STARTED) {
+        if (absoluteSpeed <= 64 && Mth.isMultipleOf(AnimationTickHolder.getTicks(), 2) || kettle.getController().getOperatingTicks() != AirtightReactorKettleController.PROCESSING_STARTED) {
             return;
         }
 
-        CCBSoundEvents.REACTOR_KETTLE_MIXING.playAt(level, kettle.getBlockPos(), 0.75f, 1, true);
+        CCBSoundEvents.REACTOR_KETTLE_MIXING.playAt(level, kettle.getBlockPos(), 0.75F, 1, true);
     }
 }

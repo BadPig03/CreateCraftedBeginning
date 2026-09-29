@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightengine;
 
-import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.RotationPropagator;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.IRotate;
@@ -21,11 +20,12 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
-    public static final float DELTA_TIME = 0.01f;
+public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity {
+    public static final float DELTA_TIME = 0.01F;
     public static final int BASE_ROTATION_SPEED = 8;
 
     private static final int LAZY_TICK_RATE = 20;
+    private static final int THERMAL_CYCLE_CHECK_INTERVAL = 20;
     private static final List<BlockPos> COG_NEIGHBOUR_OFFSETS = List.of(new BlockPos(-1, -1, 0), new BlockPos(-1, 0, -1), new BlockPos(-1, 0, 1), new BlockPos(-1, 1, 0), new BlockPos(0, -1, -1), new BlockPos(0, -1, 1), new BlockPos(0, 1, -1), new BlockPos(0, 1, 1), new BlockPos(1, -1, 0), new BlockPos(1, 0, -1), new BlockPos(1, 0, 1), new BlockPos(1, 1, 0));
 
     private final AirtightEngineAnimationState animationState = new AirtightEngineAnimationState();
@@ -67,6 +67,16 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
         }
 
         driveController.tickServer();
+        if (level.getGameTime() % THERMAL_CYCLE_CHECK_INTERVAL != 0 || getGeneratedSpeed() == 0 || getSpeed() == 0 || isOverStressed()) {
+            return;
+        }
+
+        AirtightAssemblyDriverCore driverCore = driveController.getDriverCore();
+        if (driverCore == null || !driverCore.isActive() || driverCore.getCurrentLevel() <= 0 || !driverCore.isUsingSteam()) {
+            return;
+        }
+
+        advancementBehaviour.awardPlayer(CCBAdvancements.THERMAL_CYCLE);
     }
 
     @Override
@@ -130,7 +140,7 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         super.addBehaviours(behaviours);
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.EMERGING_POWER, CCBAdvancements.FLYWHEEL);
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.EMERGING_POWER, CCBAdvancements.FLYWHEEL, CCBAdvancements.THERMAL_CYCLE);
         behaviours.add(advancementBehaviour);
     }
 
@@ -148,10 +158,6 @@ public class AirtightEngineBlockEntity extends GeneratingKineticBlockEntity impl
 
     float getPistonPhase(float partialTicks) {
         return animationState.getPistonPhase(partialTicks);
-    }
-
-    boolean isEngineOverStressed() {
-        return isOverStressed();
     }
 
     boolean hasKineticNetwork() {

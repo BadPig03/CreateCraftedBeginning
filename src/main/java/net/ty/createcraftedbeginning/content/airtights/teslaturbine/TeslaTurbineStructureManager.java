@@ -5,16 +5,15 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineGeometry.NozzlePort;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils.NozzlePort;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -22,6 +21,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 class TeslaTurbineStructureManager {
+    private static final int MAX_NOZZLES_PER_DIRECTION = 8;
     private static final String COMPOUND_KEY_CLOCKWISE_NOZZLES = "ClockwiseNozzles";
     private static final String COMPOUND_KEY_COUNTER_CLOCKWISE_NOZZLES = "CounterClockwiseNozzles";
     private static final String COMPOUND_KEY_VALID = "Valid";
@@ -40,6 +40,77 @@ class TeslaTurbineStructureManager {
         this.turbine = turbine;
     }
 
+    void tick() {
+        if (!evaluate()) {
+            return;
+        }
+
+        core.markForClientSync();
+    }
+
+    void triggerExplosion() {
+        BlockState turbineState = turbine.getBlockState();
+        Level level = turbine.getLevel();
+        int rotorCount = turbineState.getValue(TeslaTurbineBlock.ROTOR);
+        if (rotorCount == 0 || level == null || level.isClientSide) {
+            return;
+        }
+
+        BlockPos turbinePos = turbine.getBlockPos();
+        Axis turbineAxis = turbineState.getValue(TeslaTurbineBlock.AXIS);
+        double centerX = turbinePos.getX() + 0.5;
+        double centerY = turbinePos.getY() + 0.5;
+        double centerZ = turbinePos.getZ() + 0.5;
+        float explosionStrength = rotorCount * Math.max(0, CCBConfig.server().machines.teslaTurbine.explosionStrengthMultiplier.getF());
+        ExplosionInteraction explosionInteraction = CCBConfig.server().machines.teslaTurbine.explosionDamagesSurroundingBlocks.get() ? ExplosionInteraction.BLOCK : ExplosionInteraction.NONE;
+        switch (turbineAxis) {
+            case X -> {
+                level.explode(null, centerX + 0.5, centerY, centerZ, explosionStrength, true, explosionInteraction);
+                level.explode(null, centerX - 0.5, centerY, centerZ, explosionStrength, true, explosionInteraction);
+            }
+            case Z -> {
+                level.explode(null, centerX, centerY, centerZ + 0.5, explosionStrength, true, explosionInteraction);
+                level.explode(null, centerX, centerY, centerZ - 0.5, explosionStrength, true, explosionInteraction);
+            }
+            default -> {
+                level.explode(null, centerX, centerY + 0.5, centerZ, explosionStrength, true, explosionInteraction);
+                level.explode(null, centerX, centerY - 0.5, centerZ, explosionStrength, true, explosionInteraction);
+            }
+        }
+        level.setBlockAndUpdate(turbinePos, turbineState.setValue(TeslaTurbineBlock.ROTOR, 0));
+        turbine.getAdvancementBehaviour().awardPlayer(CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
+    }
+
+    boolean isActive() {
+        return (attachedClockwiseNozzles > 0 || attachedCounterClockwiseNozzles > 0) && structureValid;
+    }
+
+    void invalidateForServerLoad() {
+        clearDerivedState();
+        previousClockwiseNozzles = -1;
+        previousCounterClockwiseNozzles = -1;
+    }
+
+    int getAttachedNozzle() {
+        return attachedClockwiseNozzles + attachedCounterClockwiseNozzles;
+    }
+
+    CompoundTag writeClient() {
+        CompoundTag compoundTag = new CompoundTag();
+        compoundTag.putInt(COMPOUND_KEY_CLOCKWISE_NOZZLES, attachedClockwiseNozzles);
+        compoundTag.putInt(COMPOUND_KEY_COUNTER_CLOCKWISE_NOZZLES, attachedCounterClockwiseNozzles);
+        compoundTag.putBoolean(COMPOUND_KEY_VALID, structureValid);
+        return compoundTag;
+    }
+
+    void readClient(CompoundTag compoundTag) {
+        attachedClockwiseNozzles = Mth.clamp(compoundTag.getInt(COMPOUND_KEY_CLOCKWISE_NOZZLES), 0, MAX_NOZZLES_PER_DIRECTION);
+        attachedCounterClockwiseNozzles = Mth.clamp(compoundTag.getInt(COMPOUND_KEY_COUNTER_CLOCKWISE_NOZZLES), 0, MAX_NOZZLES_PER_DIRECTION);
+        structureValid = compoundTag.getBoolean(COMPOUND_KEY_VALID);
+        previousClockwiseNozzles = attachedClockwiseNozzles;
+        previousCounterClockwiseNozzles = attachedCounterClockwiseNozzles;
+    }
+
     private static boolean isStructureValid(BlockPos turbinePos, Axis axis, Level level) {
         for (int u = -1; u <= 1; u++) {
             for (int v = -1; v <= 1; v++) {
@@ -47,25 +118,16 @@ class TeslaTurbineStructureManager {
                     continue;
                 }
 
-                BlockPos structuralPos = TeslaTurbineUtils.calculateStructurePos(turbinePos, axis, u, v);
+                BlockPos structuralPos = TeslaTurbineGeometry.calculateStructurePos(turbinePos, axis, u, v);
                 BlockState structuralState = level.getBlockState(structuralPos);
-                if (!(structuralState.getBlock() instanceof TeslaTurbineStructuralBlock)) {
-                    return false;
+                if (structuralState.getBlock() instanceof TeslaTurbineStructuralBlock && structuralState.getValue(TeslaTurbineStructuralBlock.AXIS) == axis && structuralState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION) == TeslaTurbineStructuralPosition.fromOffset(u, v) && TeslaTurbineStructuralBlock.getMaster(structuralPos, structuralState).equals(turbinePos)) {
+                    continue;
                 }
 
-                if (structuralState.getValue(TeslaTurbineStructuralBlock.AXIS) != axis) {
-                    return false;
-                }
-
-                if (structuralState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION) != TeslaTurbineStructuralPosition.fromOffset(u, v)) {
-                    return false;
-                }
-
-                if (!TeslaTurbineStructuralBlock.getMaster(structuralPos, structuralState).equals(turbinePos)) {
-                    return false;
-                }
+                return false;
             }
         }
+
         return true;
     }
 
@@ -95,76 +157,6 @@ class TeslaTurbineStructureManager {
         return nozzleCount;
     }
 
-    void tick() {
-        if (!evaluate()) {
-            return;
-        }
-
-        core.markForClientSync();
-    }
-
-    void triggerExplosion() {
-        BlockState turbineState = turbine.getBlockState();
-        Level level = turbine.getLevel();
-        int rotorCount = turbineState.getValue(TeslaTurbineBlock.ROTOR);
-        if (rotorCount == 0 || level == null || level.isClientSide) {
-            return;
-        }
-
-        BlockPos turbinePos = turbine.getBlockPos();
-        Axis turbineAxis = turbineState.getValue(TeslaTurbineBlock.AXIS);
-        double centerX = turbinePos.getX() + 0.5;
-        double centerY = turbinePos.getY() + 0.5;
-        double centerZ = turbinePos.getZ() + 0.5;
-        float explosionStrength = rotorCount * Math.max(0, CCBConfig.server().airtights.teslaTurbineExplosionStrengthMultiplier.getF());
-        switch (turbineAxis) {
-            case X -> {
-                level.explode(null, centerX + 0.5, centerY, centerZ, explosionStrength, true, ExplosionInteraction.NONE);
-                level.explode(null, centerX - 0.5, centerY, centerZ, explosionStrength, true, ExplosionInteraction.NONE);
-            }
-            case Z -> {
-                level.explode(null, centerX, centerY, centerZ + 0.5, explosionStrength, true, ExplosionInteraction.NONE);
-                level.explode(null, centerX, centerY, centerZ - 0.5, explosionStrength, true, ExplosionInteraction.NONE);
-            }
-            default -> {
-                level.explode(null, centerX, centerY + 0.5, centerZ, explosionStrength, true, ExplosionInteraction.NONE);
-                level.explode(null, centerX, centerY - 0.5, centerZ, explosionStrength, true, ExplosionInteraction.NONE);
-            }
-        }
-        level.setBlockAndUpdate(turbinePos, turbineState.setValue(TeslaTurbineBlock.ROTOR, 0));
-        turbine.getAdvancementBehaviour().awardPlayer(CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
-    }
-
-    boolean isActive() {
-        return (attachedClockwiseNozzles > 0 || attachedCounterClockwiseNozzles > 0) && structureValid;
-    }
-
-    void invalidateForServerLoad() {
-        clearDerivedState();
-        previousClockwiseNozzles = -1;
-        previousCounterClockwiseNozzles = -1;
-    }
-
-    int getAttachedNozzle() {
-        return attachedClockwiseNozzles + attachedCounterClockwiseNozzles;
-    }
-
-    CompoundTag writeClient() {
-        CompoundTag compoundTag = new CompoundTag();
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_CLOCKWISE_NOZZLES, attachedClockwiseNozzles);
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_COUNTER_CLOCKWISE_NOZZLES, attachedCounterClockwiseNozzles);
-        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_VALID, structureValid);
-        return compoundTag;
-    }
-
-    void readClient(CompoundTag compoundTag) {
-        attachedClockwiseNozzles = CCBMathUtils.clampNonNegative(CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_CLOCKWISE_NOZZLES), TeslaTurbineUtils.MAX_NOZZLES_PER_DIRECTION);
-        attachedCounterClockwiseNozzles = CCBMathUtils.clampNonNegative(CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_COUNTER_CLOCKWISE_NOZZLES), TeslaTurbineUtils.MAX_NOZZLES_PER_DIRECTION);
-        structureValid = CCBNbtUtils.getBoolean(compoundTag, COMPOUND_KEY_VALID);
-        previousClockwiseNozzles = attachedClockwiseNozzles;
-        previousCounterClockwiseNozzles = attachedCounterClockwiseNozzles;
-    }
-
     private boolean evaluate() {
         Level level = turbine.getLevel();
         if (level == null || level.isClientSide) {
@@ -179,8 +171,8 @@ class TeslaTurbineStructureManager {
         boolean previousStructureValid = structureValid;
         structureValid = isStructureValid(turbinePos, turbineAxis, level);
         if (structureValid) {
-            attachedClockwiseNozzles = countNozzles(TeslaTurbineUtils.getNozzlePorts(true), turbinePos, turbineAxis, level);
-            attachedCounterClockwiseNozzles = countNozzles(TeslaTurbineUtils.getNozzlePorts(false), turbinePos, turbineAxis, level);
+            attachedClockwiseNozzles = countNozzles(TeslaTurbineGeometry.getNozzlePorts(true), turbinePos, turbineAxis, level);
+            attachedCounterClockwiseNozzles = countNozzles(TeslaTurbineGeometry.getNozzlePorts(false), turbinePos, turbineAxis, level);
         }
         else {
             attachedClockwiseNozzles = 0;

@@ -18,6 +18,7 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.AirtightBootsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.ElytraUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.AirtightHelmetUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.GlobalAirtightUpgradesConsumptionManager;
@@ -34,7 +35,7 @@ public class AirtightArmorsEvents {
 
     @SubscribeEvent
     public static void onAirtightArmorFireImmune(LivingIncomingDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player) || !AirtightArmorsUtils.isEntireArmoredUp(player)) {
+        if (!(event.getEntity() instanceof Player player) || !AirtightArmorSet.isEntireArmoredUp(player)) {
             return;
         }
 
@@ -57,7 +58,7 @@ public class AirtightArmorsEvents {
             return;
         }
 
-        event.setNewDamage(AirtightArmorsUtils.applyPaidResistance(player, event.getOriginalDamage(), event.getNewDamage()));
+        event.setNewDamage(AirtightArmorResistance.applyPaidResistance(player, event.getOriginalDamage(), event.getNewDamage()));
     }
 
     @SubscribeEvent
@@ -68,8 +69,9 @@ public class AirtightArmorsEvents {
             return;
         }
 
+        ElytraUpgrade.tickBoostPulse(player);
         GlobalAirtightUpgradesConsumptionManager.tick(player);
-        if (level.getGameTime() % 20 != 0 || !AirtightArmorsUtils.isEntireArmoredUp(player)) {
+        if (level.getGameTime() % 20 != 0 || !AirtightArmorSet.isEntireArmoredUp(player)) {
             return;
         }
 
@@ -79,7 +81,7 @@ public class AirtightArmorsEvents {
             return;
         }
 
-        CCBAdvancements.PHANTOM_DIVER.awardTo(player);
+        CCBAdvancements.PHANTOM_DIVERS.awardTo(player);
     }
 
     @SubscribeEvent
@@ -99,6 +101,7 @@ public class AirtightArmorsEvents {
             return;
         }
 
+        ElytraUpgrade.clearBoostPulse(player);
         GlobalAirtightUpgradesConsumptionManager.clearTracking(player);
     }
 
@@ -108,6 +111,7 @@ public class AirtightArmorsEvents {
             return;
         }
 
+        ElytraUpgrade.clearBoostPulse(player);
         GlobalAirtightUpgradesConsumptionManager.clear(player);
         GlobalAirtightUpgradesConsumptionManager.syncToClient(player);
     }

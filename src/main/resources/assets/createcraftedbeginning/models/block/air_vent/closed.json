@@ -1,6 +1,6 @@
 {
 	"credit": "Made with Blockbench",
-	"parent": "block/block",
+	"parent": "minecraft:block/block",
 	"textures": {
 		"0": "createcraftedbeginning:block/air_vent/air_vent_closed",
 		"particle": "createcraftedbeginning:block/air_vent/air_vent_closed"

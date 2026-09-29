@@ -11,10 +11,10 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.IGasCanisterContainer;
-import net.ty.createcraftedbeginning.api.gascanisters.events.GasTypeChangedEvent;
+import net.ty.createcraftedbeginning.api.canister.GasCanisterContainer;
+import net.ty.createcraftedbeginning.api.canister.event.GasTypeChangedEvent;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
@@ -50,7 +50,7 @@ final class GasCanisterEvents {
             NeoForge.EVENT_BUS.post(new GasTypeChangedEvent(player, currentGasType, storedGasType));
         }
 
-        syncOverlay(serverPlayer, overlaySelection.content(), overlaySelection.capacity(), overlaySelection.packType(), overlaySelection.creative());
+        syncOverlay(serverPlayer, overlaySelection.content(), overlaySelection.maxAmount(), overlaySelection.pressurePa(), overlaySelection.packType(), overlaySelection.creative());
     }
 
     @SubscribeEvent
@@ -58,22 +58,22 @@ final class GasCanisterEvents {
         LAST_OVERLAY_STATES.remove(event.getEntity());
     }
 
-    private static OverlaySelection findFirstAvailable(List<IGasCanisterContainer> containers) {
-        for (IGasCanisterContainer container : containers) {
+    private static OverlaySelection findFirstAvailable(List<GasCanisterContainer> containers) {
+        for (GasCanisterContainer container : containers) {
             for (int tankIndex = 0; tankIndex < container.getTanks(); tankIndex++) {
                 GasStack storedGas = container.getGasInTank(tankIndex);
-                long tankCapacity = container.getTankCapacity(tankIndex);
-                if (storedGas.isEmpty() || tankCapacity <= 0) {
+                long maxAmount = container.getTankMaxAmount(tankIndex);
+                if (storedGas.isEmpty() || maxAmount <= 0) {
                     continue;
                 }
 
-                return createSelection(container, tankIndex, storedGas, tankCapacity);
+                return createSelection(container, tankIndex, storedGas, maxAmount);
             }
         }
         return OverlaySelection.EMPTY;
     }
 
-    private static OverlaySelection createSelection(IGasCanisterContainer container, int tankIndex, GasStack storedGas, long tankCapacity) {
+    private static OverlaySelection createSelection(GasCanisterContainer container, int tankIndex, GasStack storedGas, long maxAmount) {
         int packType = -1;
         boolean isCreative = container instanceof CreativeGasCanisterContainerContents;
         if (container instanceof GasCanisterPackContainerContents packContents) {
@@ -84,35 +84,35 @@ final class GasCanisterEvents {
             packType = -2;
         }
 
-        return new OverlaySelection(storedGas, tankCapacity, packType, isCreative);
+        return new OverlaySelection(storedGas, maxAmount, container.getTankPressurePa(tankIndex), packType, isCreative);
     }
 
-    private static void syncOverlay(ServerPlayer player, GasStack content, long capacity, int packType, boolean creative) {
+    private static void syncOverlay(ServerPlayer player, GasStack content, long maxAmount, long pressurePa, int packType, boolean creative) {
         OverlayState previousOverlayState = LAST_OVERLAY_STATES.get(player);
-        if (previousOverlayState != null && previousOverlayState.matches(content, capacity, packType, creative)) {
+        if (previousOverlayState != null && previousOverlayState.matches(content, maxAmount, pressurePa, packType, creative)) {
             return;
         }
 
-        OverlayState overlayState = new OverlayState(content, capacity, packType, creative);
+        OverlayState overlayState = new OverlayState(content, maxAmount, pressurePa, packType, creative);
         LAST_OVERLAY_STATES.put(player, overlayState);
-        CatnipServices.NETWORK.sendToClient(player, new GasCanisterOverlayPacket(overlayState.content().copy(), overlayState.capacity(), overlayState.packType(), overlayState.creative()));
+        CatnipServices.NETWORK.sendToClient(player, new GasCanisterOverlayPacket(overlayState.content().copy(), overlayState.maxAmount(), overlayState.pressurePa(), overlayState.packType(), overlayState.creative()));
     }
 
-    private record OverlaySelection(GasStack content, long capacity, int packType, boolean creative) {
-        private static final OverlaySelection EMPTY = new OverlaySelection(GasStack.EMPTY, -1, -1, false);
+    private record OverlaySelection(GasStack content, long maxAmount, long pressurePa, int packType, boolean creative) {
+        private static final OverlaySelection EMPTY = new OverlaySelection(GasStack.EMPTY, -1, 0, -1, false);
 
         private OverlaySelection {
             content = content.copy();
         }
     }
 
-    private record OverlayState(GasStack content, long capacity, int packType, boolean creative) {
+    private record OverlayState(GasStack content, long maxAmount, long pressurePa, int packType, boolean creative) {
         private OverlayState {
             content = content.copy();
         }
 
-        private boolean matches(GasStack currentContent, long currentCapacity, int currentPackType, boolean currentCreative) {
-            return capacity == currentCapacity && packType == currentPackType && creative == currentCreative && GasStack.matches(content, currentContent);
+        private boolean matches(GasStack currentContent, long currentMaxAmount, long currentPressurePa, int currentPackType, boolean currentCreative) {
+            return maxAmount == currentMaxAmount && pressurePa == currentPressurePa && packType == currentPackType && creative == currentCreative && GasStack.matches(content, currentContent);
         }
     }
 }

@@ -46,3 +46,10 @@ config="createcraftedbeginning.mixins.json"
     versionRange = "[1.21.1-1.5.4,)"
     ordering = "AFTER"
     side = "BOTH"
+
+[[dependencies.createcraftedbeginning]]
+    modId = "curios"
+    type = "optional"
+    versionRange = "[${curios_version},10)"
+    ordering = "AFTER"
+    side = "BOTH"

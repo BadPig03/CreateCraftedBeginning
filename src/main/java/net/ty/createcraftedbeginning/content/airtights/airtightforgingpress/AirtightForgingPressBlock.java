@@ -42,11 +42,23 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
         if (structuralPosition.isShaft()) {
             return CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION, structuralPosition);
         }
+
         return CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION, structuralPosition);
     }
 
     private static boolean isExpectedStructure(BlockState state, AirtightForgingPressStructuralPosition structuralPosition) {
-        return state.getBlock() instanceof IAirtightForgingPressStructural structural && state.getValue(structural.getStructuralPosition()) == structuralPosition;
+        return state.getBlock() instanceof AirtightForgingPressStructural structural && state.getValue(structural.getStructuralPosition()) == structuralPosition;
+    }
+
+    private static void destroyStructure(Level level, BlockPos pos) {
+        for (AirtightForgingPressStructuralPosition structuralPosition : AirtightForgingPressStructuralPosition.all()) {
+            BlockPos structurePos = pos.offset(structuralPosition.getStructureOffset());
+            if (!isExpectedStructure(level.getBlockState(structurePos), structuralPosition)) {
+                continue;
+            }
+
+            level.destroyBlock(structurePos, false);
+        }
     }
 
     @Override
@@ -66,12 +78,22 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (isMoving) {
+            super.onRemove(state, level, pos, newState, true);
+            return;
+        }
+
         IBE.onRemove(state, level, pos, newState);
+        if (level.isClientSide || state.is(newState.getBlock())) {
+            return;
+        }
+
+        destroyStructure(level, pos);
     }
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        return onBlockEntityUseItemOn(level, blockPos, press -> AirtightForgingPressUtils.getUseItemOnResult(press, level, player, blockPos, hand, stack));
+        return onBlockEntityUseItemOn(level, blockPos, press -> AirtightForgingPressInteraction.getUseItemOnResult(press, level, player, blockPos, hand, stack));
     }
 
     @Override
@@ -102,21 +124,6 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
 
             abortStructureFormation(level, pos);
             return;
-        }
-    }
-
-    private void abortStructureFormation(ServerLevel level, BlockPos pos) {
-        if (level.getBlockState(pos).is(this)) {
-            level.destroyBlock(pos, true);
-        }
-
-        for (AirtightForgingPressStructuralPosition structuralPosition : AirtightForgingPressStructuralPosition.all()) {
-            BlockPos structurePos = pos.offset(structuralPosition.getStructureOffset());
-            if (!isExpectedStructure(level.getBlockState(structurePos), structuralPosition)) {
-                continue;
-            }
-
-            level.destroyBlock(structurePos, false);
         }
     }
 
@@ -159,5 +166,13 @@ public class AirtightForgingPressBlock extends Block implements IBE<AirtightForg
     @Override
     public BlockEntityType<? extends AirtightForgingPressBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get();
+    }
+
+    private void abortStructureFormation(ServerLevel level, BlockPos pos) {
+        if (level.getBlockState(pos).is(this)) {
+            level.destroyBlock(pos, true);
+        }
+
+        destroyStructure(level, pos);
     }
 }

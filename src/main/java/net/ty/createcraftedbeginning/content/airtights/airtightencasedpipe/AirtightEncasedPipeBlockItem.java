@@ -28,18 +28,14 @@ public class AirtightEncasedPipeBlockItem extends BlockItem {
         BlockPos pos = context.getClickedPos();
         BlockState replacedState = level.getBlockState(pos);
         InteractionResult placementResult = super.place(context);
-        if (!placementResult.consumesAction()) {
-            return placementResult;
-        }
-
-        if (level.isClientSide || !(replacedState.getBlock() instanceof AirtightPipeBlock)) {
+        if (!placementResult.consumesAction() || level.isClientSide || !(replacedState.getBlock() instanceof AirtightPipeBlock)) {
             return placementResult;
         }
 
         Player player = context.getPlayer();
-        ItemStack pipeStack = new ItemStack(replacedState.getBlock().asItem());
+        ItemStack itemStack = new ItemStack(replacedState.getBlock().asItem());
         if (player == null) {
-            Block.popResource(level, pos, pipeStack);
+            Block.popResource(level, pos, itemStack);
             return placementResult;
         }
 
@@ -47,7 +43,7 @@ public class AirtightEncasedPipeBlockItem extends BlockItem {
             return placementResult;
         }
 
-        ItemHandlerHelper.giveItemToPlayer(player, pipeStack);
+        ItemHandlerHelper.giveItemToPlayer(player, itemStack);
         return placementResult;
     }
 }

@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -25,7 +26,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -36,7 +37,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightPipeBlock extends AxisGasPipeBlock implements IBE<AirtightPipeBlockEntity>, IAirtightComponent {
+public class AirtightPipeBlock extends AxisGasPipeBlock implements IBE<AirtightPipeBlockEntity>, GasConnectable {
     public static final BooleanProperty CASED = BooleanProperty.create("cased");
 
     public AirtightPipeBlock(Properties properties) {
@@ -87,7 +88,7 @@ public class AirtightPipeBlock extends AxisGasPipeBlock implements IBE<AirtightP
             return ItemInteractionResult.sidedSuccess(true);
         }
 
-        level.setBlockAndUpdate(pos, state.setValue(CASED, true).setValue(WATERLOGGED, false));
+        level.setBlockAndUpdate(pos, state.setValue(CASED, true).setValue(BlockStateProperties.WATERLOGGED, false));
         CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1, 1);
         return ItemInteractionResult.sidedSuccess(false);
     }
@@ -97,6 +98,7 @@ public class AirtightPipeBlock extends AxisGasPipeBlock implements IBE<AirtightP
         if (state.getValue(CASED)) {
             return Shapes.block();
         }
+
         return super.getShape(state, level, pos, context);
     }
 
@@ -122,6 +124,7 @@ public class AirtightPipeBlock extends AxisGasPipeBlock implements IBE<AirtightP
         if (player != null && player.isShiftKeyDown()) {
             return canReplace;
         }
+
         return isEncasedPipeItem || canReplace;
     }
 

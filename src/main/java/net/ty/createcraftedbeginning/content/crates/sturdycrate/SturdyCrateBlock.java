@@ -37,10 +37,6 @@ public class SturdyCrateBlock extends CrateBlock<SturdyCrateBlockEntity> {
         super(properties);
     }
 
-    private static int getMaxCount() {
-        return CCBConfig.server().crates.maxSturdyCapacity.get();
-    }
-
     @Override
     protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
         return simpleCodec(SturdyCrateBlock::new);
@@ -101,7 +97,7 @@ public class SturdyCrateBlock extends CrateBlock<SturdyCrateBlockEntity> {
             tooltips.add(CCBLang.translate("gui.sturdy_crate.item").add(CCBLang.itemName(storedItem)).style(ChatFormatting.GRAY).component());
         }
 
-        tooltips.add(CCBLang.translate("gui.sturdy_crate.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(storedCount).style(ChatFormatting.GOLD)).add(CCBLang.text(" / ").style(ChatFormatting.GRAY)).add(CCBLang.number(getMaxCount()).style(ChatFormatting.DARK_GRAY)).component());
+        tooltips.add(CCBLang.translate("gui.sturdy_crate.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(storedCount).style(ChatFormatting.GOLD)).add(CCBLang.text(" / ").style(ChatFormatting.GRAY)).add(CCBLang.number(CCBConfig.server().storage.sturdyCrate.itemCapacity.get()).style(ChatFormatting.DARK_GRAY)).component());
     }
 
     @Override
@@ -114,4 +110,5 @@ public class SturdyCrateBlock extends CrateBlock<SturdyCrateBlockEntity> {
         crate.saveToItem(crateItem);
         return Collections.singletonList(crateItem);
     }
+
 }

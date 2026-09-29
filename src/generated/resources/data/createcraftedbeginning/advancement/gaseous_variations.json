@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:plywood",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:gaseous_variations_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {
@@ -11,7 +11,6 @@
       "translate": "advancement.createcraftedbeginning.gaseous_variations.desc"
     },
     "frame": "goal",
-    "hidden": true,
     "icon": {
       "components": {
         "createcraftedbeginning:gas_virtual_item_color": -1509948,

@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:wind_charged",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:looks_like_the_weathers_clearing_up_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

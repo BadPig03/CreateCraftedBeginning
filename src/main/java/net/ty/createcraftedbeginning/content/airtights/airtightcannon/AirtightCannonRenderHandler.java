@@ -45,7 +45,7 @@ public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
     @Override
     protected void transformTool(PoseStack poseStack, float flip, float equipProgress, float recoil, float partialTick) {
         poseStack.translate(flip * -0.1, 0, 0.14);
-        poseStack.scale(0.75f, 0.75f, 0.75f);
+        poseStack.scale(0.75F, 0.75F, 0.75F);
         TransformStack.of(poseStack).rotateXDegrees(recoil * 80);
     }
 
@@ -63,7 +63,7 @@ public class AirtightCannonRenderHandler extends ShootableGadgetRenderHandler {
         }
 
         for (int i = 0; i < 2; i++) {
-            Vec3 particleMotion = VecHelper.offsetRandomly(motion.scale(0.1), level.random, 0.025f);
+            Vec3 particleMotion = VecHelper.offsetRandomly(motion.scale(0.1), level.random, 0.025F);
             level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, particleStack), location.x, location.y, location.z, particleMotion.x, particleMotion.y, particleMotion.z);
         }
     }

@@ -40,9 +40,11 @@ final class EndIncinerationBlowerTargetCache {
 
         affectedItems.clear();
         for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, effectArea)) {
-            if (entityArea.intersects(itemEntity)) {
-                affectedItems.add(itemEntity);
+            if (!entityArea.intersects(itemEntity)) {
+                continue;
             }
+
+            affectedItems.add(itemEntity);
         }
         nextItemEntityScanTime = gameTime + ITEM_ENTITY_CACHE_INTERVAL;
         return affectedItems;
@@ -60,9 +62,11 @@ final class EndIncinerationBlowerTargetCache {
         BlockPos maxPos = origin.offset(blockRadius, blockRadius, blockRadius);
         for (BlockPos scanPos : BlockPos.betweenClosed(minPos, maxPos)) {
             TransportedItemStackHandlerBehaviour handler = BlockEntityBehaviour.get(level, scanPos, TransportedItemStackHandlerBehaviour.TYPE);
-            if (handler != null) {
-                transportedHandlers.add(handler);
+            if (handler == null) {
+                continue;
             }
+
+            transportedHandlers.add(handler);
         }
 
         cachedBlockRadius = blockRadius;

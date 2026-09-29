@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -21,13 +22,12 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.IItemDecorator;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSupplierUtils;
+import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandlers;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareSources;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBItems;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.ref.WeakReference;
@@ -63,50 +63,6 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
     private AirtightCannonItemRenderer() {
     }
 
-    @SubscribeEvent
-    private static void register(RegisterClientExtensionsEvent event) {
-        event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_CANNON.asItem(), new AirtightCannonItemRenderer()), CCBItems.AIRTIGHT_CANNON.asItem());
-    }
-
-    private static ItemStack getDecoratorIcon(LocalPlayer player, ClientLevel level) {
-        long gameTime = level.getGameTime();
-        if (cachedGameTime == gameTime && cachedPlayer.get() == player && cachedLevel.get() == level) {
-            return cachedDecoratorIcon;
-        }
-
-        cachedGameTime = gameTime;
-        if (cachedPlayer.get() != player) {
-            cachedPlayer = new WeakReference<>(player);
-        }
-        if (cachedLevel.get() != level) {
-            cachedLevel = new WeakReference<>(level);
-        }
-
-        ItemStack flareStack = WeatherFlareSupplierUtils.getFirstFlare(player);
-        if (!flareStack.isEmpty()) {
-            cachedDecoratorIcon = flareStack;
-            return cachedDecoratorIcon;
-        }
-
-        GasStack gasContent = CanisterContainerClients.getDisplayedGasContent();
-        if (gasContent.isEmpty()) {
-            cachedDecoratorIcon = ItemStack.EMPTY;
-            return cachedDecoratorIcon;
-        }
-
-        cachedDecoratorIcon = AirtightCannonVisualHandlerUtils.of(gasContent.getGasType()).getRenderIcon(level);
-        return cachedDecoratorIcon;
-    }
-
-    private static void renderItem(GuiGraphics guiGraphics, int xOffset, int yOffset, ItemStack decoratorIcon) {
-        PoseStack poseStack = guiGraphics.pose();
-        poseStack.pushPose();
-        poseStack.translate(xOffset, yOffset + 8, 100);
-        poseStack.scale(0.5f, 0.5f, 0.5f);
-        guiGraphics.renderItem(decoratorIcon, 0, 0);
-        poseStack.popPose();
-    }
-
     @Override
     protected void render(ItemStack cannon, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         renderer.render(model.getOriginalModel(), light);
@@ -128,7 +84,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
         boolean isUsing = player.getUseItem() == cannon;
         int useTime = isUsing ? cannon.getUseDuration(player) - player.getUseItemRemainingTicks() : 0;
         float chargeTime = useTime + (isUsing ? partialTick : 0);
-        float barrelOffset = CCBMathUtils.clampNonNegative(chargeTime / AirtightCannonUtils.getEfficientUseTime(cannon), 2) / 10;
+        float barrelOffset = Mth.clamp(chargeTime / AirtightCannonCharge.getEfficientUseTime(cannon), 0.0F, 2) / 10;
 
         poseStack.pushPose();
         poseStack.translate(0, 0, barrelOffset);
@@ -137,7 +93,7 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
 
         boolean isLeftHanded = player.getMainArm() == HumanoidArm.LEFT;
         float pistonAnimation = AirtightCannonRenderHandler.INSTANCE.getAnimation(isInMainHand ^ isLeftHanded, partialTick);
-        float pistonOffset = CCBMathUtils.clampUnit(pistonAnimation * 2) / 8;
+        float pistonOffset = Mth.clamp(pistonAnimation * 2, 0.0F, 1.0F) / 8;
 
         poseStack.pushPose();
         poseStack.translate(pistonOffset, 0, 0);
@@ -147,6 +103,50 @@ public class AirtightCannonItemRenderer extends CustomRenderedItemModelRenderer 
         poseStack.pushPose();
         poseStack.translate(-pistonOffset, 0, 0);
         renderer.render(CCBPartialModels.AIRTIGHT_CANNON_PISTON_RIGHT.get(), light);
+        poseStack.popPose();
+    }
+
+    @SubscribeEvent
+    private static void register(RegisterClientExtensionsEvent event) {
+        event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_CANNON.asItem(), new AirtightCannonItemRenderer()), CCBItems.AIRTIGHT_CANNON.asItem());
+    }
+
+    private static ItemStack getDecoratorIcon(LocalPlayer player, ClientLevel level) {
+        long gameTime = level.getGameTime();
+        if (cachedGameTime == gameTime && cachedPlayer.get() == player && cachedLevel.get() == level) {
+            return cachedDecoratorIcon;
+        }
+
+        cachedGameTime = gameTime;
+        if (cachedPlayer.get() != player) {
+            cachedPlayer = new WeakReference<>(player);
+        }
+        if (cachedLevel.get() != level) {
+            cachedLevel = new WeakReference<>(level);
+        }
+
+        ItemStack flareStack = WeatherFlareSources.findFirst(player);
+        if (!flareStack.isEmpty()) {
+            cachedDecoratorIcon = flareStack;
+            return cachedDecoratorIcon;
+        }
+
+        GasStack gasContent = CanisterContainerClients.getDisplayedGasContent();
+        if (gasContent.isEmpty()) {
+            cachedDecoratorIcon = ItemStack.EMPTY;
+            return cachedDecoratorIcon;
+        }
+
+        cachedDecoratorIcon = AirtightCannonVisualHandlers.resolveForEquipment(gasContent.getGasType()).getRenderIcon(level);
+        return cachedDecoratorIcon;
+    }
+
+    private static void renderItem(GuiGraphics guiGraphics, int xOffset, int yOffset, ItemStack decoratorIcon) {
+        PoseStack poseStack = guiGraphics.pose();
+        poseStack.pushPose();
+        poseStack.translate(xOffset, yOffset + 8, 100);
+        poseStack.scale(0.5F, 0.5F, 0.5F);
+        guiGraphics.renderItem(decoratorIcon, 0, 0);
         poseStack.popPose();
     }
 }

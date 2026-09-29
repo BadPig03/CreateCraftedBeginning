@@ -7,7 +7,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public enum CannonAnimationType {
-    CORE_Y,
-    NATURAL_Y,
-    ETHEREAL_Z
+    ONLY_CORE,
+    WITH_WIND_Y,
+    WITH_WIND_Z
 }

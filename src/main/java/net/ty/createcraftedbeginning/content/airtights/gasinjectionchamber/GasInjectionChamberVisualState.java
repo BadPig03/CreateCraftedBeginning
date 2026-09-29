@@ -2,10 +2,10 @@ package net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Optional;
+import java.util.OptionalInt;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -26,15 +26,16 @@ final class GasInjectionChamberVisualState {
             return;
         }
 
-        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_CLOUD, true);
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_CLOUD_COLOR, cloudColor);
+        compoundTag.putBoolean(COMPOUND_KEY_CLOUD, true);
+        compoundTag.putInt(COMPOUND_KEY_CLOUD_COLOR, cloudColor);
         sendCloud = false;
     }
 
-    Optional<Integer> readCloud(CompoundTag compoundTag, boolean clientPacket) {
-        if (!clientPacket || !CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CLOUD)) {
-            return Optional.empty();
+    OptionalInt readCloud(CompoundTag compoundTag, boolean clientPacket) {
+        if (!clientPacket || !compoundTag.contains(COMPOUND_KEY_CLOUD)) {
+            return OptionalInt.empty();
         }
-        return Optional.of(CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_CLOUD_COLOR, 0xFFFFFFFF));
+
+        return OptionalInt.of(NbtValues.getIntOrDefault(compoundTag, COMPOUND_KEY_CLOUD_COLOR, 0xFFFFFFFF));
     }
 }

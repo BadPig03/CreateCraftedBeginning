@@ -1,8 +1,8 @@
 {
-  "parent": "createcraftedbeginning:retrofitted",
+  "parent": "createcraftedbeginning:reassignment_protocol",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:bad_apple_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

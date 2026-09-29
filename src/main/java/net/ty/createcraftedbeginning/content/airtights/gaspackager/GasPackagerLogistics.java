@@ -63,7 +63,7 @@ final class GasPackagerLogistics {
             addStockLinkPromiseQueue(level, promiseQueues, direction, adjacentPos, adjacentState);
         }
 
-        GasLogisticsUtils.submitNewArrivals(promiseQueues, identifier, previous, current);
+        GasArrivalTracker.submitNewArrivals(promiseQueues, identifier, previous, current);
     }
 
     private static @Nullable PackagerLinkBlockEntity getConnectedStockLink(@Nullable Level level, BlockPos worldPosition) {
@@ -74,39 +74,32 @@ final class GasPackagerLogistics {
         for (Direction direction : Iterate.directions) {
             BlockPos linkPos = worldPosition.relative(direction);
             BlockState linkState = level.getBlockState(linkPos);
-            if (!AllBlocks.STOCK_LINK.has(linkState) || PackagerLinkBlock.getConnectedDirection(linkState) != direction) {
+            if (!AllBlocks.STOCK_LINK.has(linkState) || PackagerLinkBlock.getConnectedDirection(linkState) != direction || !(level.getBlockEntity(linkPos) instanceof PackagerLinkBlockEntity link)) {
                 continue;
             }
 
-            if (level.getBlockEntity(linkPos) instanceof PackagerLinkBlockEntity link) {
-                return link;
-            }
+            return link;
         }
+
         return null;
     }
 
     private static void addFactoryPanelPromiseQueues(Level level, Set<RequestPromiseQueue> promiseQueues, Direction direction, BlockPos panelPos, BlockState panelState) {
-        if (!(panelState.getBlock() instanceof FactoryPanelBlock) || FactoryPanelBlock.connectedDirection(panelState) != direction) {
-            return;
-        }
-
-        if (!(level.getBlockEntity(panelPos) instanceof FactoryPanelBlockEntity panel) || !panel.restocker) {
+        if (!(panelState.getBlock() instanceof FactoryPanelBlock) || FactoryPanelBlock.connectedDirection(panelState) != direction || !(level.getBlockEntity(panelPos) instanceof FactoryPanelBlockEntity panel) || !panel.restocker) {
             return;
         }
 
         for (FactoryPanelBehaviour behaviour : panel.panels.values()) {
-            if (behaviour.isActive()) {
-                promiseQueues.add(behaviour.restockerPromises);
+            if (!behaviour.isActive()) {
+                continue;
             }
+
+            promiseQueues.add(behaviour.restockerPromises);
         }
     }
 
     private static void addStockLinkPromiseQueue(Level level, Set<RequestPromiseQueue> promiseQueues, Direction direction, BlockPos linkPos, BlockState linkState) {
-        if (!(linkState.getBlock() instanceof PackagerLinkBlock) || PackagerLinkBlock.getConnectedDirection(linkState) != direction) {
-            return;
-        }
-
-        if (!(level.getBlockEntity(linkPos) instanceof PackagerLinkBlockEntity link)) {
+        if (!(linkState.getBlock() instanceof PackagerLinkBlock) || PackagerLinkBlock.getConnectedDirection(linkState) != direction || !(level.getBlockEntity(linkPos) instanceof PackagerLinkBlockEntity link)) {
             return;
         }
 

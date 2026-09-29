@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.event;
 
-import com.simibubi.create.content.kinetics.deployer.DeployerRecipeSearchEvent;
 import com.simibubi.create.content.trains.schedule.Schedule;
 import com.simibubi.create.foundation.item.ItemHelper;
 import net.createmod.catnip.data.Pair;
@@ -12,7 +11,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.Unit;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
@@ -20,19 +18,20 @@ import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.CCBCompatBootstrap;
-import net.ty.createcraftedbeginning.content.airtights.aircompressor.AirCompressorBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressRecipeLookup;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressUtils;
+import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerRecipeLookup;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleRecipeLookup;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleUtils;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu.InventoryHandler;
@@ -48,6 +47,7 @@ import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasThresholdCon
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasunpackager.GasUnpackagerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlockEntity;
@@ -55,13 +55,9 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.CratesBlockEntity;
-import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
-import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
-import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
-import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
-import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
-import net.ty.createcraftedbeginning.recipe.gas.DeployerApplicationWithGasRecipe;
-import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrieFinder;
+import net.ty.createcraftedbeginning.recipe.GasInjectionRecipeLookup;
+import net.ty.createcraftedbeginning.recipe.ResidueRecipeLookup;
+import net.ty.createcraftedbeginning.recipe.trie.AirtightRecipeTrieFinder;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -74,10 +70,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CCBCommonEvents {
     @SubscribeEvent
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        AirCompressorBlockEntity.registerCapabilities(event);
         AirtightForgingPressBlockEntity.registerCapabilities(event);
         AirtightForgingPressStructuralBlockEntity.registerCapabilities(event);
         AirtightForgingPressStructuralShaftBlockEntity.registerCapabilities(event);
+        AirtightFractionationTowerBlockEntity.registerCapabilities(event);
         AirtightHatchBlockEntity.registerCapabilities(event);
         AirtightReactorKettleBlockEntity.registerCapabilities(event);
         AirtightReactorKettleStructuralBlockEntity.registerCapabilities(event);
@@ -92,6 +88,7 @@ public class CCBCommonEvents {
         GasCanisterBlockEntity.registerCapabilities(event);
         GasInjectionChamberBlockEntity.registerCapabilities(event);
         GasPackagerBlockEntity.registerCapabilities(event);
+        GasUnpackagerBlockEntity.registerCapabilities(event);
         GasRepackagerBlockEntity.registerCapabilities(event);
         HorizontalAirtightTankBlockEntity.registerCapabilities(event);
         PortableGasInterfaceBlockEntity.registerCapabilities(event);
@@ -117,22 +114,12 @@ public class CCBCommonEvents {
             return;
         }
 
-        PressurizationRecipe.invalidateCaches();
-        ResidueGenerationRecipe.invalidateCaches();
-        GasInjectionRecipe.invalidateRecipeCaches();
-        AirtightWithGasRecipeTrieFinder.invalidateCaches();
-        AirtightReactorKettleUtils.invalidateRecipeCaches();
-        AirtightForgingPressUtils.invalidateRecipeCaches();
-    }
-
-    @SubscribeEvent
-    public static void onDeployerRecipeSearch(DeployerRecipeSearchEvent event) {
-        Level level = event.getBlockEntity().getLevel();
-        if (level == null) {
-            return;
-        }
-
-        event.addRecipe(() -> SequencedAssemblyWithGasRecipe.getRecipe(level, event.getInventory(), CCBRecipeTypes.DEPLOYING_WITH_GAS.getType(), DeployerApplicationWithGasRecipe.class), 110);
+        ResidueRecipeLookup.invalidateCaches();
+        GasInjectionRecipeLookup.invalidateRecipeCaches();
+        AirtightRecipeTrieFinder.invalidateCaches();
+        AirtightReactorKettleRecipeLookup.invalidateRecipeCaches();
+        AirtightForgingPressRecipeLookup.invalidateRecipeCaches();
+        AirtightFractionationTowerRecipeLookup.invalidateRecipeCaches();
     }
 
     @SubscribeEvent

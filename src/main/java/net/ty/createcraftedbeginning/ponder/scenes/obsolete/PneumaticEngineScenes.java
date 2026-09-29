@@ -33,7 +33,7 @@ public class PneumaticEngineScenes {
         scene.showBasePlate();
 
         BlockPos tankPos = util.grid().at(2, 1, 2);
-        BlockPos enginePos = util.grid().at(2, 2, 2);
+        BlockPos enginePos = tankPos.above();
 
         ItemStack wrench = new ItemStack(AllItems.WRENCH.asItem());
 
@@ -54,7 +54,7 @@ public class PneumaticEngineScenes {
 
         scene.idle(80);
         scene.overlay().showText(60).text("Using a Wrench, the rotation direction can be toggled").colored(PonderPalette.BLUE).pointAt(Vec3.atCenterOf(tankPos)).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(util.vector().blockSurface(enginePos, Direction.NORTH), Pointing.RIGHT, 60).rightClick().withItem(wrench);
+        scene.overlay().showControls(util.vector().blockSurface(enginePos, Direction.NORTH), Pointing.RIGHT, 60).rightClick().withItem(wrench.copy());
 
         scene.idle(7);
         scene.world().setKineticSpeed(util.select().fromTo(enginePos, enginePos), -64);
@@ -73,12 +73,12 @@ public class PneumaticEngineScenes {
         scene.showBasePlate();
 
         BlockPos tankPos = util.grid().at(2, 1, 2);
-        BlockPos enginePos = util.grid().at(2, 2, 2);
+        BlockPos enginePos = tankPos.above();
 
         Selection tankSelection = util.select().fromTo(tankPos, tankPos);
         Selection engineSelection = util.select().fromTo(enginePos, enginePos);
 
-        ItemStack waterBucket = Items.WATER_BUCKET.getDefaultInstance();
+        ItemStack waterBucket = new ItemStack(Items.WATER_BUCKET);
 
         scene.world().setBlock(tankPos, AllBlocks.COPPER_BACKTANK.getDefaultState(), false);
         scene.world().setBlock(enginePos, CCBBlocks.PNEUMATIC_ENGINE_BLOCK.getDefaultState(), false);
@@ -107,12 +107,12 @@ public class PneumaticEngineScenes {
         scene.world().hideIndependentSection(tank, Direction.NORTH);
 
         scene.idle(20);
-        scene.world().setBlock(util.grid().at(1, 1, 2), Blocks.STONE_PRESSURE_PLATE.defaultBlockState(), false);
-        scene.world().setBlock(util.grid().at(2, 1, 1), Blocks.STONE_PRESSURE_PLATE.defaultBlockState(), false);
-        scene.world().setBlock(util.grid().at(3, 1, 2), Blocks.STONE_PRESSURE_PLATE.defaultBlockState(), false);
-        scene.world().setBlock(util.grid().at(2, 1, 3), Blocks.STONE_PRESSURE_PLATE.defaultBlockState(), false);
+        scene.world().setBlock(tankPos.west(), Blocks.STONE_PRESSURE_PLATE.defaultBlockState(), false);
+        scene.world().setBlock(tankPos.north(), Blocks.STONE_PRESSURE_PLATE.defaultBlockState(), false);
+        scene.world().setBlock(tankPos.east(), Blocks.STONE_PRESSURE_PLATE.defaultBlockState(), false);
+        scene.world().setBlock(tankPos.south(), Blocks.STONE_PRESSURE_PLATE.defaultBlockState(), false);
         scene.world().setBlock(tankPos, AllBlocks.NETHERITE_BACKTANK.getDefaultState(), false);
-        scene.world().showSection(util.select().fromTo(1, 1, 1, 3, 1, 3), Direction.EAST);
+        scene.world().showSection(util.select().fromTo(tankPos.west().north(), tankPos.east().south()), Direction.EAST);
 
         scene.idle(10);
         scene.world().setKineticSpeed(engineSelection, 64);
@@ -120,10 +120,10 @@ public class PneumaticEngineScenes {
         scene.addKeyframe();
 
         scene.idle(20);
-        scene.overlay().showControls(util.vector().blockSurface(tankPos, Direction.NORTH), Pointing.RIGHT, 67).rightClick().withItem(waterBucket);
+        scene.overlay().showControls(util.vector().blockSurface(tankPos, Direction.NORTH), Pointing.RIGHT, 67).rightClick().withItem(waterBucket.copy());
 
         scene.idle(7);
-        scene.world().modifyBlock(tankPos, s -> s.setValue(BlockStateProperties.WATERLOGGED, true), false);
+        scene.world().modifyBlock(tankPos, state -> state.setValue(BlockStateProperties.WATERLOGGED, true), false);
         scene.world().setKineticSpeed(engineSelection, 0);
         scene.effects().rotationSpeedIndicator(enginePos);
         scene.overlay().showOutline(PonderPalette.RED, new Object(), tankSelection, 60);

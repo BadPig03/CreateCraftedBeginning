@@ -26,33 +26,6 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
     public LaserEmitterRenderer(Context ignored) {
     }
 
-    private static Vec3[] perpendicularAxes(Direction direction) {
-        return switch (direction.getAxis()) {
-            case X -> new Vec3[]{new Vec3(0, 1, 0), new Vec3(0, 0, 1)};
-            case Y -> new Vec3[]{new Vec3(1, 0, 0), new Vec3(0, 0, 1)};
-            case Z -> new Vec3[]{new Vec3(1, 0, 0), new Vec3(0, 1, 0)};
-        };
-    }
-
-    private static void renderBeam(VertexConsumer buffer, Matrix4f pose, Vec3 start, Vec3 end, Vec3 axisA, Vec3 axisB) {
-        Vec3 a = axisA.scale(BEAM_HALF_WIDTH);
-        Vec3 b = axisB.scale(BEAM_HALF_WIDTH);
-        Vec3[] offsets = {a.scale(-1).subtract(b), a.subtract(b), a.add(b), b.subtract(a)};
-        for (int i = 0; i < offsets.length; i++) {
-            Vec3 current = offsets[i];
-            Vec3 next = offsets[(i + 1) % offsets.length];
-            renderQuad(buffer, pose, start.add(current), end.add(current), end.add(next), start.add(next));
-        }
-        renderQuad(buffer, pose, end.add(offsets[0]), end.add(offsets[1]), end.add(offsets[2]), end.add(offsets[3]));
-    }
-
-    private static void renderQuad(VertexConsumer buffer, Matrix4f pose, Vec3 a, Vec3 b, Vec3 c, Vec3 d) {
-        buffer.addVertex(pose, (float) a.x, (float) a.y, (float) a.z).setColor(BEAM_RED, BEAM_GREEN, BEAM_BLUE, BEAM_ALPHA);
-        buffer.addVertex(pose, (float) b.x, (float) b.y, (float) b.z).setColor(BEAM_RED, BEAM_GREEN, BEAM_BLUE, BEAM_ALPHA);
-        buffer.addVertex(pose, (float) c.x, (float) c.y, (float) c.z).setColor(BEAM_RED, BEAM_GREEN, BEAM_BLUE, BEAM_ALPHA);
-        buffer.addVertex(pose, (float) d.x, (float) d.y, (float) d.z).setColor(BEAM_RED, BEAM_GREEN, BEAM_BLUE, BEAM_ALPHA);
-    }
-
     @Override
     protected void renderSafe(LaserEmitterBlockEntity blockEntity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
         if (!blockEntity.isLaserActive() || blockEntity.getBeamLength() <= 0) {
@@ -74,5 +47,32 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
     @Override
     public int getViewDistance() {
         return 128;
+    }
+
+    private static Vec3[] perpendicularAxes(Direction direction) {
+        return switch (direction.getAxis()) {
+            case X -> new Vec3[]{new Vec3(0, 1, 0), new Vec3(0, 0, 1)};
+            case Y -> new Vec3[]{new Vec3(1, 0, 0), new Vec3(0, 0, 1)};
+            case Z -> new Vec3[]{new Vec3(1, 0, 0), new Vec3(0, 1, 0)};
+        };
+    }
+
+    private static void renderBeam(VertexConsumer buffer, Matrix4f pose, Vec3 start, Vec3 end, Vec3 axisA, Vec3 axisB) {
+        Vec3 firstOffset = axisA.scale(BEAM_HALF_WIDTH);
+        Vec3 secondOffset = axisB.scale(BEAM_HALF_WIDTH);
+        Vec3[] offsets = {firstOffset.scale(-1).subtract(secondOffset), firstOffset.subtract(secondOffset), firstOffset.add(secondOffset), secondOffset.subtract(firstOffset)};
+        for (int i = 0; i < offsets.length; i++) {
+            Vec3 current = offsets[i];
+            Vec3 next = offsets[(i + 1) % offsets.length];
+            renderQuad(buffer, pose, start.add(current), end.add(current), end.add(next), start.add(next));
+        }
+        renderQuad(buffer, pose, end.add(offsets[0]), end.add(offsets[1]), end.add(offsets[2]), end.add(offsets[3]));
+    }
+
+    private static void renderQuad(VertexConsumer buffer, Matrix4f pose, Vec3 firstCorner, Vec3 secondCorner, Vec3 thirdCorner, Vec3 fourthCorner) {
+        buffer.addVertex(pose, (float) firstCorner.x, (float) firstCorner.y, (float) firstCorner.z).setColor(BEAM_RED, BEAM_GREEN, BEAM_BLUE, BEAM_ALPHA);
+        buffer.addVertex(pose, (float) secondCorner.x, (float) secondCorner.y, (float) secondCorner.z).setColor(BEAM_RED, BEAM_GREEN, BEAM_BLUE, BEAM_ALPHA);
+        buffer.addVertex(pose, (float) thirdCorner.x, (float) thirdCorner.y, (float) thirdCorner.z).setColor(BEAM_RED, BEAM_GREEN, BEAM_BLUE, BEAM_ALPHA);
+        buffer.addVertex(pose, (float) fourthCorner.x, (float) fourthCorner.y, (float) fourthCorner.z).setColor(BEAM_RED, BEAM_GREEN, BEAM_BLUE, BEAM_ALPHA);
     }
 }

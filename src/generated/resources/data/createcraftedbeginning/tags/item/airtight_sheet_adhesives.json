@@ -1,0 +1,11 @@
+{
+  "values": [
+    "#c:slime_balls",
+    "create:super_glue",
+    "minecraft:honey_bottle",
+    {
+      "id": "simulated:honey_glue",
+      "required": false
+    }
+  ]
+}

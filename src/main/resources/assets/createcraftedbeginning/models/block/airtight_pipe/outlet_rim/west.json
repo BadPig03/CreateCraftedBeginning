@@ -1,0 +1,23 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [32, 32],
+	"textures": {
+		"1": "createcraftedbeginning:block/airtight_pump/pump"
+	},
+	"elements": [
+		{
+			"from": [0, 2, 2],
+			"to": [2, 14, 14],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [7.5, 0, 6.5, 6], "texture": "#1"},
+				"east": {"uv": [0, 0, 6, 6], "texture": "#1"},
+				"south": {"uv": [6.5, 6, 7.5, 0], "texture": "#1"},
+				"west": {"uv": [0, 0, 6, 6], "texture": "#1", "cullface": "north"},
+				"up": {"uv": [7.5, 0, 6.5, 6], "rotation": 180, "texture": "#1"},
+				"down": {"uv": [6.5, 6, 7.5, 0], "texture": "#1"}
+			}
+		}
+	]
+}

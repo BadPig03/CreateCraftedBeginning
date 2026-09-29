@@ -20,21 +20,12 @@ public class AmethystSuspensionVirtualFluid extends BaseFlowingFluid {
         this.isSource = isSource;
     }
 
-    @Contract("_ -> new")
-    public static AmethystSuspensionVirtualFluid createSource(Properties properties) {
-        return new AmethystSuspensionVirtualFluid(properties, true);
-    }
-
-    @Contract("_ -> new")
-    public static AmethystSuspensionVirtualFluid createFlowing(Properties properties) {
-        return new AmethystSuspensionVirtualFluid(properties, false);
-    }
-
     @Override
     public Fluid getFlowing() {
         if (!isSource) {
             return this;
         }
+
         return super.getFlowing();
     }
 
@@ -43,6 +34,7 @@ public class AmethystSuspensionVirtualFluid extends BaseFlowingFluid {
         if (!isSource) {
             return super.getSource();
         }
+
         return this;
     }
 
@@ -59,5 +51,15 @@ public class AmethystSuspensionVirtualFluid extends BaseFlowingFluid {
     @Override
     public int getAmount(FluidState fluidState) {
         return 0;
+    }
+
+    @Contract("_ -> new")
+    public static AmethystSuspensionVirtualFluid createSource(Properties properties) {
+        return new AmethystSuspensionVirtualFluid(properties, true);
+    }
+
+    @Contract("_ -> new")
+    public static AmethystSuspensionVirtualFluid createFlowing(Properties properties) {
+        return new AmethystSuspensionVirtualFluid(properties, false);
     }
 }

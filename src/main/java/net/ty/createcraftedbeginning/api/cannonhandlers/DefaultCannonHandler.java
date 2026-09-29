@@ -34,25 +34,13 @@ import java.util.function.Function;
 public class DefaultCannonHandler implements AirtightCannonHandler, AirtightCannonVisualHandler {
     public static final DefaultCannonHandler INSTANCE = new DefaultCannonHandler();
 
-    private static ExplosionDamageCalculator createDamageCalculator(AirtightCannonShotContext context) {
-        return new SimpleExplosionDamageCalculator(true, false, Optional.of(context.knockbackMultiplier()), BuiltInRegistries.BLOCK.getTag(BlockTags.BLOCKS_WIND_CHARGE_EXPLOSIONS).map(Function.identity())) {
-            @Override
-            public float getKnockbackMultiplier(Entity entity) {
-                if (context.isFriendlyTarget(entity)) {
-                    return 0;
-                }
-                return super.getKnockbackMultiplier(entity);
-            }
-        };
-    }
-
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(Items.WIND_CHARGE);
     }
 
     @Override
-    public void renderTrailParticles(Level level, Vec3 pos) {
+    public void renderTrailParticles(Level level, Vec3 pos, Vec3 velocity) {
     }
 
     @Override
@@ -67,7 +55,7 @@ public class DefaultCannonHandler implements AirtightCannonHandler, AirtightCann
 
     @Override
     public CannonAnimationType getAnimationType() {
-        return CannonAnimationType.CORE_Y;
+        return CannonAnimationType.ONLY_CORE;
     }
 
     @Override
@@ -77,9 +65,9 @@ public class DefaultCannonHandler implements AirtightCannonHandler, AirtightCann
 
     @Override
     public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
-        float radius = 1.2f * context.effectMultiplier();
+        float multiplier = context.effectMultiplier();
         DamageSource damageSource = new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DamageTypes.WIND_CHARGE), context.projectile());
-        level.explode(context.projectile(), damageSource, createDamageCalculator(context), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
+        level.explode(context.projectile(), damageSource, createDamageCalculator(context), pos.x(), pos.y(), pos.z(), multiplier, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
     }
 
     @Override
@@ -89,5 +77,18 @@ public class DefaultCannonHandler implements AirtightCannonHandler, AirtightCann
 
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    }
+
+    private static ExplosionDamageCalculator createDamageCalculator(AirtightCannonShotContext context) {
+        return new SimpleExplosionDamageCalculator(true, false, Optional.of(context.knockbackMultiplier()), BuiltInRegistries.BLOCK.getTag(BlockTags.BLOCKS_WIND_CHARGE_EXPLOSIONS).map(Function.identity())) {
+            @Override
+            public float getKnockbackMultiplier(Entity entity) {
+                if (context.isFriendlyTarget(entity)) {
+                    return 0;
+                }
+
+                return super.getKnockbackMultiplier(entity);
+            }
+        };
     }
 }

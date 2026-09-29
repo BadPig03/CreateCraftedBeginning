@@ -37,5 +37,4 @@ public class AirtightForgingPressBlockItem extends BlockItem {
         ClientRenderBridge.showPlacementBounds(context, "airtight_forging_press", placementPos, new AABB(placementPos).inflate(1));
         return placementResult;
     }
-
 }

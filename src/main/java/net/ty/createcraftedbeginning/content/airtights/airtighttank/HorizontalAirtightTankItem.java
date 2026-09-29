@@ -11,7 +11,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
+import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,31 +24,6 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
 
     public HorizontalAirtightTankItem(Block block, Properties properties) {
         super(block, properties);
-    }
-
-    @Nullable
-    private static Axis getHorizontalAxis(BlockState state) {
-        if (!state.hasProperty(HorizontalAirtightTankBlock.HORIZONTAL_AXIS)) {
-            return null;
-        }
-
-        Axis horizontalAxis = state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
-        if (!horizontalAxis.isHorizontal()) {
-            return null;
-        }
-        return horizontalAxis;
-    }
-
-    private static int coordinate(BlockPos pos, Axis axis) {
-        return axis.choose(pos.getX(), pos.getY(), pos.getZ());
-    }
-
-    private static BlockPos offsetLayer(BlockPos origin, Axis axis, int uOffset, int vOffset) {
-        return switch (axis) {
-            case X -> origin.offset(0, uOffset, vOffset);
-            case Z -> origin.offset(uOffset, vOffset, 0);
-            default -> throw new IllegalArgumentException();
-        };
     }
 
     @Override
@@ -78,7 +53,7 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
             return;
         }
 
-        HorizontalAirtightTankBlockEntity placedOnTank = GasConnectivityHandler.partAt(CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), level, placedOnPos);
+        HorizontalAirtightTankBlockEntity placedOnTank = GasTankMultiblockConnectivity.partAt(CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), level, placedOnPos);
         if (placedOnTank == null) {
             return;
         }
@@ -116,6 +91,32 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
         placeTankLayer(context, level, layerStartPos, clickedFace, tankAxis, width);
     }
 
+    @Nullable
+    private static Axis getHorizontalAxis(BlockState state) {
+        if (!state.hasProperty(HorizontalAirtightTankBlock.HORIZONTAL_AXIS)) {
+            return null;
+        }
+
+        Axis horizontalAxis = state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
+        if (!horizontalAxis.isHorizontal()) {
+            return null;
+        }
+
+        return horizontalAxis;
+    }
+
+    private static int coordinate(BlockPos pos, Axis axis) {
+        return axis.choose(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    private static BlockPos offsetLayer(BlockPos origin, Axis axis, int uOffset, int vOffset) {
+        return switch (axis) {
+            case X -> origin.offset(0, uOffset, vOffset);
+            case Z -> origin.offset(uOffset, vOffset, 0);
+            default -> throw new IllegalArgumentException("Horizontal airtight tank layer axis must be X or Z; got " + axis + '.');
+        };
+    }
+
     private int countTanksToPlace(Level level, BlockPos startPos, Axis tankAxis, int width) {
         int tanksToPlace = 0;
         for (int uOffset = 0; uOffset < width; uOffset++) {
@@ -126,11 +127,12 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
                     continue;
                 }
 
-                if (targetState.getBlock() == getBlock() || !targetState.canBeReplaced()) {
-                    return INVALID_PLACEMENT;
+                if (targetState.getBlock() != getBlock() && targetState.canBeReplaced()) {
+                    tanksToPlace++;
+                    continue;
                 }
 
-                tanksToPlace++;
+                return INVALID_PLACEMENT;
             }
         }
         return tanksToPlace;

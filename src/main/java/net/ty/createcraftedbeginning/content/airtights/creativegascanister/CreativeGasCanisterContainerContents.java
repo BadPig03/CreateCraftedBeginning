@@ -2,9 +2,11 @@ package net.ty.createcraftedbeginning.content.airtights.creativegascanister;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasUnits;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment.PressureModel;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -12,19 +14,34 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeGasCanisterContainerContents extends GasCanisterContainerContents {
-    private static final long CAPACITY = Integer.MAX_VALUE * GasAmounts.MILLIBUCKETS_PER_BUCKET;
+    static final long VOLUME_LITERS = Integer.MAX_VALUE * GasUnits.LITERS_PER_KILOLITER;
+    static final long PRESSURE_PA = GasPressureLimits.SAFE_PRESSURE_PA;
 
     CreativeGasCanisterContainerContents(ItemStack canister) {
         super(canister);
     }
 
-    static long getDefaultCapacity() {
-        return CAPACITY;
-    }
-
     @Override
     public InjectionMode getInjectionMode() {
         return InjectionMode.DENY;
+    }
+
+    @Override
+    public long restoreDrainedGas(int tankIndex, GasStack resource, GasAction action) {
+        if (tankIndex != 0 || resource.isEmpty()) {
+            return 0;
+        }
+
+        return resource.getAmount();
+    }
+
+    @Override
+    public PressureModel getTankPressureModel(int tankIndex) {
+        if (isInvalidTank(tankIndex)) {
+            return PressureModel.VARIABLE;
+        }
+
+        return PressureModel.FIXED;
     }
 
     @Override
@@ -42,6 +59,7 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
         if (storedGas.isEmpty()) {
             return GasStack.EMPTY;
         }
+
         return storedGas.copyWithAmount(maxDrainAmount);
     }
 
@@ -50,7 +68,8 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
         if (tankIndex != 0) {
             return GasStack.EMPTY;
         }
-        return gas.copyWithAmount(CAPACITY);
+
+        return gas.copyWithAmount(getTankMaxAmount(tankIndex));
     }
 
     @Override
@@ -59,11 +78,21 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
     }
 
     @Override
-    public long getTankCapacity(int tankIndex) {
+    public long getTankVolume(int tankIndex) {
         if (isInvalidTank(tankIndex)) {
             return 0;
         }
-        return CAPACITY;
+
+        return VOLUME_LITERS;
+    }
+
+    @Override
+    public long getTankMaxPressurePa(int tankIndex) {
+        if (isInvalidTank(tankIndex)) {
+            return 0;
+        }
+
+        return PRESSURE_PA;
     }
 
     @Override
@@ -76,7 +105,7 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
             return;
         }
 
-        gas = newGas.copyWithAmount(CAPACITY);
+        gas = newGas.copyWithAmount(getTankMaxAmount(tankIndex));
         save();
     }
 }

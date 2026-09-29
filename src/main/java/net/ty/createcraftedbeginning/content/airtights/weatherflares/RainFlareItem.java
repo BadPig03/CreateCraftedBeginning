@@ -4,13 +4,13 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
-import net.ty.createcraftedbeginning.api.weatherflares.IWeatherFlare;
+import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlare;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class RainFlareItem extends Item implements IWeatherFlare {
+public class RainFlareItem extends Item implements WeatherFlare {
     public RainFlareItem(Properties properties) {
         super(properties);
     }

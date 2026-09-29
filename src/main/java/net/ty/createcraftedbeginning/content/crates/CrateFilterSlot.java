@@ -24,8 +24,8 @@ class CrateFilterSlot extends ValueBoxTransform {
     }
 
     @Override
-    public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack ms) {
+    public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack poseStack) {
         Direction facing = state.getValue(HorizontalDirectionalBlock.FACING);
-        TransformStack.of(ms).rotateXDegrees(90).rotateZDegrees(facing.getOpposite().toYRot());
+        TransformStack.of(poseStack).rotateXDegrees(90).rotateZDegrees(facing.getOpposite().toYRot());
     }
 }

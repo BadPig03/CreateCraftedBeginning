@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:water_hammer_effect",
+  "parent": "createcraftedbeginning:take_a_deep_breath",
   "criteria": {
     "0": {
       "conditions": {

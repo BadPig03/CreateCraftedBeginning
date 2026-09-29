@@ -10,7 +10,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -22,13 +22,13 @@ public class EndIncinerationBlowerStructuralRenderer extends KineticBlockEntityR
     }
 
     @Override
-    protected void renderSafe(EndIncinerationBlowerStructuralBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        SuperByteBuffer core = getRotatedModel(be, be.getBlockState());
-        kineticRotationTransform(core, be, Axis.Y, getAngleForBe(be, be.getBlockPos(), Axis.Y), light).renderInto(ms, buffer.getBuffer(RenderType.cutoutMipped()));
+    protected void renderSafe(EndIncinerationBlowerStructuralBlockEntity structure, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        SuperByteBuffer core = getRotatedModel(structure, structure.getBlockState());
+        kineticRotationTransform(core, structure, Axis.Y, getAngleForBe(structure, structure.getBlockPos(), Axis.Y), light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
     }
 
     @Override
-    protected SuperByteBuffer getRotatedModel(EndIncinerationBlowerStructuralBlockEntity be, BlockState blockState) {
+    protected SuperByteBuffer getRotatedModel(EndIncinerationBlowerStructuralBlockEntity structure, BlockState blockState) {
         return CachedBuffers.partial(CCBPartialModels.SHAFT_HALF_DOWN, blockState);
     }
 }

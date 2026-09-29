@@ -17,6 +17,7 @@ import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.createmod.catnip.config.ConfigBase.ConfigBool;
+import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -29,7 +30,10 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.level.ItemLike;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
+import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -64,49 +68,6 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         icon = info.icon();
         recipes = info.recipes();
         catalysts = info.catalysts();
-    }
-
-    public static IDrawable getRenderedSlot() {
-        return BASIC_SLOT;
-    }
-
-    public static IDrawable getRenderedSlot(ProcessingOutput output) {
-        return getRenderedSlot(output.getChance());
-    }
-
-    public static IDrawable getRenderedSlot(float chance) {
-        if (chance != 1) {
-            return CHANCE_SLOT;
-        }
-        return BASIC_SLOT;
-    }
-
-    public static ItemStack getResultItem(Recipe<?> recipe) {
-        ClientLevel clientLevel = Minecraft.getInstance().level;
-        if (clientLevel == null) {
-            return ItemStack.EMPTY;
-        }
-        return recipe.getResultItem(clientLevel.registryAccess());
-    }
-
-    @Contract(value = "_ -> new", pure = true)
-    protected static IDrawable asDrawable(AllGuiTextures texture) {
-        return new IDrawable() {
-            @Override
-            public int getWidth() {
-                return texture.getWidth();
-            }
-
-            @Override
-            public int getHeight() {
-                return texture.getHeight();
-            }
-
-            @Override
-            public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
-                texture.render(graphics, xOffset, yOffset);
-            }
-        };
     }
 
     @Override
@@ -155,6 +116,65 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
         tooltip.addAll(getTooltipStrings(holder.value(), recipeSlotsView, mouseX, mouseY));
     }
 
+    public static IDrawable getRenderedSlot() {
+        return BASIC_SLOT;
+    }
+
+    public static IDrawable getRenderedSlot(ProcessingOutput output) {
+        return getRenderedSlot(output.getChance());
+    }
+
+    public static IDrawable getRenderedSlot(float chance) {
+        if (chance != 1) {
+            return CHANCE_SLOT;
+        }
+
+        return BASIC_SLOT;
+    }
+
+    public static ItemStack getResultItem(Recipe<?> recipe) {
+        ClientLevel clientLevel = Minecraft.getInstance().level;
+        if (clientLevel == null) {
+            return ItemStack.EMPTY;
+        }
+
+        return recipe.getResultItem(clientLevel.registryAccess());
+    }
+
+    public static void addGasRequirementTooltip(ITooltipBuilder tooltip, GasRecipeRequirement requirement) {
+        tooltip.add(GasUnitFormat.amount(requirement.amount()).style(ChatFormatting.GRAY).component());
+        requirement.pressure().minimumPressurePa().ifPresent(pressurePa -> tooltip.add(Component.translatable("createcraftedbeginning.jei.gas.minimum_pressure", GasPressure.formatAtm(pressurePa)).withStyle(ChatFormatting.GOLD)));
+        requirement.pressure().maximumPressurePa().ifPresent(pressurePa -> tooltip.add(Component.translatable("createcraftedbeginning.jei.gas.maximum_pressure", GasPressure.formatAtm(pressurePa)).withStyle(ChatFormatting.GOLD)));
+    }
+
+    public void registerRecipes(IRecipeRegistration registration) {
+        registration.addRecipes(type, recipes.get());
+    }
+
+    public void registerCatalysts(IRecipeCatalystRegistration registration) {
+        catalysts.forEach(catalyst -> registration.addRecipeCatalyst(catalyst.get(), type));
+    }
+
+    @Contract(value = "_ -> new", pure = true)
+    protected static IDrawable asDrawable(AllGuiTextures texture) {
+        return new IDrawable() {
+            @Override
+            public int getWidth() {
+                return texture.getWidth();
+            }
+
+            @Override
+            public int getHeight() {
+                return texture.getHeight();
+            }
+
+            @Override
+            public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
+                texture.render(graphics, xOffset, yOffset);
+            }
+        };
+    }
+
     protected void onDisplayedIngredientsUpdate(T recipe, List<IRecipeSlotDrawable> recipeSlots, IFocusGroup focuses) {
     }
 
@@ -165,14 +185,6 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
     protected abstract void draw(T recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics gui, double mouseX, double mouseY);
 
     protected abstract void setRecipe(IRecipeLayoutBuilder builder, T recipe, IFocusGroup focuses);
-
-    public void registerRecipes(IRecipeRegistration registration) {
-        registration.addRecipes(type, recipes.get());
-    }
-
-    public void registerCatalysts(IRecipeCatalystRegistration registration) {
-        catalysts.forEach(catalyst -> registration.addRecipeCatalyst(catalyst.get(), type));
-    }
 
     @FunctionalInterface
     public interface Factory<T extends Recipe<?>> {

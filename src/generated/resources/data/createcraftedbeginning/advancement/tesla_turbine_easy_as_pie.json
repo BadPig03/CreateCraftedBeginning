@@ -1,8 +1,8 @@
 {
-  "parent": "createcraftedbeginning:debris_craft",
+  "parent": "createcraftedbeginning:genius_engineer",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:tesla_turbine_easy_as_pie_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

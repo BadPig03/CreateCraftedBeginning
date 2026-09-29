@@ -19,21 +19,14 @@ import java.util.concurrent.CompletableFuture;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBResidueGenerationRecipes extends ResidueGenerationGen {
-    private final GeneratedRecipe NATURAL = create("natural", b -> b.require(CCBGases.NATURAL_AIR.get(), 1).output(Items.CLAY_BALL));
-    private final GeneratedRecipe PRESSURIZED_NATURAL = create("pressurized_natural", builder -> builder.require(CCBGases.PRESSURIZED_NATURAL_AIR.get(), 1).output(Items.CLAY_BALL));
+    private final GeneratedRecipe NATURAL = create("natural", builder -> builder.require(CCBGases.NATURAL_AIR.get(), 1).output(Items.CLAY_BALL));
+    private final GeneratedRecipe ULTRAWARM = create("ultrawarm", builder -> builder.require(CCBGases.ULTRAWARM_AIR.get(), 1).output(AllItems.CINDER_FLOUR));
+    private final GeneratedRecipe ETHEREAL = create("ethereal", builder -> builder.require(CCBGases.ETHEREAL_AIR.get(), 1).output(CCBItems.CHORUS_FLOWER_POWDER));
+    private final GeneratedRecipe STEAM = create("steam", builder -> builder.require(CCBGases.STEAM.get(), 1));
 
-    private final GeneratedRecipe ULTRAWARM = create("ultrawarm", b -> b.require(CCBGases.ULTRAWARM_AIR.get(), 1).output(AllItems.CINDER_FLOUR));
-    private final GeneratedRecipe PRESSURIZED_ULTRAWARM = create("pressurized_ultrawarm", builder -> builder.require(CCBGases.PRESSURIZED_ULTRAWARM_AIR.get(), 1).output(AllItems.CINDER_FLOUR));
-
-    private final GeneratedRecipe ETHEREAL = create("ethereal", b -> b.require(CCBGases.ETHEREAL_AIR.get(), 1).output(CCBItems.CHORUS_FLOWER_POWDER));
-    private final GeneratedRecipe PRESSURIZED_ETHEREAL = create("pressurized_ethereal", builder -> builder.require(CCBGases.PRESSURIZED_ETHEREAL_AIR.get(), 1).output(CCBItems.CHORUS_FLOWER_POWDER));
-
-    private final GeneratedRecipe STEAM = create("steam", b -> b.require(CCBGases.STEAM.get(), 1));
-    private final GeneratedRecipe PRESSURIZED_STEAM = create("pressurized_steam", b -> b.require(CCBGases.PRESSURIZED_STEAM.get(), 1));
-
-    private final GeneratedRecipe MOIST = create("moist", b -> b.require(CCBGases.MOIST_AIR.get(), 1).output(new FluidStack(Fluids.WATER, 1000)));
-    private final GeneratedRecipe SPORE = create("spore", b -> b.require(CCBGases.SPORE_AIR.get(), 1).output(Items.MUSHROOM_STEM));
-    private final GeneratedRecipe SCULK = create("sculk", b -> b.require(CCBGases.SCULK_AIR.get(), 1).output(Items.SCULK_VEIN));
+    private final GeneratedRecipe MOIST = create("moist", builder -> builder.require(CCBGases.MOIST_AIR.get(), 1).output(new FluidStack(Fluids.WATER, 1000)));
+    private final GeneratedRecipe SPORE = create("spore", builder -> builder.require(CCBGases.SPORE_AIR.get(), 1).output(Items.MUSHROOM_STEM));
+    private final GeneratedRecipe SCULK = create("sculk", builder -> builder.require(CCBGases.SCULK_AIR.get(), 1).output(Items.SCULK_VEIN));
 
     public CCBResidueGenerationRecipes(PackOutput output, CompletableFuture<Provider> registries) {
         super(output, registries, CCBAPI.MOD_ID);

@@ -15,26 +15,31 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.recipes.TemperatureCondition;
-import net.ty.createcraftedbeginning.api.gas.recipes.TemperatureMatching;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
-import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightReactorKettle;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
+import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightReactorKettle;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
+import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
+import net.ty.createcraftedbeginning.recipe.temperature.TemperatureCondition;
+import net.ty.createcraftedbeginning.recipe.temperature.TemperatureMatching;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import static com.simibubi.create.compat.jei.category.CreateRecipeCategory.addFluidSlot;
 import static com.simibubi.create.compat.jei.category.CreateRecipeCategory.addStochasticTooltip;
@@ -58,12 +63,14 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
     }
 
     private static int getOutputX(int outputIndex, int outputCount) {
-        if (outputCount % 2 != 0 && outputIndex == outputCount - 1) {
+        if (!Mth.isMultipleOf(outputCount, 2) && outputIndex == outputCount - 1) {
             return 142;
         }
-        if (outputIndex % 2 != 0) {
+
+        if (!Mth.isMultipleOf(outputIndex, 2)) {
             return 151;
         }
+
         return 132;
     }
 
@@ -83,6 +90,34 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
             case CHILLED -> CCBLang.translateDirect("recipe.temperature_matching.compatible.chilled");
             default -> CCBLang.translateDirect(condition.getTranslationKey());
         };
+    }
+
+    private static @Unmodifiable List<Pair<Ingredient, Integer>> collectCondensedIngredients(NonNullList<Ingredient> recipeIngredients) {
+        Map<Ingredient, Integer> ingredientCounts = new LinkedHashMap<>();
+        for (Ingredient ingredient : recipeIngredients) {
+            if (ingredient.isEmpty()) {
+                continue;
+            }
+
+            boolean foundMatch = false;
+            for (Entry<Ingredient, Integer> countEntry : ingredientCounts.entrySet()) {
+                Ingredient existingIngredient = countEntry.getKey();
+                if (!existingIngredient.equals(ingredient)) {
+                    continue;
+                }
+
+                ingredientCounts.put(existingIngredient, countEntry.getValue() + 1);
+                foundMatch = true;
+                break;
+            }
+
+            if (foundMatch) {
+                continue;
+            }
+
+            ingredientCounts.put(ingredient, 1);
+        }
+        return ingredientCounts.entrySet().stream().map(countEntry -> Pair.of(countEntry.getKey(), countEntry.getValue())).toList();
     }
 
     @Override
@@ -125,8 +160,7 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         int color = condition.getColor();
         CCBJEITextures.JEI_HEAT_BAR.render(graphics, 4, 80, new Color(color));
         graphics.drawString(Minecraft.getInstance().font, getTemperatureDisplay(recipe), 9, 86, color, false);
-
-        if (recipe.getGasIngredients().isEmpty() && recipe.getGasResults().isEmpty()) {
+        if (recipe.getGasRequirements().isEmpty() && recipe.getGasResults().isEmpty()) {
             reactorKettleOpened.draw(graphics, background.getWidth() / 2 + 6, 58);
             return;
         }
@@ -136,13 +170,13 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
 
     @Override
     protected void setRecipe(IRecipeLayoutBuilder builder, ReactorKettleRecipe recipe, IFocusGroup focuses) {
-        List<Pair<Ingredient, Integer>> condensedIngredients = ReactorKettleRecipe.getCondensedIngredients(recipe.getIngredients());
+        List<Pair<Ingredient, Integer>> condensedIngredients = collectCondensedIngredients(recipe.getIngredients());
         NonNullList<SizedFluidIngredient> fluidIngredients = recipe.getFluidIngredients();
-        NonNullList<SizedGasIngredient> gasIngredients = recipe.getGasIngredients();
+        List<GasRecipeRequirement> gasRequirements = recipe.getGasRequirements();
         List<ProcessingOutput> results = recipe.getRollableResults();
         NonNullList<FluidStack> fluidResults = recipe.getFluidResults();
         NonNullList<GasStack> gasResults = recipe.getGasResults();
-        int inputCount = condensedIngredients.size() + fluidIngredients.size() + gasIngredients.size();
+        int inputCount = condensedIngredients.size() + fluidIngredients.size() + gasRequirements.size();
         int xOffset = inputCount < 3 ? (3 - inputCount) * 19 / 2 : 0;
         int inputIndex = 0;
         for (Pair<Ingredient, Integer> pair : condensedIngredients) {
@@ -161,11 +195,11 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
             addFluidSlot(builder, slotX, slotY, fluidIngredient);
             inputIndex++;
         }
-        for (SizedGasIngredient gasIngredient : gasIngredients) {
+        for (GasRecipeRequirement gasRequirement : gasRequirements) {
             int slotX = getInputX(inputIndex, xOffset);
             int slotY = getInputY(inputIndex);
-            List<GasStack> gasStacks = Arrays.stream(gasIngredient.getGases()).map(GasStack::copy).toList();
-            builder.addSlot(RecipeIngredientRole.INPUT, slotX, slotY).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasIngredient.amount()).style(ChatFormatting.GRAY).component()));
+            List<GasStack> gasStacks = Arrays.stream(gasRequirement.getGases()).map(GasStack::copy).toList();
+            builder.addSlot(RecipeIngredientRole.INPUT, slotX, slotY).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> addGasRequirementTooltip(tooltip, gasRequirement));
             inputIndex++;
         }
 
@@ -186,7 +220,7 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         for (GasStack gasResult : gasResults) {
             int slotX = getOutputX(outputIndex, outputCount);
             int slotY = getOutputY(outputIndex);
-            builder.addSlot(RecipeIngredientRole.OUTPUT, slotX, slotY).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasResult.copy()).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasAmounts.precise(gasResult.getAmount()).style(ChatFormatting.GRAY).component()));
+            builder.addSlot(RecipeIngredientRole.OUTPUT, slotX, slotY).setBackground(getRenderedSlot(), -1, -1).addIngredient(CCBJEIPlugin.GAS_STACK, gasResult.copy()).addRichTooltipCallback((view, tooltip) -> tooltip.add(GasUnitFormat.amount(gasResult.getAmount()).style(ChatFormatting.GRAY).component()));
             outputIndex++;
         }
 

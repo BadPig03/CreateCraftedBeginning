@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.compat.jei;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllRecipeTypes;
+import com.simibubi.create.content.kinetics.crusher.CrushingRecipe;
 import com.simibubi.create.content.kinetics.press.MechanicalPressBlockEntity;
 import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterScreen;
 import com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen;
@@ -21,6 +22,7 @@ import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -33,12 +35,11 @@ import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.client.CCBClientRecipeUtils;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasRegistries;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasUnits;
 import net.ty.createcraftedbeginning.compat.CCBCompatMods;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.CCBRecipeCategory.Builder;
@@ -48,22 +49,23 @@ import net.ty.createcraftedbeginning.compat.jei.category.CoolingCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.DissipationCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.EnergizationCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.ForgingPressCategory;
+import net.ty.createcraftedbeginning.compat.jei.category.ForgingPressCrushingCategory;
+import net.ty.createcraftedbeginning.compat.jei.category.FractionationTowerCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.GasInjectionCategory;
-import net.ty.createcraftedbeginning.compat.jei.category.PressurizationCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.ReactorKettleCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.ResidueGenerationCategory;
-import net.ty.createcraftedbeginning.compat.jei.category.SequencedAssemblyWithGasCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.WindChargingCategory;
 import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackHelper;
 import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackRenderer;
 import net.ty.createcraftedbeginning.compat.jei.functionalstorage.FunctionalStorageJEICompat;
-import net.ty.createcraftedbeginning.compat.jei.utils.AirtightHandheldDrillGhostIngredientHandler;
-import net.ty.createcraftedbeginning.compat.jei.utils.FanProcessingFilterRecipeUtils;
-import net.ty.createcraftedbeginning.compat.jei.utils.GasFilterGhostIngredientHandler;
-import net.ty.createcraftedbeginning.compat.jei.utils.RedstoneRequesterGhostIngredientHandler;
-import net.ty.createcraftedbeginning.compat.jei.utils.StockKeeperRequestGasGuiHandler;
+import net.ty.createcraftedbeginning.compat.jei.ghost.AirtightHandheldDrillGhostIngredientHandler;
+import net.ty.createcraftedbeginning.compat.jei.ghost.GasFilterGhostIngredientHandler;
+import net.ty.createcraftedbeginning.compat.jei.ghost.RedstoneRequesterGhostIngredientHandler;
+import net.ty.createcraftedbeginning.compat.jei.recipe.FanProcessingFilterRecipes;
+import net.ty.createcraftedbeginning.compat.jei.recipe.ReactorKettleRecipeConversion;
+import net.ty.createcraftedbeginning.compat.jei.stockkeeper.StockKeeperRequestGasGuiHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressUtils;
+import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressRecipeLookup;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillScreen;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
@@ -72,17 +74,20 @@ import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
 import net.ty.createcraftedbeginning.recipe.DissipationRecipe;
 import net.ty.createcraftedbeginning.recipe.EnergizationRecipe;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
+import net.ty.createcraftedbeginning.recipe.FractionationTowerRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
-import net.ty.createcraftedbeginning.recipe.PressurizationRecipe;
+import net.ty.createcraftedbeginning.recipe.ReactorKettleBrewingRecipes;
+import net.ty.createcraftedbeginning.recipe.ReactorKettleMixingRecipe;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.recipe.ResidueGenerationRecipe;
-import net.ty.createcraftedbeginning.recipe.SequencedAssemblyWithGasRecipe;
+import net.ty.createcraftedbeginning.recipe.WindChargingFoodValue;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe;
-import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipeLookup.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -97,57 +102,10 @@ public class CCBJEIPlugin implements IModPlugin {
     public static final IIngredientType<GasStack> GAS_STACK = () -> GasStack.class;
     public static final GasStackHelper GAS_STACK_HELPER = new GasStackHelper();
 
-    public static IJeiRuntime runtime;
+    @Nullable
+    private IJeiRuntime runtime;
+
     private final List<CCBRecipeCategory<?>> allCategories = new ArrayList<>();
-
-    public static void consumeAllRecipes(Consumer<? super RecipeHolder<?>> consumer) {
-        ClientPacketListener connection = Minecraft.getInstance().getConnection();
-        if (connection == null) {
-            return;
-        }
-
-        connection.getRecipeManager().getRecipes().forEach(consumer);
-    }
-
-    public static <I extends RecipeInput, R extends Recipe<I>> void consumeTypedRecipes(Consumer<? super RecipeHolder<R>> consumer, RecipeType<R> recipeType) {
-        ClientPacketListener connection = Minecraft.getInstance().getConnection();
-        if (connection == null) {
-            return;
-        }
-
-        connection.getRecipeManager().getAllRecipesFor(recipeType).forEach(consumer);
-    }
-
-    private static void registerGasStackIngredients(IModIngredientRegistration registry) {
-        GAS_STACK_HELPER.setColorHelper(registry.getColorHelper());
-        List<GasStack> gasStacks = GasRegistries.GAS_REGISTRY.holders().filter(Objects::nonNull).filter(holder -> !holder.value().isEmpty()).map(holder -> new GasStack(holder, FluidType.BUCKET_VOLUME)).toList();
-        registry.register(GAS_STACK, gasStacks, GAS_STACK_HELPER, new GasStackRenderer(), Gas.HOLDER_CODEC.xmap(holder -> new GasStack(holder, FluidType.BUCKET_VOLUME), GasStack::getGasHolder));
-    }
-
-    private static boolean isAutomatableMixingRecipe(RecipeHolder<?> holder) {
-        Recipe<?> recipe = holder.value();
-        return recipe instanceof ShapelessRecipe && recipe.getIngredients().size() > 1 && !MechanicalPressBlockEntity.canCompress(recipe) && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
-    }
-
-    private static void addAutomaticWindChargingRecipes(List<RecipeHolder<WindChargingRecipe>> recipes) {
-        List<WindChargingRecipe> overrideRecipes = recipes.stream().map(RecipeHolder::value).toList();
-        for (Item item : BuiltInRegistries.ITEM) {
-            ItemStack itemStack = item.getDefaultInstance();
-            if (itemStack.isEmpty() || overrideRecipes.stream().anyMatch(overrideRecipe -> overrideRecipe.getIngredient().test(itemStack))) {
-                continue;
-            }
-
-            WindChargingData chargingData = WindChargingRecipe.getAutomaticWindChargingTime(itemStack);
-            if (chargingData.amount() <= 0) {
-                continue;
-            }
-
-            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
-            ResourceLocation recipeId = CCBAPI.asResource("jei/wind_charging/" + itemId.getNamespace() + '/' + itemId.getPath());
-            WindChargingRecipe chargingRecipe = new StandardProcessingRecipe.Builder<>(WindChargingRecipe::new, recipeId).withItemIngredients(Ingredient.of(item)).duration(chargingData.time()).build();
-            recipes.add(new RecipeHolder<>(recipeId, chargingRecipe));
-        }
-    }
 
     @Override
     public ResourceLocation getPluginUid() {
@@ -157,9 +115,10 @@ public class CCBJEIPlugin implements IModPlugin {
     @Override
     public void registerItemSubtypes(ISubtypeRegistration registration) {
         registration.registerSubtypeInterpreter(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get(), FanProcessingFilterSubtypeInterpreter.INSTANCE);
-        if (CCBCompatMods.FUNCTIONAL_STORAGE.isLoaded()) {
+        CCBCompatMods.FUNCTIONAL_STORAGE.executeIfInstalled(() -> {
             FunctionalStorageHook.registerItemSubtypes(registration);
-        }
+            return () -> {};
+        });
     }
 
     @Override
@@ -176,7 +135,7 @@ public class CCBJEIPlugin implements IModPlugin {
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         allCategories.forEach(category -> category.registerRecipes(registration));
-        FanProcessingFilterRecipeUtils.registerRecipes(registration);
+        FanProcessingFilterRecipes.registerRecipes(registration);
     }
 
     @Override
@@ -201,12 +160,61 @@ public class CCBJEIPlugin implements IModPlugin {
 
     @Override
     public void onRuntimeAvailable(IJeiRuntime runtime) {
-        CCBJEIPlugin.runtime = runtime;
+        this.runtime = runtime;
     }
 
     @Override
     public void onRuntimeUnavailable() {
         runtime = null;
+    }
+
+    public static void consumeAllRecipes(Consumer<? super RecipeHolder<?>> consumer) {
+        ClientPacketListener connection = Minecraft.getInstance().getConnection();
+        if (connection == null) {
+            return;
+        }
+
+        connection.getRecipeManager().getRecipes().forEach(consumer);
+    }
+
+    public static <I extends RecipeInput, R extends Recipe<I>> void consumeTypedRecipes(Consumer<? super RecipeHolder<R>> consumer, RecipeType<R> recipeType) {
+        ClientPacketListener connection = Minecraft.getInstance().getConnection();
+        if (connection == null) {
+            return;
+        }
+
+        connection.getRecipeManager().getAllRecipesFor(recipeType).forEach(consumer);
+    }
+
+    private static void registerGasStackIngredients(IModIngredientRegistration registry) {
+        GAS_STACK_HELPER.setColorHelper(registry.getColorHelper());
+        List<GasStack> gasStacks = GasRegistries.GAS_REGISTRY.holders().filter(Objects::nonNull).filter(holder -> !holder.value().isEmpty()).map(holder -> new GasStack(holder, GasUnits.GU_PER_KGU)).toList();
+        registry.register(GAS_STACK, gasStacks, GAS_STACK_HELPER, new GasStackRenderer(), Gas.HOLDER_CODEC.xmap(holder -> new GasStack(holder, GasUnits.GU_PER_KGU), GasStack::getGasHolder));
+    }
+
+    private static boolean isAutomatableMixingRecipe(RecipeHolder<?> holder) {
+        Recipe<?> recipe = holder.value();
+        return recipe instanceof ShapelessRecipe && recipe.getIngredients().size() > 1 && !MechanicalPressBlockEntity.canCompress(recipe) && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
+    }
+
+    private static void addAutomaticWindChargingRecipes(List<RecipeHolder<WindChargingRecipe>> recipes) {
+        List<WindChargingRecipe> overrideRecipes = recipes.stream().map(RecipeHolder::value).toList();
+        for (Item item : BuiltInRegistries.ITEM) {
+            ItemStack itemStack = item.getDefaultInstance();
+            if (itemStack.isEmpty() || overrideRecipes.stream().anyMatch(overrideRecipe -> overrideRecipe.getIngredient().test(itemStack))) {
+                continue;
+            }
+
+            WindChargingData chargingData = new WindChargingFoodValue(itemStack).calculate();
+            if (chargingData.amount() <= 0) {
+                continue;
+            }
+
+            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+            ResourceLocation recipeId = CCBAPI.asResource("jei/wind_charging/" + itemId.getNamespace() + '/' + itemId.getPath());
+            WindChargingRecipe chargingRecipe = new StandardProcessingRecipe.Builder<>(WindChargingRecipe::new, recipeId).withItemIngredients(Ingredient.of(item)).duration(chargingData.time()).build();
+            recipes.add(new RecipeHolder<>(recipeId, chargingRecipe));
+        }
     }
 
     private void loadCategories() {
@@ -215,15 +223,25 @@ public class CCBJEIPlugin implements IModPlugin {
         builder(DissipationRecipe.class).addTypedRecipes(CCBRecipeTypes.DISSIPATION).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).catalyst(CCBBlocks.AIRTIGHT_TANK_BLOCK::get).doubleItemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK, CCBBlocks.AIRTIGHT_TANK_BLOCK).emptyBackground(177, 70).build("dissipation", DissipationCategory::new);
         builder(EnergizationRecipe.class).addTypedRecipes(CCBRecipeTypes.ENERGIZATION).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).catalyst(CCBBlocks.AIRTIGHT_TANK_BLOCK::get).doubleItemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK, CCBBlocks.AIRTIGHT_TANK_BLOCK).emptyBackground(177, 70).build("energization", EnergizationCategory::new);
         builder(ForgingPressRecipe.class).addTypedRecipes(CCBRecipeTypes.FORGING_PRESS).catalyst(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK::get).emptyBackground(177, 103).build("forging_press", ForgingPressCategory::new);
-        builder(ForgingPressRecipe.class).enableWhen(CCBConfig.server().airtights.enableAutomaticPressingRecipes).addAllRecipesIf(AirtightForgingPressUtils::isAllowedAutomaticPressingRecipe, ForgingPressRecipe::convertPressingToForgingPressRecipe).catalyst(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK, AllBlocks.MECHANICAL_PRESS).emptyBackground(177, 103).build("forging_press_auto_pressing", ForgingPressCategory::new);
-        builder(ForgingPressRecipe.class).enableWhen(CCBConfig.server().airtights.enableAutomaticSmithingRecipes).addAllRecipesIf(holder -> AirtightForgingPressUtils.isAllowedAutomaticSmithingRecipe(holder) && ForgingPressRecipe.canConvertSmithingRecipe(holder.value()), ForgingPressRecipe::convertToForgingPressRecipe).catalyst(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK, Blocks.SMITHING_TABLE).emptyBackground(177, 103).build("forging_press_auto_smithing", ForgingPressCategory::new);
+        builder(ForgingPressRecipe.class).enableWhen(CCBConfig.server().machines.airtightForgingPress.enableAutomaticPressingRecipes).addAllRecipesIf(AirtightForgingPressRecipeLookup::isAllowedAutomaticPressingRecipe, ForgingPressRecipe::convertPressingToForgingPressRecipe).catalyst(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK, AllBlocks.MECHANICAL_PRESS).emptyBackground(177, 103).build("forging_press_auto_pressing", ForgingPressCategory::new);
+        builder(CrushingRecipe.class).enableWhen(CCBConfig.server().machines.airtightForgingPress.enableAutomaticCrushingRecipes).addAllRecipesIf(AirtightForgingPressRecipeLookup::isAllowedAutomaticCrushingRecipe, holder -> new RecipeHolder<>(holder.id(), (CrushingRecipe) holder.value())).catalyst(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK, AllBlocks.CRUSHING_WHEEL).emptyBackground(177, 103).build("forging_press_auto_crushing", ForgingPressCrushingCategory::new);
+        builder(ForgingPressRecipe.class).enableWhen(CCBConfig.server().machines.airtightForgingPress.enableAutomaticSmithingRecipes).addAllRecipesIf(holder -> AirtightForgingPressRecipeLookup.isAllowedAutomaticSmithingRecipe(holder) && ForgingPressRecipe.canConvertSmithingRecipe(holder.value()), ForgingPressRecipe::convertToForgingPressRecipe).catalyst(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK, Blocks.SMITHING_TABLE).emptyBackground(177, 103).build("forging_press_auto_smithing", ForgingPressCategory::new);
         builder(ChillingRecipe.class).addTypedRecipes(CCBRecipeTypes.CHILLING).catalystStack(ChillingCategory.getCatalystStack()).doubleItemIcon(AllItems.PROPELLER.get(), CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(178, 72).build("chilling", ChillingCategory::new);
         builder(GasInjectionRecipe.class).addTypedRecipes(CCBRecipeTypes.GAS_INJECTION).catalyst(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK::get).doubleItemIcon(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK, CCBItems.GAS_CANISTER).emptyBackground(177, 70).build("gas_injection", GasInjectionCategory::new);
-        builder(PressurizationRecipe.class).addTypedRecipes(CCBRecipeTypes.PRESSURIZATION).catalyst(CCBBlocks.AIR_COMPRESSOR_BLOCK::get).catalyst(CCBBlocks.BREEZE_COOLER_BLOCK::get).doubleItemIcon(CCBBlocks.AIR_COMPRESSOR_BLOCK, CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(177, 70).build("pressurization", PressurizationCategory::new);
+        builder(FractionationTowerRecipe.class).addTypedRecipes(CCBRecipeTypes.FRACTIONATION_TOWER).addRecipeListConsumer(recipes -> recipes.removeIf(holder -> holder.value().isCondensation())).catalyst(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL::get).catalyst(CCBBlocks.AIRTIGHT_TANK_BLOCK::get).doubleItemIcon(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL, AllBlocks.BLAZE_BURNER).emptyBackground(177, 103).build("fractionation_tower_fractionation", FractionationTowerCategory::new);
+        builder(FractionationTowerRecipe.class).addTypedRecipes(CCBRecipeTypes.FRACTIONATION_TOWER).addRecipeListConsumer(recipes -> recipes.removeIf(holder -> !holder.value().isCondensation())).catalyst(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL::get).catalyst(CCBBlocks.AIRTIGHT_TANK_BLOCK::get).doubleItemIcon(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL, CCBBlocks.BREEZE_COOLER_BLOCK).emptyBackground(177, 103).build("fractionation_tower_condensation", FractionationTowerCategory::new);
         builder(ReactorKettleRecipe.class).addTypedRecipes(CCBRecipeTypes.REACTOR_KETTLE).catalyst(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK::get).emptyBackground(177, 103).build("reactor_kettle", ReactorKettleCategory::new);
-        builder(ReactorKettleRecipe.class).enableWhen(CCBConfig.server().airtights.enableAutomaticMixingRecipes).addAllRecipesIf(CCBJEIPlugin::isAutomatableMixingRecipe, CCBClientRecipeUtils::convertToReactorKettleRecipe).catalyst(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK, Blocks.CRAFTING_TABLE).emptyBackground(177, 103).build("reactor_kettle_auto_mixing", ReactorKettleCategory::new);
+        builder(ReactorKettleRecipe.class).enableWhen(CCBConfig.server().machines.airtightReactorKettle.enableAutomaticMixingRecipes).addAllRecipesIf(ReactorKettleMixingRecipe::isSupported, ReactorKettleMixingRecipe::convert).catalyst(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK, AllBlocks.MECHANICAL_MIXER).emptyBackground(177, 103).build("reactor_kettle_mixing", ReactorKettleCategory::new);
+        builder(ReactorKettleRecipe.class).enableWhen(CCBConfig.server().machines.airtightReactorKettle.enableAutomaticBrewingRecipes).addRecipeListConsumer(recipes -> {
+            ClientLevel level = Minecraft.getInstance().level;
+            if (level == null) {
+                return;
+            }
+
+            recipes.addAll(ReactorKettleBrewingRecipes.getRecipes(level));
+        }).catalyst(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK, Blocks.BREWING_STAND).emptyBackground(177, 103).build("reactor_kettle_auto_brewing", ReactorKettleCategory::new);
+        builder(ReactorKettleRecipe.class).enableWhen(CCBConfig.server().machines.airtightReactorKettle.enableAutomaticShapelessRecipes).addAllRecipesIf(CCBJEIPlugin::isAutomatableMixingRecipe, ReactorKettleRecipeConversion::convertToReactorKettleRecipe).catalyst(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK::get).doubleItemIcon(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK, Blocks.CRAFTING_TABLE).emptyBackground(177, 103).build("reactor_kettle_auto_mixing", ReactorKettleCategory::new);
         builder(ResidueGenerationRecipe.class).addTypedRecipes(CCBRecipeTypes.RESIDUE_GENERATION).catalyst(CCBBlocks.RESIDUE_OUTLET_BLOCK::get).catalyst(CCBBlocks.AIRTIGHT_ENGINE_BLOCK::get).emptyBackground(177, 103).build("residue_generation", ResidueGenerationCategory::new);
-        builder(SequencedAssemblyWithGasRecipe.class).addTypedRecipes(CCBRecipeTypes.SEQUENCED_ASSEMBLY_WITH_GAS).doubleItemIcon(AllItems.PRECISION_MECHANISM.get(), CCBItems.GAS_CANISTER).emptyBackground(180, 115).build("sequenced_assembly_with_gas", SequencedAssemblyWithGasCategory::new);
         builder(WindChargingRecipe.class).addTypedRecipes(CCBRecipeTypes.WIND_CHARGING).addRecipeListConsumer(CCBJEIPlugin::addAutomaticWindChargingRecipes).catalyst(CCBBlocks.BREEZE_CHAMBER_BLOCK::get).itemIcon(CCBBlocks.BREEZE_CHAMBER_BLOCK).emptyBackground(177, 50).build("wind_charging", WindChargingCategory::new);
     }
 

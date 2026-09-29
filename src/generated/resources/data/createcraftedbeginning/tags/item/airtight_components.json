@@ -3,20 +3,24 @@
     "createcraftedbeginning:airtight_pipe",
     "createcraftedbeginning:airtight_encased_pipe",
     "createcraftedbeginning:airtight_check_valve",
+    "createcraftedbeginning:airtight_valve",
     "createcraftedbeginning:smart_airtight_pipe",
     "createcraftedbeginning:airtight_pump",
+    "createcraftedbeginning:airtight_regulator_pump",
+    "createcraftedbeginning:airtight_flowmeter",
+    "createcraftedbeginning:airtight_manometer",
     "createcraftedbeginning:airtight_tank",
     "createcraftedbeginning:horizontal_airtight_tank",
     "createcraftedbeginning:creative_airtight_tank",
     "createcraftedbeginning:airtight_hatch",
     "createcraftedbeginning:gas_injection_chamber",
-    "createcraftedbeginning:air_compressor",
     "createcraftedbeginning:airtight_engine",
     "createcraftedbeginning:residue_outlet",
     "createcraftedbeginning:boiler_steam_outlet",
     "createcraftedbeginning:tesla_turbine",
     "createcraftedbeginning:tesla_turbine_nozzle",
     "createcraftedbeginning:airtight_reactor_kettle",
-    "createcraftedbeginning:airtight_forging_press"
+    "createcraftedbeginning:airtight_forging_press",
+    "createcraftedbeginning:airtight_meter"
   ]
 }

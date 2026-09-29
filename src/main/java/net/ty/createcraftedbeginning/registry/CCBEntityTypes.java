@@ -22,14 +22,14 @@ public class CCBEntityTypes {
     public static final EntityEntry<AirtightCannonWindChargeProjectileEntity> AIRTIGHT_CANNON_WIND_CHARGE_PROJECTILE = CCBEntityTypes.<AirtightCannonWindChargeProjectileEntity>register("airtight_cannon_wind_charge_projectile", AirtightCannonWindChargeProjectileEntity::new, false, AirtightCannonWindChargeProjectileEntity::build).register();
     public static final EntityEntry<WeatherFlareProjectileEntity> WEATHER_FLARE_PROJECTILE = CCBEntityTypes.<WeatherFlareProjectileEntity>register("weather_flare_projectile", WeatherFlareProjectileEntity::new, true, WeatherFlareProjectileEntity::build).register();
 
-    private static <T extends Entity> @NotNull EntityBuilder<T, ?> register(String name, EntityFactory<T> factory, boolean immuneToFire, NonNullConsumer<Builder<T>> propertyBuilder) {
-        return CCBRegistrateProvider.get().entity(Lang.asId(name), factory, MobCategory.MISC).defaultLang().properties(b -> b.setTrackingRange(4).setUpdateInterval(10).setShouldReceiveVelocityUpdates(true)).properties(propertyBuilder).properties(b -> {
-            if (immuneToFire) {
-                b.fireImmune();
-            }
-        });
+    public static void register() {
     }
 
-    public static void register() {
+    private static <T extends Entity> @NotNull EntityBuilder<T, ?> register(String name, EntityFactory<T> factory, boolean immuneToFire, NonNullConsumer<Builder<T>> propertyBuilder) {
+        return CCBRegistrateProvider.get().entity(Lang.asId(name), factory, MobCategory.MISC).defaultLang().properties(builder -> builder.setTrackingRange(4).setUpdateInterval(10).setShouldReceiveVelocityUpdates(true)).properties(propertyBuilder).properties(builder -> {
+            if (immuneToFire) {
+                builder.fireImmune();
+            }
+        });
     }
 }

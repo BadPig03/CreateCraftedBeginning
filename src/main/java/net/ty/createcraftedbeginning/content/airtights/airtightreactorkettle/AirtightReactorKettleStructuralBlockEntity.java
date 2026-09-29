@@ -22,10 +22,11 @@ import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IGasInventoryIdentifierProvider;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
+import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -35,55 +36,13 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity implements ThresholdSwitchObservable, IGasInventoryIdentifierProvider {
+public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity implements ThresholdSwitchObservable, GasInventoryIdentifierProvider {
     private FilteringBehaviour filteringBehaviour;
     private boolean syncingFilter;
 
     public AirtightReactorKettleStructuralBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         setLazyTickRate(10);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getItemCapability());
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getFluidCapability());
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getGasCapability());
-    }
-
-    public static boolean canStore(BlockState state) {
-        return state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).canStore();
-    }
-
-    @Nullable AirtightReactorKettleBlockEntity getMasterBlockEntity() {
-        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(getBlockPos(), getBlockState());
-        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity masterBlockEntity)) {
-            return null;
-        }
-        return masterBlockEntity;
-    }
-
-    private @Nullable IItemHandler getItemCapability() {
-        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
-        if (kettle == null || !canStore(getBlockState())) {
-            return null;
-        }
-        return kettle.getItemPortCapability();
-    }
-
-    private @Nullable IFluidHandler getFluidCapability() {
-        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
-        if (kettle == null || !canStore(getBlockState())) {
-            return null;
-        }
-        return kettle.getFluidPortCapability();
-    }
-
-    private @Nullable IGasHandler getGasCapability() {
-        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
-        if (kettle == null || !canStore(getBlockState())) {
-            return null;
-        }
-        return kettle.getGasPortCapability();
     }
 
     @Override
@@ -117,27 +76,6 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         syncFilterFromMaster(kettle.getRecipeFilter());
     }
 
-    void syncFilterFromMaster(ItemStack filterStack) {
-        if (filteringBehaviour == null || ItemStack.matches(filteringBehaviour.getFilter(), filterStack)) {
-            return;
-        }
-
-        syncingFilter = true;
-        try {
-            filteringBehaviour.setFilter(filterStack);
-        } finally {
-            syncingFilter = false;
-        }
-    }
-
-    private void onFilterChanged(ItemStack filterStack) {
-        if (syncingFilter) {
-            return;
-        }
-
-        AirtightReactorKettleUtils.updateRecipeFilter(this, filterStack);
-    }
-
     @Override
     public int getMaxValue() {
         AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
@@ -147,7 +85,7 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
 
         IItemHandler items = getItemCapability();
         IFluidHandler fluids = getFluidCapability();
-        IGasHandler gases = getGasCapability();
+        GasHandler gases = getGasCapability();
         if (items == null || fluids == null || gases == null) {
             return 0;
         }
@@ -159,10 +97,12 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         for (int tank = 0; tank < fluids.getTanks(); tank++) {
             totalCapacity += fluids.getTankCapacity(tank);
         }
-        for (int tank = 0; tank < gases.getTanks(); tank++) {
-            totalCapacity += gases.getTankCapacity(tank);
+        if (gases instanceof GasStorageHandler storageGases) {
+            for (int tank = 0; tank < storageGases.getTanks(); tank++) {
+                totalCapacity += storageGases.getTankMaxAmount(tank);
+            }
         }
-        return CCBMathUtils.clampToNonNegativeInt(totalCapacity);
+        return BoundedMath.clampToNonNegativeInt(totalCapacity);
     }
 
     @Override
@@ -179,7 +119,7 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
 
         IItemHandler items = getItemCapability();
         IFluidHandler fluids = getFluidCapability();
-        IGasHandler gases = getGasCapability();
+        GasHandler gases = getGasCapability();
         if (items == null || fluids == null || gases == null) {
             return 0;
         }
@@ -194,18 +134,86 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         for (int tank = 0; tank < gases.getTanks(); tank++) {
             storedAmount += gases.getGasInTank(tank).getAmount();
         }
-        return CCBMathUtils.clampToNonNegativeInt(storedAmount);
+        return BoundedMath.clampToNonNegativeInt(storedAmount);
     }
 
     @Override
     public MutableComponent format(int value) {
-        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
+        return CCBLang.text(String.valueOf(value) + ' ').add(CCBLang.translate("gui.threshold.items")).component();
     }
 
     @Override
     public InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
-        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(getBlockPos(), getBlockState());
+        BlockPos masterPos = AirtightReactorKettleStructural.getMaster(getBlockPos(), getBlockState());
         return new Single(masterPos);
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getItemCapability());
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getFluidCapability());
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getGasCapability());
+    }
+
+    public static boolean canStore(BlockState state) {
+        return state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).canStore();
+    }
+
+    @Nullable AirtightReactorKettleBlockEntity getMasterBlockEntity() {
+        BlockPos masterPos = AirtightReactorKettleStructural.getMaster(getBlockPos(), getBlockState());
+        if (level == null || !(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity masterBlockEntity)) {
+            return null;
+        }
+
+        return masterBlockEntity;
+    }
+
+    void syncFilterFromMaster(ItemStack filterStack) {
+        if (filteringBehaviour == null || ItemStack.matches(filteringBehaviour.getFilter(), filterStack)) {
+            return;
+        }
+
+        syncingFilter = true;
+        try {
+            filteringBehaviour.setFilter(filterStack);
+        }
+        finally {
+            syncingFilter = false;
+        }
+    }
+
+    private @Nullable IItemHandler getItemCapability() {
+        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
+        if (kettle == null || !canStore(getBlockState())) {
+            return null;
+        }
+
+        return kettle.getItemPortCapability();
+    }
+
+    private @Nullable IFluidHandler getFluidCapability() {
+        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
+        if (kettle == null || !canStore(getBlockState())) {
+            return null;
+        }
+
+        return kettle.getFluidPortCapability();
+    }
+
+    private @Nullable GasHandler getGasCapability() {
+        AirtightReactorKettleBlockEntity kettle = getMasterBlockEntity();
+        if (kettle == null || !canStore(getBlockState())) {
+            return null;
+        }
+
+        return kettle.getGasPortCapability();
+    }
+
+    private void onFilterChanged(ItemStack filterStack) {
+        if (syncingFilter) {
+            return;
+        }
+
+        AirtightReactorKettleInteraction.updateRecipeFilter(this, filterStack);
     }
 
     private static class AirtightReactorKettleValueBox extends Sided {

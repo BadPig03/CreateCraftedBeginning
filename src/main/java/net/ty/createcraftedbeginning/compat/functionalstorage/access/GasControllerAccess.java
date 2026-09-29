@@ -1,7 +1,7 @@
 package net.ty.createcraftedbeginning.compat.functionalstorage.access;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -10,5 +10,5 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface GasControllerAccess {
-    @Nullable IGasHandler ccb$getGasHandler();
+    @Nullable GasHandler ccb$getGasHandler();
 }

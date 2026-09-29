@@ -5,7 +5,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -31,37 +32,6 @@ class AirtightForgingPressStructureManager {
         this.press = press;
     }
 
-    private static float getSpeed(BlockPos pressPos, Level level) {
-        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
-        if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
-            return 0;
-        }
-        return shaft.getSpeed();
-    }
-
-    private static float getTheoreticalSpeed(BlockPos pressPos, Level level) {
-        float maxTheoreticalSpeed = 0;
-        for (AirtightForgingPressStructuralPosition structuralPosition : AirtightForgingPressStructuralPosition.all()) {
-            if (!structuralPosition.isShaft() || structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER) {
-                continue;
-            }
-
-            BlockPos shaftPos = pressPos.offset(structuralPosition.getStructureOffset());
-            if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
-                return 0;
-            }
-
-            maxTheoreticalSpeed = Math.max(maxTheoreticalSpeed, Mth.abs(shaft.getTheoreticalSpeed()));
-        }
-
-        return maxTheoreticalSpeed;
-    }
-
-    private static boolean isOverstressed(BlockPos pressPos, Level level) {
-        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
-        return level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft && shaft.getOverstressed();
-    }
-
     void tick() {
         if (!evaluate()) {
             return;
@@ -73,30 +43,26 @@ class AirtightForgingPressStructureManager {
 
     CompoundTag write() {
         CompoundTag structureTag = new CompoundTag();
-        CCBNbtUtils.putFloat(structureTag, COMPOUND_KEY_SPEED, speed);
-        CCBNbtUtils.putFloat(structureTag, COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
-        CCBNbtUtils.putFloat(structureTag, COMPOUND_KEY_THEORETICAL_SPEED, theoreticalSpeed);
-        CCBNbtUtils.putFloat(structureTag, COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED, previousTheoreticalSpeed);
-        CCBNbtUtils.putBoolean(structureTag, COMPOUND_KEY_OVERSTRESSED, overstressed);
-        CCBNbtUtils.putBoolean(structureTag, COMPOUND_KEY_PREVIOUS_OVERSTRESSED, previousOverstressed);
+        structureTag.putFloat(COMPOUND_KEY_SPEED, speed);
+        structureTag.putFloat(COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
+        structureTag.putFloat(COMPOUND_KEY_THEORETICAL_SPEED, theoreticalSpeed);
+        structureTag.putFloat(COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED, previousTheoreticalSpeed);
+        structureTag.putBoolean(COMPOUND_KEY_OVERSTRESSED, overstressed);
+        structureTag.putBoolean(COMPOUND_KEY_PREVIOUS_OVERSTRESSED, previousOverstressed);
         return structureTag;
     }
 
     void read(CompoundTag compoundTag) {
-        speed = CCBNbtUtils.getFloatOrDefault(compoundTag, COMPOUND_KEY_SPEED, speed);
-        previousSpeed = CCBNbtUtils.getFloatOrDefault(compoundTag, COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
-        theoreticalSpeed = CCBNbtUtils.getFloatOrDefault(compoundTag, COMPOUND_KEY_THEORETICAL_SPEED, theoreticalSpeed);
-        previousTheoreticalSpeed = CCBNbtUtils.getFloatOrDefault(compoundTag, COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED, previousTheoreticalSpeed);
-        overstressed = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_OVERSTRESSED, overstressed);
-        previousOverstressed = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_PREVIOUS_OVERSTRESSED, previousOverstressed);
+        speed = NbtValues.getFloatOrDefault(compoundTag, COMPOUND_KEY_SPEED, speed);
+        previousSpeed = NbtValues.getFloatOrDefault(compoundTag, COMPOUND_KEY_PREVIOUS_SPEED, previousSpeed);
+        theoreticalSpeed = NbtValues.getFloatOrDefault(compoundTag, COMPOUND_KEY_THEORETICAL_SPEED, theoreticalSpeed);
+        previousTheoreticalSpeed = NbtValues.getFloatOrDefault(compoundTag, COMPOUND_KEY_PREVIOUS_THEORETICAL_SPEED, previousTheoreticalSpeed);
+        overstressed = NbtValues.getBooleanOrDefault(compoundTag, COMPOUND_KEY_OVERSTRESSED, overstressed);
+        previousOverstressed = NbtValues.getBooleanOrDefault(compoundTag, COMPOUND_KEY_PREVIOUS_OVERSTRESSED, previousOverstressed);
     }
 
     float getSpeed() {
         return speed;
-    }
-
-    float getTheoreticalSpeed() {
-        return theoreticalSpeed;
     }
 
     float getRealSpeed() {
@@ -110,6 +76,47 @@ class AirtightForgingPressStructureManager {
 
     boolean getOverstressed() {
         return overstressed;
+    }
+
+    @Nullable AirtightForgingPressStructuralShaftBlockEntity getKineticTooltipSource() {
+        Level level = press.getLevel();
+        if (level == null) {
+            return null;
+        }
+
+        return getKineticTooltipSource(press.getBlockPos(), level);
+    }
+
+    private static float getSpeed(BlockPos pressPos, Level level) {
+        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
+        if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
+            return 0;
+        }
+
+        return shaft.getSpeed();
+    }
+
+    private static float getTheoreticalSpeed(BlockPos pressPos, Level level) {
+        AirtightForgingPressStructuralShaftBlockEntity shaft = getKineticTooltipSource(pressPos, level);
+        if (shaft == null) {
+            return 0;
+        }
+
+        return Mth.abs(shaft.getTheoreticalSpeed());
+    }
+
+    private static @Nullable AirtightForgingPressStructuralShaftBlockEntity getKineticTooltipSource(BlockPos pressPos, Level level) {
+        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
+        if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
+            return null;
+        }
+
+        return shaft;
+    }
+
+    private static boolean isOverstressed(BlockPos pressPos, Level level) {
+        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
+        return level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft && shaft.getOverstressed();
     }
 
     private boolean evaluate() {

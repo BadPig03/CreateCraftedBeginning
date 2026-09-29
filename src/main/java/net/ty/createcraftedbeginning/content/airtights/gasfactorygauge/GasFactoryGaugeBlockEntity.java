@@ -12,8 +12,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeAttachment.Detection;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,6 +46,7 @@ public class GasFactoryGaugeBlockEntity extends FactoryPanelBlockEntity {
 
         advancements = new AdvancementBehaviour(this, AllAdvancements.FACTORY_GAUGE);
         behaviours.add(advancements);
+        behaviours.add(new CCBAdvancementBehaviour(this, CCBAdvancements.SMART_GAS_COLLECTION));
     }
 
     @Override
@@ -74,6 +77,7 @@ public class GasFactoryGaugeBlockEntity extends FactoryPanelBlockEntity {
         if (!restocker) {
             return null;
         }
+
         return attachment.findAttachedPackager();
     }
 

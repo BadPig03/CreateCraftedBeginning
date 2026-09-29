@@ -10,6 +10,7 @@ import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
@@ -17,7 +18,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -34,45 +35,45 @@ final class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRendere
     private AirtightExtendArmItemRenderer() {
     }
 
-    @SubscribeEvent
-    private static void register(RegisterClientExtensionsEvent event) {
-        event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_EXTEND_ARM.asItem(), new AirtightExtendArmItemRenderer()), CCBItems.AIRTIGHT_EXTEND_ARM.asItem());
-    }
-
     @Override
-    protected void render(ItemStack arm, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
+    protected void render(ItemStack arm, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         AirtightExtendArmRenderHandler renderHandler = AirtightExtendArmRenderHandler.INSTANCE;
         boolean isFirstPerson = transformType == ItemDisplayContext.FIRST_PERSON_LEFT_HAND || transformType == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND;
         float extensionProgress = isFirstPerson ? renderHandler.getAnimation(AnimationTickHolder.getPartialTicks()) : 0;
         renderer.renderSolid(model.getOriginalModel(), light);
 
-        ms.pushPose();
-        ms.translate(0, 0, -0.625 - extensionProgress * 1.125);
-        ms.scale(1 - extensionProgress * 0.125f, 1 - extensionProgress * 0.125f, 1 + extensionProgress * 9);
+        poseStack.pushPose();
+        poseStack.translate(0, 0, -0.625 - extensionProgress * 1.125);
+        poseStack.scale(1 - extensionProgress * 0.125F, 1 - extensionProgress * 0.125F, 1 + extensionProgress * 9);
         renderer.renderSolid(SPRING.get(), light);
-        ms.popPose();
+        poseStack.popPose();
 
         for (int springIndex = 0; springIndex < 4; springIndex++) {
-            ms.pushPose();
-            ms.translate(0, 0, -0.7375 + 0.075 * springIndex - extensionProgress * 0.5625 * (3.5 - springIndex));
-            ms.scale(1 - extensionProgress * 0.125f, 1 - extensionProgress * 0.125f, 1 + extensionProgress * 1.5f);
+            poseStack.pushPose();
+            poseStack.translate(0, 0, -0.7375 + 0.075 * springIndex - extensionProgress * 0.5625 * (3.5 - springIndex));
+            poseStack.scale(1 - extensionProgress * 0.125F, 1 - extensionProgress * 0.125F, 1 + extensionProgress * 1.5F);
             renderer.renderSolid(SPRING_CAP.get(), light);
-            ms.popPose();
+            poseStack.popPose();
         }
 
-        ms.pushPose();
-        ms.translate(0, 0, -extensionProgress * 2.25);
+        poseStack.pushPose();
+        poseStack.translate(0, 0, -extensionProgress * 2.25);
         renderer.renderSolid(isFirstPerson ? renderHandler.getPose().get() : POINTING.get(), light);
-        ms.popPose();
+        poseStack.popPose();
 
-        ms.pushPose();
+        poseStack.pushPose();
         float cogAngle = AnimationTickHolder.getRenderTime() * -2;
         if (isFirstPerson) {
-            cogAngle += 360 * extensionProgress * extensionProgress * extensionProgress;
+            cogAngle += 360 * Mth.square(extensionProgress) * extensionProgress;
         }
         cogAngle %= 360;
-        TransformStack.of(ms).translate(0, 0.0625, 0).rotateZDegrees(cogAngle).translateBack(0, 0.0625, 0);
+        TransformStack.of(poseStack).translate(0, 0.0625, 0).rotateZDegrees(cogAngle).translateBack(0, 0.0625, 0);
         renderer.renderSolid(COGS.get(), light);
-        ms.popPose();
+        poseStack.popPose();
+    }
+
+    @SubscribeEvent
+    private static void register(RegisterClientExtensionsEvent event) {
+        event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_EXTEND_ARM.asItem(), new AirtightExtendArmItemRenderer()), CCBItems.AIRTIGHT_EXTEND_ARM.asItem());
     }
 }

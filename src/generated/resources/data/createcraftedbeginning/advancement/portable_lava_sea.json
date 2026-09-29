@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:a_house_of_gold_in_the_crate",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:portable_lava_sea_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {
@@ -11,7 +11,6 @@
       "translate": "advancement.createcraftedbeginning.portable_lava_sea.desc"
     },
     "frame": "goal",
-    "hidden": true,
     "icon": {
       "count": 1,
       "id": "minecraft:lava_bucket"

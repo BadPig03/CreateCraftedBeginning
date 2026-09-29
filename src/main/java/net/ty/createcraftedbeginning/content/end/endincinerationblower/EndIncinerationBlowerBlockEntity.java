@@ -13,7 +13,7 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
 import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralBlockEntity.BlowerWorkingMode;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Nullable;
@@ -43,18 +43,6 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         ownerState = new EndIncinerationBlowerOwner();
         visualState = new EndIncinerationBlowerVisualState();
         showOutline = true;
-    }
-
-    public static AABB calculateArea(BlockPos pos, float speed) {
-        return EndIncinerationBlowerRange.calculateArea(pos, speed);
-    }
-
-    static void setClientTicker(Consumer<EndIncinerationBlowerBlockEntity> ticker) {
-        clientTicker = ticker;
-    }
-
-    static float calculateRange(float speed) {
-        return EndIncinerationBlowerRange.calculateRange(speed);
     }
 
     @Override
@@ -95,15 +83,27 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_SHOW_OUTLINE, showOutline);
+        compoundTag.putBoolean(COMPOUND_KEY_SHOW_OUTLINE, showOutline);
         ownerState.write(compoundTag);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        showOutline = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_SHOW_OUTLINE, showOutline);
+        showOutline = NbtValues.getBooleanOrDefault(compoundTag, COMPOUND_KEY_SHOW_OUTLINE, showOutline);
         ownerState.read(compoundTag);
+    }
+
+    public static AABB calculateArea(BlockPos pos, float speed) {
+        return EndIncinerationBlowerRange.calculateArea(pos, speed);
+    }
+
+    static void setClientTicker(Consumer<EndIncinerationBlowerBlockEntity> ticker) {
+        clientTicker = ticker;
+    }
+
+    static float calculateRange(float speed) {
+        return EndIncinerationBlowerRange.calculateRange(speed);
     }
 
     void toggleShowOutline() {
@@ -152,6 +152,7 @@ public class EndIncinerationBlowerBlockEntity extends EndMechanicalBlockEntity<E
         if (structural == null) {
             return null;
         }
+
         return structural.getBlowerWorkingMode().get();
     }
 }

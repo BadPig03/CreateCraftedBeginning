@@ -23,7 +23,7 @@ public record AirtightHandheldDrillGhostItemSubmitPacket(ItemStack item) impleme
             return;
         }
 
-        if (!item.isEmpty() && !AirtightHandheldDrillUtils.isValidFilter(item)) {
+        if (!item.isEmpty() && !AirtightHandheldDrillSettings.isValidFilter(item)) {
             return;
         }
 

@@ -19,7 +19,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -35,13 +35,8 @@ final class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRen
     private AirtightHandheldDrillItemRenderer() {
     }
 
-    @SubscribeEvent
-    private static void register(RegisterClientExtensionsEvent event) {
-        event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem(), new AirtightHandheldDrillItemRenderer()), CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem());
-    }
-
     @Override
-    protected void render(ItemStack drill, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
+    protected void render(ItemStack drill, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         renderer.render(model.getOriginalModel(), light);
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) {
@@ -49,7 +44,7 @@ final class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRen
         }
 
         BakedModel drillFront = CCBPartialModels.AIRTIGHT_HANDHELD_DRILL_FRONT.get();
-        float rotationAngle = rotationAngles.getOrDefault(drill, 0.0f);
+        float rotationAngle = rotationAngles.getOrDefault(drill, 0.0F);
         boolean isDrillHeld = player.getMainHandItem() == drill || player.getOffhandItem() == drill;
         if (isDrillHeld) {
             float rotationSpeed = AirtightHandheldDrillRenderHandler.INSTANCE.getAnimation(AnimationTickHolder.getPartialTicks());
@@ -57,9 +52,16 @@ final class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRen
             rotationAngles.put(drill, rotationAngle);
         }
 
-        ms.pushPose();
-        ms.mulPose(Axis.ZP.rotationDegrees(rotationAngle));
+        poseStack.pushPose();
+
+        poseStack.mulPose(Axis.ZP.rotationDegrees(rotationAngle));
         renderer.render(drillFront, light);
-        ms.popPose();
+
+        poseStack.popPose();
+    }
+
+    @SubscribeEvent
+    private static void register(RegisterClientExtensionsEvent event) {
+        event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem(), new AirtightHandheldDrillItemRenderer()), CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem());
     }
 }

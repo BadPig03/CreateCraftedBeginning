@@ -8,13 +8,13 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.client.gui.CCBGUITextures;
+import net.ty.createcraftedbeginning.client.gui.CCBIcons;
+import net.ty.createcraftedbeginning.client.gui.VerticalIndicator;
+import net.ty.createcraftedbeginning.client.gui.VerticalIndicator.State;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
-import net.ty.createcraftedbeginning.foundation.client.VerticalIndicator;
-import net.ty.createcraftedbeginning.foundation.client.VerticalIndicator.State;
-import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -24,20 +24,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public abstract class AirtightArmorScreen<T extends AirtightArmorMenu> extends AirtightUpgradableScreen<T> {
     protected AirtightArmorScreen(T menu, Inventory inv, Component title) {
         super(menu, inv, title, CCBGUITextures.ARMORS);
-    }
-
-    private static State getIndicatorState(AirtightUpgradeStatus status, boolean canInstall) {
-        if (!status.isInstalled()) {
-            if (!canInstall) {
-                return State.OFF;
-            }
-            return State.YELLOW;
-        }
-
-        if (!status.isEnabled()) {
-            return State.RED;
-        }
-        return State.GREEN;
     }
 
     @Override
@@ -60,7 +46,7 @@ public abstract class AirtightArmorScreen<T extends AirtightArmorMenu> extends A
             VerticalIndicator indicator = new VerticalIndicator(indicatorX, topPos + offset.getSecond(), rightAligned);
             upgradeIndicators.put(upgrade, indicator);
 
-            ScreenButtonConfig config = new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getComponents(menu.player, menu.contentHolder.copy()), upgrade.getUpgradeItem());
+            ScreenButtonConfig config = new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getComponents(menu.player, menu.contentHolder.copy()), () -> upgrade.getUpgradeItem(menu.player.level()));
             buttonConfigsMap.put(upgrade, config);
             addRenderableWidgets(button, indicator);
         });
@@ -74,10 +60,26 @@ public abstract class AirtightArmorScreen<T extends AirtightArmorMenu> extends A
             VerticalIndicator indicator = (VerticalIndicator) upgradeIndicators.get(upgrade);
             AirtightUpgradeStatus status = menu.getStatus(upgrade);
 
-            button.active = status.isInstalled() || upgrade.testUpgradeItem(stack);
+            button.active = status.isInstalled() || upgrade.testUpgradeItem(stack, menu.player.level());
             button.green = status.isInstalled() && status.isEnabled();
-            indicator.state = getIndicatorState(status, button.active);
+            indicator.setState(getIndicatorState(status, button.active));
         });
         disableUpgradeButton.visible = menu.getCurrentStatusList().stream().allMatch(AirtightUpgradeStatus::isInstalled);
+    }
+
+    private static State getIndicatorState(AirtightUpgradeStatus status, boolean canInstall) {
+        if (!status.isInstalled()) {
+            if (!canInstall) {
+                return State.OFF;
+            }
+
+            return State.YELLOW;
+        }
+
+        if (!status.isEnabled()) {
+            return State.RED;
+        }
+
+        return State.GREEN;
     }
 }

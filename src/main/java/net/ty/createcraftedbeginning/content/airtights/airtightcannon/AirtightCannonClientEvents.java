@@ -32,7 +32,7 @@ final class AirtightCannonClientEvents {
         }
 
         int useTime = cannon.getUseDuration(player) - player.getUseItemRemainingTicks();
-        float chargeProgress = Math.min((float) useTime / (AirtightCannonUtils.getEfficientUseTime(cannon) * 2), 1);
-        event.setNewFovModifier(event.getFovModifier() * (1 - chargeProgress * 0.15f));
+        float chargeProgress = Math.min((float) useTime / (AirtightCannonCharge.getEfficientUseTime(cannon) * 2), 1);
+        event.setNewFovModifier(event.getFovModifier() * (1 - chargeProgress * 0.15F));
     }
 }

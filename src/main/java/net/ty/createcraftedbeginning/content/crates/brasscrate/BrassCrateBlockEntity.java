@@ -20,7 +20,7 @@ public class BrassCrateBlockEntity extends FilteredCrateBlockEntity {
     private CCBAdvancementBehaviour advancementBehaviour;
 
     public BrassCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state, () -> CCBConfig.server().crates.maxBrassCapacity.get());
+        super(type, pos, state, () -> CCBConfig.server().storage.brassCrate.itemCapacity.get());
     }
 
     @Override

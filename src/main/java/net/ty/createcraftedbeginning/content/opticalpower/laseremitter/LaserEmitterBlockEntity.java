@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -19,8 +20,6 @@ import net.ty.createcraftedbeginning.content.opticalpower.laserreceiver.LaserRec
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerConsumerBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetwork;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetworkManager;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -95,7 +94,7 @@ public class LaserEmitterBlockEntity extends SmartBlockEntity implements Optical
             return;
         }
 
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_OPTICAL_POWER_POINTS, allocatedPowerPoints);
+        compoundTag.putInt(COMPOUND_KEY_OPTICAL_POWER_POINTS, allocatedPowerPoints);
     }
 
     @Override
@@ -105,7 +104,7 @@ public class LaserEmitterBlockEntity extends SmartBlockEntity implements Optical
             return;
         }
 
-        allocatedPowerPoints = CCBMathUtils.clampNonNegative(CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_OPTICAL_POWER_POINTS), OpticalPowerNetwork.MAX_CONSUMER_POWER_POINTS);
+        allocatedPowerPoints = Mth.clamp(compoundTag.getInt(COMPOUND_KEY_OPTICAL_POWER_POINTS), 0, OpticalPowerNetwork.MAX_CONSUMER_POWER_POINTS);
     }
 
     @Override
@@ -114,7 +113,7 @@ public class LaserEmitterBlockEntity extends SmartBlockEntity implements Optical
             return;
         }
 
-        int clamped = CCBMathUtils.clampNonNegative(powerPoints, OpticalPowerNetwork.MAX_CONSUMER_POWER_POINTS);
+        int clamped = Mth.clamp(powerPoints, 0, OpticalPowerNetwork.MAX_CONSUMER_POWER_POINTS);
         if (allocatedPowerPoints == clamped) {
             return;
         }
@@ -137,6 +136,7 @@ public class LaserEmitterBlockEntity extends SmartBlockEntity implements Optical
         if (laserBehaviour == null) {
             return 0;
         }
+
         return laserBehaviour.getBeamLength();
     }
 

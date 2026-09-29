@@ -35,6 +35,7 @@ final class GasFactoryGaugeAttachment {
         if (!(level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity)) {
             return Detection.DETACHED;
         }
+
         return Detection.ATTACHED;
     }
 
@@ -49,6 +50,7 @@ final class GasFactoryGaugeAttachment {
         if (!level.isLoaded(packagerPos) || !(level.getBlockEntity(packagerPos) instanceof GasPackagerBlockEntity packager)) {
             return null;
         }
+
         return packager;
     }
 

@@ -10,11 +10,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class EtherealAirDrillHandler implements AirtightDrillHandler {
     @Override
     public int getDamageAddition() {
-        return 1;
+        return 2;
     }
 
     @Override
     public float getConsumptionMultiplier() {
-        return 0.8f;
+        return 0.6F;
     }
 }

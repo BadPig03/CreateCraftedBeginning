@@ -22,6 +22,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
@@ -39,12 +40,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implements IBE<AirtightReactorKettleStructuralCogBlockEntity>, IWrenchable, IProxyHoveringInformation, ICogWheel, IAirtightReactorKettleStructural {
+public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implements IBE<AirtightReactorKettleStructuralCogBlockEntity>, IWrenchable, IProxyHoveringInformation, ICogWheel, AirtightReactorKettleStructural {
     public static final EnumProperty<AirtightReactorKettleStructuralPosition> STRUCTURAL_POSITION = EnumProperty.create("structural_position", AirtightReactorKettleStructuralPosition.class);
 
     public AirtightReactorKettleStructuralCogBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(STRUCTURAL_POSITION, AirtightReactorKettleStructuralPosition.TOP_CENTER));
+    }
+
+    @Override
+    public BlockState rotate(BlockState state, Rotation rotation) {
+        return state.setValue(STRUCTURAL_POSITION, state.getValue(STRUCTURAL_POSITION).rotate(rotation));
     }
 
     @Override
@@ -60,7 +66,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
             return super.onSneakWrenched(state, context);
         }
 
-        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(clickedPos, state);
+        BlockPos masterPos = AirtightReactorKettleStructural.getMaster(clickedPos, state);
         Player player = context.getPlayer();
         InteractionHand hand = context.getHand();
         ItemStack heldStack = context.getItemInHand();
@@ -91,7 +97,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
             return super.playerWillDestroy(level, pos, state, player);
         }
 
-        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
+        BlockPos masterPos = AirtightReactorKettleStructural.getMaster(pos, state);
         level.destroyBlockProgress(masterPos.hashCode(), masterPos, -1);
         if (level.isClientSide || !player.isCreative()) {
             return super.playerWillDestroy(level, pos, state, player);
@@ -110,7 +116,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor accessor, BlockPos pos, BlockPos neighborPos) {
         if (stillValid(accessor, pos, state)) {
-            BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
+            BlockPos masterPos = AirtightReactorKettleStructural.getMaster(pos, state);
             if (!accessor.getBlockTicks().hasScheduledTick(masterPos, CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK.get())) {
                 accessor.scheduleTick(masterPos, CCBBlocks.AIRTIGHT_REACTOR_KETTLE_BLOCK.get(), 1);
             }
@@ -133,7 +139,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         AirtightReactorKettleStructuralPosition structuralPosition = state.getValue(STRUCTURAL_POSITION);
         VoxelShape baseShape = AirtightReactorKettleVoxelShapes.getShape(structuralPosition);
-        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
+        BlockPos masterPos = AirtightReactorKettleStructural.getMaster(pos, state);
         if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity kettle) || kettle.getWindowsOpenState()) {
             return baseShape;
         }
@@ -141,6 +147,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
         if (!structuralPosition.isWindow(-1)) {
             return baseShape;
         }
+
         return CCBShapes.AIRTIGHT_REACTOR_KETTLE_TOP_MID_CLOSED.get(structuralPosition.getDirection());
     }
 
@@ -156,11 +163,11 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
         super.onRemove(state, level, pos, newState, moving);
-        if (state.is(newState.getBlock()) || !stillValid(level, pos, state)) {
+        if (moving || state.is(newState.getBlock()) || !stillValid(level, pos, state)) {
             return;
         }
 
-        level.destroyBlock(AirtightReactorKettleUtils.getMaster(pos, state), true);
+        level.destroyBlock(AirtightReactorKettleStructural.getMaster(pos, state), true);
     }
 
     @Override
@@ -169,7 +176,7 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
             return false;
         }
 
-        BlockPos masterPos = AirtightReactorKettleUtils.getMaster(pos, state);
+        BlockPos masterPos = AirtightReactorKettleStructural.getMaster(pos, state);
         return level.getBlockState(masterPos).getBlock() instanceof AirtightReactorKettleBlock;
     }
 
@@ -183,7 +190,8 @@ public class AirtightReactorKettleStructuralCogBlock extends KineticBlock implem
         if (!stillValid(level, pos, state)) {
             return pos;
         }
-        return AirtightReactorKettleUtils.getMaster(pos, state);
+
+        return AirtightReactorKettleStructural.getMaster(pos, state);
     }
 
     @Override

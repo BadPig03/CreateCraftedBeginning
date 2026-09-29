@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.Block;
 import net.ty.createcraftedbeginning.config.CCBStress;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.airtightassemblydriver.AirtightAssemblyDriverCore;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,7 +31,7 @@ public final class CCBStressProviders {
         }
 
         if (block == CCBBlocks.TESLA_TURBINE_BLOCK.get()) {
-            int speed = TeslaTurbineUtils.MAX_LEVEL * TeslaTurbineUtils.BASE_ROTATION_SPEED;
+            int speed = TeslaTurbineBlock.MAX_LEVEL * TeslaTurbineBlock.BASE_ROTATION_SPEED;
             return new GeneratedRpm(speed, true);
         }
 

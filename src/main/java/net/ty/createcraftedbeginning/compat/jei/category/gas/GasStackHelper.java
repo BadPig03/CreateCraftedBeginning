@@ -12,12 +12,12 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.fluids.FluidType;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gas.gases.GasRegistries;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
+import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasRegistries;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasUnits;
+import net.ty.createcraftedbeginning.client.gas.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -31,10 +31,6 @@ import java.util.stream.Stream;
 public class GasStackHelper implements IIngredientHelper<GasStack> {
     @Nullable
     private IColorHelper colorHelper;
-
-    public void setColorHelper(@Nullable IColorHelper colorHelper) {
-        this.colorHelper = colorHelper;
-    }
 
     @Override
     public IIngredientType<GasStack> getIngredientType() {
@@ -62,6 +58,7 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
         if (colorHelper == null) {
             return IIngredientHelper.super.getColors(ingredient);
         }
+
         return colorHelper.getColors(CCBGasClientTextures.getGasTexture(ingredient.getGasHolder()), ingredient.getHint(), 1);
     }
 
@@ -72,7 +69,7 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
         }
 
         ItemStack canister = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
-        if (!(canister.getCapability(GasHandler.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
+        if (!(canister.getCapability(CanisterCapabilities.ITEM) instanceof CreativeGasCanisterContainerContents contents)) {
             return ItemStack.EMPTY;
         }
 
@@ -87,6 +84,7 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
         if (key != null) {
             return key.location();
         }
+
         return GasRegistries.GAS_REGISTRY.getKey(holder.value());
     }
 
@@ -97,7 +95,7 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
 
     @Override
     public GasStack normalizeIngredient(GasStack ingredient) {
-        return ingredient.copyWithAmount(FluidType.BUCKET_VOLUME);
+        return ingredient.copyWithAmount(GasUnits.GU_PER_KGU);
     }
 
     @Override
@@ -122,5 +120,9 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
 
         stringHelper.add("Amount", stack.getAmount());
         return stringHelper.toString();
+    }
+
+    public void setColorHelper(@Nullable IColorHelper colorHelper) {
+        this.colorHelper = colorHelper;
     }
 }

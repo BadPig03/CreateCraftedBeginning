@@ -1,169 +1,40 @@
 package net.ty.createcraftedbeginning.recipe;
 
-import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.simibubi.create.foundation.recipe.RecipeFinder;
+import com.simibubi.create.compat.jei.category.sequencedAssembly.SequencedAssemblySubCategory;
+import com.simibubi.create.content.processing.sequenced.IAssemblyRecipe;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
-import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.ingredients.SizedGasIngredient;
-import net.ty.createcraftedbeginning.api.gas.recipes.ProcessingWithGasRecipeParams;
-import net.ty.createcraftedbeginning.api.gas.recipes.StandardProcessingWithGasRecipe;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
+import net.ty.createcraftedbeginning.compat.jei.category.GasInjectionSequencedAssemblySubCategory;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
-import net.ty.createcraftedbeginning.recipe.gas.IAssemblyRecipeWithGas;
-import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant;
-import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant.AbstractFluid;
-import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant.AbstractGas;
-import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant.AbstractItem;
-import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrie;
-import net.ty.createcraftedbeginning.recipe.trie.AirtightWithGasRecipeTrieFinder;
-import net.ty.createcraftedbeginning.recipe.trie.IAirtightWithGasRecipe;
-import org.jetbrains.annotations.Contract;
+import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
+import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlanner;
+import net.ty.createcraftedbeginning.recipe.gas.processing.GasProcessingRecipeParams;
+import net.ty.createcraftedbeginning.recipe.gas.processing.StandardGasProcessingRecipe;
+import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRecipeInput> implements IAssemblyRecipeWithGas, IAirtightWithGasRecipe {
-    private static final Object RECIPE_CACHE_KEY = new Object();
+public class GasInjectionRecipe extends StandardGasProcessingRecipe<SingleRecipeInput> implements IAssemblyRecipe {
 
-    public GasInjectionRecipe(ProcessingWithGasRecipeParams params) {
+    public GasInjectionRecipe(GasProcessingRecipeParams params) {
         super(CCBRecipeTypes.GAS_INJECTION, params);
-    }
-
-    public static Optional<RecipeMatch> findRecipeMatch(Level level, ItemStack itemStack, GasStack gasStack) {
-        if (itemStack.isEmpty() || gasStack.isEmpty()) {
-            return Optional.empty();
-        }
-
-        SingleRecipeInput recipeInput = new SingleRecipeInput(itemStack);
-        Optional<RecipeHolder<GasInjectionRecipe>> assemblyRecipeHolder = SequencedAssemblyWithGasRecipe.getRecipe(level, recipeInput, CCBRecipeTypes.GAS_INJECTION.getType(), GasInjectionRecipe.class, matchItemAndGas(level, gasStack, recipeInput));
-        if (assemblyRecipeHolder.isPresent()) {
-            return Optional.of(new RecipeMatch(assemblyRecipeHolder.get().value(), true));
-        }
-
-        if (!AirtightWithGasRecipeTrieFinder.hasFailed(RECIPE_CACHE_KEY, level)) {
-            try {
-                return findItemInTrie(level, itemStack, gasStack, recipeInput);
-            } catch (ExecutionException | UncheckedExecutionException exception) {
-                disableRecipeTrie(level, exception);
-            }
-        }
-        return findItemLinear(level, gasStack, recipeInput);
-    }
-
-    public static Optional<RecipeMatch> findFluidRecipeMatch(Level level, IFluidHandler fluids, GasStack gasStack) {
-        if (gasStack.isEmpty() || fluids.getTanks() <= 0) {
-            return Optional.empty();
-        }
-
-        if (!AirtightWithGasRecipeTrieFinder.hasFailed(RECIPE_CACHE_KEY, level)) {
-            try {
-                return findFluidInTrie(level, fluids, gasStack);
-            } catch (ExecutionException | UncheckedExecutionException exception) {
-                disableRecipeTrie(level, exception);
-            }
-        }
-        return findFluidLinear(level, fluids, gasStack);
-    }
-
-    private static Optional<RecipeMatch> findItemInTrie(Level level, ItemStack itemStack, GasStack gasStack, SingleRecipeInput input) throws ExecutionException {
-        AirtightWithGasRecipeTrie<?> recipeTrie = getRecipeTrie(level);
-        Set<AbstractVariant> lookupVariants = new HashSet<>();
-        lookupVariants.add(new AbstractItem(itemStack.getItem()));
-        lookupVariants.add(new AbstractGas(gasStack.getGasType()));
-        for (Recipe<?> candidateRecipe : recipeTrie.lookup(lookupVariants)) {
-            if (!(candidateRecipe instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.matches(input, level) || !injectionRecipe.matchesGas(gasStack)) {
-                continue;
-            }
-
-            return Optional.of(new RecipeMatch(injectionRecipe, false));
-        }
-        return Optional.empty();
-    }
-
-    private static Optional<RecipeMatch> findFluidInTrie(Level level, IFluidHandler fluids, GasStack gasStack) throws ExecutionException {
-        AirtightWithGasRecipeTrie<?> recipeTrie = getRecipeTrie(level);
-        Set<AbstractVariant> lookupVariants = new HashSet<>();
-        for (int tankIndex = 0; tankIndex < fluids.getTanks(); tankIndex++) {
-            FluidStack fluidStack = fluids.getFluidInTank(tankIndex);
-            if (!fluidStack.isEmpty()) {
-                lookupVariants.add(new AbstractFluid(fluidStack.getFluid()));
-            }
-        }
-        if (lookupVariants.isEmpty()) {
-            return Optional.empty();
-        }
-
-        lookupVariants.add(new AbstractGas(gasStack.getGasType()));
-        for (Recipe<?> candidateRecipe : recipeTrie.lookup(lookupVariants)) {
-            if (!(candidateRecipe instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.isFluidInjection() || !injectionRecipe.matchesFluid(fluids) || !injectionRecipe.matchesGas(gasStack)) {
-                continue;
-            }
-
-            return Optional.of(new RecipeMatch(injectionRecipe, false));
-        }
-        return Optional.empty();
-    }
-
-    private static AirtightWithGasRecipeTrie<?> getRecipeTrie(Level level) throws ExecutionException {
-        return AirtightWithGasRecipeTrieFinder.get(RECIPE_CACHE_KEY, level, recipeHolder -> recipeHolder.value() instanceof GasInjectionRecipe);
-    }
-
-    private static Optional<RecipeMatch> findItemLinear(Level level, GasStack gasStack, SingleRecipeInput input) {
-        for (RecipeHolder<? extends Recipe<?>> recipeHolder : RecipeFinder.get(RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof GasInjectionRecipe)) {
-            if (!(recipeHolder.value() instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.matches(input, level) || !injectionRecipe.matchesGas(gasStack)) {
-                continue;
-            }
-
-            return Optional.of(new RecipeMatch(injectionRecipe, false));
-        }
-        return Optional.empty();
-    }
-
-    private static Optional<RecipeMatch> findFluidLinear(Level level, IFluidHandler fluids, GasStack gasStack) {
-        for (RecipeHolder<? extends Recipe<?>> recipeHolder : RecipeFinder.get(RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof GasInjectionRecipe)) {
-            if (!(recipeHolder.value() instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.isFluidInjection() || !injectionRecipe.matchesFluid(fluids) || !injectionRecipe.matchesGas(gasStack)) {
-                continue;
-            }
-
-            return Optional.of(new RecipeMatch(injectionRecipe, false));
-        }
-        return Optional.empty();
-    }
-
-    private static void disableRecipeTrie(Level level, Exception exception) {
-        if (!AirtightWithGasRecipeTrieFinder.recordFailure(RECIPE_CACHE_KEY, level)) {
-            return;
-        }
-
-        CCBAPI.LOGGER.error("Failed to build the gas injection recipe trie; falling back to a linear recipe search until recipes are reloaded", exception);
-    }
-
-    public static void invalidateRecipeCaches() {
-        AirtightWithGasRecipeTrieFinder.invalidateFailures(RECIPE_CACHE_KEY);
-    }
-
-    @Contract(pure = true)
-    private static Predicate<RecipeHolder<GasInjectionRecipe>> matchItemAndGas(Level level, GasStack gasStack, SingleRecipeInput input) {
-        return recipeHolder -> recipeHolder.value().matches(input, level) && recipeHolder.value().matchesGas(gasStack);
     }
 
     @Override
@@ -202,23 +73,21 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
             errors.add("Gas injection recipes require exactly one gas ingredient.");
         }
 
-        boolean hasFluidMedium = !fluidIngredients.isEmpty() || !fluidResults.isEmpty();
-        if (!hasFluidMedium) {
-            return;
+        int inputMediumCount = (ingredients.isEmpty() ? 0 : 1) + (fluidIngredients.isEmpty() ? 0 : 1);
+        if (inputMediumCount != 1) {
+            errors.add("Gas injection recipes require exactly one item or fluid input.");
         }
 
-        if (!ingredients.isEmpty() || !results.isEmpty()) {
-            errors.add("Gas injection recipes cannot mix item and fluid inputs or outputs.");
-        }
-        if (fluidIngredients.size() != 1 || fluidResults.size() != 1) {
-            errors.add("Fluid gas injection recipes require exactly one fluid input and one fluid output.");
-            return;
+        int outputMediumCount = (results.isEmpty() ? 0 : 1) + (fluidResults.isEmpty() ? 0 : 1);
+        if (outputMediumCount != 1) {
+            errors.add("Gas injection recipes require exactly one item or fluid output.");
         }
 
-        if (fluidIngredients.getFirst().amount() <= 0) {
+        if (!fluidIngredients.isEmpty() && fluidIngredients.getFirst().amount() <= 0) {
             errors.add("Fluid gas injection recipe input amount must be greater than zero.");
         }
-        if (!fluidResults.getFirst().isEmpty() && fluidResults.getFirst().getAmount() > 0) {
+
+        if (!(!fluidResults.isEmpty() && (fluidResults.getFirst().isEmpty() || fluidResults.getFirst().getAmount() <= 0))) {
             return;
         }
 
@@ -232,25 +101,59 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         return CCBLang.translateDirect("recipe.assembly.gas_injection_injecting_gas", gasName);
     }
 
+    @Override
+    public void addRequiredMachines(Set<ItemLike> list) {
+        list.add(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.get());
+    }
+
+    @Override
+    public void addAssemblyIngredients(List<Ingredient> list) {
+    }
+
+    @Override
+    public Supplier<Supplier<SequencedAssemblySubCategory>> getJEISubCategory() {
+        return () -> GasInjectionSequencedAssemblySubCategory::new;
+    }
+
     public boolean isFluidInjection() {
         return ingredients.isEmpty() && results.isEmpty() && fluidIngredients.size() == 1 && fluidResults.size() == 1;
+    }
+
+    public boolean hasItemInput() {
+        return !ingredients.isEmpty();
+    }
+
+    public boolean hasFluidInput() {
+        return !fluidIngredients.isEmpty();
+    }
+
+    public boolean hasItemOutput() {
+        return !results.isEmpty();
+    }
+
+    public boolean hasFluidOutput() {
+        return !fluidResults.isEmpty();
+    }
+
+    public boolean canProcessOnBelt() {
+        return hasItemInput() && hasItemOutput();
     }
 
     public ItemStack rollFirstResult(Level level) {
         return rollResults(level.random).stream().findFirst().orElse(ItemStack.EMPTY);
     }
 
-    public SizedGasIngredient getGasIngredient() {
-        if (gasIngredients.isEmpty()) {
-            throw new IllegalStateException("Gas Injection Recipe has no gas ingredient!");
+    public GasRecipeRequirement getGasRequirement() {
+        if (getGasRequirements().isEmpty()) {
+            throw new IllegalStateException("Gas injection recipe has no gas requirement.");
         }
 
-        return gasIngredients.getFirst();
+        return getGasRequirements().getFirst();
     }
 
     public SizedFluidIngredient getFluidIngredient() {
         if (fluidIngredients.isEmpty()) {
-            throw new IllegalStateException("Gas Injection Recipe has no fluid ingredient!");
+            throw new IllegalStateException("Gas injection recipe has no fluid ingredient.");
         }
 
         return fluidIngredients.getFirst();
@@ -260,6 +163,7 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         if (fluidResults.isEmpty()) {
             return FluidStack.EMPTY;
         }
+
         return fluidResults.getFirst();
     }
 
@@ -267,14 +171,31 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         if (ingredients.isEmpty()) {
             return Ingredient.EMPTY;
         }
+
         return ingredients.getFirst();
     }
 
-    private boolean matchesGas(GasStack gasStack) {
-        return getGasIngredient().ingredient().test(gasStack);
+    boolean matchesGas(GasPressureCompartment gasSource) {
+        return GasConsumptionPlanner.plan(getGasRequirement(), gasSource).isPresent();
     }
 
-    private boolean matchesFluid(IFluidHandler fluids) {
+    boolean matchesBasinInput(IItemHandler items, IFluidHandler fluids) {
+        if (hasItemInput()) {
+            Ingredient ingredient = getIngredient();
+            for (int slot = 0; slot < items.getSlots(); slot++) {
+                ItemStack itemStack = items.getStackInSlot(slot);
+                if (!itemStack.isEmpty() && ingredient.test(itemStack)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return hasFluidInput() && matchesFluid(fluids);
+    }
+
+    boolean matchesFluid(IFluidHandler fluids) {
         if (!isFluidInjection()) {
             return false;
         }
@@ -291,6 +212,4 @@ public class GasInjectionRecipe extends StandardProcessingWithGasRecipe<SingleRe
         }
         return remainingAmount <= 0;
     }
-
-    public record RecipeMatch(GasInjectionRecipe recipe, boolean sequencedAssembly) {}
 }

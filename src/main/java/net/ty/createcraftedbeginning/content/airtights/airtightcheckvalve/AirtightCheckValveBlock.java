@@ -24,47 +24,22 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
+import net.ty.createcraftedbeginning.gas.network.DirectionalGasPipe;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
+import net.ty.createcraftedbeginning.gas.visual.GasPlacementHelper;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<AirtightCheckValveBlockEntity>, IDirectionalPipe, IAirtightComponent {
+public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<AirtightCheckValveBlockEntity>, DirectionalGasPipe, GasConnectable {
     public static final BooleanProperty INVERTED = BlockStateProperties.INVERTED;
 
     public AirtightCheckValveBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(INVERTED, false).setValue(DIRECTIONAL_FACING, DirectionalFacing.NULL));
-    }
-
-    static boolean isInputSide(BlockState state, Direction direction) {
-        if (state.getValue(AXIS) != direction.getAxis()) {
-            return false;
-        }
-
-        boolean isPositiveDirection = direction.getAxisDirection() == AxisDirection.POSITIVE;
-        return isPositiveDirection != state.getValue(INVERTED);
-    }
-
-    static boolean isOutputSide(BlockState state, Direction direction) {
-        return state.getValue(AXIS) == direction.getAxis() && !isInputSide(state, direction);
-    }
-
-    private static Direction getOutputDirection(BlockState state) {
-        AxisDirection axisDirection = state.getValue(INVERTED) ? AxisDirection.POSITIVE : AxisDirection.NEGATIVE;
-        return Direction.fromAxisAndDirection(state.getValue(AXIS), axisDirection);
-    }
-
-    private static BlockState setOutputDirection(BlockState state, Direction output) {
-        return state.setValue(AXIS, output.getAxis()).setValue(INVERTED, output.getAxisDirection() == AxisDirection.POSITIVE);
-    }
-
-    private static BlockState setDirectionalFacing(BlockState state, Direction direction) {
-        return state.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(direction));
     }
 
     @Override
@@ -75,6 +50,7 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         if (facing == DirectionalFacing.NULL) {
             return rotatedState;
         }
+
         return setDirectionalFacing(rotatedState, rotation.rotate(DirectionalFacing.getDirection(facing)));
     }
 
@@ -86,6 +62,7 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
         if (facing == DirectionalFacing.NULL) {
             return mirroredState;
         }
+
         return setDirectionalFacing(mirroredState, mirror.mirror(DirectionalFacing.getDirection(facing)));
     }
 
@@ -113,16 +90,8 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         Axis axis = state.getValue(AXIS);
-        Direction output = context.getNearestLookingDirection();
-        for (Direction direction : context.getNearestLookingDirections()) {
-            if (direction.getAxis() != axis) {
-                continue;
-            }
-
-            output = direction;
-            break;
-        }
-
+        boolean isSneaking = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
+        Direction output = GasPlacementHelper.chooseOutputDirection(context, axis, GasPlacementHelper.getConnectableDirections(context.getLevel(), context.getClickedPos()), !isSneaking);
         boolean isInverted = output.getAxisDirection() == AxisDirection.POSITIVE;
         DirectionalFacing facing = DirectionalFacing.getFacingDirection(context.getHorizontalDirection());
         return state.setValue(INVERTED, isInverted).setValue(DIRECTIONAL_FACING, facing);
@@ -130,7 +99,7 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        return CCBShapes.CHECK_VALVE.get(state.getValue(AXIS));
+        return CCBShapes.AIRTIGHT_CHECK_VALVE.get(state.getValue(AXIS));
     }
 
     @Override
@@ -146,5 +115,31 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
     @Override
     public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return currentState.getValue(AXIS) == localFace.getAxis();
+    }
+
+    static boolean isInputSide(BlockState state, Direction direction) {
+        if (state.getValue(AXIS) != direction.getAxis()) {
+            return false;
+        }
+
+        boolean isPositiveDirection = direction.getAxisDirection() == AxisDirection.POSITIVE;
+        return isPositiveDirection != state.getValue(INVERTED);
+    }
+
+    static boolean isOutputSide(BlockState state, Direction direction) {
+        return state.getValue(AXIS) == direction.getAxis() && !isInputSide(state, direction);
+    }
+
+    private static Direction getOutputDirection(BlockState state) {
+        AxisDirection axisDirection = state.getValue(INVERTED) ? AxisDirection.POSITIVE : AxisDirection.NEGATIVE;
+        return Direction.fromAxisAndDirection(state.getValue(AXIS), axisDirection);
+    }
+
+    private static BlockState setOutputDirection(BlockState state, Direction output) {
+        return state.setValue(AXIS, output.getAxis()).setValue(INVERTED, output.getAxisDirection() == AxisDirection.POSITIVE);
+    }
+
+    private static BlockState setDirectionalFacing(BlockState state, Direction direction) {
+        return state.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(direction));
     }
 }

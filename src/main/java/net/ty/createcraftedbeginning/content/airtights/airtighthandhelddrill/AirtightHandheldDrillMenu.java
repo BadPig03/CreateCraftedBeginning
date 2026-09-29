@@ -57,7 +57,7 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
         addSlot(new SlotItemHandler(menuInventory, FILTER_SLOT_INDEX, 17, 115) {
             @Override
             public boolean mayPlace(ItemStack stack) {
-                return AirtightHandheldDrillUtils.isValidFilter(stack);
+                return AirtightHandheldDrillSettings.isValidFilter(stack);
             }
 
             @Override
@@ -78,12 +78,6 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
     @Override
     protected @Nullable AirtightUpgrade getUpgradeById(ResourceLocation id) {
         return AirtightHandheldDrillUpgradeRegistry.getById(id);
-    }
-
-    @Override
-    protected boolean isValidUpgrade(ItemStack stack) {
-        AirtightUpgrade upgrade = AirtightHandheldDrillUpgradeRegistry.getByStack(stack);
-        return upgrade != null && !getStatus(upgrade).isInstalled();
     }
 
     @Override
@@ -122,7 +116,7 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
             return ItemStack.EMPTY;
         }
 
-        if (menuInventory.getStackInSlot(FILTER_SLOT_INDEX).isEmpty() && AirtightHandheldDrillUtils.isValidFilter(movedStack)) {
+        if (menuInventory.getStackInSlot(FILTER_SLOT_INDEX).isEmpty() && AirtightHandheldDrillSettings.isValidFilter(movedStack)) {
             menuInventory.setStackInSlot(FILTER_SLOT_INDEX, movedStack.copyWithCount(1));
             slot.setChanged();
             return ItemStack.EMPTY;

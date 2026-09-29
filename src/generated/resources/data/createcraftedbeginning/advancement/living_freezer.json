@@ -1,5 +1,5 @@
 {
-  "parent": "createcraftedbeginning:gas_filtration",
+  "parent": "createcraftedbeginning:smart_gas_collection",
   "criteria": {
     "0": {
       "conditions": {

@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -33,12 +32,12 @@ class AirtightForgingPressCore {
 
     CompoundTag write() {
         CompoundTag coreTag = new CompoundTag();
-        CCBNbtUtils.putTag(coreTag, COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
+        coreTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, structureManager.write());
         return coreTag;
     }
 
     void read(CompoundTag compoundTag) {
-        structureManager.read(CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_STRUCTURE_MANAGER));
+        structureManager.read(compoundTag.getCompound(COMPOUND_KEY_STRUCTURE_MANAGER));
     }
 
     AirtightForgingPressStructureManager getStructureManager() {

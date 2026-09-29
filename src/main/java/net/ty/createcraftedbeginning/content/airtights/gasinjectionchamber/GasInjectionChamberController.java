@@ -6,6 +6,7 @@ import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType;
+import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -40,12 +41,11 @@ final class GasInjectionChamberController {
         if (!level.isClientSide && !operation.isRunning() && operation.type == NONE && chamber.consumeBasinCheckScheduled()) {
             basinProcessor.tryStartOperation();
         }
-
         if (!operation.isRunning()) {
             return;
         }
 
-        operation.decrementProcessingTicks();
+        operation.advanceProcessingTicks();
         if (!level.isClientSide && operation.type == BASIN_RECIPE && !operation.hasAttemptedExecution() && operation.getProcessingTicks() <= GasInjectionChamberBlockEntity.INJECTION_EXECUTION_TICK) {
             operation.markExecutionAttempted();
             executeBasinInjection();
@@ -78,20 +78,22 @@ final class GasInjectionChamberController {
 
         int cloudColor = chamber.getGasInTank().getHint();
         boolean injectionSucceeded;
-        chamber.getGasTankBehaviour().beginMutation();
+        SmartGasTankBehaviour tankBehaviour = chamber.getGasTankBehaviour();
+        tankBehaviour.beginMutation();
         try {
             injectionSucceeded = basinProcessor.executeCurrentState();
-        } finally {
-            chamber.getGasTankBehaviour().endMutation();
+        }
+        finally {
+            tankBehaviour.endMutation();
         }
 
         if (!injectionSucceeded) {
-            chamber.getGasTankBehaviour().sendDataImmediately();
+            tankBehaviour.sendDataImmediately();
             return;
         }
 
         visual.queueCloud(cloudColor);
-        chamber.getGasTankBehaviour().sendDataImmediately();
-        CCBSoundEvents.INJECTING.playOnServer(level, chamber.getBlockPos(), 0.75f, 0.9f + 0.2f * level.random.nextFloat());
+        tankBehaviour.sendDataImmediately();
+        CCBSoundEvents.INJECTING.playOnServer(level, chamber.getBlockPos(), 0.75F, 0.9F + 0.2F * level.random.nextFloat());
     }
 }

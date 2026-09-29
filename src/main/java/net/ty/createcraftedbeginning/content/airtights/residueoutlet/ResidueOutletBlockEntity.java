@@ -46,15 +46,6 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         setLazyTickRate(LAZY_TICK_RATE);
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.fluidTankBehaviour.getCapability());
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.inventory.getExtractionCapability());
-    }
-
-    private static int getMaxCapacity() {
-        return CCBConfig.server().airtights.residueOutletCapacity.get() * FluidType.BUCKET_VOLUME;
-    }
-
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltipLines, boolean isPlayerSneaking) {
         return tooltip.addToGoggleTooltip(tooltipLines);
@@ -62,7 +53,7 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        fluidTankBehaviour = SmartFluidTankBehaviour.single(this, getMaxCapacity()).forbidInsertion();
+        fluidTankBehaviour = SmartFluidTankBehaviour.single(this, CCBConfig.server().machines.residueOutlet.fluidCapacity.get() * FluidType.BUCKET_VOLUME).forbidInsertion();
         behaviours.add(fluidTankBehaviour);
     }
 
@@ -104,6 +95,11 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         return insertionPlanner.create(fluidStack, itemStack, maxAmount);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.fluidTankBehaviour.getCapability());
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.inventory.getExtractionCapability());
+    }
+
     public int insertResidueFluid(FluidStack fluidStack, FluidAction action) {
         return fluidTankBehaviour.getPrimaryHandler().fill(fluidStack, action);
     }
@@ -119,4 +115,5 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
     FluidStack getStoredFluid() {
         return fluidTankBehaviour.getPrimaryHandler().getFluidInTank(0);
     }
+
 }

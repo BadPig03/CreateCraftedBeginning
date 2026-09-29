@@ -10,11 +10,10 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlock.WindLevel;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity.ChargerType;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction;
-import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingData;
+import net.ty.createcraftedbeginning.recipe.WindChargingRecipeLookup.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -31,6 +30,30 @@ public abstract class BaseChamberState {
     protected BaseChamberState(int remainingTime, boolean isCreative) {
         this.remainingTime = remainingTime;
         this.isCreative = isCreative;
+    }
+
+    public int getRemainingTime() {
+        return remainingTime;
+    }
+
+    public boolean isCreative() {
+        return isCreative;
+    }
+
+    public void save(CompoundTag compoundTag) {
+        compoundTag.putInt(COMPOUND_KEY_REMAINING_TIME, remainingTime);
+        compoundTag.putBoolean(COMPOUND_KEY_IS_CREATIVE, isCreative);
+    }
+
+    public void tick(BreezeChamberBlockEntity chamber) {
+    }
+
+    public abstract WindLevel getWindLevel();
+
+    public abstract ChargerType getChargerType();
+
+    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData chargingData, boolean forceOverflow, boolean simulate) {
+        return insertWindCharge(chamber, stack, chargingData, forceOverflow, simulate);
     }
 
     private static void awardFeedingAdvancements(BreezeChamberBlockEntity chamber, ItemStack stack, int chargingTime) {
@@ -52,16 +75,18 @@ public abstract class BaseChamberState {
 
     private static void applyRemainingTime(BreezeChamberBlockEntity chamber, long updatedTime) {
         int maxWindCapacity = BreezeChamberBlockEntity.getMaxWindCapacity();
-        int clampedTime = CCBMathUtils.clampMagnitude((int) updatedTime, maxWindCapacity);
+        int clampedTime = (int) BoundedMath.clampMagnitude(updatedTime, maxWindCapacity);
         if (clampedTime > 0) {
             chamber.setChamberState(new GaleChamberState(clampedTime, false));
+            return;
         }
-        else if (clampedTime < 0) {
+
+        if (clampedTime < 0) {
             chamber.setChamberState(new IllChamberState(clampedTime, false));
+            return;
         }
-        else {
-            chamber.setChamberState(new InactiveChamberState());
-        }
+
+        chamber.setChamberState(new InactiveChamberState());
     }
 
     private static boolean shouldRejectAutomaticOverflow(int remainingTime, long updatedTime) {
@@ -79,30 +104,6 @@ public abstract class BaseChamberState {
         return remainingTime < 0 || remainingTime >= effectiveThreshold || updatedTime < effectiveThreshold;
     }
 
-    public int getRemainingTime() {
-        return remainingTime;
-    }
-
-    public boolean isCreative() {
-        return isCreative;
-    }
-
-    public void save(CompoundTag compoundTag) {
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_REMAINING_TIME, remainingTime);
-        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_IS_CREATIVE, isCreative);
-    }
-
-    public void tick(BreezeChamberBlockEntity chamber) {
-    }
-
-    public abstract WindLevel getWindLevel();
-
-    public abstract ChargerType getChargerType();
-
-    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData chargingData, boolean forceOverflow, boolean simulate) {
-        return insertWindCharge(chamber, stack, chargingData, forceOverflow, simulate);
-    }
-
     private InteractionResult insertWindCharge(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData chargingData, boolean forceOverflow, boolean simulate) {
         if (chargingData.amount() <= 0) {
             return InteractionResult.FAIL;
@@ -111,6 +112,7 @@ public abstract class BaseChamberState {
         if (isCreative && chargingData.action() != WindChargingAction.CYCLE_CREATIVE) {
             return InteractionResult.PASS;
         }
+
         return switch (chargingData.action()) {
             case CHARGE -> insertCharge(chamber, stack, chargingData.time(), forceOverflow, simulate);
             case CLEAR_ILL -> clearIll(chamber, stack, simulate);
@@ -160,7 +162,7 @@ public abstract class BaseChamberState {
             return InteractionResult.SUCCESS;
         }
 
-        chamber.getAdvancementBehaviour().awardPlayer(CCBAdvancements.UNIVERSAL_ANTIDOTE);
+        chamber.getAdvancementBehaviour().awardPlayer(CCBAdvancements.IS_THIS_EVEN_SCIENTIFIC);
         return InteractionResult.SUCCESS;
     }
 

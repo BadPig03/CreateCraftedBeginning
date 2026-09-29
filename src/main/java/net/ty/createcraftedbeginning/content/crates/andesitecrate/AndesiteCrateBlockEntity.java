@@ -13,6 +13,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class AndesiteCrateBlockEntity extends CratesBlockEntity {
     public AndesiteCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state, () -> CCBConfig.server().crates.maxAndesiteCapacity.get());
+        super(type, pos, state, () -> CCBConfig.server().storage.andesiteCrate.itemCapacity.get());
     }
 }

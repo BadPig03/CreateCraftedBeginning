@@ -22,15 +22,6 @@ public class CreativeChamberState extends BaseChamberState {
         creativeType = chargerType;
     }
 
-    @Contract(pure = true)
-    static ChargerType getNextChargeType(ChargerType chargerType) {
-        return switch (chargerType) {
-            case NORMAL -> ChargerType.BAD;
-            case BAD -> ChargerType.NONE;
-            case NONE -> ChargerType.NORMAL;
-        };
-    }
-
     @Override
     public void tick(BreezeChamberBlockEntity chamber) {
         chamber.tickGasProcessing(creativeType, remainingTime);
@@ -48,5 +39,14 @@ public class CreativeChamberState extends BaseChamberState {
     @Override
     public ChargerType getChargerType() {
         return creativeType;
+    }
+
+    @Contract(pure = true)
+    static ChargerType getNextChargeType(ChargerType chargerType) {
+        return switch (chargerType) {
+            case NORMAL -> ChargerType.BAD;
+            case BAD -> ChargerType.NONE;
+            case NONE -> ChargerType.NORMAL;
+        };
     }
 }

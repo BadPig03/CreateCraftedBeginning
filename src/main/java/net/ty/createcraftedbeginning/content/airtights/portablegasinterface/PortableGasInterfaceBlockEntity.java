@@ -12,10 +12,11 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IMountedStorageManagerWithGas;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
+import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageAccess;
+import net.ty.createcraftedbeginning.gas.storage.GasTank;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,7 +26,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements ThresholdSwitchObservable {
     private final PortableGasInterfaceDisplay display;
-    private IGasHandler capability;
+    private GasStorageHandler capability;
 
     public PortableGasInterfaceBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -33,17 +34,13 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         display = new PortableGasInterfaceDisplay(this);
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.PORTABLE_GAS_INTERFACE.get(), (blockEntity, context) -> blockEntity.capability);
-    }
-
     @Override
     public void startTransferringTo(Contraption contraption, float distance) {
-        if (connectedEntity == contraption.entity || !(contraption.getStorage() instanceof IMountedStorageManagerWithGas mountedStorage)) {
+        if (connectedEntity == contraption.entity || !(contraption.getStorage() instanceof MountedGasStorageAccess mountedStorage)) {
             return;
         }
 
-        capability = new InterfaceGasHandler(mountedStorage.ccb$getGases());
+        capability = new InterfaceGasHandler(mountedStorage.ccb$getGasStorage());
         invalidateCapability();
         super.startTransferringTo(contraption, distance);
     }
@@ -86,11 +83,15 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         return display.format(value);
     }
 
-    IGasHandler getGasCapability() {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.PORTABLE_GAS_INTERFACE.get(), (blockEntity, context) -> blockEntity.capability);
+    }
+
+    GasStorageHandler getGasCapability() {
         return capability;
     }
 
-    boolean canAccessGasStorage(IGasHandler gasHandler) {
+    boolean canAccessGasStorage(GasHandler gasHandler) {
         return capability == gasHandler && canTransfer();
     }
 
@@ -137,12 +138,12 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         onContentTransferred();
     }
 
-    private IGasHandler createEmptyHandler() {
+    private GasStorageHandler createEmptyHandler() {
         return new InterfaceGasHandler(new GasTank(0));
     }
 
     private class InterfaceGasHandler extends PortableGasInterfaceGasHandler {
-        private InterfaceGasHandler(IGasHandler wrapped) {
+        private InterfaceGasHandler(GasStorageHandler wrapped) {
             super(PortableGasInterfaceBlockEntity.this, wrapped);
         }
     }

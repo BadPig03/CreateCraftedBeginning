@@ -16,7 +16,7 @@ import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndMechanicalBlockEntity;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
@@ -42,30 +42,6 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
         animationState = new EndSculkSilencerAnimationState();
         controller = new EndSculkSilencerController(this);
         showOutline = true;
-    }
-
-    static void setClientTicker(Consumer<EndSculkSilencerBlockEntity> ticker) {
-        clientTicker = ticker;
-    }
-
-    static boolean meetsRequiredSpeed(float speed, short range) {
-        float speedRequirementMultiplier = Math.max(0, CCBConfig.server().endDevices.speedRequirementMultiplier.getF());
-        return range > 0 && Mth.abs(speed) >= SpeedLevel.MEDIUM.getSpeedValue() * range * Mth.sqrt(range) * speedRequirementMultiplier;
-    }
-
-    static float calculateAnimationTargetSpeed(float kineticSpeed) {
-        return EndSculkSilencerAnimationState.calculateTargetSpeed(kineticSpeed);
-    }
-
-    static AABB calculateArea(Level level, BlockPos pos, short range) {
-        int chunkRadius = Math.max(0, range - 1);
-        int centerChunkX = pos.getX() >> 4;
-        int centerChunkZ = pos.getZ() >> 4;
-        int minX = centerChunkX - chunkRadius << 4;
-        int minZ = centerChunkZ - chunkRadius << 4;
-        int maxX = centerChunkX + chunkRadius + 1 << 4;
-        int maxZ = centerChunkZ + chunkRadius + 1 << 4;
-        return new AABB(minX, level.getMinBuildHeight(), minZ, maxX, level.getMaxBuildHeight(), maxZ);
     }
 
     @Override
@@ -123,13 +99,13 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        CCBNbtUtils.putBoolean(compoundTag, COMPOUND_KEY_SHOW_OUTLINE, showOutline);
+        compoundTag.putBoolean(COMPOUND_KEY_SHOW_OUTLINE, showOutline);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        showOutline = CCBNbtUtils.getBooleanOrDefault(compoundTag, COMPOUND_KEY_SHOW_OUTLINE, showOutline);
+        showOutline = NbtValues.getBooleanOrDefault(compoundTag, COMPOUND_KEY_SHOW_OUTLINE, showOutline);
     }
 
     @Override
@@ -152,6 +128,30 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     public void invalidate() {
         controller.remove();
         super.invalidate();
+    }
+
+    static void setClientTicker(Consumer<EndSculkSilencerBlockEntity> ticker) {
+        clientTicker = ticker;
+    }
+
+    static boolean meetsRequiredSpeed(float speed, short range) {
+        float speedRequirementMultiplier = Math.max(0, CCBConfig.server().machines.endSculkSilencer.requiredSpeedMultiplier.getF());
+        return range > 0 && Mth.abs(speed) >= SpeedLevel.MEDIUM.getSpeedValue() * range * Mth.sqrt(range) * speedRequirementMultiplier;
+    }
+
+    static float calculateAnimationTargetSpeed(float kineticSpeed) {
+        return EndSculkSilencerAnimationState.calculateTargetSpeed(kineticSpeed);
+    }
+
+    static AABB calculateArea(Level level, BlockPos pos, short range) {
+        int chunkRadius = Math.max(0, range - 1);
+        int centerChunkX = pos.getX() >> 4;
+        int centerChunkZ = pos.getZ() >> 4;
+        int minX = centerChunkX - chunkRadius << 4;
+        int minZ = centerChunkZ - chunkRadius << 4;
+        int maxX = centerChunkX + chunkRadius + 1 << 4;
+        int maxZ = centerChunkZ + chunkRadius + 1 << 4;
+        return new AABB(minX, level.getMinBuildHeight(), minZ, maxX, level.getMaxBuildHeight(), maxZ);
     }
 
     LerpedFloat getAnimation() {
@@ -182,6 +182,7 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
         if (!meetsRequiredSpeed(getSpeed(), workingRange)) {
             return 0;
         }
+
         return workingRange;
     }
 }

@@ -10,7 +10,7 @@ import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
@@ -48,6 +48,6 @@ public class EndSculkSilencerVisual extends AbstractBlockEntityVisual<EndSculkSi
 
     private void animate(float partialTick) {
         float angle = blockEntity.getAnimation().getValue(partialTick) * Mth.DEG_TO_RAD;
-        core.setIdentityTransform().translate(getVisualPosition()).translateY(0.5f).translate(Translate.CENTER).rotateX(angle).rotateY(angle).rotateZ(Mth.PI / 4).translateBack(Translate.CENTER).setChanged();
+        core.setIdentityTransform().translate(getVisualPosition()).translateY(0.5F).translate(Translate.CENTER).rotateX(angle).rotateY(angle).rotateZ(Mth.PI / 4).translateBack(Translate.CENTER).setChanged();
     }
 }

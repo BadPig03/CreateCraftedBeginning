@@ -22,7 +22,7 @@ public class AndesiteCrateMountedStorage extends CrateMountedItemStorage<Andesit
     }
 
     private AndesiteCrateMountedStorage(MountedItemStorageType<?> type, ItemStack content, int count) {
-        super(type, AndesiteCrateBlockEntity.class, content, count, () -> CCBConfig.server().crates.maxAndesiteCapacity.get());
+        super(type, AndesiteCrateBlockEntity.class, content, count, () -> CCBConfig.server().storage.andesiteCrate.itemCapacity.get());
     }
 
     public static AndesiteCrateMountedStorage fromBlockEntity(AndesiteCrateBlockEntity crate) {

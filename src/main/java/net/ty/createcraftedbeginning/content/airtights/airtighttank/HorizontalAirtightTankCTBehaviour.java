@@ -10,8 +10,8 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.airtights.gas.transport.GasConnectivityHandler;
-import net.ty.createcraftedbeginning.foundation.texture.CCBSpriteShifts;
+import net.ty.createcraftedbeginning.client.render.CCBSpriteShifts;
+import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -35,12 +35,13 @@ public class HorizontalAirtightTankCTBehaviour extends Base {
         if (directionAxis == tankAxis) {
             return CCBSpriteShifts.AIRTIGHT_TANK_TOP;
         }
+
         return CCBSpriteShifts.HORIZONTAL_AIRTIGHT_TANK;
     }
 
     @Override
     public boolean connectsTo(BlockState state, BlockState other, BlockAndTintGetter level, BlockPos pos, BlockPos otherPos, Direction face) {
-        return state.getBlock() == other.getBlock() && GasConnectivityHandler.isConnected(level, pos, otherPos);
+        return state.getBlock() == other.getBlock() && GasTankMultiblockConnectivity.isConnected(level, pos, otherPos);
     }
 
     @Override
@@ -59,7 +60,12 @@ public class HorizontalAirtightTankCTBehaviour extends Base {
         if (faceAxis == tankAxis || faceAxis.isVertical()) {
             return super.getUpDirection(level, pos, state, face);
         }
-        return Direction.fromAxisAndDirection(tankAxis, isAlongX ? AxisDirection.POSITIVE : AxisDirection.NEGATIVE);
+
+        if (isAlongX) {
+            return Direction.fromAxisAndDirection(tankAxis, AxisDirection.POSITIVE);
+        }
+
+        return Direction.fromAxisAndDirection(tankAxis, AxisDirection.NEGATIVE);
     }
 
     @Override
@@ -77,6 +83,7 @@ public class HorizontalAirtightTankCTBehaviour extends Base {
         if (faceAxis == tankAxis || faceAxis.isVertical()) {
             return super.getRightDirection(level, pos, state, face);
         }
+
         return Direction.fromAxisAndDirection(Axis.Y, face.getAxisDirection());
     }
 }

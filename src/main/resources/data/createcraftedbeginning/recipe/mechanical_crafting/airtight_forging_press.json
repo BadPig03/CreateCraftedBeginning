@@ -26,12 +26,15 @@
     },
     "H": {
       "item": "create:chute"
+    },
+    "M": {
+      "item": "createcraftedbeginning:airtight_meter"
     }
   },
   "pattern": [
     "BAHAB",
     "CCECC",
-    "BGFGB",
+    "BGMGB",
     "BGFGB",
     "BDDDB"
   ],

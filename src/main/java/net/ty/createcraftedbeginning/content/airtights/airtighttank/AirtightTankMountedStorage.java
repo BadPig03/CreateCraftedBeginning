@@ -10,11 +10,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankMountedStorage.Handler;
-import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
-import net.ty.createcraftedbeginning.content.airtights.gas.mounted.WrapperMountedGasStorage;
+import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageType;
+import net.ty.createcraftedbeginning.gas.mounted.WrapperMountedGasStorage;
+import net.ty.createcraftedbeginning.gas.storage.GasTank;
+import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
+import net.ty.createcraftedbeginning.gas.storage.GasTankState;
 import net.ty.createcraftedbeginning.registry.CCBMountedStorage;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -23,37 +26,31 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler> implements SyncedMountedStorage {
-    static final MapCodec<AirtightTankMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.LONG.fieldOf("capacity").forGetter(AirtightTankMountedStorage::getCapacity), GasStack.OPTIONAL_CODEC.fieldOf("gas").forGetter(AirtightTankMountedStorage::getGasStack)).apply(instance, AirtightTankMountedStorage::new));
+public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler> implements SyncedMountedStorage {
+    static final MapCodec<AirtightTankMountedStorage> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(Codec.LONG.fieldOf("volume").forGetter(AirtightTankMountedStorage::getVolume), Codec.LONG.optionalFieldOf("max_pressure", GasPressure.REFERENCE_PRESSURE_PA).forGetter(AirtightTankMountedStorage::getMaxPressurePa), GasStack.OPTIONAL_CODEC.fieldOf("gas").forGetter(AirtightTankMountedStorage::getGasStack)).apply(instance, AirtightTankMountedStorage::new));
 
     private boolean dirty;
 
-    private AirtightTankMountedStorage(long capacity, GasStack gasStack) {
-        this(CCBMountedStorage.AIRTIGHT_TANK.get(), capacity, gasStack);
+    private AirtightTankMountedStorage(long volume, long maxPressurePa, GasStack gasStack) {
+        this(new GasTankState(new GasTankLimits(volume, maxPressurePa), gasStack));
     }
 
-    private AirtightTankMountedStorage(MountedGasStorageType<?> type, long capacity, GasStack gasStack) {
-        super(type, new Handler(capacity, gasStack));
+    private AirtightTankMountedStorage(GasTankState state) {
+        this(CCBMountedStorage.AIRTIGHT_TANK.get(), state);
+    }
+
+    private AirtightTankMountedStorage(MountedGasStorageType<?> type, GasTankState state) {
+        super(type, new Handler(state));
         wrapped.onChange = () -> dirty = true;
     }
 
-    @Contract("_ -> new")
-    static AirtightTankMountedStorage fromTank(AirtightTankBlockEntity tank) {
-        GasTank tankInventory = tank.getTankInventory();
-        return new AirtightTankMountedStorage(tankInventory.getCapacity(), tankInventory.getGasStack().copy());
-    }
-
     @Override
-    public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
-        if (!(be instanceof AirtightTankBlockEntity tank) || !tank.isController()) {
+    public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity blockEntity) {
+        if (!(blockEntity instanceof AirtightTankBlockEntity tank) || !tank.isController()) {
             return;
         }
 
-        tank.getTankInventory().setGasStack(wrapped.getGasStack());
-    }
-
-    private long getCapacity() {
-        return wrapped.getCapacity();
+        tank.getTankInventory().tryApplyState(getState()).requireAccepted();
     }
 
     @Override
@@ -72,24 +69,41 @@ class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler> imple
             return;
         }
 
-        tank.getTankInventory().setGasStack(getGasStack());
+        tank.getTankInventory().tryApplyState(getState()).requireAccepted();
+    }
+
+    @Contract("_ -> new")
+    static AirtightTankMountedStorage fromTank(AirtightTankBlockEntity tank) {
+        return new AirtightTankMountedStorage(tank.getTankInventory().snapshot());
+    }
+
+    private long getVolume() {
+        return wrapped.getVolume();
+    }
+
+    private long getMaxPressurePa() {
+        return wrapped.getMaxPressurePa();
     }
 
     private GasStack getGasStack() {
         return wrapped.getGasStack();
     }
 
+    private GasTankState getState() {
+        return wrapped.snapshot();
+    }
+
     static final class Handler extends GasTank {
         private Runnable onChange = () -> {
         };
 
-        private Handler(long capacity, GasStack gasStack) {
-            super(capacity);
-            setGasStack(gasStack);
+        private Handler(GasTankState state) {
+            super(state.limits());
+            tryApplyState(state).requireAccepted();
         }
 
         @Override
-        protected void onContentsChanged() {
+        protected void onStateChanged() {
             onChange.run();
         }
     }

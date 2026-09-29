@@ -7,13 +7,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerUnits;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
-import net.ty.createcraftedbeginning.foundation.CCBMathUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -32,10 +31,6 @@ public class LaserReceiverBlockEntity extends GeneratingKineticBlockEntity {
 
     public LaserReceiverBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-    }
-
-    public static int getMaxReceivedPowerPoints() {
-        return Math.max(1, OpticalPowerUnits.toPowerPoints(CCBConfig.server().opticalPower.maxLaserReceiverPowerSu.get()));
     }
 
     @Override
@@ -63,17 +58,17 @@ public class LaserReceiverBlockEntity extends GeneratingKineticBlockEntity {
             return;
         }
 
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_OPTICAL_POWER_POINTS, receivedPowerPoints);
+        compoundTag.putInt(COMPOUND_KEY_OPTICAL_POWER_POINTS, receivedPowerPoints);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (!clientPacket || !CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_OPTICAL_POWER_POINTS)) {
+        if (!clientPacket || !compoundTag.contains(COMPOUND_KEY_OPTICAL_POWER_POINTS)) {
             return;
         }
 
-        receivedPowerPoints = CCBMathUtils.clampNonNegative(CCBNbtUtils.getInt(compoundTag, COMPOUND_KEY_OPTICAL_POWER_POINTS), getMaxReceivedPowerPoints());
+        receivedPowerPoints = Mth.clamp(compoundTag.getInt(COMPOUND_KEY_OPTICAL_POWER_POINTS), 0, getMaxReceivedPowerPoints());
     }
 
     @Override
@@ -81,6 +76,7 @@ public class LaserReceiverBlockEntity extends GeneratingKineticBlockEntity {
         if (receivedPowerPoints <= 0) {
             return 0;
         }
+
         return GENERATED_SPEED;
     }
 
@@ -102,6 +98,10 @@ public class LaserReceiverBlockEntity extends GeneratingKineticBlockEntity {
         applyReceivedPower(targetPowerPoints);
     }
 
+    public static int getMaxReceivedPowerPoints() {
+        return Math.max(1, OpticalPowerUnits.toPowerPoints(CCBConfig.server().opticalPower.laserReceiver.maxReceivedPowerSu.get()));
+    }
+
     public void receiveLaser(int powerPoints) {
         if (level == null || level.isClientSide) {
             return;
@@ -114,7 +114,7 @@ public class LaserReceiverBlockEntity extends GeneratingKineticBlockEntity {
             accumulatingTick = gameTime;
             accumulatingPowerPoints = 0;
         }
-        accumulatingPowerPoints = CCBMathUtils.clampNonNegative(accumulatingPowerPoints + powerPoints, getMaxReceivedPowerPoints());
+        accumulatingPowerPoints = Mth.clamp(accumulatingPowerPoints + powerPoints, 0, getMaxReceivedPowerPoints());
     }
 
     public Direction getOutputDirection() {
@@ -127,7 +127,7 @@ public class LaserReceiverBlockEntity extends GeneratingKineticBlockEntity {
     }
 
     private void applyReceivedPower(int powerPoints) {
-        int clamped = CCBMathUtils.clampNonNegative(powerPoints, getMaxReceivedPowerPoints());
+        int clamped = Mth.clamp(powerPoints, 0, getMaxReceivedPowerPoints());
         if (receivedPowerPoints == clamped) {
             return;
         }

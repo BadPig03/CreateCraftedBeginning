@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.platform.client;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
@@ -34,11 +33,20 @@ public final class ClientRenderBridge {
     }
 
     public static void showPlacementBounds(BlockPlaceContext context, String outlineId, BlockPos placementPos, AABB bounds) {
-        service.showPlacementBounds(context, outlineId, placementPos, bounds);
+        Player player = context.getPlayer();
+        if (player == null) {
+            return;
+        }
+
+        showPlacementBounds(player, outlineId, placementPos, bounds, "gui.warnings.clear_blocks_for_placement");
     }
 
-    public static void showGasAreaOutline(Player player, BlockPos pos, Direction direction, float inflation, int color) {
-        service.showGasAreaOutline(player, pos, direction, inflation, color);
+    public static void showPlacementBounds(Player player, String outlineId, BlockPos placementPos, AABB bounds, String warningKey) {
+        service.showPlacementBounds(player, outlineId, placementPos, bounds, warningKey);
+    }
+
+    public static void showGasAreaOutline(Player player, BlockPos effectPos, float inflation, int color) {
+        service.showGasAreaOutline(player, effectPos, inflation, color);
     }
 
     public interface Service {
@@ -49,10 +57,10 @@ public final class ClientRenderBridge {
         default void dontAnimateAirtightCannon(InteractionHand hand) {
         }
 
-        default void showPlacementBounds(BlockPlaceContext context, String outlineId, BlockPos placementPos, AABB bounds) {
+        default void showPlacementBounds(Player player, String outlineId, BlockPos placementPos, AABB bounds, String warningKey) {
         }
 
-        default void showGasAreaOutline(Player player, BlockPos pos, Direction direction, float inflation, int color) {
+        default void showGasAreaOutline(Player player, BlockPos effectPos, float inflation, int color) {
         }
     }
 }

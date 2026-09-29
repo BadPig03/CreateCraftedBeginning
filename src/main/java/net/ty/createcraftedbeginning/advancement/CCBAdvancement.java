@@ -5,20 +5,22 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementType;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.advancements.Criterion;
+import net.minecraft.advancements.critereon.ImpossibleTrigger;
 import net.minecraft.advancements.critereon.InventoryChangeTrigger.TriggerInstance;
 import net.minecraft.advancements.critereon.ItemPredicate;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
-import net.ty.createcraftedbeginning.advancement.triggers.CCBTriggersRegistry;
-import net.ty.createcraftedbeginning.advancement.triggers.SimpleCCBTrigger;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -42,7 +44,6 @@ public class CCBAdvancement {
     private final String id;
 
     private AdvancementHolder dataGenResult;
-    private SimpleCCBTrigger builtinTrigger;
     private CCBAdvancement parent;
     private String title;
     private String description;
@@ -51,8 +52,7 @@ public class CCBAdvancement {
         id = advancementId;
         operator.apply(builder);
         if (!builder.externalTrigger) {
-            builtinTrigger = CCBTriggersRegistry.add(advancementId + "_builtin");
-            advancementBuilder.addCriterion("0", builtinTrigger.createCriterion(SimpleCCBTrigger.instance()));
+            advancementBuilder.addCriterion("0", CriteriaTriggers.IMPOSSIBLE.createCriterion(new ImpossibleTrigger.TriggerInstance()));
         }
         ENTRIES.add(this);
     }
@@ -66,20 +66,36 @@ public class CCBAdvancement {
             return true;
         }
 
-        if (serverPlayer.getServer() == null) {
+        MinecraftServer server = serverPlayer.getServer();
+        if (server == null) {
             return false;
         }
 
-        AdvancementHolder holder = serverPlayer.getServer().getAdvancements().get(CCBAPI.asResource(id));
+        AdvancementHolder holder = server.getAdvancements().get(CCBAPI.asResource(id));
         return holder == null || serverPlayer.getAdvancements().getOrStartProgress(holder).isDone();
     }
 
     public void awardTo(@Nullable Player player) {
-        if (!(player instanceof ServerPlayer serverPlayer) || builtinTrigger == null || isAlreadyAwardedTo(player)) {
+        if (!(player instanceof ServerPlayer serverPlayer) || builder.externalTrigger) {
             return;
         }
 
-        builtinTrigger.trigger(serverPlayer);
+        MinecraftServer server = serverPlayer.getServer();
+        if (server == null) {
+            return;
+        }
+
+        AdvancementHolder holder = server.getAdvancements().get(CCBAPI.asResource(id));
+        if (holder == null) {
+            return;
+        }
+
+        PlayerAdvancements advancements = serverPlayer.getAdvancements();
+        if (advancements.getOrStartProgress(holder).isDone()) {
+            return;
+        }
+
+        advancements.award(holder, "0");
     }
 
     public void save(Consumer<AdvancementHolder> consumer, Provider provider) {
@@ -173,13 +189,6 @@ public class CCBAdvancement {
             return this;
         }
 
-        private Builder externalTrigger(Criterion<?> trigger) {
-            advancementBuilder.addCriterion(String.valueOf(keyIndex), trigger);
-            externalTrigger = true;
-            keyIndex++;
-            return this;
-        }
-
         public Builder whenIconCollected() {
             return whenItemCollected(icon.getItem());
         }
@@ -192,6 +201,10 @@ public class CCBAdvancement {
             return externalTrigger(TriggerInstance.hasItems(ItemPredicate.Builder.item().of(tag).build()));
         }
 
+        public Builder whenAnyItemCollected(ItemLike... items) {
+            return externalTrigger(TriggerInstance.hasItems(ItemPredicate.Builder.item().of(items).build()));
+        }
+
         public Builder whenItemsCollected(List<ItemProviderEntry<?, ?>> items) {
             for (ItemProviderEntry<?, ?> item : items) {
                 externalTrigger(TriggerInstance.hasItems(item.asItem()));
@@ -201,6 +214,13 @@ public class CCBAdvancement {
 
         public Builder awardedForFree() {
             return externalTrigger(TriggerInstance.hasItems(new ItemLike[]{}));
+        }
+
+        private Builder externalTrigger(Criterion<?> trigger) {
+            advancementBuilder.addCriterion(String.valueOf(keyIndex), trigger);
+            externalTrigger = true;
+            keyIndex++;
+            return this;
         }
     }
 }

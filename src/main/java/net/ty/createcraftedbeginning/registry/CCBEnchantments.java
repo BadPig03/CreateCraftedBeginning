@@ -18,14 +18,6 @@ public class CCBEnchantments {
     public static final ResourceKey<Enchantment> ECONOMIZE = ResourceKey.create(Registries.ENCHANTMENT, CCBAPI.asResource("economize"));
 
     public static void bootstrap(BootstrapContext<Enchantment> context) {
-        context.register(ECONOMIZE, Enchantment.enchantment(Enchantment.definition(
-            context.lookup(Registries.ITEM).getOrThrow(CCBItemTags.GAS_CANISTER_ENCHANTABLE.tag),
-            10,
-            GasCanisterContainerContents.ECONOMIZE_MAX_LEVEL,
-            Enchantment.dynamicCost(15, 15),
-            Enchantment.dynamicCost(45, 15),
-            1,
-            EquipmentSlotGroup.MAINHAND
-        )).build(ECONOMIZE.location()));
+        context.register(ECONOMIZE, Enchantment.enchantment(Enchantment.definition(context.lookup(Registries.ITEM).getOrThrow(CCBItemTags.GAS_CANISTER_ENCHANTABLE.tag), 10, GasCanisterContainerContents.ECONOMIZE_MAX_LEVEL, Enchantment.dynamicCost(15, 15), Enchantment.dynamicCost(45, 15), 1, EquipmentSlotGroup.MAINHAND)).build(ECONOMIZE.location()));
     }
 }

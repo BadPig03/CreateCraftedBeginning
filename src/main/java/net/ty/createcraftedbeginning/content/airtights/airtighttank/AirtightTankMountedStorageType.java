@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.airtights.gas.mounted.MountedGasStorageType;
+import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageType;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -19,10 +19,11 @@ public class AirtightTankMountedStorageType extends MountedGasStorageType<Airtig
 
     @Override
     @Nullable
-    public AirtightTankMountedStorage mount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
-        if (!(be instanceof AirtightTankBlockEntity tank) || !tank.isController()) {
+    public AirtightTankMountedStorage mount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity blockEntity) {
+        if (!(blockEntity instanceof AirtightTankBlockEntity tank) || !tank.isController()) {
             return null;
         }
+
         return AirtightTankMountedStorage.fromTank(tank);
     }
 }

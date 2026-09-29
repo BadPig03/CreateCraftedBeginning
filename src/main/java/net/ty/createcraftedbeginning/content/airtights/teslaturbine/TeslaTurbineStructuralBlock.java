@@ -27,6 +27,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
@@ -41,7 +42,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineUtils.NozzlePort;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineGeometry.NozzlePort;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -74,6 +75,16 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
             default -> new BlockPos(u, 0, v);
         };
         return pos.subtract(structureOffset);
+    }
+
+    @Override
+    public BlockState rotate(BlockState state, Rotation rotation) {
+        BlockPos offset = getMaster(BlockPos.ZERO, state).multiply(-1).rotate(rotation);
+        BlockState rotated = super.rotate(state, rotation);
+        Axis axis = rotated.getValue(AXIS);
+        int u = axis == Axis.X ? offset.getZ() : offset.getX();
+        int v = axis == Axis.Y ? offset.getZ() : offset.getY();
+        return rotated.setValue(STRUCTURAL_POSITION, TeslaTurbineStructuralPosition.fromOffset(u, v));
     }
 
     @Override
@@ -160,7 +171,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
-        if (state.is(newState.getBlock()) || !stillValid(level, pos, state, false)) {
+        if (moving || state.is(newState.getBlock()) || !stillValid(level, pos, state, false)) {
             return;
         }
 
@@ -183,6 +194,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         if (!state.getValue(WATERLOGGED)) {
             return Fluids.EMPTY.defaultFluidState();
         }
+
         return Fluids.WATER.defaultFluidState();
     }
 
@@ -205,6 +217,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
         if (!stillValid(level, pos, state, false)) {
             return pos;
         }
+
         return getMaster(pos, state);
     }
 
@@ -240,15 +253,6 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
             return position.u == 0 || position.v == 0;
         }
 
-        static TeslaTurbineStructuralPosition fromOffset(int u, int v) {
-            for (TeslaTurbineStructuralPosition position : values()) {
-                if (position.u == u && position.v == v) {
-                    return position;
-                }
-            }
-            return TOP_MID;
-        }
-
         public static Set<Direction> getPossiblePosition(TeslaTurbineStructuralPosition position, Axis axis) {
             Set<Direction> directions = new HashSet<>();
             int u = position.u;
@@ -266,6 +270,16 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
                 directions.add(v > 0 ? Direction.SOUTH : Direction.NORTH);
             }
             return directions;
+        }
+
+        static TeslaTurbineStructuralPosition fromOffset(int u, int v) {
+            for (TeslaTurbineStructuralPosition position : values()) {
+                if (position.u == u && position.v == v) {
+                    return position;
+                }
+            }
+
+            return TOP_MID;
         }
 
         @Override
@@ -296,7 +310,7 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
             NozzlePort nearestPort = null;
             double nearestDistanceSqr = Double.MAX_VALUE;
             Vec3 hitLocation = ray.getLocation();
-            for (NozzlePort port : TeslaTurbineUtils.getNozzlePorts()) {
+            for (NozzlePort port : TeslaTurbineGeometry.getNozzlePorts()) {
                 BlockPos candidatePos = port.getWorldPosition(masterPos, axis);
                 if (!level.getBlockState(candidatePos).canBeReplaced()) {
                     continue;

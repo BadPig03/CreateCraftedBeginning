@@ -37,8 +37,8 @@ public class SturdyCrateScenes {
         scene.showBasePlate();
 
         BlockPos cratePos = util.grid().at(2, 1, 2);
-        BlockPos chutePos = util.grid().at(2, 2, 2);
-        BlockPos itemPos = util.grid().at(2, 3, 2);
+        BlockPos chutePos = cratePos.above();
+        BlockPos itemPos = cratePos.above(2);
 
         Selection crateSelection = util.select().position(cratePos);
         Selection chuteSelection = util.select().position(chutePos);
@@ -63,7 +63,7 @@ public class SturdyCrateScenes {
 
         scene.idle(80);
         scene.overlay().showFilterSlotInput(filterVec, Direction.UP, 60);
-        scene.overlay().showText(60).text("Items in the filter slot specify what to store").colored(PonderPalette.GREEN).pointAt(filterVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Items in the filter slot specify what to store").colored(PonderPalette.BLUE).pointAt(filterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showText(60).text("Sturdy Crate can't store Shulker Boxes, Toolboxes, or other Sturdy Crates").colored(PonderPalette.RED).pointAt(filterVec).placeNearTarget().attachKeyFrame();
@@ -97,7 +97,7 @@ public class SturdyCrateScenes {
         scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), sturdyCrateItem.copy());
         scene.overlay().showControls(crateNorthVec, Pointing.RIGHT, 30).withItem(diamondItem.copy());
 
-        scene.idle(30);
+        scene.idle(57);
         scene.markAsFinished();
     }
 }

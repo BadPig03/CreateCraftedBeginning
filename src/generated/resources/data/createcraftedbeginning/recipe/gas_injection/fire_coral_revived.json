@@ -1,13 +1,16 @@
 {
   "type": "createcraftedbeginning:gas_injection",
+  "gas_ingredients": [
+    {
+      "amount": 2000,
+      "ingredient": {
+        "gas": "createcraftedbeginning:moist_air"
+      }
+    }
+  ],
   "ingredients": [
     {
       "item": "minecraft:dead_fire_coral"
-    },
-    {
-      "type": "createcraftedbeginning:single",
-      "amount": 500,
-      "gas": "createcraftedbeginning:moist_air"
     }
   ],
   "results": [

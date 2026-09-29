@@ -1,7 +1,7 @@
 package net.ty.createcraftedbeginning.api.armhandlers;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
+import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -13,14 +13,6 @@ public record AirtightArmStats(float gasConsumptionMultiplier, float increasedBl
         requireNonNegativeFinite("block interaction range bonus", increasedBlockInteractionRange);
         requireNonNegativeFinite("entity interaction range bonus", increasedEntityInteractionRange);
         requireNonNegativeFinite("attack knockback bonus", increasedKnockback);
-    }
-
-    private static void requireNonNegativeFinite(String name, float value) {
-        if (GasConsumptions.isNonNegativeFinite(value)) {
-            return;
-        }
-
-        throw new IllegalArgumentException(name + " must be finite and non-negative: " + value);
     }
 
     @Override
@@ -41,5 +33,13 @@ public record AirtightArmStats(float gasConsumptionMultiplier, float increasedBl
     @Override
     public float getIncreasedKnockback() {
         return increasedKnockback;
+    }
+
+    private static void requireNonNegativeFinite(String name, float value) {
+        if (GasConsumptionMath.isNonNegativeFinite(value)) {
+            return;
+        }
+
+        throw new IllegalArgumentException("Airtight arm " + name + " must be finite and non-negative; got " + value + '.');
     }
 }

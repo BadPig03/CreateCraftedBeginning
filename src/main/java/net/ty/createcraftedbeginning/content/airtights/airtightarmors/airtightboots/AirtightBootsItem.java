@@ -25,10 +25,10 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
+import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlers;
+import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorSet;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightBaseArmorItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.JumpStrengthUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.MovementEfficiencyUpgrade;
@@ -102,7 +102,7 @@ public class AirtightBootsItem extends AirtightBaseArmorItem implements MenuProv
             return;
         }
 
-        if (AirtightArmorsUtils.isEntireArmoredUp(player) && tooltipFlag.hasShiftDown()) {
+        if (AirtightArmorSet.isEntireArmoredUp(player) && tooltipFlag.hasShiftDown()) {
             tooltip.add(CCBLang.translate("gui.airtight_armors.fire_immune_condition").style(ChatFormatting.GRAY).component());
             tooltip.addAll(TooltipHelper.cutTextComponent(CCBLang.translateDirect("gui.airtight_armors.fire_immune_behaviour"), Palette.STANDARD_CREATE));
         }
@@ -115,9 +115,9 @@ public class AirtightBootsItem extends AirtightBaseArmorItem implements MenuProv
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(CCBLang.gasName(gas).add(CCBLang.translate("gui.gas_tools.content")).style(ChatFormatting.GRAY).component());
 
-        float consumptionMultiplier = AirtightArmorsHandlerUtils.of(gas.getGasType()).getConsumptionMultiplier(EquipmentSlot.FEET);
-        MutableComponent advancedMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptions.format(consumptionMultiplier) + ']').component() : Component.empty();
-        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptions.formatPercent(consumptionMultiplier)).add(advancedMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
+        float consumptionMultiplier = AirtightArmorsHandlers.resolveForEquipment(gas.getGasType()).getConsumptionMultiplier(EquipmentSlot.FEET);
+        MutableComponent advancedMultiplier = tooltipFlag.isAdvanced() ? CCBLang.text(" [x" + GasConsumptionMath.format(consumptionMultiplier) + ']').component() : Component.empty();
+        tooltip.add(CCBLang.translate("gui.gas_tools.gas_consumption", GasConsumptionMath.formatPercent(consumptionMultiplier)).add(advancedMultiplier.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }
 
     @Override

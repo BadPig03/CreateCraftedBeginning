@@ -4,7 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -26,22 +26,27 @@ final class GasInjectionChamberSerialization {
     }
 
     void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        CCBNbtUtils.putInt(compoundTag, GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, operation.getProcessingTicks());
         filter.writeInstalledFilter(compoundTag, provider);
         if (clientPacket) {
-            CCBNbtUtils.putBoolean(compoundTag, GasInjectionChamberFilterState.COMPOUND_KEY_FILTER_LOCKED, operation.type == OperationType.FAN_PROCESSING);
+            compoundTag.putFloat(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, operation.getProcessingTicks());
+            compoundTag.putFloat(GasInjectionChamberOperationState.COMPOUND_KEY_PRESSURE_SPEED_MULTIPLIER, operation.getPressureSpeedMultiplier());
+            compoundTag.putInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_CYCLE, operation.getProcessingCycle());
+            compoundTag.putBoolean(GasInjectionChamberFilterState.COMPOUND_KEY_FILTER_LOCKED, operation.type == OperationType.FAN_PROCESSING);
         }
         visual.writeCloud(compoundTag, clientPacket);
     }
 
     void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        if (CCBNbtUtils.contains(compoundTag, GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS)) {
-            operation.synchronizeProcessingTicks(CCBNbtUtils.getInt(compoundTag, GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS), clientPacket);
+        if (clientPacket && compoundTag.contains(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS)) {
+            float processingTicks = NbtValues.getFloatOrDefault(compoundTag, GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, operation.getProcessingTicks());
+            float pressureSpeedMultiplier = NbtValues.getFloatOrDefault(compoundTag, GasInjectionChamberOperationState.COMPOUND_KEY_PRESSURE_SPEED_MULTIPLIER, 1.0F);
+            int processingCycle = NbtValues.getIntOrDefault(compoundTag, GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_CYCLE, operation.getProcessingCycle());
+            operation.synchronizeProcessingState(processingTicks, pressureSpeedMultiplier, processingCycle);
         }
 
         filter.readInstalledFilter(compoundTag, provider);
         if (clientPacket) {
-            filter.setClientLocked(CCBNbtUtils.getBoolean(compoundTag, GasInjectionChamberFilterState.COMPOUND_KEY_FILTER_LOCKED));
+            filter.setClientLocked(compoundTag.getBoolean(GasInjectionChamberFilterState.COMPOUND_KEY_FILTER_LOCKED));
         }
         else {
             operation.clearTransientOperation();

@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:all_hands_acquired",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:three_way_handshake_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

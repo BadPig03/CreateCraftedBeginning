@@ -20,14 +20,14 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.client.gui.CCBGUITextures;
+import net.ty.createcraftedbeginning.client.gui.CCBIcons;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableScreen;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
-import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -65,24 +65,10 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
 
     public AirtightHandheldDrillScreen(AirtightHandheldDrillMenu menu, Inventory inv, Component title) {
         super(menu, inv, title, CCBGUITextures.HANDHELD_DRILL);
-        miningTemplate = AirtightHandheldDrillUtils.getMiningTemplate(menu.contentHolder);
-        miningSize = AirtightHandheldDrillUtils.getMiningSizeParams(menu.contentHolder);
-        miningDirection = AirtightHandheldDrillUtils.getMiningDirection(menu.contentHolder);
-        relativePosition = AirtightHandheldDrillUtils.getRelativePositionParams(menu.contentHolder);
-    }
-
-    private static State getIndicatorState(AirtightUpgradeStatus status, boolean isAvailable) {
-        if (!status.isInstalled()) {
-            if (!isAvailable) {
-                return State.OFF;
-            }
-            return State.YELLOW;
-        }
-
-        if (!status.isEnabled()) {
-            return State.RED;
-        }
-        return State.GREEN;
+        miningTemplate = AirtightHandheldDrillSettings.getMiningTemplate(menu.contentHolder);
+        miningSize = AirtightHandheldDrillSettings.getMiningSizeParams(menu.contentHolder);
+        miningDirection = AirtightHandheldDrillSettings.getMiningDirection(menu.contentHolder);
+        relativePosition = AirtightHandheldDrillSettings.getRelativePositionParams(menu.contentHolder);
     }
 
     @Override
@@ -113,11 +99,15 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         int slotIndex = hoveredSlot.getSlotIndex();
         if (slotIndex == AirtightHandheldDrillMenu.FILTER_SLOT_INDEX) {
             guiGraphics.renderTooltip(font, FILTER_SLOT_TITLE.plainCopy().withStyle(ChatFormatting.GRAY), mouseX, mouseY);
+            return;
         }
-        else if (slotIndex == AirtightHandheldDrillMenu.UPGRADE_SLOT_INDEX) {
-            Component slotTooltip = disableUpgradeButton.visible ? UPGRADE_FULL.plainCopy().withStyle(ChatFormatting.GRAY) : UPGRADE_SLOT_TITLE.plainCopy().withStyle(ChatFormatting.GRAY);
-            guiGraphics.renderTooltip(font, slotTooltip, mouseX, mouseY);
+
+        if (slotIndex != AirtightHandheldDrillMenu.UPGRADE_SLOT_INDEX) {
+            return;
         }
+
+        Component slotTooltip = disableUpgradeButton.visible ? UPGRADE_FULL.plainCopy().withStyle(ChatFormatting.GRAY) : UPGRADE_SLOT_TITLE.plainCopy().withStyle(ChatFormatting.GRAY);
+        guiGraphics.renderTooltip(font, slotTooltip, mouseX, mouseY);
     }
 
     @Override
@@ -155,12 +145,40 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
                 return;
             }
 
-            button.active = status.isInstalled() || upgrade.testUpgradeItem(upgradeStack);
+            button.active = status.isInstalled() || upgrade.testUpgradeItem(upgradeStack, menu.player.level());
             button.green = status.isInstalled() && status.isEnabled();
             Indicator indicator = (Indicator) upgradeIndicators.get(upgrade);
             indicator.state = getIndicatorState(status, button.active);
         });
         disableUpgradeButton.visible = menu.getCurrentStatusList().stream().allMatch(AirtightUpgradeStatus::isInstalled);
+    }
+
+    @Override
+    public void removed() {
+        if (!AirtightHandheldDrillSettings.isRelativePositionValid(miningTemplate, miningSize, miningDirection, relativePosition)) {
+            int[] defaultRelativePosition = miningTemplate.getTemplate().getDefaultRelativePosition();
+            relativePosition[0] = defaultRelativePosition[0];
+            relativePosition[1] = defaultRelativePosition[1];
+            relativePosition[2] = defaultRelativePosition[2];
+        }
+        CatnipServices.NETWORK.sendToServer(new AirtightHandheldDrillParametersPacket(miningTemplate, new BlockPos(miningSize[0], miningSize[1], miningSize[2]), miningDirection, new BlockPos(relativePosition[0], relativePosition[1], relativePosition[2])));
+        super.removed();
+    }
+
+    private static State getIndicatorState(AirtightUpgradeStatus status, boolean isAvailable) {
+        if (!status.isInstalled()) {
+            if (!isAvailable) {
+                return State.OFF;
+            }
+
+            return State.YELLOW;
+        }
+
+        if (!status.isEnabled()) {
+            return State.RED;
+        }
+
+        return State.GREEN;
     }
 
     private void addUpgradeButton(AirtightUpgrade upgrade) {
@@ -169,28 +187,16 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         upgradeButtons.put(upgrade, button);
 
         if (upgrade.isRightIndicator()) {
-            buttonConfigsMap.put(upgrade, new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> false, List::of, null));
+            buttonConfigsMap.put(upgrade, new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> false, List::of, () -> null));
             addRenderableWidgets(button);
             return;
         }
 
         Indicator indicator = new Indicator(leftPos + offset.getFirst(), topPos + offset.getSecond() - 6, CommonComponents.EMPTY);
         upgradeIndicators.put(upgrade, indicator);
-        buttonConfigsMap.put(upgrade, new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getComponents(menu.player, menu.contentHolder.copy()), upgrade.getUpgradeItem()));
+        buttonConfigsMap.put(upgrade, new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getComponents(menu.player, menu.contentHolder.copy()), () -> upgrade.getUpgradeItem(menu.player.level())));
         addRenderableWidget(indicator);
         addRenderableWidgets(button);
-    }
-
-    @Override
-    public void removed() {
-        if (!AirtightHandheldDrillUtils.isRelativePositionValid(miningTemplate, miningSize, miningDirection, relativePosition)) {
-            int[] defaultRelativePosition = miningTemplate.getTemplate().getDefaultRelativePosition();
-            relativePosition[0] = defaultRelativePosition[0];
-            relativePosition[1] = defaultRelativePosition[1];
-            relativePosition[2] = defaultRelativePosition[2];
-        }
-        CatnipServices.NETWORK.sendToServer(new AirtightHandheldDrillParametersPacket(miningTemplate, new BlockPos(miningSize[0], miningSize[1], miningSize[2]), miningDirection, new BlockPos(relativePosition[0], relativePosition[1], relativePosition[2])));
-        super.removed();
     }
 
     private void initMiningTemplate() {
@@ -252,7 +258,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
             ScrollInput input = new ScrollInput(leftPos + 40 + 20 * index, topPos + 65, 18, 18).withRange(0, miningSize[index]).withShiftStep(3).writingTo(label).titled(miningTemplate.getRelativeLabel(index, miningDirection).plainCopy()).calling(relativePositionValue -> {
                 relativePosition[parameterIndex] = relativePositionValue;
                 label.setX(leftPos + 49 + 20 * parameterIndex - font.width(label.text) / 2);
-                boolean isRelativePositionValid = AirtightHandheldDrillUtils.isRelativePositionValid(miningTemplate, miningSize, miningDirection, relativePosition);
+                boolean isRelativePositionValid = AirtightHandheldDrillSettings.isRelativePositionValid(miningTemplate, miningSize, miningDirection, relativePosition);
                 relativePositionLabels.forEach(positionLabel -> positionLabel.colored(isRelativePositionValid ? COLOR_VALID : COLOR_INVALID));
             });
             input.setState(relativePosition[index]);

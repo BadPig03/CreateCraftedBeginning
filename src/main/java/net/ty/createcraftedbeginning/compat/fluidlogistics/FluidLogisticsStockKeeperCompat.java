@@ -36,9 +36,11 @@ public final class FluidLogisticsStockKeeperCompat {
             if (!(fluidKeyResult instanceof ItemStack fluidKey) || fluidKey.isEmpty()) {
                 return ItemStack.EMPTY;
             }
+
             return fluidKey.copyWithCount(1);
-        } catch (IllegalAccessException | InvocationTargetException exception) {
-            CCBAPI.LOGGER.warn("Failed to create a CreateFluidLogistic stock-keeper fluid key", exception);
+        }
+        catch (IllegalAccessException | InvocationTargetException exception) {
+            CCBAPI.LOGGER.warn("Failed to create a CreateFluidLogistic stock-keeper fluid key.", exception);
             return ItemStack.EMPTY;
         }
     }
@@ -53,8 +55,9 @@ public final class FluidLogisticsStockKeeperCompat {
             if (capacityResult instanceof Number number) {
                 return Math.max(1, number.intValue());
             }
-        } catch (IllegalAccessException | InvocationTargetException exception) {
-            CCBAPI.LOGGER.warn("Failed to query CreateFluidLogistic fluid package capacity", exception);
+        }
+        catch (IllegalAccessException | InvocationTargetException exception) {
+            CCBAPI.LOGGER.warn("Failed to query CreateFluidLogistic fluid package capacity.", exception);
         }
         return Math.max(1, fallback);
     }
@@ -66,8 +69,9 @@ public final class FluidLogisticsStockKeeperCompat {
 
         try {
             return Class.forName(PACKAGE_RESOURCE_TYPES, false, FluidLogisticsStockKeeperCompat.class.getClassLoader());
-        } catch (ClassNotFoundException | LinkageError exception) {
-            CCBAPI.LOGGER.warn("CreateFluidLogistic is installed, but its package-resource API is unavailable; mixed gas/fluid stock-keeper transfer will not include fluids", exception);
+        }
+        catch (ClassNotFoundException | LinkageError exception) {
+            CCBAPI.LOGGER.warn("CreateFluidLogistic is installed, but its package-resource API is unavailable; mixed gas/fluid stock-keeper transfer will not include fluids.", exception);
             return null;
         }
     }
@@ -79,8 +83,9 @@ public final class FluidLogisticsStockKeeperCompat {
 
         try {
             return RESOURCE_TYPES_CLASS.getMethod(methodName, parameterTypes);
-        } catch (NoSuchMethodException | SecurityException exception) {
-            CCBAPI.LOGGER.warn("CreateFluidLogistic package-resource API method '{}' is unavailable", methodName, exception);
+        }
+        catch (NoSuchMethodException | SecurityException exception) {
+            CCBAPI.LOGGER.warn("CreateFluidLogistic package-resource API method '{}' is unavailable.", methodName, exception);
             return null;
         }
     }

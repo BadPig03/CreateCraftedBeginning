@@ -5,20 +5,27 @@ import net.minecraft.core.Holder;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
+import net.ty.createcraftedbeginning.api.gas.Gas;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record AirtightCannonShotContext(Entity projectile, @Nullable Entity owner, Holder<Gas> gasHolder, float effectMultiplier, float knockbackMultiplier, boolean flame) {
-    public static AirtightCannonShotContext external(Entity source, Holder<Gas> gasHolder, float effectMultiplier) {
-        return new AirtightCannonShotContext(source, source, gasHolder, effectMultiplier, 1, false);
+public record AirtightCannonShotContext(Entity projectile, @Nullable Entity owner, Holder<Gas> gasHolder, long sourcePressurePa, float effectMultiplier, float knockbackMultiplier, boolean flame) {
+    public AirtightCannonShotContext {
+        if (sourcePressurePa < GasPressure.VACUUM_PA) {
+            throw new IllegalArgumentException("Airtight cannon source pressure must be non-negative; got " + sourcePressurePa + " Pa.");
+        }
     }
 
-    public boolean isFriendlyTarget(Entity target) {
-        return isFriendlyTarget(owner, target);
+    public static AirtightCannonShotContext external(Entity source, Holder<Gas> gasHolder, float effectMultiplier) {
+        return external(source, gasHolder, GasPressure.REFERENCE_PRESSURE_PA, effectMultiplier);
+    }
+
+    public static AirtightCannonShotContext external(Entity source, Holder<Gas> gasHolder, long sourcePressurePa, float effectMultiplier) {
+        return new AirtightCannonShotContext(source, source, gasHolder, sourcePressurePa, effectMultiplier, 1, false);
     }
 
     public static boolean isFriendlyTarget(@Nullable Entity owner, Entity target) {
@@ -36,6 +43,10 @@ public record AirtightCannonShotContext(Entity projectile, @Nullable Entity owne
 
         LivingEntity petOwner = animal.getOwner();
         return petOwner != null && (petOwner == owner || owner.isAlliedTo(petOwner) || petOwner.isAlliedTo(owner));
+    }
+
+    public boolean isFriendlyTarget(Entity target) {
+        return isFriendlyTarget(owner, target);
     }
 
     public static boolean isProtectedTarget(@Nullable Entity owner, Entity target) {

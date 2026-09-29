@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Con
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -21,18 +21,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbineBlockEntity> {
     public TeslaTurbineRenderer(Context context) {
         super(context);
-    }
-
-    private static SuperByteBuffer rotateToAxis(SuperByteBuffer buffer, Axis axis) {
-        switch (axis) {
-            case Z -> buffer.rotateCentered(Mth.HALF_PI, Axis.X);
-            case X -> buffer.rotateCentered(-Mth.HALF_PI, Axis.Z);
-        }
-        return buffer;
-    }
-
-    private static SuperByteBuffer getRotorModel(BlockState blockState, Axis rotationAxis) {
-        return rotateToAxis(CachedBuffers.partial(CCBPartialModels.TESLA_TURBINE_ROTOR, blockState), rotationAxis);
     }
 
     @Override
@@ -49,9 +37,9 @@ public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbin
             return;
         }
 
-        float rotorSpacing = 14.0f / (rotorCount + 1);
+        float rotorSpacing = 14.0F / (rotorCount + 1);
         for (int rotorIndex = 0; rotorIndex < rotorCount; rotorIndex++) {
-            SuperByteBuffer rotorBuffer = getRotorModel(blockState, rotationAxis);
+            SuperByteBuffer rotorBuffer = rotateToAxis(CachedBuffers.partial(CCBPartialModels.TESLA_TURBINE_ROTOR, blockState), rotationAxis);
             rotorBuffer.translate(0, (rotorSpacing * (rotorIndex + 1) - 7) / 16, 0);
             kineticRotationTransform(rotorBuffer, blockEntity, Axis.Y, rotationAngle, light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
         }
@@ -61,4 +49,13 @@ public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbin
     protected SuperByteBuffer getRotatedModel(TeslaTurbineBlockEntity blockEntity, BlockState blockState) {
         return CachedBuffers.partial(AllPartialModels.SHAFT, blockState);
     }
+
+    private static SuperByteBuffer rotateToAxis(SuperByteBuffer buffer, Axis axis) {
+        switch (axis) {
+            case Z -> buffer.rotateCentered(Mth.HALF_PI, Axis.X);
+            case X -> buffer.rotateCentered(-Mth.HALF_PI, Axis.Z);
+        }
+        return buffer;
+    }
+
 }

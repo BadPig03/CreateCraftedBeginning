@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:updraft",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:mini_tunnel_borer_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

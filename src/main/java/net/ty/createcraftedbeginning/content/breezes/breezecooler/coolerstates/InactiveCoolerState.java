@@ -8,8 +8,8 @@ import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBl
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity.CoolantType;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerController.CoolingSyncMode;
-import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
-import net.ty.createcraftedbeginning.recipe.CoolingRecipe.CoolingData;
+import net.ty.createcraftedbeginning.recipe.CoolingRecipeLookup;
+import net.ty.createcraftedbeginning.recipe.CoolingRecipeLookup.CoolingData;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -37,7 +37,7 @@ public class InactiveCoolerState extends BaseCoolerState {
             return InteractionResult.FAIL;
         }
 
-        CoolingData coolingData = CoolingRecipe.getCoolingTime(level, stack, null);
+        CoolingData coolingData = CoolingRecipeLookup.findCoolingData(level, stack, null);
         int coolingTime = coolingData.time();
         if (coolingTime <= 0) {
             return InteractionResult.FAIL;

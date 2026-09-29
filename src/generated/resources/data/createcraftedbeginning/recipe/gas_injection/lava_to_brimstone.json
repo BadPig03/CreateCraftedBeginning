@@ -1,15 +1,18 @@
 {
   "type": "createcraftedbeginning:gas_injection",
+  "gas_ingredients": [
+    {
+      "amount": 1000,
+      "ingredient": {
+        "gas": "createcraftedbeginning:energized_ultrawarm_air"
+      }
+    }
+  ],
   "ingredients": [
     {
       "type": "neoforge:tag",
       "amount": 1000,
       "tag": "c:lava"
-    },
-    {
-      "type": "createcraftedbeginning:single",
-      "amount": 500,
-      "gas": "createcraftedbeginning:energized_ultrawarm_air"
     }
   ],
   "results": [

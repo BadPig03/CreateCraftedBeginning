@@ -5,10 +5,12 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.compat.createdragonsplus.CreateDragonsPlusCompat;
+import net.ty.createcraftedbeginning.compat.curios.CuriosCompat;
 import net.ty.createcraftedbeginning.compat.dndesires.DnDesiresCompat;
 import net.ty.createcraftedbeginning.compat.functionalstorage.FunctionalStorageCompat;
 import net.ty.createcraftedbeginning.compat.functionalstorage.client.FunctionalStorageClientCompat;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEICompat;
+import net.ty.createcraftedbeginning.compat.sable.MultiblockAssemblyCompat;
 import net.ty.createcraftedbeginning.compat.sable.SableSubLevelCompat;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -21,12 +23,17 @@ public final class CCBCompatBootstrap {
 
     public static void initialize() {
         CCBCompatMods.CREATE_DRAGONS_PLUS.executeIfInstalled(() -> CreateDragonsPlusCompat::register);
+        CCBCompatMods.CURIOS.executeIfInstalled(() -> CuriosCompat::register);
         CCBCompatMods.DNDESIRES.executeIfInstalled(() -> DnDesiresCompat::register);
         CCBCompatMods.SABLE.executeIfInstalled(() -> SableSubLevelCompat::register);
         CCBCompatMods.FUNCTIONAL_STORAGE.executeIfInstalled(() -> FunctionalStorageHook::register);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        CCBCompatMods.CURIOS.executeIfInstalled(() -> {
+            CuriosHook.registerCapabilities(event);
+            return () -> {};
+        });
         CCBCompatMods.FUNCTIONAL_STORAGE.executeIfInstalled(() -> {
             FunctionalStorageHook.registerCapabilities(event);
             return () -> {};
@@ -34,6 +41,9 @@ public final class CCBCompatBootstrap {
     }
 
     public static void commonSetup(FMLCommonSetupEvent event) {
+        if (CCBCompatMods.SIMULATED.isLoaded()) {
+            event.enqueueWork(MultiblockAssemblyCompat::register);
+        }
         CCBCompatMods.JEI.executeIfInstalled(() -> {
             event.enqueueWork(JEIHook::registerMysteriousItemConversions);
             return () -> {};
@@ -45,6 +55,12 @@ public final class CCBCompatBootstrap {
             FunctionalStorageClientHook.registerListeners(modEventBus);
             return () -> {};
         });
+    }
+
+    private static final class CuriosHook {
+        private static void registerCapabilities(RegisterCapabilitiesEvent event) {
+            CuriosCompat.registerCapabilities(event);
+        }
     }
 
     private static final class FunctionalStorageHook {

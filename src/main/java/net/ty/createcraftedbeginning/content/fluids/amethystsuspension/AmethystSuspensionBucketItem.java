@@ -46,13 +46,18 @@ public class AmethystSuspensionBucketItem extends BucketItem {
                 continue;
             }
 
-            if (level.isClientSide) {
-                Fluids.WATER.getFluidType().onVaporize(player, level, adjacentPos, new FluidStack(Fluids.WATER, 1000));
+            if (!level.isClientSide) {
+                continue;
             }
-            else {
-                CCBAdvancements.DRYING_OUT.awardTo(player);
-            }
+
+            Fluids.WATER.getFluidType().onVaporize(player, level, adjacentPos, new FluidStack(Fluids.WATER, 1000));
         }
+
+        if (level.isClientSide || level.dimension() != Level.NETHER) {
+            return true;
+        }
+
+        CCBAdvancements.NATURAL_EVAPORATION.awardTo(player);
         return true;
     }
 }

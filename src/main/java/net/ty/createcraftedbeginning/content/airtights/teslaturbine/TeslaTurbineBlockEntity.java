@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 
-import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.api.stress.BlockStressValues;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -10,20 +9,22 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.api.gas.gases.interfaces.IGasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
+public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity {
+    private static final int LAZY_TICK_RATE = 4;
     private static final String COMPOUND_KEY_CORE = "Core";
     private final TeslaTurbineCore core;
 
@@ -32,14 +33,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     public TeslaTurbineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         core = new TeslaTurbineCore(this);
-        setLazyTickRate(TeslaTurbineUtils.LAZY_TICK_RATE);
-    }
-
-    private static float calculateStressCapacity(float generatedSpeed) {
-        float absoluteSpeed = Math.abs(generatedSpeed);
-        int maxRotationSpeed = AllConfigs.server().kinetics.maxRotationSpeed.get();
-        double baseStressCapacity = BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get());
-        return absoluteSpeed * (float) baseStressCapacity / maxRotationSpeed;
+        setLazyTickRate(LAZY_TICK_RATE);
     }
 
     @Override
@@ -81,13 +75,13 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_CORE, core.write(provider, clientPacket));
+        compoundTag.put(COMPOUND_KEY_CORE, core.write(provider, clientPacket));
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        CompoundTag coreTag = CCBNbtUtils.getCompoundOrEmpty(compoundTag, COMPOUND_KEY_CORE);
+        CompoundTag coreTag = NbtValues.getCompoundOrEmpty(compoundTag, COMPOUND_KEY_CORE);
         core.read(coreTag, provider, clientPacket);
     }
 
@@ -103,7 +97,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
         behaviours.add(advancementBehaviour);
     }
 
-    public IGasHandler createGasHandler(boolean clockwise) {
+    public GasHandler createGasHandler(boolean clockwise) {
         return core.createGasHandler(clockwise);
     }
 
@@ -113,5 +107,12 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity implem
 
     void refreshStructure() {
         core.getStructureManager().tick();
+    }
+
+    private static float calculateStressCapacity(float generatedSpeed) {
+        float absoluteSpeed = Mth.abs(generatedSpeed);
+        int maxRotationSpeed = AllConfigs.server().kinetics.maxRotationSpeed.get();
+        float baseStressCapacity = (float) BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get());
+        return absoluteSpeed * baseStressCapacity / maxRotationSpeed;
     }
 }

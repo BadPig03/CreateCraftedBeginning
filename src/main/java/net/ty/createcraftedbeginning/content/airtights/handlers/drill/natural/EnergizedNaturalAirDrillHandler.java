@@ -14,6 +14,6 @@ public class EnergizedNaturalAirDrillHandler extends NaturalAirDrillHandler {
 
     @Override
     public float getConsumptionMultiplier() {
-        return 0.8f;
+        return super.getConsumptionMultiplier() * 0.75F;
     }
 }

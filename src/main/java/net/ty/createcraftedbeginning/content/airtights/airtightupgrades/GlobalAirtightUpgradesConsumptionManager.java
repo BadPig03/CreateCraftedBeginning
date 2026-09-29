@@ -4,15 +4,14 @@ import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandler;
-import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlerUtils;
-import net.ty.createcraftedbeginning.api.gas.gases.Gas;
-import net.ty.createcraftedbeginning.api.gascanisters.GasConsumptions;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.AirtightArmorsUtils;
+import net.ty.createcraftedbeginning.api.armorhandlers.AirtightArmorsHandlers;
+import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
 
@@ -40,11 +39,122 @@ public final class GlobalAirtightUpgradesConsumptionManager {
     private GlobalAirtightUpgradesConsumptionManager() {
     }
 
+    public static void syncToClient(Player player) {
+        syncToClient(player, false);
+    }
+
+    public static void forceSyncToClient(Player player) {
+        syncToClient(player, true);
+    }
+
+    public static boolean canConsumeGas(Player player, AirtightUpgrade upgrade, EquipmentSlot equipmentSlot, float gasConsumption, Predicate<AirtightArmorsHandler> armorHandlerPredicate) {
+        return findAffordableFuel(player, upgrade, equipmentSlot, gasConsumption, armorHandlerPredicate).isPresent();
+    }
+
+    public static boolean tryConsumeGas(Player player, AirtightUpgrade upgrade, EquipmentSlot equipmentSlot, float gasConsumption) {
+        return tryConsumeGas(player, upgrade, equipmentSlot, gasConsumption, armorHandler -> true);
+    }
+
+    public static boolean tryConsumeGas(Player player, AirtightUpgrade upgrade, EquipmentSlot equipmentSlot, float gasConsumption, Predicate<AirtightArmorsHandler> armorHandlerPredicate) {
+        if (!GasConsumptionMath.isNonNegativeFinite(gasConsumption)) {
+            return false;
+        }
+
+        Optional<AffordableFuel> affordableFuel = findAffordableFuel(player, upgrade, equipmentSlot, gasConsumption, armorHandlerPredicate);
+        if (affordableFuel.isEmpty()) {
+            return false;
+        }
+
+        AffordableFuel selectedFuel = affordableFuel.get();
+        return interactWithGasDirectly(player, selectedFuel);
+    }
+
+    public static void clear(Player player) {
+        POWERED_UPGRADES.remove(player.getUUID());
+    }
+
+    public static void clearTracking(Player player) {
+        UUID playerId = player.getUUID();
+        POWERED_UPGRADES.remove(playerId);
+        LAST_SYNCED_POWERED_UPGRADES.remove(playerId);
+        CLIENT_POWERED_UPGRADES.remove(playerId);
+    }
+
+    public static void tick(Player player) {
+        Level level = player.level();
+        if (level.isClientSide || !Mth.isMultipleOf(player.tickCount, POWER_REFRESH_INTERVAL)) {
+            return;
+        }
+
+        List<RequestedUpgrade> requestedUpgrades = collectRequests(player);
+        if (requestedUpgrades.isEmpty()) {
+            clearExpired(player);
+            syncToClient(player);
+            return;
+        }
+
+        Optional<AffordableFuel> affordableFuel = findAffordableFuel(player, requestedUpgrades);
+        if (affordableFuel.isEmpty()) {
+            clearAndSync(player);
+            return;
+        }
+
+        AffordableFuel selectedFuel = affordableFuel.get();
+        if (!interactWithGasDirectly(player, selectedFuel)) {
+            clearAndSync(player);
+            return;
+        }
+
+        Map<ResourceLocation, Long> expirationByUpgradeId = POWERED_UPGRADES.computeIfAbsent(player.getUUID(), ignoredPlayerId -> new HashMap<>());
+        long expirationTime = level.getGameTime() + POWER_REFRESH_INTERVAL;
+        for (RequestedUpgrade requestedUpgrade : requestedUpgrades) {
+            expirationByUpgradeId.put(requestedUpgrade.upgrade().getID(), expirationTime);
+        }
+
+        clearExpired(player);
+        syncToClient(player);
+    }
+
+    static boolean isPowered(Player player, AirtightUpgrade upgrade) {
+        UUID playerId = player.getUUID();
+        if (player.level().isClientSide) {
+            Set<ResourceLocation> poweredUpgradeIds = CLIENT_POWERED_UPGRADES.get(playerId);
+            return poweredUpgradeIds != null && poweredUpgradeIds.contains(upgrade.getID());
+        }
+
+        Map<ResourceLocation, Long> expirationByUpgradeId = POWERED_UPGRADES.get(playerId);
+        if (expirationByUpgradeId == null) {
+            return false;
+        }
+
+        long expirationTime = expirationByUpgradeId.getOrDefault(upgrade.getID(), 0L);
+        return expirationTime >= player.level().getGameTime();
+    }
+
+    static void acceptClientSync(Player player, List<ResourceLocation> poweredUpgradeIds) {
+        if (!player.level().isClientSide) {
+            return;
+        }
+
+        UUID playerId = player.getUUID();
+        if (poweredUpgradeIds.isEmpty()) {
+            CLIENT_POWERED_UPGRADES.remove(playerId);
+            return;
+        }
+
+        CLIENT_POWERED_UPGRADES.put(playerId, Set.copyOf(poweredUpgradeIds));
+    }
+
+    static void clearClientTracking() {
+        CLIENT_POWERED_UPGRADES.clear();
+    }
+
     private static double getRawGasConsumption(Player player, AirtightUpgrade upgrade, EquipmentSlot equipmentSlot, float baseConsumption, AirtightArmorsHandler armorHandler) {
         double rawGasConsumption = baseConsumption * armorHandler.getConsumptionMultiplier(equipmentSlot) * upgrade.getGasConsumptionMultiplier(player);
-        if (!GasConsumptions.isNonNegativeFinite(rawGasConsumption)) {
+        if (!GasConsumptionMath.isNonNegativeFinite(rawGasConsumption)) {
             return -1;
         }
+
         return rawGasConsumption;
     }
 
@@ -64,8 +174,8 @@ public final class GlobalAirtightUpgradesConsumptionManager {
         POWERED_UPGRADES.remove(playerId);
     }
 
-    private static boolean interactWithGasDirectly(Player player, Gas gasType, long gasAmount) {
-        return gasAmount >= 0 && !gasType.isEmpty() && (gasAmount == 0 || CanisterContainerConsumers.interactContainer(player, gasType, gasAmount, () -> true, false));
+    private static boolean interactWithGasDirectly(Player player, AffordableFuel fuel) {
+        return fuel.amount() == 0 || CanisterContainerConsumers.interactContainer(player, fuel, () -> true, false);
     }
 
     private static Set<ResourceLocation> getPoweredIds(Player player) {
@@ -86,30 +196,6 @@ public final class GlobalAirtightUpgradesConsumptionManager {
         return Set.copyOf(poweredUpgradeIds);
     }
 
-    static boolean isPowered(Player player, AirtightUpgrade upgrade) {
-        UUID playerId = player.getUUID();
-        if (player.level().isClientSide) {
-            Set<ResourceLocation> poweredUpgradeIds = CLIENT_POWERED_UPGRADES.get(playerId);
-            return poweredUpgradeIds != null && poweredUpgradeIds.contains(upgrade.getID());
-        }
-
-        Map<ResourceLocation, Long> expirationByUpgradeId = POWERED_UPGRADES.get(playerId);
-        if (expirationByUpgradeId == null) {
-            return false;
-        }
-
-        long expirationTime = expirationByUpgradeId.getOrDefault(upgrade.getID(), 0L);
-        return expirationTime >= player.level().getGameTime();
-    }
-
-    public static void syncToClient(Player player) {
-        syncToClient(player, false);
-    }
-
-    public static void forceSyncToClient(Player player) {
-        syncToClient(player, true);
-    }
-
     private static void syncToClient(Player player, boolean forceSync) {
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return;
@@ -127,52 +213,39 @@ public final class GlobalAirtightUpgradesConsumptionManager {
         LAST_SYNCED_POWERED_UPGRADES.put(playerId, poweredUpgradeIds);
     }
 
-    static void acceptClientSync(Player player, List<ResourceLocation> poweredUpgradeIds) {
-        if (!player.level().isClientSide) {
-            return;
-        }
-
-        UUID playerId = player.getUUID();
-        if (poweredUpgradeIds.isEmpty()) {
-            CLIENT_POWERED_UPGRADES.remove(playerId);
-            return;
-        }
-
-        CLIENT_POWERED_UPGRADES.put(playerId, Set.copyOf(poweredUpgradeIds));
-    }
-
-    public static boolean canConsumeGas(Player player, AirtightUpgrade upgrade, EquipmentSlot equipmentSlot, float gasConsumption, Predicate<AirtightArmorsHandler> armorHandlerPredicate) {
-        return findAffordableFuel(player, upgrade, equipmentSlot, gasConsumption, armorHandlerPredicate).isPresent();
-    }
-
-    public static boolean tryConsumeGas(Player player, AirtightUpgrade upgrade, EquipmentSlot equipmentSlot, float gasConsumption) {
-        return tryConsumeGas(player, upgrade, equipmentSlot, gasConsumption, armorHandler -> true);
-    }
-
-    public static boolean tryConsumeGas(Player player, AirtightUpgrade upgrade, EquipmentSlot equipmentSlot, float gasConsumption, Predicate<AirtightArmorsHandler> armorHandlerPredicate) {
-        if (!GasConsumptions.isNonNegativeFinite(gasConsumption)) {
-            return false;
-        }
-
-        Optional<AffordableFuel> affordableFuel = findAffordableFuel(player, upgrade, equipmentSlot, gasConsumption, armorHandlerPredicate);
-        if (affordableFuel.isEmpty()) {
-            return false;
-        }
-
-        AffordableFuel selectedFuel = affordableFuel.get();
-        return interactWithGasDirectly(player, selectedFuel.gasType(), selectedFuel.amount());
-    }
-
     private static Optional<AffordableFuel> findAffordableFuel(Player player, AirtightUpgrade upgrade, EquipmentSlot equipmentSlot, float gasConsumption, Predicate<AirtightArmorsHandler> armorHandlerPredicate) {
-        if (!GasConsumptions.isNonNegativeFinite(gasConsumption)) {
+        if (!GasConsumptionMath.isNonNegativeFinite(gasConsumption)) {
             return Optional.empty();
         }
-        return CanisterContainerConsumers.findAffordableFuel(player, gasType -> {
-            AirtightArmorsHandler armorHandler = AirtightArmorsHandlerUtils.of(gasType);
+
+        return CanisterContainerConsumers.findAffordableFuel(player, context -> {
+            AirtightArmorsHandler armorHandler = AirtightArmorsHandlers.resolveForEquipment(context.gasType());
             if (!armorHandlerPredicate.test(armorHandler)) {
                 return -1;
             }
+
             return getRawGasConsumption(player, upgrade, equipmentSlot, gasConsumption, armorHandler);
+        });
+    }
+
+    private static Optional<AffordableFuel> findAffordableFuel(Player player, List<RequestedUpgrade> requestedUpgrades) {
+        return CanisterContainerConsumers.findAffordableFuel(player, context -> {
+            AirtightArmorsHandler armorHandler = AirtightArmorsHandlers.resolveForEquipment(context.gasType());
+            double totalGasConsumption = 0;
+            for (RequestedUpgrade requestedUpgrade : requestedUpgrades) {
+                double rawGasConsumption = getRawGasConsumption(player, requestedUpgrade.upgrade(), requestedUpgrade.equipmentSlot(), requestedUpgrade.gasConsumption(), armorHandler);
+                if (rawGasConsumption < 0) {
+                    return -1;
+                }
+
+                totalGasConsumption += rawGasConsumption;
+                if (GasConsumptionMath.isNonNegativeFinite(totalGasConsumption)) {
+                    continue;
+                }
+
+                return -1;
+            }
+            return totalGasConsumption;
         });
     }
 
@@ -180,7 +253,7 @@ public final class GlobalAirtightUpgradesConsumptionManager {
         List<RequestedUpgrade> requestedUpgrades = new ArrayList<>();
         for (EquipmentSlot equipmentSlot : ARMOR_SLOTS) {
             ItemStack armorStack = player.getItemBySlot(equipmentSlot);
-            for (AirtightUpgrade upgrade : AirtightArmorsUtils.getAllUpgrades(armorStack)) {
+            for (AirtightUpgrade upgrade : AirtightItemUpgrades.getAllUpgrades(armorStack)) {
                 if (!upgrade.isRequesting(player, armorStack)) {
                     continue;
                 }
@@ -196,79 +269,8 @@ public final class GlobalAirtightUpgradesConsumptionManager {
         return requestedUpgrades;
     }
 
-    private static Optional<AffordableFuel> findAffordableFuel(Player player, List<RequestedUpgrade> requestedUpgrades) {
-        return CanisterContainerConsumers.findAffordableFuel(player, gasType -> {
-            AirtightArmorsHandler armorHandler = AirtightArmorsHandlerUtils.of(gasType);
-            double totalGasConsumption = 0;
-            for (RequestedUpgrade requestedUpgrade : requestedUpgrades) {
-                double rawGasConsumption = getRawGasConsumption(player, requestedUpgrade.upgrade(), requestedUpgrade.equipmentSlot(), requestedUpgrade.gasConsumption(), armorHandler);
-                if (rawGasConsumption < 0) {
-                    return -1;
-                }
-
-                totalGasConsumption += rawGasConsumption;
-                if (GasConsumptions.isNonNegativeFinite(totalGasConsumption)) {
-                    continue;
-                }
-
-                return -1;
-            }
-            return totalGasConsumption;
-        });
-    }
-
     private static void clearAndSync(Player player) {
         clear(player);
-        syncToClient(player);
-    }
-
-    public static void clear(Player player) {
-        POWERED_UPGRADES.remove(player.getUUID());
-    }
-
-    public static void clearTracking(Player player) {
-        UUID playerId = player.getUUID();
-        POWERED_UPGRADES.remove(playerId);
-        LAST_SYNCED_POWERED_UPGRADES.remove(playerId);
-        CLIENT_POWERED_UPGRADES.remove(playerId);
-    }
-
-    static void clearClientTracking() {
-        CLIENT_POWERED_UPGRADES.clear();
-    }
-
-    public static void tick(Player player) {
-        Level level = player.level();
-        if (level.isClientSide || player.tickCount % POWER_REFRESH_INTERVAL != 0) {
-            return;
-        }
-
-        List<RequestedUpgrade> requestedUpgrades = collectRequests(player);
-        if (requestedUpgrades.isEmpty()) {
-            clearExpired(player);
-            syncToClient(player);
-            return;
-        }
-
-        Optional<AffordableFuel> affordableFuel = findAffordableFuel(player, requestedUpgrades);
-        if (affordableFuel.isEmpty()) {
-            clearAndSync(player);
-            return;
-        }
-
-        AffordableFuel selectedFuel = affordableFuel.get();
-        if (!interactWithGasDirectly(player, selectedFuel.gasType(), selectedFuel.amount())) {
-            clearAndSync(player);
-            return;
-        }
-
-        Map<ResourceLocation, Long> expirationByUpgradeId = POWERED_UPGRADES.computeIfAbsent(player.getUUID(), ignoredPlayerId -> new HashMap<>());
-        long expirationTime = level.getGameTime() + POWER_REFRESH_INTERVAL;
-        for (RequestedUpgrade requestedUpgrade : requestedUpgrades) {
-            expirationByUpgradeId.put(requestedUpgrade.upgrade().getID(), expirationTime);
-        }
-
-        clearExpired(player);
         syncToClient(player);
     }
 

@@ -6,6 +6,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -28,7 +30,7 @@ final class CrateDisplay {
     }
 
     MutableComponent format(int value) {
-        return CCBLang.text(value + " ").add(CCBLang.translate("gui.threshold.items")).component();
+        return CCBLang.text(String.valueOf(value) + ' ').add(CCBLang.translate("gui.threshold.items")).component();
     }
 
     void addToGoggleTooltip(List<Component> tooltip) {
@@ -36,7 +38,7 @@ final class CrateDisplay {
         ItemStack storedItem = storage.storedItem();
         int storedCount = storage.storedCount();
         int capacity = maxValue();
-        if (storedItem.isEmpty() || storedCount == 0) {
+        if (storedItem.isEmpty() || storedCount == 0 || !GoggleTooltip.isVisible(tooltip, Section.ITEM_STORAGE)) {
             CCBLang.translate("gui.crates.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(capacity).style(ChatFormatting.GOLD)).forGoggles(tooltip, 1);
             return;
         }

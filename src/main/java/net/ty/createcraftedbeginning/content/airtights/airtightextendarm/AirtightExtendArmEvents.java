@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightextendarm;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -15,10 +16,10 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClick
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gascanisters.events.GasTypeChangedEvent;
-import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmUtils.PowerUseResult;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterUtils;
+import net.ty.createcraftedbeginning.api.canister.event.GasTypeChangedEvent;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightArmPower.PowerUseResult;
+import net.ty.createcraftedbeginning.gas.interaction.GasInteractionFeedback;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -42,8 +43,8 @@ final class AirtightExtendArmEvents {
             return;
         }
 
-        AirtightExtendArmUtils.tick(player);
-        if (player.tickCount % 20 != 0 || !player.getMainHandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM) || !player.getOffhandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM)) {
+        AirtightArmPower.tick(player);
+        if (!Mth.isMultipleOf(player.tickCount, 20) || !player.getMainHandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM) || !player.getOffhandItem().is(CCBItems.AIRTIGHT_EXTEND_ARM)) {
             return;
         }
 
@@ -53,11 +54,11 @@ final class AirtightExtendArmEvents {
     @SubscribeEvent
     private static void onGasTypeChanged(GasTypeChangedEvent event) {
         Player player = event.getPlayer();
-        if (player.level().isClientSide || !AirtightExtendArmUtils.isHoldingArms(player)) {
+        if (player.level().isClientSide || !AirtightArmPower.isHoldingArms(player)) {
             return;
         }
 
-        AirtightExtendArmUtils.refreshArmModifiers(player);
+        AirtightArmPower.refreshArmModifiers(player);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -67,7 +68,7 @@ final class AirtightExtendArmEvents {
             return;
         }
 
-        PowerUseResult powerUseResult = AirtightExtendArmUtils.tryUseBlockPower(player, event.getPos());
+        PowerUseResult powerUseResult = AirtightArmPower.tryUseBlockPower(player, event.getPos());
         if (powerUseResult.allowed()) {
             return;
         }
@@ -88,7 +89,7 @@ final class AirtightExtendArmEvents {
             return;
         }
 
-        ChargeAttempt chargeAttempt = consumeInteractionOnce(player, InteractionType.BLOCK, event.getPos().asLong(), () -> AirtightExtendArmUtils.tryUseBlockPower(player, event.getPos()));
+        ChargeAttempt chargeAttempt = consumeInteractionOnce(player, InteractionType.BLOCK, event.getPos().asLong(), () -> AirtightArmPower.tryUseBlockPower(player, event.getPos()));
         if (chargeAttempt.result().allowed()) {
             return;
         }
@@ -105,7 +106,7 @@ final class AirtightExtendArmEvents {
             return;
         }
 
-        PowerUseResult powerUseResult = AirtightExtendArmUtils.tryUseAttackPower(player, event.getTarget());
+        PowerUseResult powerUseResult = AirtightArmPower.tryUseAttackPower(player, event.getTarget());
         if (powerUseResult.allowed()) {
             return;
         }
@@ -122,7 +123,7 @@ final class AirtightExtendArmEvents {
         }
 
         Entity targetEntity = event.getTarget();
-        ChargeAttempt chargeAttempt = consumeInteractionOnce(player, InteractionType.ENTITY, targetEntity.getId(), () -> AirtightExtendArmUtils.tryUseEntityPower(player, targetEntity));
+        ChargeAttempt chargeAttempt = consumeInteractionOnce(player, InteractionType.ENTITY, targetEntity.getId(), () -> AirtightArmPower.tryUseEntityPower(player, targetEntity));
         if (chargeAttempt.result().allowed()) {
             return;
         }
@@ -140,7 +141,7 @@ final class AirtightExtendArmEvents {
         }
 
         Entity targetEntity = event.getTarget();
-        ChargeAttempt chargeAttempt = consumeInteractionOnce(player, InteractionType.ENTITY, targetEntity.getId(), () -> AirtightExtendArmUtils.tryUseEntityPower(player, targetEntity));
+        ChargeAttempt chargeAttempt = consumeInteractionOnce(player, InteractionType.ENTITY, targetEntity.getId(), () -> AirtightArmPower.tryUseEntityPower(player, targetEntity));
         if (chargeAttempt.result().allowed()) {
             return;
         }
@@ -177,11 +178,11 @@ final class AirtightExtendArmEvents {
 
         GasStack attemptedGas = powerUseResult.attemptedGas();
         if (attemptedGas.isEmpty()) {
-            GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.no_gas");
+            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.no_gas");
             return;
         }
 
-        GasCanisterUtils.displayCustomWarningHint(player, "gui.warnings.insufficient_gas", attemptedGas.getHoverName());
+        GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", attemptedGas.getHoverName());
     }
 
     private enum InteractionType {

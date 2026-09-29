@@ -1,9 +1,10 @@
 {
+	"format_version": "1.9.0",
 	"credit": "Made with Blockbench",
-	"parent": "block/block",
+	"parent": "minecraft:block/block",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "createcraftedbeginning:block/air_compressor/compressor"
+		"0": "createcraftedbeginning:block/airtight_encased_pipe/pipe"
 	},
 	"elements": [
 		{

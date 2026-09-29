@@ -17,9 +17,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestClientUtils;
-import net.ty.createcraftedbeginning.foundation.client.CCBGUITextures;
-import net.ty.createcraftedbeginning.foundation.gui.CCBIcons;
+import net.ty.createcraftedbeginning.client.gui.CCBGUITextures;
+import net.ty.createcraftedbeginning.client.gui.CCBIcons;
+import net.ty.createcraftedbeginning.client.stockkeeper.GasRequestTooltips;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -86,13 +86,13 @@ public class GasFilterScreen extends AbstractSimiContainerScreen<GasFilterMenu> 
 
     @Override
     protected List<Component> getTooltipFromContainerItem(ItemStack stack) {
-        if (hoveredSlot == null || hoveredSlot.container == menu.playerInventory || !GasVirtualUtils.isVirtualItem(stack)) {
+        if (hoveredSlot == null || hoveredSlot.container == menu.playerInventory || !VirtualGasItems.isVirtualItem(stack)) {
             return super.getTooltipFromContainerItem(stack);
         }
 
         List<Component> tooltips = new ArrayList<>();
-        tooltips.add(CCBLang.gasName(GasVirtualUtils.getGasType(stack)).component());
-        tooltips.addAll(GasRequestClientUtils.getExtraTooltips(stack));
+        tooltips.add(CCBLang.gasName(VirtualGasItems.readGasSample(stack)).component());
+        tooltips.addAll(GasRequestTooltips.getExtraTooltips(stack));
         return tooltips;
     }
 

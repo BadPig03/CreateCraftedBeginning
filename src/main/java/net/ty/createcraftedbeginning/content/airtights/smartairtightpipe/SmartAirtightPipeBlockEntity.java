@@ -9,8 +9,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AbstractAirtightPipeBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasFilteringBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.gas.behaviours.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.behaviour.GasFilteringBehaviour;
+import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -28,22 +29,25 @@ public class SmartAirtightPipeBlockEntity extends AbstractAirtightPipeBlockEntit
 
     @Override
     protected void addPipeBehaviours(List<BlockEntityBehaviour> behaviours) {
-        filter = new GasFilteringBehaviour(this, new SmartAirtightPipeFilterSlot());
+        filter = new GasFilteringBehaviour(this, new SmartAirtightPipeFilterSlot()).withCallback(ignoredStack -> {
+            Level level = getLevel();
+            if (level == null) {
+                return;
+            }
+
+            GasNetworkTopology.invalidate(level, getBlockPos());
+        });
         behaviours.add(filter);
     }
 
     @Override
     protected GasTransportBehaviour createTransportBehaviour() {
-        return new SmartAirtightPipeTransportBehaviour(this);
+        return new SmartAirtightPipeTransportBehaviour(this, filter);
     }
 
     @Override
-    public boolean canTransport(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
+    public boolean allowsGasTransport(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
         return AxisGasPipeBlock.isOpenAt(blockState, direction);
     }
 
-    @Nullable
-    GasFilteringBehaviour getFilter() {
-        return filter;
-    }
 }

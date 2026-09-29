@@ -23,6 +23,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -68,6 +69,14 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false).setValue(UP, false).setValue(DOWN, false));
     }
 
+    public static BlockState withConnections(BlockState state, BlockGetter level, BlockPos pos) {
+        for (Direction direction : Iterate.directions) {
+            boolean connected = level.getBlockState(pos.relative(direction)).getBlock() instanceof AirVentBlock;
+            state = state.setValue(PROPERTY_BY_DIRECTION.get(direction), connected);
+        }
+        return state;
+    }
+
     static int getConnectionMask(BlockState state) {
         int connectionMask = 0;
         for (Direction direction : Iterate.directions) {
@@ -85,18 +94,6 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         return (getPassableMask(state, level, pos) & directionMask) != 0;
     }
 
-    private static boolean isConnected(BlockState state, Direction direction) {
-        return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
-    }
-
-    public static BlockState withConnections(BlockState state, BlockGetter level, BlockPos pos) {
-        for (Direction direction : Iterate.directions) {
-            boolean connected = level.getBlockState(pos.relative(direction)).getBlock() instanceof AirVentBlock;
-            state = state.setValue(PROPERTY_BY_DIRECTION.get(direction), connected);
-        }
-        return state;
-    }
-
     static VentState getVentState(BlockGetter level, BlockPos pos, BlockState state, Direction direction) {
         if (isConnected(state, direction)) {
             return VentState.CONNECTED;
@@ -105,11 +102,16 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         if (!(level.getBlockEntity(pos) instanceof AirVentBlockEntity airVent)) {
             return VentState.EMPTY;
         }
+
         return airVent.getLouverState(direction);
     }
 
     static boolean isInsideAirVent(@Nullable Player player) {
-        return player != null && player.getInBlockState().getBlock() instanceof AirVentBlock;
+        return player != null && AirVentTraversal.isInside(player);
+    }
+
+    private static boolean isConnected(BlockState state, Direction direction) {
+        return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
     }
 
     private static Direction getTargetedFace(BlockPos pos, Vec3 hitLocation, Direction hitFace) {
@@ -119,9 +121,27 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
             case Z -> hitLocation.z - pos.getZ();
         };
         return switch (hitFace.getAxis()) {
-            case X -> relativeCoordinate < 0.5 ? Direction.WEST : Direction.EAST;
-            case Y -> relativeCoordinate < 0.5 ? Direction.DOWN : Direction.UP;
-            case Z -> relativeCoordinate < 0.5 ? Direction.NORTH : Direction.SOUTH;
+            case X -> {
+                if (relativeCoordinate < 0.5) {
+                    yield Direction.WEST;
+                }
+
+                yield Direction.EAST;
+            }
+            case Y -> {
+                if (relativeCoordinate < 0.5) {
+                    yield Direction.DOWN;
+                }
+
+                yield Direction.UP;
+            }
+            case Z -> {
+                if (relativeCoordinate < 0.5) {
+                    yield Direction.NORTH;
+                }
+
+                yield Direction.SOUTH;
+            }
         };
     }
 
@@ -136,6 +156,15 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         }
 
         return connectionMask | airVent.getOpenedLouverMask();
+    }
+
+    @Override
+    protected BlockState rotate(BlockState state, Rotation rotation) {
+        BlockState rotated = state;
+        for (Direction direction : Iterate.directions) {
+            rotated = rotated.setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(direction)), state.getValue(PROPERTY_BY_DIRECTION.get(direction)));
+        }
+        return rotated;
     }
 
     @Override
@@ -171,6 +200,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         if (isInsideAirVent(context.getPlayer())) {
             return onWrenched(state, context);
         }
+
         return IWrenchable.super.onSneakWrenched(state, context);
     }
 
@@ -190,6 +220,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         if (state.getValue(connectionProperty) != shouldConnect) {
             return state.setValue(connectionProperty, shouldConnect);
         }
+
         return state;
     }
 
@@ -233,6 +264,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         if (!state.getValue(WATERLOGGED)) {
             return Fluids.EMPTY.defaultFluidState();
         }
+
         return Fluids.WATER.getSource(false);
     }
 

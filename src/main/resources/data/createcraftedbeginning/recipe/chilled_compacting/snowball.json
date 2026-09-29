@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:chilled_compacting",
+  "ingredients": [
+    {
+      "type": "neoforge:single",
+      "amount": 250,
+      "fluid": "minecraft:water"
+    }
+  ],
+  "processing_time": 100,
+  "results": [
+    {
+      "id": "minecraft:snowball"
+    }
+  ]
+}

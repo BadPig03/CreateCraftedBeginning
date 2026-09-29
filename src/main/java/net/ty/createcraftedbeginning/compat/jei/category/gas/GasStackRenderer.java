@@ -16,8 +16,8 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.item.TooltipFlag;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.client.gas.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import org.joml.Matrix4f;
 
@@ -31,35 +31,6 @@ import java.util.List;
 public class GasStackRenderer implements IIngredientRenderer<GasStack> {
     private static final int TEXTURE_SIZE = 16;
 
-    private static void drawTiledSprite(GuiGraphics graphics, TextureAtlasSprite sprite) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, sprite.atlasLocation());
-
-        float uMin = sprite.getU0();
-        float uMax = sprite.getU1();
-        float vMin = sprite.getV0();
-        float vMax = sprite.getV1();
-
-        RenderSystem.enableBlend();
-        BufferBuilder buffer = Tesselator.getInstance().begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        Matrix4f pose = graphics.pose().last().pose();
-        buffer.addVertex(pose, 0, TEXTURE_SIZE, 100).setUv(uMin, vMax);
-        buffer.addVertex(pose, TEXTURE_SIZE, TEXTURE_SIZE, 100).setUv(uMax, vMax);
-        buffer.addVertex(pose, TEXTURE_SIZE, 0, 100).setUv(uMax, vMin);
-        buffer.addVertex(pose, 0, 0, 100).setUv(uMin, vMin);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
-        RenderSystem.disableBlend();
-    }
-
-    private static void collectTooltips(GasStack stack, List<Component> tooltips) {
-        if (stack.isEmpty()) {
-            return;
-        }
-
-        tooltips.add(Component.translatable(stack.getTranslationKey()));
-        tooltips.add(CCBLang.text(stack.getGasType().getResourceLocation().toString()).style(ChatFormatting.DARK_GRAY).component());
-    }
-
     @Override
     public void render(GuiGraphics guiGraphics, GasStack stack) {
         if (stack.isEmpty()) {
@@ -67,7 +38,7 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
         }
 
         int color = stack.getHint();
-        guiGraphics.setColor(ARGB32.red(color) / 255.0f, ARGB32.green(color) / 255.0f, ARGB32.blue(color) / 255.0f, ARGB32.alpha(color) / 255.0f);
+        guiGraphics.setColor(ARGB32.red(color) / 255.0F, ARGB32.green(color) / 255.0F, ARGB32.blue(color) / 255.0F, ARGB32.alpha(color) / 255.0F);
         drawTiledSprite(guiGraphics, CCBGasClientTextures.getGasTexture(stack.getGasHolder()));
         guiGraphics.setColor(1, 1, 1, 1);
     }
@@ -98,5 +69,34 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
     @Override
     public int getHeight() {
         return TEXTURE_SIZE;
+    }
+
+    private static void drawTiledSprite(GuiGraphics graphics, TextureAtlasSprite sprite) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, sprite.atlasLocation());
+
+        float uMin = sprite.getU0();
+        float uMax = sprite.getU1();
+        float vMin = sprite.getV0();
+        float vMax = sprite.getV1();
+
+        RenderSystem.enableBlend();
+        BufferBuilder buffer = Tesselator.getInstance().begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        Matrix4f pose = graphics.pose().last().pose();
+        buffer.addVertex(pose, 0, TEXTURE_SIZE, 100).setUv(uMin, vMax);
+        buffer.addVertex(pose, TEXTURE_SIZE, TEXTURE_SIZE, 100).setUv(uMax, vMax);
+        buffer.addVertex(pose, TEXTURE_SIZE, 0, 100).setUv(uMax, vMin);
+        buffer.addVertex(pose, 0, 0, 100).setUv(uMin, vMin);
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        RenderSystem.disableBlend();
+    }
+
+    private static void collectTooltips(GasStack stack, List<Component> tooltips) {
+        if (stack.isEmpty()) {
+            return;
+        }
+
+        tooltips.add(Component.translatable(stack.getTranslationKey()));
+        tooltips.add(CCBLang.text(stack.getGasType().getResourceLocation().toString()).style(ChatFormatting.DARK_GRAY).component());
     }
 }

@@ -5,14 +5,15 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Optional;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberFilterState {
+public final class GasInjectionChamberFilterState {
     static final String COMPOUND_KEY_FILTER_LOCKED = "FilterLocked";
     private static final String COMPOUND_KEY_INSTALLED_FILTER = "InstalledFilter";
 
@@ -28,11 +29,11 @@ final class GasInjectionChamberFilterState {
     }
 
     Optional<ResourceLocation> getFanProcessingType() {
-        return GasInjectionChamberUtils.getFanProcessingTypeId(installedFilter);
+        return GasInjectionChamberFilterItem.getFanProcessingTypeId(installedFilter);
     }
 
     boolean install(ItemStack stack) {
-        if (hasInstalledFilter() || !GasInjectionChamberUtils.isFilter(stack)) {
+        if (hasInstalledFilter() || !GasInjectionChamberFilterItem.isFilter(stack)) {
             return false;
         }
 
@@ -59,12 +60,12 @@ final class GasInjectionChamberFilterState {
             return;
         }
 
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_INSTALLED_FILTER, installedFilter.saveOptional(provider));
+        compoundTag.put(COMPOUND_KEY_INSTALLED_FILTER, installedFilter.saveOptional(provider));
     }
 
     void readInstalledFilter(CompoundTag compoundTag, Provider provider) {
-        installedFilter = CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_INSTALLED_FILTER) ? ItemStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_INSTALLED_FILTER)) : ItemStack.EMPTY;
-        if (GasInjectionChamberUtils.isFilter(installedFilter)) {
+        installedFilter = compoundTag.contains(COMPOUND_KEY_INSTALLED_FILTER) ? ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_INSTALLED_FILTER)) : ItemStack.EMPTY;
+        if (GasInjectionChamberFilterItem.isFilter(installedFilter)) {
             return;
         }
 

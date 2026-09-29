@@ -14,16 +14,16 @@ import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IAirtightComponent;
-import net.ty.createcraftedbeginning.content.airtights.gas.interfaces.IDirectionalPipe;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
+import net.ty.createcraftedbeginning.gas.network.DirectionalGasPipe;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SmartAirtightPipeBlock extends AxisGasPipeBlock implements IBE<SmartAirtightPipeBlockEntity>, IDirectionalPipe, IAirtightComponent {
+public class SmartAirtightPipeBlock extends AxisGasPipeBlock implements IBE<SmartAirtightPipeBlockEntity>, DirectionalGasPipe, GasConnectable {
     public SmartAirtightPipeBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(DIRECTIONAL_FACING, DirectionalFacing.NULL));

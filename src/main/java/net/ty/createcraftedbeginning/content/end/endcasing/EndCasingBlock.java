@@ -32,11 +32,6 @@ public class EndCasingBlock extends CasingBlock {
         super(properties);
     }
 
-    public static void registerPlacementHelpers() {
-        PLACEMENT_HELPERS.put(CCBBlocks.END_INCINERATION_BLOWER_BLOCK.asItem(), PlacementHelpers.register(new EndIncinerationBlowerPlacementHelper()));
-        PLACEMENT_HELPERS.put(CCBBlocks.END_SCULK_SILENCER_BLOCK.asItem(), PlacementHelpers.register(new EndSculkSilencerPlacementHelper()));
-    }
-
     @Override
     public int getLightEmission(BlockState state, BlockGetter level, BlockPos pos) {
         return 15;
@@ -53,6 +48,12 @@ public class EndCasingBlock extends CasingBlock {
         if (!placementHelper.matchesItem(stack)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+
         return placementHelper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult);
+    }
+
+    public static void registerPlacementHelpers() {
+        PLACEMENT_HELPERS.put(CCBBlocks.END_INCINERATION_BLOWER_BLOCK.asItem(), PlacementHelpers.register(new EndIncinerationBlowerPlacementHelper()));
+        PLACEMENT_HELPERS.put(CCBBlocks.END_SCULK_SILENCER_BLOCK.asItem(), PlacementHelpers.register(new EndSculkSilencerPlacementHelper()));
     }
 }

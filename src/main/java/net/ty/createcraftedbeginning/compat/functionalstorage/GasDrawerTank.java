@@ -1,32 +1,23 @@
 package net.ty.createcraftedbeginning.compat.functionalstorage;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.api.gas.gases.handlers.GasTank;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.compat.functionalstorage.GasDrawerTransfer.VoidTarget;
+import net.ty.createcraftedbeginning.gas.storage.GasTank;
+import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasDrawerTank extends GasTank {
+public final class GasDrawerTank extends GasTank implements VoidTarget {
     private final GasDrawerBlockEntity owner;
 
-    public GasDrawerTank(long capacity, GasDrawerBlockEntity owner, Predicate<GasStack> validator) {
-        super(capacity, validator);
+    public GasDrawerTank(GasTankLimits limits, GasDrawerBlockEntity owner, Predicate<GasStack> validator) {
+        super(limits, validator);
         this.owner = owner;
-    }
-
-    public GasStack getStoredStack() {
-        return gas.copy();
-    }
-
-    private GasStack getVisibleStack() {
-        if (gas.isEmpty() || !owner.isCreative()) {
-            return gas.copy();
-        }
-        return gas.copyWithAmount(Long.MAX_VALUE);
     }
 
     @Override
@@ -34,9 +25,12 @@ public final class GasDrawerTank extends GasTank {
         if (!owner.isCreative()) {
             return super.drain(resource, action);
         }
-        if (resource.isEmpty() || gas.isEmpty() || !GasStack.isSameGasSameComponents(resource, gas)) {
+
+        GasStack storedGas = getStoredStack();
+        if (resource.isEmpty() || storedGas.isEmpty() || !GasStack.isSameGasSameComponents(resource, storedGas)) {
             return GasStack.EMPTY;
         }
+
         return resource.copy();
     }
 
@@ -45,10 +39,13 @@ public final class GasDrawerTank extends GasTank {
         if (!owner.isCreative()) {
             return super.drain(maxDrain, action);
         }
-        if (maxDrain <= 0 || gas.isEmpty()) {
+
+        GasStack storedGas = getStoredStack();
+        if (maxDrain <= 0 || storedGas.isEmpty()) {
             return GasStack.EMPTY;
         }
-        return gas.copyWithAmount(maxDrain);
+
+        return storedGas.copyWithAmount(maxDrain);
     }
 
     @Override
@@ -61,28 +58,24 @@ public final class GasDrawerTank extends GasTank {
         if (resource.isEmpty() || !isGasValid(resource)) {
             return 0;
         }
+
         if (owner.isCreative()) {
             return fillCreative(resource, action);
         }
 
-        boolean sameStoredIdentity = !gas.isEmpty() && GasStack.isSameGasSameComponents(gas, resource);
+        GasStack storedGas = getStoredStack();
+        boolean sameStoredIdentity = !storedGas.isEmpty() && GasStack.isSameGasSameComponents(storedGas, resource);
         boolean lockedIdentity = owner.isLocked() && isGasValid(resource);
         long acceptedAmount = super.fill(resource, action);
         if (!owner.isVoid()) {
             return acceptedAmount;
         }
+
         if (!sameStoredIdentity && !lockedIdentity && acceptedAmount <= 0) {
             return acceptedAmount;
         }
-        return resource.getAmount();
-    }
 
-    @Override
-    public long getTankCapacity(int ignoredTank) {
-        if (owner.isCreative()) {
-            return Long.MAX_VALUE;
-        }
-        return capacity;
+        return resource.getAmount();
     }
 
     @Override
@@ -91,34 +84,72 @@ public final class GasDrawerTank extends GasTank {
     }
 
     @Override
-    public long getCapacity() {
+    public long getPressurePa() {
+        if (!owner.isCreative() || getStoredStack().isEmpty()) {
+            return super.getPressurePa();
+        }
+
+        return getMaxPressurePa();
+    }
+
+    @Override
+    public long getStoredAmount() {
+        if (owner.isCreative() && !getStoredStack().isEmpty()) {
+            return Long.MAX_VALUE;
+        }
+
+        return super.getStoredAmount();
+    }
+
+    @Override
+    public PressureModel getPressureModel() {
         if (owner.isCreative()) {
-            return Long.MAX_VALUE;
+            return PressureModel.FIXED;
         }
-        return capacity;
+
+        return PressureModel.VARIABLE;
     }
 
     @Override
-    public long getGasAmount() {
-        if (!gas.isEmpty() && owner.isCreative()) {
-            return Long.MAX_VALUE;
+    public boolean canVoid(GasStack resource) {
+        if (resource.isEmpty() || owner.isCreative() || !owner.isVoid() || !isGasValid(resource)) {
+            return false;
         }
-        return gas.getAmount();
+
+        GasStack storedGas = getStoredStack();
+        if (!storedGas.isEmpty()) {
+            return GasStack.isSameGasSameComponents(storedGas, resource);
+        }
+
+        return owner.isLocked();
     }
 
     @Override
-    protected void onContentsChanged() {
+    protected void onStateChanged() {
         owner.onGasChanged();
     }
 
+    public GasStack getStoredStack() {
+        return super.getGasStack();
+    }
+
+    private GasStack getVisibleStack() {
+        GasStack storedGas = getStoredStack();
+        if (storedGas.isEmpty() || !owner.isCreative()) {
+            return storedGas;
+        }
+
+        return storedGas.copyWithAmount(Long.MAX_VALUE);
+    }
+
     private long fillCreative(GasStack resource, GasAction action) {
-        if (!gas.isEmpty() && !GasStack.isSameGasSameComponents(gas, resource)) {
+        GasStack storedGas = getStoredStack();
+        if (!storedGas.isEmpty() && !GasStack.isSameGasSameComponents(storedGas, resource)) {
             return 0;
         }
 
-        if (gas.isEmpty() && action.execute()) {
-            gas = resource.copyWithAmount(1);
-            onContentsChanged();
+        if (storedGas.isEmpty() && action.execute()) {
+            tryReplaceContents(resource.copyWithAmount(1)).requireAccepted();
         }
         return resource.getAmount();
     }

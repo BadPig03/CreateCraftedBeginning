@@ -37,8 +37,8 @@ public class AndesiteCrateScenes {
         scene.showBasePlate();
 
         BlockPos cratePos = util.grid().at(2, 1, 2);
-        BlockPos chutePos = util.grid().at(2, 2, 2);
-        BlockPos itemPos = util.grid().at(2, 3, 2);
+        BlockPos chutePos = cratePos.above();
+        BlockPos itemPos = cratePos.above(2);
 
         Selection crateSelection = util.select().position(cratePos);
         Selection chuteSelection = util.select().position(chutePos);
@@ -57,14 +57,14 @@ public class AndesiteCrateScenes {
         scene.world().showSection(crateSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Andesite Crate can store a large amount of of identical items").pointAt(crateVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Andesite Crate can store a large amount of identical items").pointAt(crateVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(80);
+        scene.idle(60);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
         scene.world().showSection(chuteSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Even if they are unstackable").colored(PonderPalette.GREEN).pointAt(crateVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Even if they are unstackable").colored(PonderPalette.BLUE).pointAt(crateVec).placeNearTarget().attachKeyFrame();
         for (int i = 0; i < 5; i++) {
             scene.idle(10);
             ElementLink<EntityElement> remove = scene.world().createItemEntity(itemVec, itemDropMotion, diamondPickaxeItem.copy());
@@ -81,7 +81,7 @@ public class AndesiteCrateScenes {
         scene.world().hideSection(chuteSelection, Direction.UP);
 
         scene.idle(20);
-        scene.overlay().showControls(crateNorthVec, Pointing.RIGHT, 60).showing(AllIcons.I_MTD_CLOSE).withItem(brassHandItem);
+        scene.overlay().showControls(crateNorthVec, Pointing.RIGHT, 60).showing(AllIcons.I_MTD_CLOSE).withItem(brassHandItem.copy());
         scene.overlay().showText(60).text("However, contents cannot be added or taken manually").colored(PonderPalette.RED).placeNearTarget().pointAt(util.vector().blockSurface(cratePos, Direction.WEST)).attachKeyFrame();
 
         scene.idle(80);
@@ -95,7 +95,7 @@ public class AndesiteCrateScenes {
             scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), diamondPickaxeItem.copy());
         }
 
-        scene.idle(30);
+        scene.idle(57);
         scene.markAsFinished();
     }
 }

@@ -37,12 +37,12 @@ public class CrateMountedItemStorage<B extends CratesBlockEntity> extends Mounte
     }
 
     @Override
-    public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
-        if (!blockEntityClass.isInstance(be)) {
+    public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity blockEntity) {
+        if (!blockEntityClass.isInstance(blockEntity)) {
             return;
         }
 
-        B crate = blockEntityClass.cast(be);
+        B crate = blockEntityClass.cast(blockEntity);
         crate.setStoredItems(getStoredItem(), getStoredCount());
         afterUnmount(crate);
     }

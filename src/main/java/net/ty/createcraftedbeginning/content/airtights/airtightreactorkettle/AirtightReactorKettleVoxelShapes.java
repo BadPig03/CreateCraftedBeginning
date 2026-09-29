@@ -46,11 +46,11 @@ final class AirtightReactorKettleVoxelShapes {
     private AirtightReactorKettleVoxelShapes() {
     }
 
-    private static void put(AirtightReactorKettleStructuralPosition position, VoxelShape shape) {
-        SHAPES_MAP.put(position, shape);
-    }
-
     static VoxelShape getShape(AirtightReactorKettleStructuralPosition structuralPosition) {
         return SHAPES_MAP.getOrDefault(structuralPosition, Shapes.block());
+    }
+
+    private static void put(AirtightReactorKettleStructuralPosition position, VoxelShape shape) {
+        SHAPES_MAP.put(position, shape);
     }
 }

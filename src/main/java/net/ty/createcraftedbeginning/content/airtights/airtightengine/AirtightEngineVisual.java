@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightengine;
 
+
+
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityVisual;
 import com.simibubi.create.content.kinetics.base.RotatingInstance;
 import com.simibubi.create.foundation.render.AllInstanceTypes;
@@ -19,7 +21,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -47,37 +49,6 @@ public class AirtightEngineVisual extends KineticBlockEntityVisual<AirtightEngin
 
         piston = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.AIRTIGHT_ENGINE_PISTON)).createInstance();
         animatePiston(partialTick);
-    }
-
-    private void applyCogBaseRotation() {
-        if (axis == Axis.X) {
-            cogs.rotation.rotateZ(-Mth.HALF_PI * rotationSign);
-        }
-        else if (axis == Axis.Z) {
-            cogs.rotation.rotateX(Mth.HALF_PI * rotationSign);
-        }
-        else if (direction == Direction.UP) {
-            cogs.rotation.rotateX(Mth.PI);
-        }
-    }
-
-    private void updateCogRotation() {
-        cogs.setup(blockEntity).setPosition(getVisualPosition()).setChanged();
-    }
-
-    private void animatePiston(float partialTick) {
-        piston.setIdentityTransform().translate(getVisualPosition()).translate(Translate.CENTER);
-        if (axis == Axis.X) {
-            piston.rotateZ(-Mth.HALF_PI * rotationSign);
-        }
-        else if (axis == Axis.Z) {
-            piston.rotateX(Mth.HALF_PI * rotationSign);
-        }
-        else if (direction == Direction.UP) {
-            piston.rotateX(Mth.PI);
-        }
-        piston.translateBack(Translate.CENTER);
-        piston.translate(0, -0.2f * Mth.sin(blockEntity.getPistonPhase(partialTick)) - 0.2f, 0).setChanged();
     }
 
     @Override
@@ -114,5 +85,42 @@ public class AirtightEngineVisual extends KineticBlockEntityVisual<AirtightEngin
     public void collectCrumblingInstances(Consumer<Instance> consumer) {
         consumer.accept(cogs);
         consumer.accept(piston);
+    }
+
+    private void applyCogBaseRotation() {
+        if (axis == Axis.X) {
+            cogs.rotation.rotateZ(-Mth.HALF_PI * rotationSign);
+            return;
+        }
+
+        if (axis == Axis.Z) {
+            cogs.rotation.rotateX(Mth.HALF_PI * rotationSign);
+            return;
+        }
+
+        if (direction != Direction.UP) {
+            return;
+        }
+
+        cogs.rotation.rotateX(Mth.PI);
+    }
+
+    private void updateCogRotation() {
+        cogs.setup(blockEntity).setPosition(getVisualPosition()).setChanged();
+    }
+
+    private void animatePiston(float partialTick) {
+        piston.setIdentityTransform().translate(getVisualPosition()).translate(Translate.CENTER);
+        if (axis == Axis.X) {
+            piston.rotateZ(-Mth.HALF_PI * rotationSign);
+        }
+        else if (axis == Axis.Z) {
+            piston.rotateX(Mth.HALF_PI * rotationSign);
+        }
+        else if (direction == Direction.UP) {
+            piston.rotateX(Mth.PI);
+        }
+        piston.translateBack(Translate.CENTER);
+        piston.translate(0, 0.2F * -Mth.sin(blockEntity.getPistonPhase(partialTick)) - 0.2F, 0).setChanged();
     }
 }

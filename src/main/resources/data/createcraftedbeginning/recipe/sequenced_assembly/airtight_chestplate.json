@@ -1,21 +1,17 @@
 {
   "type": "create:sequenced_assembly",
   "ingredient": {
-    "item": "minecraft:elytra"
+    "item": "create:netherite_backtank"
   },
   "loops": 1,
   "results": [
     {
-      "chance": 75,
+      "chance": 90,
       "id": "createcraftedbeginning:airtight_chestplate"
     },
     {
-      "chance": 12.5,
+      "chance": 10,
       "id": "createcraftedbeginning:breeze_core"
-    },
-    {
-      "chance": 12.5,
-      "id": "minecraft:elytra"
     }
   ],
   "sequence": [
@@ -42,7 +38,7 @@
           "item": "createcraftedbeginning:incomplete_airtight_chestplate"
         },
         {
-          "item": "create:netherite_backtank"
+          "item": "createcraftedbeginning:airtight_sheet_block"
         }
       ],
       "results": [

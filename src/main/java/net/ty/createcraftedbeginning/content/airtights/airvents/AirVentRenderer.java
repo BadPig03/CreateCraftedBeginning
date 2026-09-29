@@ -12,23 +12,16 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.foundation.client.CCBPartialModels;
+import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirVentRenderer extends SafeBlockEntityRenderer<AirVentBlockEntity> {
-    private static final float LOUVER_SURFACE_OFFSET = 0.001953125f;
+    private static final float LOUVER_SURFACE_OFFSET = 0.001953125F;
 
     public AirVentRenderer(Context ignored) {
-    }
-
-    private static void renderLouver(PartialModel model, BlockState state, Direction direction, float surfaceOffset, PoseStack poseStack, VertexConsumer consumer, int light, int overlay) {
-        poseStack.pushPose();
-        poseStack.translate(direction.getStepX() * surfaceOffset, direction.getStepY() * surfaceOffset, direction.getStepZ() * surfaceOffset);
-        CachedBuffers.partialFacing(model, state, direction.getOpposite()).light(light).overlay(overlay).renderInto(poseStack, consumer);
-        poseStack.popPose();
     }
 
     @Override
@@ -51,5 +44,12 @@ public class AirVentRenderer extends SafeBlockEntityRenderer<AirVentBlockEntity>
             renderLouver(louverModel, blockState, direction, LOUVER_SURFACE_OFFSET, poseStack, solidBuffer, light, overlay);
             renderLouver(louverModel, blockState, direction, -LOUVER_SURFACE_OFFSET, poseStack, solidBuffer, light, overlay);
         }
+    }
+
+    private static void renderLouver(PartialModel model, BlockState state, Direction direction, float surfaceOffset, PoseStack poseStack, VertexConsumer consumer, int light, int overlay) {
+        poseStack.pushPose();
+        poseStack.translate(direction.getStepX() * surfaceOffset, direction.getStepY() * surfaceOffset, direction.getStepZ() * surfaceOffset);
+        CachedBuffers.partialFacing(model, state, direction.getOpposite()).light(light).overlay(overlay).renderInto(poseStack, consumer);
+        poseStack.popPose();
     }
 }

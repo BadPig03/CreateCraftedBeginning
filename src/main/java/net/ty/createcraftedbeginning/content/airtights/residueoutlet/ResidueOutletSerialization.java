@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.residueoutlet;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -19,14 +18,14 @@ final class ResidueOutletSerialization {
     }
 
     void write(CompoundTag compoundTag, Provider provider) {
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_INVENTORY, inventory.serializeNBT(provider));
+        compoundTag.put(COMPOUND_KEY_INVENTORY, inventory.serializeNBT(provider));
     }
 
     void read(CompoundTag compoundTag, Provider provider) {
-        if (!CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_INVENTORY)) {
+        if (!compoundTag.contains(COMPOUND_KEY_INVENTORY)) {
             return;
         }
 
-        inventory.deserializeNBT(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_INVENTORY));
+        inventory.deserializeNBT(provider, compoundTag.getCompound(COMPOUND_KEY_INVENTORY));
     }
 }

@@ -20,7 +20,11 @@ public abstract class WindChargingRecipeGen extends BaseRecipeProvider {
     }
 
     protected GeneratedRecipe create(String name, WindChargingAction action, UnaryOperator<Builder<WindChargingRecipe>> transform) {
-        GeneratedRecipe recipe = consumer -> transform.apply(new Builder<>(params -> new WindChargingRecipe(params, action), asResource(name))).build(consumer);
+        return create(name, action, 0, transform);
+    }
+
+    protected GeneratedRecipe create(String name, WindChargingAction action, int priority, UnaryOperator<Builder<WindChargingRecipe>> transform) {
+        GeneratedRecipe recipe = consumer -> transform.apply(new Builder<>(params -> new WindChargingRecipe(params, action, priority), asResource(name))).build(consumer);
         all.add(recipe);
         return recipe;
     }

@@ -3,11 +3,15 @@ package net.ty.createcraftedbeginning.content.crates;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
+import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
-import net.ty.createcraftedbeginning.foundation.CCBNbtUtils;
+import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.ty.createcraftedbeginning.foundation.NbtValues;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Objects;
@@ -15,9 +19,10 @@ import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INBTSerializable<CompoundTag> {
+public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INBTSerializable<CompoundTag> {
     private static final String COMPOUND_KEY_CONTENT = "Content";
     private static final String COMPOUND_KEY_COUNT = "Count";
 
@@ -31,9 +36,9 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
     private boolean batchChanged;
 
     CrateItemStackHandler(IntSupplier maxCountSupplier, Predicate<ItemStack> itemValidator, Runnable contentsChangedListener) {
-        this.maxCountSupplier = Objects.requireNonNull(maxCountSupplier);
-        this.itemValidator = Objects.requireNonNull(itemValidator);
-        this.contentsChangedListener = Objects.requireNonNull(contentsChangedListener);
+        this.maxCountSupplier = Objects.requireNonNull(maxCountSupplier, "Parameter 'maxCountSupplier' must not be null.");
+        this.itemValidator = Objects.requireNonNull(itemValidator, "Parameter 'itemValidator' must not be null.");
+        this.contentsChangedListener = Objects.requireNonNull(contentsChangedListener, "Parameter 'contentsChangedListener' must not be null.");
     }
 
     @Override
@@ -43,17 +48,17 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
             return compoundTag;
         }
 
-        CCBNbtUtils.putTag(compoundTag, COMPOUND_KEY_CONTENT, content.saveOptional(provider));
-        CCBNbtUtils.putInt(compoundTag, COMPOUND_KEY_COUNT, count);
+        compoundTag.put(COMPOUND_KEY_CONTENT, content.saveOptional(provider));
+        compoundTag.putInt(COMPOUND_KEY_COUNT, count);
         return compoundTag;
     }
 
     @Override
     public void deserializeNBT(Provider provider, CompoundTag compoundTag) {
         ItemStack storedContent = ItemStack.EMPTY;
-        int storedCount = CCBNbtUtils.getIntOrDefault(compoundTag, COMPOUND_KEY_COUNT, 0);
-        if (CCBNbtUtils.contains(compoundTag, COMPOUND_KEY_CONTENT)) {
-            storedContent = ItemStack.parseOptional(provider, CCBNbtUtils.getCompound(compoundTag, COMPOUND_KEY_CONTENT));
+        int storedCount = NbtValues.getIntOrDefault(compoundTag, COMPOUND_KEY_COUNT, 0);
+        if (compoundTag.contains(COMPOUND_KEY_CONTENT)) {
+            storedContent = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CONTENT));
         }
         applyStoredItems(storedContent, storedCount, false);
         onLoad();
@@ -70,6 +75,7 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
         if (content.isEmpty()) {
             return ItemStack.EMPTY;
         }
+
         return content.copyWithCount(count);
     }
 
@@ -94,6 +100,7 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
             if (remainingCount <= 0) {
                 return ItemStack.EMPTY;
             }
+
             return stack.copyWithCount(remainingCount);
         }
 
@@ -111,6 +118,7 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
         if (remainingCount <= 0) {
             return ItemStack.EMPTY;
         }
+
         return stack.copyWithCount(remainingCount);
     }
 
@@ -153,15 +161,18 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
         if (content.isEmpty()) {
             return ItemStack.EMPTY;
         }
+
         return content.copy();
     }
 
-    int getCountInSlot(int slot) {
+    @Internal
+    public int getCountInSlot(int slot) {
         validateSlotIndex(slot);
         return count;
     }
 
-    void setStoredItems(int slot, ItemStack stack, int newCount) {
+    @Internal
+    public void setStoredItems(int slot, ItemStack stack, int newCount) {
         validateSlotIndex(slot);
         applyStoredItems(stack, newCount, true);
     }
@@ -171,7 +182,7 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
             return;
         }
 
-        throw new RuntimeException("Slot " + slot + " not in valid range - [0,1)");
+        throw new RuntimeException("Slot index must be in [0, 1); got " + slot + '.');
     }
 
     final void initializeStoredItems(ItemStack stack, int newCount) {
@@ -186,22 +197,54 @@ class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INB
         return Math.max(0, maxCountSupplier.getAsInt());
     }
 
-    final int getRemainingCapacity() {
+    @Internal
+    public final int getRemainingCapacity() {
         return Math.max(0, getConfiguredCapacity() - count);
     }
 
     final <T> T runInBatch(Supplier<T> action) {
-        Objects.requireNonNull(action);
+        Objects.requireNonNull(action, "Parameter 'action' must not be null.");
         batchDepth++;
         try {
             return action.get();
-        } finally {
+        }
+        finally {
+
             batchDepth--;
             if (batchDepth == 0 && batchChanged) {
                 batchChanged = false;
                 onContentsChanged();
             }
         }
+    }
+
+    void dropContents(Level level, double x, double y, double z) {
+        ItemStack content = getStackInSlot(0);
+        int count = getCountInSlot(0);
+        if (content.isEmpty() || count <= 0) {
+            return;
+        }
+
+        int maxStackSize = content.getMaxStackSize();
+        while (count > 0) {
+            int dropCount = Math.min(count, maxStackSize);
+            Containers.dropItemStack(level, x, y, z, content.copyWithCount(dropCount));
+            count -= dropCount;
+        }
+    }
+
+    int calculateRedstoneSignal() {
+        int storedCount = getCountInSlot(0);
+        if (storedCount <= 0) {
+            return 0;
+        }
+
+        int capacity = getConfiguredCapacity();
+        if (capacity <= 0) {
+            return 0;
+        }
+
+        return Mth.clamp(Mth.floor((double) storedCount / capacity * 14) + 1, 0, 15);
     }
 
     private void onLoad() {

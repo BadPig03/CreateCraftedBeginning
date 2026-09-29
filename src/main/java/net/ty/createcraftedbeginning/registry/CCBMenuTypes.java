@@ -27,14 +27,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CCBMenuTypes {
     private static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, CCBAPI.MOD_ID);
 
-    private static <C extends AbstractContainerMenu> @NotNull DeferredHolder<MenuType<?>, MenuType<C>> register(String name, IContainerFactory<C> factory) {
-        return MENU_TYPES.register(name, () -> IMenuTypeExtension.create(factory));
-    }
-
-    public static void register(IEventBus modEventBus) {
-        MENU_TYPES.register(modEventBus);
-    }
-
     public static final DeferredHolder<MenuType<?>, MenuType<AirtightHelmetMenu>> AIRTIGHT_HELMET_MENU = register("airtight_helmet", AirtightHelmetMenu::new);
 
     public static final DeferredHolder<MenuType<?>, MenuType<AirtightChestplateMenu>> AIRTIGHT_CHESTPLATE_MENU = register("airtight_chestplate", AirtightChestplateMenu::new);
@@ -46,4 +38,12 @@ public class CCBMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<GasCanisterPackMenu>> GAS_CANISTER_PACK_MENU = register("gas_canister_pack", GasCanisterPackMenu::new);
     public static final DeferredHolder<MenuType<?>, MenuType<GasFilterMenu>> GAS_FILTER_MENU = register("gas_filter", GasFilterMenu::new);
     public static final DeferredHolder<MenuType<?>, MenuType<GasFactoryGaugeSetGasMenu>> GAS_FACTORY_GAUGE_SET_GAS_MENU = register("gas_factory_gauge_set_gas", GasFactoryGaugeSetGasMenu::new);
+
+    public static void register(IEventBus modEventBus) {
+        MENU_TYPES.register(modEventBus);
+    }
+
+    private static <C extends AbstractContainerMenu> @NotNull DeferredHolder<MenuType<?>, MenuType<C>> register(String name, IContainerFactory<C> factory) {
+        return MENU_TYPES.register(name, () -> IMenuTypeExtension.create(factory));
+    }
 }

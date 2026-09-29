@@ -22,19 +22,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public abstract class UpgradeItemMixin {
     @SuppressWarnings("DataFlowIssue")
     @Inject(method = "getDescription", at = @At("HEAD"), cancellable = true)
-    private void ccb$getDescription(ItemStack stack, ControllableDrawerTile<?> tile, CallbackInfoReturnable<Component> cir) {
+    private void ccb$getDescription(ItemStack stack, ControllableDrawerTile<?> tile, CallbackInfoReturnable<Component> callback) {
         if (!(tile instanceof GasDrawerBlockEntity)) {
             return;
         }
 
         UpgradeItem upgrade = (UpgradeItem) (Object) this;
         if (upgrade == FunctionalStorage.PUSHING_UPGRADE.get()) {
-            cir.setReturnValue(CCBLang.translateDirect("compat.functional_storage.drawer_upgrade.push.gas", UpgradeItem.getRelativeDirection(UpgradeItem.getDirection(stack), tile.getFacingDirection()).withStyle(ChatFormatting.GOLD)));
+            callback.setReturnValue(CCBLang.translateDirect("compat.functional_storage.drawer_upgrade.push.gas", UpgradeItem.getRelativeDirection(UpgradeItem.getDirection(stack), tile.getFacingDirection()).withStyle(ChatFormatting.GOLD)));
             return;
         }
 
         if (upgrade == FunctionalStorage.PULLING_UPGRADE.get()) {
-            cir.setReturnValue(CCBLang.translateDirect("compat.functional_storage.drawer_upgrade.pull.gas", UpgradeItem.getRelativeDirection(UpgradeItem.getDirection(stack), tile.getFacingDirection()).withStyle(ChatFormatting.GOLD)));
+            callback.setReturnValue(CCBLang.translateDirect("compat.functional_storage.drawer_upgrade.pull.gas", UpgradeItem.getRelativeDirection(UpgradeItem.getDirection(stack), tile.getFacingDirection()).withStyle(ChatFormatting.GOLD)));
             return;
         }
 
@@ -42,6 +42,6 @@ public abstract class UpgradeItemMixin {
             return;
         }
 
-        cir.setReturnValue(CCBLang.translateDirect("compat.functional_storage.drawer_upgrade.void.gas"));
+        callback.setReturnValue(CCBLang.translateDirect("compat.functional_storage.drawer_upgrade.void.gas"));
     }
 }

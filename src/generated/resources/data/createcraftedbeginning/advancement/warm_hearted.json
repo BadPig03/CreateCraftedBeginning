@@ -2,7 +2,7 @@
   "parent": "createcraftedbeginning:hot_hot_hot",
   "criteria": {
     "0": {
-      "trigger": "createcraftedbeginning:warm_hearted_builtin"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {

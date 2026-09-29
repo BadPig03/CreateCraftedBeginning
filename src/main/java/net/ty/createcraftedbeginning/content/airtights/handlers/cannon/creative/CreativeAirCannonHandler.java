@@ -21,7 +21,7 @@ import net.ty.createcraftedbeginning.api.cannonhandlers.AirtightCannonShotContex
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.AirtightCannonVisualHandler;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.CannonAnimationType;
 import net.ty.createcraftedbeginning.api.cannonhandlers.visual.CannonModelType;
-import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonUtils;
+import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonBlast;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -32,16 +32,13 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeAirCannonHandler implements AirtightCannonHandler, AirtightCannonVisualHandler {
-    private static final float DEFAULT_RADIUS = 1.2f;
-    private static final float LETHAL_BONUS_DAMAGE = Integer.MAX_VALUE;
-
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(CCBItems.CREATIVE_WIND_CHARGE.asItem());
     }
 
     @Override
-    public void renderTrailParticles(Level level, Vec3 pos) {
+    public void renderTrailParticles(Level level, Vec3 pos, Vec3 velocity) {
     }
 
     @Override
@@ -51,12 +48,12 @@ public class CreativeAirCannonHandler implements AirtightCannonHandler, Airtight
 
     @Override
     public CannonModelType getModelType() {
-        return CannonModelType.CORE_ONLY;
+        return CannonModelType.WITH_WIND;
     }
 
     @Override
     public CannonAnimationType getAnimationType() {
-        return CannonAnimationType.CORE_Y;
+        return CannonAnimationType.WITH_WIND_Y;
     }
 
     @Override
@@ -66,11 +63,11 @@ public class CreativeAirCannonHandler implements AirtightCannonHandler, Airtight
 
     @Override
     public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
-        float radius = DEFAULT_RADIUS * context.effectMultiplier();
-        DamageSource explosionDamageSource = CCBDamageTypes.source(DamageTypes.WIND_CHARGE, level, context.projectile());
-        level.explode(context.projectile(), explosionDamageSource, AirtightCannonUtils.createDamageCalculator(context), pos.x(), pos.y(), pos.z(), radius, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
-        List<LivingEntity> entities = AirtightCannonUtils.getNearbyEntities(level, pos, radius, context);
-        AirtightCannonUtils.applyBonusDamage(entities, explosionDamageSource, LETHAL_BONUS_DAMAGE);
+        float multiplier = context.effectMultiplier();
+        DamageSource explosionDamageSource = CCBDamageTypes.source(DamageTypes.WIND_CHARGE, level, context.projectile(), context.owner());
+        level.explode(context.projectile(), explosionDamageSource, AirtightCannonBlast.createDamageCalculator(context), pos.x(), pos.y(), pos.z(), multiplier, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
+        List<LivingEntity> entities = AirtightCannonBlast.getNearbyEntities(level, pos, multiplier, context);
+        applyAdditionalEffects(level, entities, explosionDamageSource, context);
     }
 
     @Override
@@ -81,5 +78,10 @@ public class CreativeAirCannonHandler implements AirtightCannonHandler, Airtight
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(CCBLang.translate("gui.airtight_cannon.creative_air").style(ChatFormatting.DARK_GREEN).component());
+    }
+
+    @Override
+    public void applyAdditionalEffects(Level level, List<LivingEntity> entities, DamageSource explosionDamageSource, AirtightCannonShotContext context) {
+        AirtightCannonBlast.applyBonusDamage(entities, explosionDamageSource, Integer.MAX_VALUE);
     }
 }

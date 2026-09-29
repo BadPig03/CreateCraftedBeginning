@@ -12,9 +12,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAction;
-import net.ty.createcraftedbeginning.api.gas.gases.GasCapabilities.GasHandler;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
+import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
@@ -34,15 +34,6 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
         controller = new BoilerSteamOutletController(this);
         exposedGasHandler = new SteamOutletGasHandler(this);
         setLazyTickRate(LAZY_TICK_RATE);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasHandler.BLOCK, CCBBlockEntities.BOILER_STEAM_OUTLET.get(), (be, direction) -> {
-            if (direction != BoilerSteamOutletBlock.getFacing(be.getBlockState())) {
-                return null;
-            }
-            return be.exposedGasHandler;
-        });
     }
 
     @Override
@@ -65,12 +56,14 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         controller.write(compoundTag, clientPacket);
+        exposedGasHandler.write(compoundTag, clientPacket);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
         controller.read(compoundTag, clientPacket);
+        exposedGasHandler.read(compoundTag, clientPacket);
     }
 
     @Override
@@ -83,21 +76,47 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         CCBLang.translate("gui.boiler_steam_outlet.header").forGoggles(tooltip);
         CCBLang.translate("gui.boiler_steam_outlet.steam_generation").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(controller.getSteamGenerationRate()).space().translate("gui.unit.milli_buckets_per_second").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
+        CCBLang.number(controller.getSteamGenerationRate()).space().translate("gui.unit.gas_units_per_second").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
         CCBLang.translate("gui.boiler_steam_outlet.steam_output").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(controller.getSteamOutputRate()).space().translate("gui.unit.milli_buckets_per_second").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
+        CCBLang.number(controller.getSteamOutputRate()).space().translate("gui.unit.gas_units_per_second").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
         return true;
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.BOILER_STEAM_OUTLET.get(), (outlet, direction) -> {
+            if (direction != BoilerSteamOutletBlock.getFacing(outlet.getBlockState())) {
+                return null;
+            }
+
+            return outlet.exposedGasHandler;
+        });
     }
 
     void recordExtraction(GasStack drained, GasAction action) {
         controller.recordExtraction(drained, action);
     }
 
+    void restoreExtraction(GasStack restored, GasAction action) {
+        controller.restoreExtraction(restored, action);
+    }
+
+    void invalidateCurrentProduction() {
+        controller.invalidateCurrentProduction();
+    }
+
+    long getMaximumOutputAmount() {
+        return controller.getMaximumOutputAmount();
+    }
+
     void ensureCurrentTick() {
         controller.ensureCurrentTick();
     }
 
-    void setAvailableSteamThisTick(long amount) {
-        exposedGasHandler.setAvailableSteamThisTick(amount);
+    void addProducedSteam(long amount) {
+        exposedGasHandler.addProducedSteam(amount);
+    }
+
+    void clearBufferedSteam() {
+        exposedGasHandler.clearBufferedSteam();
     }
 }

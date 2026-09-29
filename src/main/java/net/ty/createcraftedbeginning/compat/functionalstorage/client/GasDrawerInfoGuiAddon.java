@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.compat.functionalstorage.client;
 
-import com.buuz135.functionalstorage.util.NumberUtils;
 import com.hrznstudio.titanium.client.screen.addon.BasicScreenAddon;
 import com.hrznstudio.titanium.client.screen.asset.IAssetProvider;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -15,15 +14,14 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.inventory.InventoryMenu;
-import net.ty.createcraftedbeginning.api.gas.gases.GasAmounts;
-import net.ty.createcraftedbeginning.api.gas.gases.GasStack;
-import net.ty.createcraftedbeginning.client.CCBGasClientTextures;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.client.gas.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.compat.functionalstorage.GasDrawerBlockEntity;
 import net.ty.createcraftedbeginning.compat.functionalstorage.GasDrawerBlockEntity.RenderGas;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,40 +29,11 @@ import java.util.Optional;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
-    private static final DecimalFormat AMOUNT_FORMAT = new DecimalFormat("####0.#");
-
     private final GasDrawerBlockEntity drawer;
 
     public GasDrawerInfoGuiAddon(int posX, int posY, GasDrawerBlockEntity drawer) {
         super(posX, posY);
         this.drawer = drawer;
-    }
-
-    private static void drawSlotFrame(GuiGraphics graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, 0xFF5A5A5A);
-        graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0xFF171717);
-    }
-
-    private static Rect2i slotRect(int slot, int slots) {
-        if (slots == 1) {
-            return new Rect2i(6, 6, 36, 36);
-        }
-        else if (slots == 2) {
-            return new Rect2i(4, slot == 0 ? 25 : 5, 40, 18);
-        }
-        return switch (slot) {
-            case 0 -> new Rect2i(25, 25, 18, 18);
-            case 1 -> new Rect2i(5, 25, 18, 18);
-            case 2 -> new Rect2i(25, 5, 18, 18);
-            default -> new Rect2i(5, 5, 18, 18);
-        };
-    }
-
-    private static String format(long number) {
-        if (number <= Integer.MAX_VALUE) {
-            return NumberUtils.getFormatedFluidBigNumber((int) number);
-        }
-        return AMOUNT_FORMAT.format(number / 1000000000) + "M B";
     }
 
     @Override
@@ -96,6 +65,32 @@ public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
 
             graphics.renderTooltip(Minecraft.getInstance().font, createTooltip(slot), Optional.empty(), mouseX - guiX, mouseY - guiY);
         }
+    }
+
+    private static void drawSlotFrame(GuiGraphics graphics, int x, int y, int width, int height) {
+        graphics.fill(x, y, x + width, y + height, 0xFF5A5A5A);
+        graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0xFF171717);
+    }
+
+    private static Rect2i slotRect(int slot, int slots) {
+        if (slots == 1) {
+            return new Rect2i(6, 6, 36, 36);
+        }
+
+        if (slots == 2) {
+            if (slot == 0) {
+                return new Rect2i(4, 25, 40, 18);
+            }
+
+            return new Rect2i(4, 5, 40, 18);
+        }
+
+        return switch (slot) {
+            case 0 -> new Rect2i(25, 25, 18, 18);
+            case 1 -> new Rect2i(5, 25, 18, 18);
+            case 2 -> new Rect2i(25, 5, 18, 18);
+            default -> new Rect2i(5, 5, 18, 18);
+        };
     }
 
     private void drawSlot(GuiGraphics graphics, int guiX, int guiY, int slot, Rect2i rect) {
@@ -144,34 +139,39 @@ public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
         if (renderGas.filterOnly()) {
             tooltip.add(CCBLang.translateDirect("compat.functional_storage.gas_drawer.locked_filter").withStyle(ChatFormatting.GRAY));
         }
-
         long displayedAmount = renderGas.filterOnly() ? 0 : gasStack.getAmount();
-        String amountText = drawer.isCreative() && !renderGas.filterOnly() ? "∞" : GasAmounts.formatCompact(displayedAmount) + '/' + GasAmounts.formatCompact(drawer.getPhysicalTankCapacity());
+        String amountText = drawer.isCreative() && !renderGas.filterOnly() ? CCBLang.translateDirect("generic.infinity_mark").getString() : GasUnitFormat.formatCompact(displayedAmount) + '/' + GasUnitFormat.formatCompact(drawer.getTankVolume());
         tooltip.add(Component.translatable("gui.functionalstorage.amount").withStyle(ChatFormatting.GOLD).append(Component.literal(amountText).withStyle(ChatFormatting.WHITE)));
     }
 
     private void drawAmount(GuiGraphics graphics, int guiX, int guiY, Rect2i rect, GasStack stack) {
         int x = guiX + getPosX() + rect.getX();
         int y = guiY + getPosY() + rect.getY();
-        Font font = Minecraft.getInstance().font;
-        String amountText = drawer.isCreative() ? "∞" : format(stack.getAmount()) + '/' + format(drawer.getPhysicalTankCapacity());
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
         poseStack.translate(0, 0, 200);
-        poseStack.scale(0.5f, 0.5f, 0.5f);
-        graphics.drawString(font, amountText, Math.round(x * 2 + rect.getWidth() - font.width(amountText) / 2.0f), (y + rect.getHeight()) * 2 - 10, 0xFFFFFF, true);
+        poseStack.scale(0.5F, 0.5F, 0.5F);
+        Font font = Minecraft.getInstance().font;
+        String amountText = drawer.isCreative() ? CCBLang.translateDirect("generic.infinity_mark").getString() : GasUnitFormat.formatCompact(stack.getAmount()) + '/' + GasUnitFormat.formatCompact(drawer.getTankVolume());
+        graphics.drawString(font, amountText, Math.round(x * 2 + rect.getWidth() - font.width(amountText) / 2.0F), (y + rect.getHeight()) * 2 - 10, 0xFFFFFF, true);
 
         poseStack.popPose();
     }
 
     private void renderGas(GuiGraphics graphics, int guiX, int guiY, GasStack gasStack, boolean isFilterOnly, Rect2i rect) {
         int tint = gasStack.getHint();
-        float red = ARGB32.red(tint) / 255.0f;
-        float green = ARGB32.green(tint) / 255.0f;
-        float blue = ARGB32.blue(tint) / 255.0f;
-        float tintAlpha = ARGB32.alpha(tint) / 255.0f;
-        float alpha = isFilterOnly ? 0.35f : tintAlpha <= 0 ? 1 : tintAlpha;
+        float red = ARGB32.red(tint) / 255.0F;
+        float green = ARGB32.green(tint) / 255.0F;
+        float blue = ARGB32.blue(tint) / 255.0F;
+        float tintAlpha = ARGB32.alpha(tint) / 255.0F;
+        float alpha;
+        if (isFilterOnly) {
+            alpha = 0.35F;
+        }
+        else {
+            alpha = tintAlpha <= 0 ? 1 : tintAlpha;
+        }
         RenderSystem.setShaderTexture(0, InventoryMenu.BLOCK_ATLAS);
         RenderSystem.setShaderColor(red, green, blue, alpha);
         RenderSystem.enableBlend();
