@@ -1,0 +1,71 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/block",
+	"texture_size": [32, 32],
+	"textures": {
+		"particle": "createcraftedbeginning:block/optical_fiber/fiber",
+		"fiber": "createcraftedbeginning:block/optical_fiber/fiber",
+		"outline": "createcraftedbeginning:block/optical_fiber/outline"
+	},
+	"elements": [
+		{
+			"from": [0, 6, 6],
+			"to": [8, 10, 10],
+			"faces": {
+				"north": {"uv": [8, 0, 12, 2], "texture": "#fiber"},
+				"south": {"uv": [12, 0, 8, 2], "texture": "#fiber"},
+				"up": {"uv": [8, 2, 12, 0], "rotation": 180, "texture": "#fiber"},
+				"down": {"uv": [8, 0, 12, 2], "rotation": 180, "texture": "#fiber"}
+			}
+		},
+		{
+			"from": [6, 5, 5],
+			"to": [9, 11, 11],
+			"faces": {
+				"north": {"uv": [5.5, 2.5, 7, 5.5], "texture": "#fiber"},
+				"east": {"uv": [2.5, 2.5, 5.5, 5.5], "texture": "#fiber"},
+				"south": {"uv": [1, 2.5, 2.5, 5.5], "texture": "#fiber"},
+				"west": {"uv": [2.5, 2.5, 5.5, 5.5], "texture": "#fiber"},
+				"up": {"uv": [2.5, 5.5, 1, 2.5], "rotation": 180, "texture": "#fiber"},
+				"down": {"uv": [2.5, 2.5, 1, 5.5], "rotation": 180, "texture": "#fiber"}
+			}
+		},
+		{
+			"name": "outline",
+			"from": [0, 5.7, 5.7],
+			"to": [8.3, 10.3, 5.7],
+			"shade": false,
+			"faces": {
+				"south": {"uv": [0, 0, 16, 16], "texture": "#outline"}
+			}
+		},
+		{
+			"name": "outline",
+			"from": [0, 5.7, 10.3],
+			"to": [8.3, 10.3, 10.3],
+			"shade": false,
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#outline"}
+			}
+		},
+		{
+			"name": "outline",
+			"from": [0, 5.7, 5.7],
+			"to": [8.3, 5.7, 10.3],
+			"shade": false,
+			"faces": {
+				"up": {"uv": [0, 0, 16, 16], "rotation": 180, "texture": "#outline"}
+			}
+		},
+		{
+			"name": "outline",
+			"from": [0, 10.3, 5.7],
+			"to": [8.3, 10.3, 10.3],
+			"shade": false,
+			"faces": {
+				"down": {"uv": [0, 0, 16, 16], "rotation": 180, "texture": "#outline"}
+			}
+		}
+	]
+}

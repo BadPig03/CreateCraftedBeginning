@@ -1,0 +1,140 @@
+{
+  "variants": {
+    "directional_facing=east,facing=down": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 90
+    },
+    "directional_facing=east,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "directional_facing=east,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 180
+    },
+    "directional_facing=east,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 180
+    },
+    "directional_facing=east,facing=up": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 90
+    },
+    "directional_facing=east,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "directional_facing=north,facing=down": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block"
+    },
+    "directional_facing=north,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "directional_facing=north,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 180
+    },
+    "directional_facing=north,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 180
+    },
+    "directional_facing=north,facing=up": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block"
+    },
+    "directional_facing=north,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "directional_facing=null,facing=down": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block"
+    },
+    "directional_facing=null,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "directional_facing=null,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 180
+    },
+    "directional_facing=null,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 180
+    },
+    "directional_facing=null,facing=up": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block"
+    },
+    "directional_facing=null,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "directional_facing=south,facing=down": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 180
+    },
+    "directional_facing=south,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "directional_facing=south,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 180
+    },
+    "directional_facing=south,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 180
+    },
+    "directional_facing=south,facing=up": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 180
+    },
+    "directional_facing=south,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "directional_facing=west,facing=down": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 270
+    },
+    "directional_facing=west,facing=east": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "directional_facing=west,facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 180
+    },
+    "directional_facing=west,facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 180
+    },
+    "directional_facing=west,facing=up": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 270
+    },
+    "directional_facing=west,facing=west": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "type": "createcraftedbeginning:fractionation_tower",
+  "ingredients": [
+    {
+      "type": "neoforge:single",
+      "amount": 100,
+      "fluid": "createcraftedbeginning:brimstone"
+    }
+  ],
+  "layer_outputs": [
+    {
+      "fluid": {
+        "amount": 500,
+        "id": "minecraft:lava"
+      },
+      "layer": 1
+    },
+    {
+      "gas": {
+        "amount": 500,
+        "id": "createcraftedbeginning:ultrawarm_air"
+      },
+      "layer": 2
+    }
+  ],
+  "processing_time": 200,
+  "results": [],
+  "temperature": "superheated"
+}

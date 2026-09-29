@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:you_shall_not_pass",
+  "criteria": {
+    "0": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.visual_monitoring.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:airtight_meter"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.visual_monitoring"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -1,0 +1,14 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "createcraftedbeginning:block/airtight_meters/manometer"
+    },
+    "axis=y": {
+      "model": "createcraftedbeginning:block/airtight_meters/manometer_vertical"
+    },
+    "axis=z": {
+      "model": "createcraftedbeginning:block/airtight_meters/manometer",
+      "y": 270
+    }
+  }
+}

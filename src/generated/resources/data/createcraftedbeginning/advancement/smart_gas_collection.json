@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:a_guide_to_otherworldly_logistics",
+  "criteria": {
+    "0": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.smart_gas_collection.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:gas_factory_gauge"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.smart_gas_collection"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:airtight_meter"
+    },
+    {
+      "item": "create:andesite_alloy"
+    },
+    {
+      "item": "createcraftedbeginning:airtight_sheet"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:airtight_fractionation_tower_instrument_panel"
+  }
+}

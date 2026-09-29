@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:forging_press",
+  "ingredients": [
+    {
+      "tag": "c:plates/gold"
+    },
+    {
+      "item": "minecraft:iron_trapdoor"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:light_weighted_pressure_plate"
+    }
+  ]
+}

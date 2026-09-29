@@ -1,0 +1,17 @@
+{
+  "type": "createcraftedbeginning:forging_press",
+  "ingredients": [
+    {
+      "tag": "c:plates/iron"
+    },
+    {
+      "item": "minecraft:iron_trapdoor"
+    }
+  ],
+  "results": [
+    {
+      "count": 9,
+      "id": "minecraft:iron_nugget"
+    }
+  ]
+}

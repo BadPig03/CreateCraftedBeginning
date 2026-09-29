@@ -1,0 +1,78 @@
+{
+  "render_type": "minecraft:cutout_mipped",
+  "textures": {
+    "side": "createcraftedbeginning:block/airtight_fractionation_tower/vertical_connected",
+    "end": "createcraftedbeginning:block/airtight_fractionation_tower/top_connected",
+    "particle": "#side"
+  },
+  "elements": [
+    {
+      "from": [
+        -16,
+        -16,
+        -16
+      ],
+      "to": [
+        32,
+        32,
+        32
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            16,
+            12
+          ],
+          "texture": "#side"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            16,
+            12
+          ],
+          "texture": "#side"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            16,
+            12
+          ],
+          "texture": "#side"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            16,
+            12
+          ],
+          "texture": "#side"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            16,
+            12
+          ],
+          "texture": "#end"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            16,
+            12
+          ],
+          "texture": "#end"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "type": "createcraftedbeginning:cooling",
+  "ingredients": [
+    {
+      "item": "minecraft:snow_block"
+    }
+  ],
+  "processing_time": 80,
+  "results": []
+}

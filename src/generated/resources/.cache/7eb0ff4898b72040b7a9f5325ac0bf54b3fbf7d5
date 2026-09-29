@@ -1,0 +1,4 @@
+// 1.21.1	2026-09-26T17:07:25.0840741	Create Crafted Beginning: Gas Drawer Loot Conditions
+56692208216581f48fec682cbfe80c0eb0379a30 data/createcraftedbeginning/loot_table/blocks/gas_drawer_1.json
+55ff7f397765ef30f620e2e350136133dbce5f52 data/createcraftedbeginning/loot_table/blocks/gas_drawer_2.json
+99f06ec03e6e6cebe77b8d1beae0d3291458ffed data/createcraftedbeginning/loot_table/blocks/gas_drawer_4.json

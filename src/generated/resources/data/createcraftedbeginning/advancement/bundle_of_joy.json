@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:collision_course",
+  "criteria": {
+    "0": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.bundle_of_joy.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "create:andesite_alloy"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.bundle_of_joy"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

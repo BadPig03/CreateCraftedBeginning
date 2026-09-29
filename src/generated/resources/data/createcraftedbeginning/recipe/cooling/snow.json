@@ -1,0 +1,10 @@
+{
+  "type": "createcraftedbeginning:cooling",
+  "ingredients": [
+    {
+      "item": "minecraft:snow"
+    }
+  ],
+  "processing_time": 10,
+  "results": []
+}

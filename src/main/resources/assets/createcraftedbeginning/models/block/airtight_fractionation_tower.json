@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "render_type": "minecraft:cutout_mipped",
+  "textures": {
+    "end": "createcraftedbeginning:block/airtight_fractionation_tower/top_connected",
+    "side": "createcraftedbeginning:block/airtight_fractionation_tower/vertical_connected"
+  }
+}

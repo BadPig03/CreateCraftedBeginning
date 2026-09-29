@@ -1,0 +1,8 @@
+{
+  "size": 1,
+  "operation": "SET",
+  "icon": "createcraftedbeginning:slot/empty_gas_canister_pack",
+  "add_cosmetic": false,
+  "render_toggle": false,
+  "validators": ["createcraftedbeginning:gas_canister_pack"]
+}

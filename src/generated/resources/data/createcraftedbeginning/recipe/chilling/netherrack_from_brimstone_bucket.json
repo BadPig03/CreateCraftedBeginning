@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:chilling",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:brimstone_bucket"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:netherrack"
+    },
+    {
+      "id": "minecraft:bucket"
+    }
+  ]
+}

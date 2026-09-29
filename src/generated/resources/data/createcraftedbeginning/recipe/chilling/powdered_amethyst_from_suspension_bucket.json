@@ -1,0 +1,17 @@
+{
+  "type": "createcraftedbeginning:chilling",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:amethyst_suspension_bucket"
+    }
+  ],
+  "results": [
+    {
+      "count": 4,
+      "id": "createcraftedbeginning:powdered_amethyst"
+    },
+    {
+      "id": "minecraft:bucket"
+    }
+  ]
+}

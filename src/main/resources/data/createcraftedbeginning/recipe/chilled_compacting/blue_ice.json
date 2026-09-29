@@ -1,0 +1,14 @@
+{
+  "type": "createcraftedbeginning:chilled_compacting",
+  "ingredients": [
+    {
+      "item": "minecraft:packed_ice"
+    }
+  ],
+  "processing_time": 100,
+  "results": [
+    {
+      "id": "minecraft:blue_ice"
+    }
+  ]
+}

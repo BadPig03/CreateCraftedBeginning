@@ -1,0 +1,24 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/block",
+	"texture_size": [32, 32],
+	"textures": {
+		"particle": "createcraftedbeginning:block/optical_fiber/fiber",
+		"fiber": "createcraftedbeginning:block/optical_fiber/fiber"
+	},
+	"elements": [
+		{
+			"from": [14, 5, 5],
+			"to": [17, 11, 11],
+			"faces": {
+				"north": {"uv": [5.5, 2.5, 7, 5.5], "texture": "#fiber"},
+				"east": {"uv": [2.5, 2.5, 5.5, 5.5], "texture": "#fiber"},
+				"south": {"uv": [1, 2.5, 2.5, 5.5], "texture": "#fiber"},
+				"west": {"uv": [2.5, 2.5, 5.5, 5.5], "texture": "#fiber"},
+				"up": {"uv": [2.5, 5.5, 1, 2.5], "rotation": 180, "texture": "#fiber"},
+				"down": {"uv": [2.5, 2.5, 1, 5.5], "rotation": 180, "texture": "#fiber"}
+			}
+		}
+	]
+}

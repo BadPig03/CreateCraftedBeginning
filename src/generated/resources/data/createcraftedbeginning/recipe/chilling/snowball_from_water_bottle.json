@@ -1,0 +1,22 @@
+{
+  "type": "createcraftedbeginning:chilling",
+  "ingredients": [
+    {
+      "type": "neoforge:components",
+      "components": {
+        "minecraft:potion_contents": {
+          "potion": "minecraft:water"
+        }
+      },
+      "items": "minecraft:potion"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:snowball"
+    },
+    {
+      "id": "minecraft:glass_bottle"
+    }
+  ]
+}

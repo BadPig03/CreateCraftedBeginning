@@ -1,0 +1,16 @@
+{
+  "type": "createcraftedbeginning:chilled_compacting",
+  "ingredients": [
+    {
+      "type": "neoforge:single",
+      "amount": 1000,
+      "fluid": "createcraftedbeginning:amethyst_suspension"
+    }
+  ],
+  "processing_time": 100,
+  "results": [
+    {
+      "id": "createcraftedbeginning:powdered_amethyst_block"
+    }
+  ]
+}

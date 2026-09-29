@@ -1,0 +1,14 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "createcraftedbeginning:block/airtight_meters/flowmeter"
+    },
+    "axis=y": {
+      "model": "createcraftedbeginning:block/airtight_meters/flowmeter_vertical"
+    },
+    "axis=z": {
+      "model": "createcraftedbeginning:block/airtight_meters/flowmeter",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "createcraftedbeginning:gas_injection",
+  "gas_ingredients": [
+    {
+      "amount": 1000,
+      "ingredient": {
+        "gas": "createcraftedbeginning:energized_ultrawarm_air"
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "minecraft:magma_block"
+    }
+  ],
+  "results": [
+    {
+      "amount": 50,
+      "id": "createcraftedbeginning:brimstone"
+    }
+  ]
+}

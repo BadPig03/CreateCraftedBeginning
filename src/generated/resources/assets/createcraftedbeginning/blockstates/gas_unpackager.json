@@ -1,0 +1,25 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "createcraftedbeginning:block/gas_unpackager/block_vertical"
+    },
+    "facing=east": {
+      "model": "createcraftedbeginning:block/gas_unpackager/block",
+      "y": 270
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/gas_unpackager/block",
+      "y": 180
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/gas_unpackager/block"
+    },
+    "facing=up": {
+      "model": "createcraftedbeginning:block/gas_unpackager/block_vertical"
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/gas_unpackager/block",
+      "y": 90
+    }
+  }
+}
