@@ -1,0 +1,142 @@
+package net.ty.createcraftedbeginning.foundation.transaction;
+
+import net.minecraft.MethodsReturnNonnullByDefault;
+import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public final class ResourceTransaction {
+    private final List<TransactionParticipant<?>> participants = new ArrayList<>();
+
+    public static <S> TransactionParticipant<S> participant(BooleanSupplier validator, Supplier<S> snapshotter, BooleanSupplier executor, Consumer<S> restorer) {
+        return new TransactionParticipant<>() {
+            @Override
+            public boolean validate() {
+                return validator.getAsBoolean();
+            }
+
+            @Override
+            public S snapshot() {
+                return snapshotter.get();
+            }
+
+            @Override
+            public boolean execute() {
+                return executor.getAsBoolean();
+            }
+
+            @Override
+            public void restore(S snapshot) {
+                restorer.accept(snapshot);
+            }
+        };
+    }
+
+    public ResourceTransaction require(BooleanSupplier requirement) {
+        return add(participant(requirement, () -> Boolean.TRUE, () -> true, ignored -> {}));
+    }
+
+    public <S> ResourceTransaction add(TransactionParticipant<S> participant) {
+        participants.add(participant);
+        return this;
+    }
+
+    public boolean commit() {
+        for (TransactionParticipant<?> participant : participants) {
+            if (participant.validate()) {
+                continue;
+            }
+
+            return false;
+        }
+
+        List<CapturedParticipant> captured = new ArrayList<>(participants.size());
+        for (TransactionParticipant<?> participant : participants) {
+            captured.add(capture(participant));
+        }
+
+        boolean committed = false;
+        int attemptedParticipants = 0;
+        Throwable failure = null;
+        try {
+            for (CapturedParticipant participant : captured) {
+                attemptedParticipants++;
+                if (participant.execute()) {
+                    continue;
+                }
+
+                return false;
+            }
+
+            committed = true;
+            return true;
+        }
+        catch (RuntimeException | Error throwable) {
+            failure = throwable;
+            throw throwable;
+        }
+        finally {
+            if (!committed) {
+                rollback(captured, attemptedParticipants, failure);
+            }
+        }
+    }
+
+    private static <S> CapturedParticipant capture(TransactionParticipant<S> participant) {
+        S snapshot = participant.snapshot();
+        return new CapturedParticipant() {
+            @Override
+            public boolean execute() {
+                return participant.execute();
+            }
+
+            @Override
+            public void restore() {
+                participant.restore(snapshot);
+            }
+        };
+    }
+
+    private static void rollback(List<CapturedParticipant> participants, int attemptedParticipants, @Nullable Throwable primaryFailure) {
+        Throwable rollbackFailure = null;
+        for (int index = attemptedParticipants - 1; index >= 0; index--) {
+            try {
+                participants.get(index).restore();
+            }
+            catch (RuntimeException | Error throwable) {
+                if (primaryFailure != null) {
+                    primaryFailure.addSuppressed(throwable);
+                }
+                else if (rollbackFailure == null) {
+                    rollbackFailure = throwable;
+                }
+                else {
+                    rollbackFailure.addSuppressed(throwable);
+                }
+            }
+        }
+
+        if (primaryFailure != null || rollbackFailure == null) {
+            return;
+        }
+
+        if (rollbackFailure instanceof RuntimeException runtimeException) {
+            throw runtimeException;
+        }
+
+        throw (Error) rollbackFailure;
+    }
+
+    private interface CapturedParticipant {
+        boolean execute();
+
+        void restore();
+    }
+}

@@ -1,0 +1,70 @@
+package net.ty.createcraftedbeginning.compat.jei.ghost;
+
+import mezz.jei.api.gui.handlers.IGhostIngredientHandler;
+import mezz.jei.api.ingredients.ITypedIngredient;
+import net.createmod.catnip.platform.CatnipServices;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterGhostItemSubmitPacket;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
+import java.util.List;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public class GasFilterGhostIngredientHandler implements IGhostIngredientHandler<GasFilterScreen> {
+    private static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
+
+    @Override
+    public <I> @NotNull List<Target<I>> getTargetsTyped(GasFilterScreen screen, ITypedIngredient<I> ingredient, boolean doStart) {
+        List<Target<I>> targets = new ArrayList<>();
+        if (ingredient.getType() != CCBJEIPlugin.GAS_STACK) {
+            return targets;
+        }
+
+        for (int i = PLAYER_INVENTORY_SLOTS; i < screen.getMenu().slots.size(); i++) {
+            targets.add(new GhostTarget<>(screen, i - PLAYER_INVENTORY_SLOTS));
+        }
+        return targets;
+    }
+
+    @Override
+    public void onComplete() {
+    }
+
+    private static class GhostTarget<I> implements Target<I> {
+        private final Rect2i area;
+        private final GasFilterScreen screen;
+        private final int slotIndex;
+
+        public GhostTarget(GasFilterScreen screen, int slotIndex) {
+            this.screen = screen;
+            this.slotIndex = slotIndex;
+            Slot menuSlot = screen.getMenu().slots.get(slotIndex + PLAYER_INVENTORY_SLOTS);
+            area = new Rect2i(screen.getGuiLeft() + menuSlot.x, screen.getGuiTop() + menuSlot.y, 16, 16);
+        }
+
+        @Override
+        public Rect2i getArea() {
+            return area;
+        }
+
+        @Override
+        public void accept(I ingredient) {
+            if (!(ingredient instanceof GasStack gasStack) || gasStack.isEmpty()) {
+                return;
+            }
+
+            GasStack normalizedGas = gasStack.copyWithAmount(1);
+            screen.getMenu().setGas(slotIndex, normalizedGas);
+            CatnipServices.NETWORK.sendToServer(new GasFilterGhostItemSubmitPacket(normalizedGas, slotIndex));
+        }
+    }
+}

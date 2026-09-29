@@ -1,0 +1,32 @@
+package net.ty.createcraftedbeginning.mixin.common.minecraft;
+
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.entity.monster.hoglin.Hoglin;
+import net.ty.createcraftedbeginning.registry.CCBMobEffects;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+@Mixin(Hoglin.class)
+public abstract class HoglinMixin {
+    @SuppressWarnings("DataFlowIssue")
+    @Inject(method = "isConverting", at = @At("RETURN"), cancellable = true)
+    private void ccb$isConverting(CallbackInfoReturnable<Boolean> callback) {
+        Hoglin hoglin = (Hoglin) (Object) this;
+        if (hoglin.hasEffect(CCBMobEffects.ZOMBIFICATION_IMMUNITY)){
+            callback.setReturnValue(false);
+            return;
+        }
+
+        if (!hoglin.hasEffect(CCBMobEffects.ZOMBIFICATION)) {
+            return;
+        }
+
+        callback.setReturnValue(true);
+    }
+}
