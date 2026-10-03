@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.mixin.compat.sable;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.ty.createcraftedbeginning.compat.sable.AssemblyTransformAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -19,6 +20,14 @@ public abstract class AssemblyTransformMixin implements AssemblyTransformAccess 
         return apply(pos);
     }
 
+    @Override
+    public ServerLevel ccb$getResultingLevel() {
+        return getLevel();
+    }
+
     @Shadow
     public abstract BlockPos apply(BlockPos pos);
+
+    @Shadow
+    public abstract ServerLevel getLevel();
 }

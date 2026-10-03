@@ -7,6 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.fluids.FluidUtil;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.NotNull;
@@ -29,20 +30,20 @@ public final class AirtightHandheldDrillSettings {
         return new int[]{relativePosition.getX(), relativePosition.getY(), relativePosition.getZ()};
     }
 
-    public static Direction getMiningDirection(ItemStack drill) {
-        return drill.getOrDefault(CCBDataComponents.DRILL_MINING_DIRECTION, Direction.NORTH);
+    public static DrillMiningDirection getMiningDirection(ItemStack drill) {
+        return drill.getOrDefault(CCBDataComponents.DRILL_MINING_DIRECTION, DrillMiningDirection.NORTH);
     }
 
     static AirtightHandheldDrillMiningTemplates getMiningTemplate(ItemStack drill) {
         return drill.getOrDefault(CCBDataComponents.DRILL_MINING_TEMPLATE, AirtightHandheldDrillMiningTemplates.CUBOID);
     }
 
-    static boolean isRelativePositionValid(AirtightHandheldDrillMiningTemplates template, int[] miningSize, Direction miningDirection, int[] relativePosition) {
-        return !template.getTemplate().usesSpatialParameters() || template.getTemplate().getOffset(miningSize, miningDirection, relativePosition).contains(BlockPos.ZERO);
+    static boolean isRelativePositionValid(AirtightHandheldDrillMiningTemplates template, int[] miningSize, int[] relativePosition) {
+        return !template.getTemplate().usesSpatialParameters() || template.getTemplate().getOffset(miningSize, Direction.SOUTH, relativePosition).contains(BlockPos.ZERO);
     }
 
     static boolean isValidFilter(ItemStack filterStack) {
         Item filterItem = filterStack.getItem();
-        return filterItem instanceof FilterItem || filterItem instanceof BlockItem;
+        return filterItem instanceof FilterItem || filterItem instanceof BlockItem || FluidUtil.getFluidContained(filterStack).isPresent();
     }
 }

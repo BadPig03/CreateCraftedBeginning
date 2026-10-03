@@ -110,16 +110,6 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
             buffer.writeInt(recipe.priority);
         }, buffer -> new WindChargingRecipe(ProcessingRecipeParams.STREAM_CODEC.decode(buffer), WindChargingAction.STREAM_CODEC.decode(buffer), buffer.readInt()));
 
-        @Override
-        public MapCodec<WindChargingRecipe> codec() {
-            return CODEC;
-        }
-
-        @Override
-        public StreamCodec<RegistryFriendlyByteBuf, WindChargingRecipe> streamCodec() {
-            return STREAM_CODEC;
-        }
-
         private static DataResult<WindChargingRecipe> validateRecipe(WindChargingRecipe recipe) {
             List<String> errors = recipe.validate();
             if (errors.isEmpty()) {
@@ -128,6 +118,16 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
 
             errors.addFirst(recipe.getClass().getSimpleName() + " failed validation:");
             return DataResult.error(() -> Joiner.on('\n').join(errors), recipe);
+        }
+
+        @Override
+        public MapCodec<WindChargingRecipe> codec() {
+            return CODEC;
+        }
+
+        @Override
+        public StreamCodec<RegistryFriendlyByteBuf, WindChargingRecipe> streamCodec() {
+            return STREAM_CODEC;
         }
     }
 }

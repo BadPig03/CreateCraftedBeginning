@@ -25,6 +25,20 @@ public class SmartAirtightPipeRenderer extends SmartBlockEntityRenderer<SmartAir
         super(context);
     }
 
+    private static boolean isBeyondRenderDistance(SmartAirtightPipeBlockEntity pipe, Level level, BlockPos pos, GasFilteringBehaviour gasFilter) {
+        if (pipe.isVirtual()) {
+            return false;
+        }
+
+        Entity camera = Minecraft.getInstance().cameraEntity;
+        if (camera == null || level != camera.level()) {
+            return false;
+        }
+
+        float renderDistance = gasFilter.getRenderDistance();
+        return camera.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > Mth.square(renderDistance);
+    }
+
     @Override
     protected void renderSafe(SmartAirtightPipeBlockEntity pipe, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         if (pipe.isRemoved()) {
@@ -63,19 +77,5 @@ public class SmartAirtightPipeRenderer extends SmartBlockEntityRenderer<SmartAir
         ValueBoxRenderer.renderItemIntoValueBox(filterStack, poseStack, buffer, light, overlay);
 
         poseStack.popPose();
-    }
-
-    private static boolean isBeyondRenderDistance(SmartAirtightPipeBlockEntity pipe, Level level, BlockPos pos, GasFilteringBehaviour gasFilter) {
-        if (pipe.isVirtual()) {
-            return false;
-        }
-
-        Entity camera = Minecraft.getInstance().cameraEntity;
-        if (camera == null || level != camera.level()) {
-            return false;
-        }
-
-        float renderDistance = gasFilter.getRenderDistance();
-        return camera.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > Mth.square(renderDistance);
     }
 }

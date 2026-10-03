@@ -25,34 +25,6 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
         this.isBasin = isBasin;
     }
 
-    @SuppressWarnings("ConstantExpression")
-    @Override
-    public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
-        PoseStack poseStack = graphics.pose();
-        poseStack.pushPose();
-
-        poseStack.translate(xOffset, yOffset, 100);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
-
-        poseStack.pushPose();
-
-        blockElement(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.getDefaultState()).scale(SCALE).render(graphics);
-        float cycle = (AnimationTickHolder.getRenderTime() - offset * 8) % 100;
-        poseStack.translate(0, getNozzleSqueeze(cycle), 0);
-        blockElement(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE).scale(SCALE).render(graphics);
-        poseStack.translate(0, getNozzleTopSqueeze(cycle), 0);
-        blockElement(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_TOP).scale(SCALE).render(graphics);
-        blockElement(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_BOTTOM).scale(SCALE).render(graphics);
-
-        poseStack.popPose();
-
-        BlockState supportState = isBasin ? AllBlocks.BASIN.getDefaultState() : AllBlocks.DEPOT.getDefaultState();
-        blockElement(supportState).atLocal(0, 2, 0).scale(SCALE).render(graphics);
-
-        poseStack.popPose();
-    }
-
     private static float getNozzleSqueeze(float cycle) {
         if (cycle < 20) {
             return Mth.sin(cycle / 40.0F * Mth.PI) * 15;
@@ -83,5 +55,33 @@ public class AnimatedGasInjectionChamber extends AnimatedKinetics {
         }
 
         return 3.5F;
+    }
+
+    @SuppressWarnings("ConstantExpression")
+    @Override
+    public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
+        PoseStack poseStack = graphics.pose();
+        poseStack.pushPose();
+
+        poseStack.translate(xOffset, yOffset, 100);
+        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
+        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
+
+        poseStack.pushPose();
+
+        blockElement(CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.getDefaultState()).scale(SCALE).render(graphics);
+        float cycle = (AnimationTickHolder.getRenderTime() - offset * 8) % 100;
+        poseStack.translate(0, getNozzleSqueeze(cycle), 0);
+        blockElement(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE).scale(SCALE).render(graphics);
+        poseStack.translate(0, getNozzleTopSqueeze(cycle), 0);
+        blockElement(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_TOP).scale(SCALE).render(graphics);
+        blockElement(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_BOTTOM).scale(SCALE).render(graphics);
+
+        poseStack.popPose();
+
+        BlockState supportState = isBasin ? AllBlocks.BASIN.getDefaultState() : AllBlocks.DEPOT.getDefaultState();
+        blockElement(supportState).atLocal(0, 2, 0).scale(SCALE).render(graphics);
+
+        poseStack.popPose();
     }
 }

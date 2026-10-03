@@ -53,6 +53,32 @@ public final class GasLinearPressureSolver {
         this.residuals = residuals;
     }
 
+    private static double dot(double[] first, double[] second) {
+        double result = 0;
+        for (int index = 0; index < first.length; index++) {
+            result += first[index] * second[index];
+        }
+        return result;
+    }
+
+    private static boolean containsAsymmetricLinearization(EdgeFlow[] linearizedFlows) {
+        for (EdgeFlow flow : linearizedFlows) {
+            if (flow.fromPressureConductance() == flow.toPressureConductance()) {
+                continue;
+            }
+
+            return true;
+        }
+        return false;
+    }
+
+    private static void applyJacobiPreconditioner(double[] input, double[] output, double[] diagonal) {
+        for (int index = 0; index < input.length; index++) {
+            double divisor = diagonal[index];
+            output[index] = divisor > 0 && Double.isFinite(divisor) ? input[index] / divisor : input[index];
+        }
+    }
+
     @Internal
     public Result solve(EdgeFlow[] linearizedFlows, SolverWork work) {
         return solve(linearizedFlows, work, true);
@@ -82,32 +108,6 @@ public final class GasLinearPressureSolver {
         }
 
         return solveWithSor(linearizedFlows, PRESSURE_SOR_FACTOR, MAX_LINEAR_SOLVER_SWEEPS, work);
-    }
-
-    private static double dot(double[] first, double[] second) {
-        double result = 0;
-        for (int index = 0; index < first.length; index++) {
-            result += first[index] * second[index];
-        }
-        return result;
-    }
-
-    private static boolean containsAsymmetricLinearization(EdgeFlow[] linearizedFlows) {
-        for (EdgeFlow flow : linearizedFlows) {
-            if (flow.fromPressureConductance() == flow.toPressureConductance()) {
-                continue;
-            }
-
-            return true;
-        }
-        return false;
-    }
-
-    private static void applyJacobiPreconditioner(double[] input, double[] output, double[] diagonal) {
-        for (int index = 0; index < input.length; index++) {
-            double divisor = diagonal[index];
-            output[index] = divisor > 0 && Double.isFinite(divisor) ? input[index] / divisor : input[index];
-        }
     }
 
     private boolean solveWithBiConjugateGradientStabilized(EdgeFlow[] linearizedFlows, SolverWork work) {

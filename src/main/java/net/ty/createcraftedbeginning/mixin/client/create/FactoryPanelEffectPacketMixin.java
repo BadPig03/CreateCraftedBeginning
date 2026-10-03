@@ -24,8 +24,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public abstract class FactoryPanelEffectPacketMixin {
     @Shadow
     public abstract FactoryPanelPosition fromPos();
+
     @Shadow
     public abstract FactoryPanelPosition toPos();
+
     @Shadow
     public abstract boolean success();
 

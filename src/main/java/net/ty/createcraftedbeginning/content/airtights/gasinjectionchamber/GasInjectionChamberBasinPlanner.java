@@ -37,11 +37,6 @@ public final class GasInjectionChamberBasinPlanner {
         this.chamber = chamber;
     }
 
-    @Internal
-    public Optional<BasinPlan> createPlan(BasinBlockEntity basin, @Nullable GasInjectionRecipe recipe) {
-        return planInputs(basin, recipe).flatMap(inputs -> new GasInjectionChamberBasinOutputs().preview(basin, inputs));
-    }
-
     static boolean canDrainItems(IItemHandler items, List<ItemDrain> drainPlan) {
         for (ItemDrain itemDrain : drainPlan) {
             ItemStack simulatedDrain = items.extractItem(itemDrain.slot(), itemDrain.count(), true);
@@ -66,46 +61,6 @@ public final class GasInjectionChamberBasinPlanner {
         }
 
         return true;
-    }
-
-    Optional<BasinPlan> createPlan(BasinBlockEntity basin) {
-        Level level = chamber.getLevel();
-        if (level == null || basin.inputTank == null) {
-            return Optional.empty();
-        }
-
-        IItemHandler inputItems = basin.getInputInventory();
-        IFluidHandler inputFluids = basin.inputTank.getCapability();
-        Optional<RecipeMatch> recipeMatch = new GasInjectionRecipeLookup(level, chamber.getGasTank()).findBasinRecipeMatch(inputItems, inputFluids);
-        return recipeMatch.flatMap(match -> createPlan(basin, match.recipe()));
-    }
-
-    Optional<BasinInputs> planInputs(BasinBlockEntity basin, @Nullable GasInjectionRecipe recipe) {
-        Level level = chamber.getLevel();
-        if (level == null || basin.inputTank == null || recipe == null || recipe.hasItemInput() == recipe.hasFluidInput() || recipe.hasItemOutput() == recipe.hasFluidOutput()) {
-            return Optional.empty();
-        }
-
-        GasStack availableGas = chamber.getGasInTank();
-        if (availableGas.isEmpty() || GasInjectionChamberBasinIntegration.getTransactionView(basin) == null) {
-            return Optional.empty();
-        }
-
-        IItemHandler inputItems = basin.getInputInventory();
-        IFluidHandler inputFluids = basin.inputTank.getCapability();
-        int batchSize = getMaxBatchSize(basin, inputItems, inputFluids, recipe);
-        if (batchSize <= 0) {
-            return Optional.empty();
-        }
-
-        Optional<GasConsumptionPlan> gasPlan = GasConsumptionPlanner.plan(recipe.getGasRequirement(), chamber.getGasTank(), batchSize);
-        List<ItemDrain> itemDrainPlan = recipe.hasItemInput() ? createItemDrainPlan(recipe.getIngredient(), inputItems, batchSize) : List.of();
-        List<FluidStack> fluidDrainPlan = recipe.hasFluidInput() ? createFluidDrainPlan(recipe.getFluidIngredient(), inputFluids, batchSize) : List.of();
-        if (gasPlan.isEmpty() || itemDrainPlan == null || fluidDrainPlan == null || !canDrainItems(inputItems, itemDrainPlan) || !canDrainFluids(inputFluids, fluidDrainPlan)) {
-            return Optional.empty();
-        }
-
-        return Optional.of(new BasinInputs(level, recipe, batchSize, gasPlan.get(), itemDrainPlan, fluidDrainPlan));
     }
 
     private static @Nullable List<ItemDrain> createItemDrainPlan(Ingredient ingredient, IItemHandler items, int batchSize) {
@@ -247,6 +202,51 @@ public final class GasInjectionChamberBasinPlanner {
 
         List<FluidStack> fluidResults = fluidResult.isEmpty() ? List.of() : List.of(fluidResult);
         return basin.acceptOutputs(itemResults, fluidResults, true);
+    }
+
+    @Internal
+    public Optional<BasinPlan> createPlan(BasinBlockEntity basin, @Nullable GasInjectionRecipe recipe) {
+        return planInputs(basin, recipe).flatMap(inputs -> new GasInjectionChamberBasinOutputs().preview(basin, inputs));
+    }
+
+    Optional<BasinPlan> createPlan(BasinBlockEntity basin) {
+        Level level = chamber.getLevel();
+        if (level == null || basin.inputTank == null) {
+            return Optional.empty();
+        }
+
+        IItemHandler inputItems = basin.getInputInventory();
+        IFluidHandler inputFluids = basin.inputTank.getCapability();
+        Optional<RecipeMatch> recipeMatch = new GasInjectionRecipeLookup(level, chamber.getGasTank()).findBasinRecipeMatch(inputItems, inputFluids);
+        return recipeMatch.flatMap(match -> createPlan(basin, match.recipe()));
+    }
+
+    Optional<BasinInputs> planInputs(BasinBlockEntity basin, @Nullable GasInjectionRecipe recipe) {
+        Level level = chamber.getLevel();
+        if (level == null || basin.inputTank == null || recipe == null || recipe.hasItemInput() == recipe.hasFluidInput() || recipe.hasItemOutput() == recipe.hasFluidOutput()) {
+            return Optional.empty();
+        }
+
+        GasStack availableGas = chamber.getGasInTank();
+        if (availableGas.isEmpty() || GasInjectionChamberBasinIntegration.getTransactionView(basin) == null) {
+            return Optional.empty();
+        }
+
+        IItemHandler inputItems = basin.getInputInventory();
+        IFluidHandler inputFluids = basin.inputTank.getCapability();
+        int batchSize = getMaxBatchSize(basin, inputItems, inputFluids, recipe);
+        if (batchSize <= 0) {
+            return Optional.empty();
+        }
+
+        Optional<GasConsumptionPlan> gasPlan = GasConsumptionPlanner.plan(recipe.getGasRequirement(), chamber.getGasTank(), batchSize);
+        List<ItemDrain> itemDrainPlan = recipe.hasItemInput() ? createItemDrainPlan(recipe.getIngredient(), inputItems, batchSize) : List.of();
+        List<FluidStack> fluidDrainPlan = recipe.hasFluidInput() ? createFluidDrainPlan(recipe.getFluidIngredient(), inputFluids, batchSize) : List.of();
+        if (gasPlan.isEmpty() || itemDrainPlan == null || fluidDrainPlan == null || !canDrainItems(inputItems, itemDrainPlan) || !canDrainFluids(inputFluids, fluidDrainPlan)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new BasinInputs(level, recipe, batchSize, gasPlan.get(), itemDrainPlan, fluidDrainPlan));
     }
 
     private int getMaxBatchSize(BasinBlockEntity basin, IItemHandler items, IFluidHandler fluids, GasInjectionRecipe recipe) {

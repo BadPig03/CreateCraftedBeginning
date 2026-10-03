@@ -64,6 +64,10 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         this.background = background;
     }
 
+    protected static boolean isMouseOverSlot(int mouseX, int mouseY, int x, int y) {
+        return mouseX >= x && mouseY >= y && mouseX < x + 18 && mouseY < y + 18;
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -120,10 +124,6 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         GuiGameElement.of(menu.contentHolder).scale(4).at(leftPos + background.getWidth() + 2, topPos + background.getHeight() - 48, -200).render(guiGraphics);
     }
 
-    protected static boolean isMouseOverSlot(int mouseX, int mouseY, int x, int y) {
-        return mouseX >= x && mouseY >= y && mouseX < x + 18 && mouseY < y + 18;
-    }
-
     protected void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (hoveredSlot == null || hoveredSlot.hasItem() || hoveredSlot.getMaxStackSize() != 1 || hoveredSlot.getSlotIndex() != AirtightUpgradableMenu.UPGRADE_SLOT_INDEX) {
             return;
@@ -161,7 +161,7 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
         }
 
         ItemStack upgradeStack = menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX);
-        if (upgrade.testUpgradeItem(upgradeStack, menu.player.level())) {
+        if (menu.player.isCreative() || upgrade.testUpgradeItem(upgradeStack, menu.player.level())) {
             CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(upgradeId, true));
             return;
         }

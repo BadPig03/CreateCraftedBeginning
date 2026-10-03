@@ -29,6 +29,14 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
         super(info);
     }
 
+    private static MutableComponent getProcessingTime(CoolingRecipe recipe) {
+        if (!recipe.isFluidIngredients() && recipe.isCreativeIceCream()) {
+            return Component.translatable("createcraftedbeginning.generic.infinity_mark");
+        }
+
+        return CCBLang.secondsWithGameTicks(recipe.getProcessingDuration(), 20).component();
+    }
+
     @Override
     public void draw(CoolingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         Font font = Minecraft.getInstance().font;
@@ -50,13 +58,5 @@ public class CoolingCategory extends CCBRecipeCategory<CoolingRecipe> {
         }
 
         builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(recipe.getIngredient());
-    }
-
-    private static MutableComponent getProcessingTime(CoolingRecipe recipe) {
-        if (!recipe.isFluidIngredients() && recipe.isCreativeIceCream()) {
-            return Component.translatable("createcraftedbeginning.generic.infinity_mark");
-        }
-
-        return CCBLang.secondsWithGameTicks(recipe.getProcessingDuration(), 20).component();
     }
 }

@@ -30,6 +30,10 @@ public final class BreezeChamberConversionPlanner {
         this.chamber = chamber;
     }
 
+    static boolean canAcceptOutputPhysically(GasTank outputTank, GasStack outputStack) {
+        return !outputStack.isEmpty() && outputStack.getAmount() > 0 && (outputTank.isEmpty() || GasStack.isSameGasSameComponents(outputTank.getGasStack(), outputStack)) && outputTank.getRemainingAmount() >= outputStack.getAmount();
+    }
+
     @Internal
     public int getProcessingAmount(int windTime) {
         if (windTime == 0 || chamber.getLevel() == null) {
@@ -54,22 +58,6 @@ public final class BreezeChamberConversionPlanner {
         return Mth.clamp((int) Math.round(maxProcessingRate * pressureStrength), 1, maxProcessingRate);
     }
 
-    static boolean canAcceptOutputPhysically(GasTank outputTank, GasStack outputStack) {
-        return !outputStack.isEmpty() && outputStack.getAmount() > 0 && (outputTank.isEmpty() || GasStack.isSameGasSameComponents(outputTank.getGasStack(), outputStack)) && outputTank.getRemainingAmount() >= outputStack.getAmount();
-    }
-
-    Optional<GasConversion> findProcessingTarget(ChargerType chargerType, GasStack inputStack, GasPressureCompartment inputTank, GasTank outputTank) {
-        for (GasConversion conversion : getConversions(chargerType, inputStack)) {
-            if (!canAcceptProcessingOutput(outputTank, conversion.output()) || GasConsumptionPlanner.plan(conversion.input(), inputTank).isEmpty()) {
-                continue;
-            }
-
-            return Optional.of(conversion);
-        }
-
-        return Optional.empty();
-    }
-
     @Internal
     public Optional<GasConversionPlan> planConversion(GasConversion conversion, GasPressureCompartment inputTank, GasTank outputTank, long processingBudget) {
         long inputAmount = conversion.input().amount();
@@ -88,6 +76,18 @@ public final class BreezeChamberConversionPlanner {
 
         Optional<GasConsumptionPlan> inputPlan = GasConsumptionPlanner.plan(conversion.input(), inputTank, batchCount);
         return inputPlan.map(plan -> new GasConversionPlan(conversion, plan, batchCount));
+    }
+
+    Optional<GasConversion> findProcessingTarget(ChargerType chargerType, GasStack inputStack, GasPressureCompartment inputTank, GasTank outputTank) {
+        for (GasConversion conversion : getConversions(chargerType, inputStack)) {
+            if (!canAcceptProcessingOutput(outputTank, conversion.output()) || GasConsumptionPlanner.plan(conversion.input(), inputTank).isEmpty()) {
+                continue;
+            }
+
+            return Optional.of(conversion);
+        }
+
+        return Optional.empty();
     }
 
     long retainableProcessingCredit(ChargerType chargerType, GasPressureCompartment inputTank, GasTank outputTank, long remainingBudget) {

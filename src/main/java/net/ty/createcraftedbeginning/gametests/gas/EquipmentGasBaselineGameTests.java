@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Pig;
@@ -33,7 +34,6 @@ import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
-import java.util.Objects;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -69,8 +69,13 @@ public final class EquipmentGasBaselineGameTests {
         projectile.hurt(helper.getLevel().damageSources().generic(), 1);
 
         helper.assertTrue(target.hasEffect(MobEffects.LEVITATION), "Ethereal projectile did not apply levitation");
-        helper.assertValueEqual(Objects.requireNonNull(target.getEffect(MobEffects.LEVITATION)).getAmplifier(), 0, "High-pressure projectile retained the high-pressure effect level");
-        helper.assertValueEqual(Objects.requireNonNull(target.getEffect(MobEffects.LEVITATION)).getDuration(), 100, "High-pressure projectile retained the high-pressure duration");
+        MobEffectInstance levitation = target.getEffect(MobEffects.LEVITATION);
+        if (levitation == null) {
+            throw new NullPointerException("Expected levitation on the ethereal projectile target.");
+        }
+
+        helper.assertValueEqual(levitation.getAmplifier(), 0, "High-pressure projectile retained the high-pressure effect level");
+        helper.assertValueEqual(levitation.getDuration(), 100, "High-pressure projectile retained the high-pressure duration");
         helper.succeed();
     }
 
@@ -122,6 +127,11 @@ public final class EquipmentGasBaselineGameTests {
     }
 
     private static GasCanisterContainer newCanister() {
-        return Objects.requireNonNull(new ItemStack(CCBItems.GAS_CANISTER.get()).getCapability(CanisterCapabilities.ITEM));
+        GasCanisterContainer canister = new ItemStack(CCBItems.GAS_CANISTER.get()).getCapability(CanisterCapabilities.ITEM);
+        if (canister == null) {
+            throw new NullPointerException("Expected a gas canister capability for the equipment baseline fixture.");
+        }
+
+        return canister;
     }
 }

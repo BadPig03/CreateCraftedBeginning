@@ -21,6 +21,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AnimatedAirtightForgingPress extends AnimatedKinetics {
     private static final int SCALE = 12;
 
+    private static float getSqueeze(float cycle) {
+        float ticks = Mth.clamp(cycle, 0.0F, 30);
+        float distance;
+        if (ticks < 20) {
+            float progress = ticks / 15;
+            distance = Mth.clamp(Mth.square(progress) * progress, 0.0F, 1.0F);
+        }
+        else {
+            distance = Mth.clamp((30 - ticks) / 10, 0.0F, 1.0F);
+        }
+        return distance * 8;
+    }
+
     @SuppressWarnings("ConstantExpression")
     @Override
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
@@ -60,18 +73,5 @@ public class AnimatedAirtightForgingPress extends AnimatedKinetics {
         }
 
         poseStack.popPose();
-    }
-
-    private static float getSqueeze(float cycle) {
-        float ticks = Mth.clamp(cycle, 0.0F, 30);
-        float distance;
-        if (ticks < 20) {
-            float progress = ticks / 15;
-            distance = Mth.clamp(Mth.square(progress) * progress, 0.0F, 1.0F);
-        }
-        else {
-            distance = Mth.clamp((30 - ticks) / 10, 0.0F, 1.0F);
-        }
-        return distance * 8;
     }
 }

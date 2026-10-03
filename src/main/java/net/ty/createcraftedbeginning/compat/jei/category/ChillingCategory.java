@@ -34,6 +34,12 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
         super(info);
     }
 
+    public static Supplier<ItemStack> getCatalystStack() {
+        ItemStack fanStack = new ItemStack(AllBlocks.ENCASED_FAN);
+        fanStack.set(DataComponents.CUSTOM_NAME, CCBLang.translateDirect("recipe.fan_chilling.fan").withStyle(style -> style.withItalic(false)));
+        return () -> fanStack;
+    }
+
     @SuppressWarnings("ConstantExpression")
     @Override
     protected void draw(ChillingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
@@ -72,11 +78,5 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
             builder.addSlot(RecipeIngredientRole.OUTPUT, slotX, slotY).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(CreateRecipeCategory.addStochasticTooltip(output));
             outputIndex++;
         }
-    }
-
-    public static Supplier<ItemStack> getCatalystStack() {
-        ItemStack fanStack = new ItemStack(AllBlocks.ENCASED_FAN);
-        fanStack.set(DataComponents.CUSTOM_NAME, CCBLang.translateDirect("recipe.fan_chilling.fan").withStyle(style -> style.withItalic(false)));
-        return () -> fanStack;
     }
 }

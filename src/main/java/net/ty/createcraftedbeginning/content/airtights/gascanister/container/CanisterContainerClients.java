@@ -113,7 +113,12 @@ public final class CanisterContainerClients {
 
     public static Gas getStoredGasType(Player player) {
         ResourceLocation gasId = NBTHelper.readResourceLocation(player.getPersistentData(), COMPOUND_KEY_STORED_GAS_TYPE);
-        return Gas.findById(gasId);
+        Gas gasType = Gas.findById(gasId);
+        if (!gasType.isUsableInEquipment()) {
+            return Gas.EMPTY_GAS_HOLDER.value();
+        }
+
+        return gasType;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -160,6 +165,13 @@ public final class CanisterContainerClients {
         private static final DisplayedGasState UNSYNCED = new DisplayedGasState(GasStack.EMPTY, -1, 0, -1, false, false);
 
         public DisplayedGasState {
+            if (!content.getGasType().isUsableInEquipment()) {
+                content = GasStack.EMPTY;
+                maxAmount = -1;
+                pressurePa = 0;
+                packType = -1;
+                creative = false;
+            }
             content = content.copy();
             pressurePa = Math.max(0, pressurePa);
         }

@@ -57,6 +57,25 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(FACE, AttachFace.FLOOR).setValue(FACING, Direction.NORTH).setValue(AXIS, Axis.Y).setValue(CLOCKWISE, true));
     }
 
+    public static Direction getFacing(BlockState state) {
+        return switch (state.getValue(FACE)) {
+            case CEILING -> Direction.UP;
+            case FLOOR -> Direction.DOWN;
+            case WALL -> state.getValue(FACING);
+        };
+    }
+
+    static boolean isStateValid(BlockState state) {
+        AttachFace face = state.getValue(FACE);
+        Axis axis = state.getValue(AXIS);
+        if (face == AttachFace.WALL) {
+            Direction facing = state.getValue(FACING);
+            return facing.getAxis() == axis;
+        }
+
+        return axis.isVertical();
+    }
+
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         Level level = context.getLevel();
@@ -196,24 +215,5 @@ public class AirtightEngineBlock extends KineticBlock implements IBE<AirtightEng
     @Override
     public boolean isSmallCog() {
         return false;
-    }
-
-    public static Direction getFacing(BlockState state) {
-        return switch (state.getValue(FACE)) {
-            case CEILING -> Direction.UP;
-            case FLOOR -> Direction.DOWN;
-            case WALL -> state.getValue(FACING);
-        };
-    }
-
-    static boolean isStateValid(BlockState state) {
-        AttachFace face = state.getValue(FACE);
-        Axis axis = state.getValue(AXIS);
-        if (face == AttachFace.WALL) {
-            Direction facing = state.getValue(FACING);
-            return facing.getAxis() == axis;
-        }
-
-        return axis.isVertical();
     }
 }

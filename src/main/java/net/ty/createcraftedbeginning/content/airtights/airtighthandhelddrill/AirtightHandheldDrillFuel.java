@@ -15,9 +15,9 @@ import net.ty.createcraftedbeginning.api.gas.Gas;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.ExperienceConversionUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HarvestOptimizationUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.LiquidReplacementUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.MagnetUpgrade;
-import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.SilkTouchUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
@@ -56,10 +56,10 @@ final class AirtightHandheldDrillFuel {
 
         blockConsumption += perBlockConsumption;
         if (silkTouch && !experienceConversion) {
-            blockConsumption *= (SilkTouchUpgrade.BASE_GAS_MULTIPLIER * CCBConfig.server().equipment.airtightHandheldDrill.silkTouchGasMultiplier.getF());
+            blockConsumption *= CCBConfig.server().equipment.airtightHandheldDrill.harvestOptimizationGasMultiplier.getF();
         }
         if (magnet) {
-            blockConsumption *= (MagnetUpgrade.BASE_GAS_MULTIPLIER * CCBConfig.server().equipment.airtightHandheldDrill.magnetGasMultiplier.getF());
+            blockConsumption *= MagnetUpgrade.BASE_GAS_MULTIPLIER * CCBConfig.server().equipment.airtightHandheldDrill.magnetGasMultiplier.getF();
         }
 
         if (!experienceConversion) {
@@ -75,11 +75,11 @@ final class AirtightHandheldDrillFuel {
             if (Double.isNaN(baseGasConsumption[0])) {
                 baseGasConsumption[0] = calculateBaseGasConsumption(drill, context);
             }
-            return calculateRawGasConsumption(baseGasConsumption[0], usageContext.gasType(), usageContext.sourcePressurePa());
+            return calculateRawGasConsumption(baseGasConsumption[0], usageContext.gasType());
         });
     }
 
-    static double calculateRawGasConsumption(double baseGasConsumption, Gas gasType, long sourcePressurePa) {
+    static double calculateRawGasConsumption(double baseGasConsumption, Gas gasType) {
         if (!GasConsumptionMath.isNonNegativeFinite(baseGasConsumption)) {
             return -1;
         }
@@ -109,7 +109,7 @@ final class AirtightHandheldDrillFuel {
             return -1;
         }
 
-        boolean silkTouch = SilkTouchUpgrade.INSTANCE.canApply(drill);
+        boolean silkTouch = HarvestOptimizationUpgrade.INSTANCE.canApply(drill);
         boolean magnet = MagnetUpgrade.INSTANCE.canApply(drill);
         boolean experienceConversion = ExperienceConversionUpgrade.INSTANCE.canApply(drill);
         boolean liquidReplacement = LiquidReplacementUpgrade.INSTANCE.canApply(drill);

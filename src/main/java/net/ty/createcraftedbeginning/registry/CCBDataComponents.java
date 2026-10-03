@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponentType.Builder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -15,6 +14,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.DrillMiningDirection;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilters.GasFilterData;
@@ -39,7 +39,7 @@ public class CCBDataComponents {
 
     public static final DataComponentType<AirtightHandheldDrillMiningTemplates> DRILL_MINING_TEMPLATE = register("drill_mining_template", builder -> builder.persistent(AirtightHandheldDrillMiningTemplates.CODEC).networkSynchronized(AirtightHandheldDrillMiningTemplates.STREAM_CODEC));
     public static final DataComponentType<BlockPos> DRILL_MINING_SIZE = register("drill_mining_size", builder -> builder.persistent(BlockPos.CODEC).networkSynchronized(BlockPos.STREAM_CODEC));
-    public static final DataComponentType<Direction> DRILL_MINING_DIRECTION = register("drill_mining_direction", builder -> builder.persistent(Direction.CODEC).networkSynchronized(Direction.STREAM_CODEC));
+    public static final DataComponentType<DrillMiningDirection> DRILL_MINING_DIRECTION = register("drill_mining_direction", builder -> builder.persistent(DrillMiningDirection.CODEC).networkSynchronized(DrillMiningDirection.STREAM_CODEC));
     public static final DataComponentType<BlockPos> DRILL_MINING_RELATIVE_POSITION = register("drill_mining_relative_position", builder -> builder.persistent(BlockPos.CODEC).networkSynchronized(BlockPos.STREAM_CODEC));
 
     public static final DataComponentType<ItemContainerContents> AIRTIGHT_UPGRADABLE_INVENTORY = register("airtight_upgradable_inventory", builder -> builder.persistent(ItemContainerContents.CODEC).networkSynchronized(ItemContainerContents.STREAM_CODEC));

@@ -125,6 +125,7 @@ public final class GasNetworkSimulator {
         }
         double remainingTickFraction = 1;
         int executedSubsteps = 0;
+        boolean quantizationAttempted = false;
         for (int substepIndex = 0; substepIndex < MAX_DYNAMIC_SUBSTEPS && remainingTickFraction > MIN_SUBSTEP_FRACTION; substepIndex++) {
             if (profiling) {
                 executedSubsteps++;
@@ -162,9 +163,11 @@ public final class GasNetworkSimulator {
             }
 
             List<ComponentPlan> normalPlans = new ArrayList<>();
+            List<TransferComponent> quantizedComponents = new ArrayList<>();
             for (TransferComponent component : solution.transferComponents()) {
                 GasTransferPlan plan = GasEndpointTransferPlanner.plan(level, gas, component, substepFraction, substepIndex);
                 if (plan.isEmpty()) {
+                    quantizedComponents.add(component);
                     continue;
                 }
 
@@ -174,11 +177,17 @@ public final class GasNetworkSimulator {
                 GasSolverProfiler.recordTransferPlanning(System.nanoTime() - transferPlanningStart);
             }
 
-            if (normalPlans.isEmpty()) {
-                if (!executeQuantizedPlan(level, pressureGraph, gas, endpoints, solution, transportBudget, flowAccumulator, substepIndex)) {
-                    return;
-                }
+            if (!quantizationAttempted && !quantizedComponents.isEmpty()) {
+                quantizationAttempted = true;
+                if (executeQuantizedPlan(level, pressureGraph, gas, endpoints, solution, quantizedComponents, transportBudget, flowAccumulator, substepIndex)) {
+                    if (normalPlans.isEmpty()) {
+                        return;
+                    }
 
+                    continue;
+                }
+            }
+            if (flowAccumulator.hasCollision() || normalPlans.isEmpty()) {
                 return;
             }
 
@@ -208,8 +217,7 @@ public final class GasNetworkSimulator {
         recordSubstepCapIfExhausted(executedSubsteps, remainingTickFraction);
     }
 
-    private static boolean executeQuantizedPlan(Level level, PreparedGraph pressureGraph, GasStack gas, List<GasNetworkPressureEndpoint> endpoints, GasPressureGraphSolution solution, GasTransportFlowBudget transportBudget, GasPipeFlowAccumulator flowAccumulator, int substepIndex) {
-        List<TransferComponent> components = solution.transferComponents();
+    private static boolean executeQuantizedPlan(Level level, PreparedGraph pressureGraph, GasStack gas, List<GasNetworkPressureEndpoint> endpoints, GasPressureGraphSolution solution, List<TransferComponent> components, GasTransportFlowBudget transportBudget, GasPipeFlowAccumulator flowAccumulator, int substepIndex) {
         int componentCursor = Math.floorMod(level.getGameTime() + substepIndex, components.size());
         for (int componentOffset = 0; componentOffset < components.size(); componentOffset++) {
             TransferComponent component = components.get(Mth.positiveModulo(componentCursor + componentOffset, components.size()));

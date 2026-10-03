@@ -39,6 +39,10 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
         display = new CrateDisplay(storage);
     }
 
+    public static <T extends CratesBlockEntity> void registerCapabilities(RegisterCapabilitiesEvent event, BlockEntityType<T> type) {
+        event.registerBlockEntity(ItemHandler.BLOCK, type, (blockEntity, context) -> blockEntity.getHandler());
+    }
+
     @Override
     public void sendData() {
         if (storage == null || level == null || level.isClientSide) {
@@ -106,10 +110,6 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
         invalidateCapabilities();
     }
 
-    public static <T extends CratesBlockEntity> void registerCapabilities(RegisterCapabilitiesEvent event, BlockEntityType<T> type) {
-        event.registerBlockEntity(ItemHandler.BLOCK, type, (blockEntity, context) -> blockEntity.getHandler());
-    }
-
     public final ItemStack getStoredItem() {
         return storage.storedItem();
     }
@@ -122,6 +122,11 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
         storage.setStoredItems(content, count);
     }
 
+    @Internal
+    public final CrateItemStackHandler getHandler() {
+        return storage.handler();
+    }
+
     protected boolean canStoreItem(ItemStack stack) {
         return true;
     }
@@ -131,10 +136,5 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
     }
 
     protected void onTrackedItemDiscarded() {
-    }
-
-    @Internal
-    public final CrateItemStackHandler getHandler() {
-        return storage.handler();
     }
 }

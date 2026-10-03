@@ -31,6 +31,70 @@ public final class ControllerGasHandler implements GasStorageHandler {
     private List<GasStorageHandler> handlers = List.of();
     private GasStorageHandler delegate = new CombinedGasStorageHandler();
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        registerControllerCapability(event, FunctionalStorage.DRAWER_CONTROLLER.type().get());
+        registerControllerCapability(event, FunctionalStorage.FRAMED_DRAWER_CONTROLLER.type().get());
+        registerExtensionCapability(event, FunctionalStorage.CONTROLLER_EXTENSION.type().get());
+        registerExtensionCapability(event, FunctionalStorage.FRAMED_CONTROLLER_EXTENSION.type().get());
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void registerControllerCapability(RegisterCapabilitiesEvent event, BlockEntityType<?> type) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, (BlockEntityType) type, (blockEntity, ignoredDirection) -> ((GasControllerAccess) blockEntity).ccb$getGasHandler());
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void registerExtensionCapability(RegisterCapabilitiesEvent event, BlockEntityType<?> type) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, (BlockEntityType) type, (blockEntity, side) -> ccb$getExtensionGasHandler((StorageControllerExtensionTile<?>) blockEntity, side));
+    }
+
+    private static @Nullable GasHandler ccb$getExtensionGasHandler(StorageControllerExtensionTile<?> extension, @Nullable Direction capabilitySide) {
+        BlockPos controllerPos = extension.getControllerPos();
+        Level level = extension.getLevel();
+        if (controllerPos == null || level == null || !level.isLoaded(controllerPos)) {
+            return null;
+        }
+
+        return level.getCapability(GasCapabilities.BLOCK, controllerPos, capabilitySide);
+    }
+
+    private static long fillTank(GasStorageHandler handler, int tankIndex, GasStack gasStack, GasAction action) {
+        GasPressureCompartment compartment = handler.getPressureCompartment(tankIndex);
+        long acceptedAmount = compartment.fill(gasStack, GasAction.SIMULATE);
+        if (acceptedAmount <= 0 || !action.execute()) {
+            return acceptedAmount;
+        }
+
+        return compartment.fill(gasStack, GasAction.EXECUTE);
+    }
+
+    private static List<GasTankState[]> snapshotStates(List<GasDrawerHandler> drawers) {
+        List<GasTankState[]> snapshots = new ArrayList<>(drawers.size());
+        for (GasDrawerHandler drawer : drawers) {
+            snapshots.add(drawer.snapshotStates());
+        }
+        return snapshots;
+    }
+
+    private static void restoreStates(List<GasDrawerHandler> drawers, List<GasTankState[]> snapshots) {
+        if (drawers.size() != snapshots.size()) {
+            throw new IllegalArgumentException("Gas drawer snapshot count mismatch: expected " + drawers.size() + ", got " + snapshots.size() + '.');
+        }
+
+        for (int drawerIndex = 0; drawerIndex < drawers.size(); drawerIndex++) {
+            drawers.get(drawerIndex).validateStates(snapshots.get(drawerIndex));
+        }
+        for (int drawerIndex = 0; drawerIndex < drawers.size(); drawerIndex++) {
+            drawers.get(drawerIndex).restoreStates(snapshots.get(drawerIndex));
+        }
+    }
+
+    private static void endTransactions(List<GasDrawerHandler> drawers, int begunTransactions, boolean commit) {
+        for (int drawerIndex = 0; drawerIndex < begunTransactions; drawerIndex++) {
+            drawers.get(drawerIndex).endTransaction(commit);
+        }
+    }
+
     @Override
     public GasPressureCompartment getPressureCompartment(int tank) {
         return delegate.getPressureCompartment(tank);
@@ -178,73 +242,9 @@ public final class ControllerGasHandler implements GasStorageHandler {
         return delegate.getTankPressureModel(tank);
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        registerControllerCapability(event, FunctionalStorage.DRAWER_CONTROLLER.type().get());
-        registerControllerCapability(event, FunctionalStorage.FRAMED_DRAWER_CONTROLLER.type().get());
-        registerExtensionCapability(event, FunctionalStorage.CONTROLLER_EXTENSION.type().get());
-        registerExtensionCapability(event, FunctionalStorage.FRAMED_CONTROLLER_EXTENSION.type().get());
-    }
-
     public void refresh(List<GasHandler> handlers) {
         this.handlers = handlers.stream().filter(GasStorageHandler.class::isInstance).map(GasStorageHandler.class::cast).toList();
         delegate = new CombinedGasStorageHandler(this.handlers.toArray(GasStorageHandler[]::new));
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static void registerControllerCapability(RegisterCapabilitiesEvent event, BlockEntityType<?> type) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, (BlockEntityType) type, (blockEntity, ignoredDirection) -> ((GasControllerAccess) blockEntity).ccb$getGasHandler());
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static void registerExtensionCapability(RegisterCapabilitiesEvent event, BlockEntityType<?> type) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, (BlockEntityType) type, (blockEntity, side) -> ccb$getExtensionGasHandler((StorageControllerExtensionTile<?>) blockEntity, side));
-    }
-
-    private static @Nullable GasHandler ccb$getExtensionGasHandler(StorageControllerExtensionTile<?> extension, @Nullable Direction capabilitySide) {
-        BlockPos controllerPos = extension.getControllerPos();
-        Level level = extension.getLevel();
-        if (controllerPos == null || level == null || !level.isLoaded(controllerPos)) {
-            return null;
-        }
-
-        return level.getCapability(GasCapabilities.BLOCK, controllerPos, capabilitySide);
-    }
-
-    private static long fillTank(GasStorageHandler handler, int tankIndex, GasStack gasStack, GasAction action) {
-        GasPressureCompartment compartment = handler.getPressureCompartment(tankIndex);
-        long acceptedAmount = compartment.fill(gasStack, GasAction.SIMULATE);
-        if (acceptedAmount <= 0 || !action.execute()) {
-            return acceptedAmount;
-        }
-
-        return compartment.fill(gasStack, GasAction.EXECUTE);
-    }
-
-    private static List<GasTankState[]> snapshotStates(List<GasDrawerHandler> drawers) {
-        List<GasTankState[]> snapshots = new ArrayList<>(drawers.size());
-        for (GasDrawerHandler drawer : drawers) {
-            snapshots.add(drawer.snapshotStates());
-        }
-        return snapshots;
-    }
-
-    private static void restoreStates(List<GasDrawerHandler> drawers, List<GasTankState[]> snapshots) {
-        if (drawers.size() != snapshots.size()) {
-            throw new IllegalArgumentException("Gas drawer snapshot count mismatch: expected " + drawers.size() + ", got " + snapshots.size() + '.');
-        }
-
-        for (int drawerIndex = 0; drawerIndex < drawers.size(); drawerIndex++) {
-            drawers.get(drawerIndex).validateStates(snapshots.get(drawerIndex));
-        }
-        for (int drawerIndex = 0; drawerIndex < drawers.size(); drawerIndex++) {
-            drawers.get(drawerIndex).restoreStates(snapshots.get(drawerIndex));
-        }
-    }
-
-    private static void endTransactions(List<GasDrawerHandler> drawers, int begunTransactions, boolean commit) {
-        for (int drawerIndex = 0; drawerIndex < begunTransactions; drawerIndex++) {
-            drawers.get(drawerIndex).endTransaction(commit);
-        }
     }
 
     private long fillExisting(GasStack resource, GasAction action) {

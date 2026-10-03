@@ -42,6 +42,17 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
         this(access, pressureState, transferLimits, FlowResistance.NONE, recovery);
     }
 
+    private static List<PredictionAccess> predictionAccesses(TransferAccess access) {
+        List<PredictionAccess> result = new ArrayList<>();
+        if (access.drainHandler() instanceof GasPressureCompartment compartment) {
+            result.add(new PredictionAccess(compartment, access.drainFaces()));
+        }
+        if (access.fillHandler() instanceof GasPressureCompartment compartment) {
+            result.add(new PredictionAccess(compartment, access.fillFaces()));
+        }
+        return result;
+    }
+
     public boolean canQuantizedDrain(GasStack gas) {
         return maxQuantizedDrainAmount(gas, 1) >= 1;
     }
@@ -237,17 +248,6 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
             blockEntity.setChanged();
         }
         return remainder.getAmount();
-    }
-
-    private static List<PredictionAccess> predictionAccesses(TransferAccess access) {
-        List<PredictionAccess> result = new ArrayList<>();
-        if (access.drainHandler() instanceof GasPressureCompartment compartment) {
-            result.add(new PredictionAccess(compartment, access.drainFaces()));
-        }
-        if (access.fillHandler() instanceof GasPressureCompartment compartment) {
-            result.add(new PredictionAccess(compartment, access.fillFaces()));
-        }
-        return result;
     }
 
     public record TransferAccess(@Nullable GasHandler drainHandler, @Nullable GasHandler fillHandler, List<BlockFace> drainFaces, List<BlockFace> fillFaces) {

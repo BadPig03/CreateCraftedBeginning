@@ -41,11 +41,9 @@
     "createcraftedbeginning:optical_fiber",
     "createcraftedbeginning:amethyst_collector_panel",
     "createcraftedbeginning:laser_emitter",
-    "createcraftedbeginning:laser_receiver",
+    "createcraftedbeginning:photothermal_receiver",
     "createcraftedbeginning:end_alloy_block",
     "createcraftedbeginning:end_casing",
-    "createcraftedbeginning:end_incineration_blower",
-    "createcraftedbeginning:end_incineration_blower_structural",
     "createcraftedbeginning:end_sculk_silencer",
     "createcraftedbeginning:end_sculk_silencer_structural",
     "createcraftedbeginning:andesite_crate",
@@ -117,7 +115,6 @@
     "createcraftedbeginning:crying_obsidian_bricks_w",
     "createcraftedbeginning:crying_obsidian_bricks_x",
     "createcraftedbeginning:crying_obsidian_bricks_y",
-    "createcraftedbeginning:crying_obsidian_bricks_z",
-    "createcraftedbeginning:pneumatic_engine"
+    "createcraftedbeginning:crying_obsidian_bricks_z"
   ]
 }

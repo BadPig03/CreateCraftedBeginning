@@ -180,6 +180,11 @@ public class GasStorageDataProvider {
         tooltip.add(elementHelper.sprite(ICON, 16, 16));
         ProgressStyle progressStyle = elementHelper.progressStyle().overlay(view.overlay);
         tooltip.append(elementHelper.progress(view.ratio, progressText, progressStyle, BoxStyle.getNestedBox(), true));
+        if (showDetails) {
+            for (Component line : view.gasTooltip) {
+                tooltip.add(line);
+            }
+        }
         if (!includePressure || view.pressurePa < GasPressure.VACUUM_PA) {
             return;
         }

@@ -37,6 +37,14 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<GasHa
         behaviourType = type;
     }
 
+    private static boolean matchesFilter(GasStack gasStack, @Nullable GasFilteringBehaviour gasFilter, @Nullable Predicate<GasStack> itemFilter) {
+        if (gasFilter == null) {
+            return itemFilter == null || itemFilter.test(gasStack);
+        }
+
+        return gasFilter.test(gasStack);
+    }
+
     @Override
     protected BlockCapability<GasHandler, Direction> capability() {
         return GasCapabilities.BLOCK;
@@ -69,14 +77,6 @@ public class GasManipulationBehaviour extends CapManipulationBehaviourBase<GasHa
             return extractedGas;
         }
         return GasStack.EMPTY;
-    }
-
-    private static boolean matchesFilter(GasStack gasStack, @Nullable GasFilteringBehaviour gasFilter, @Nullable Predicate<GasStack> itemFilter) {
-        if (gasFilter == null) {
-            return itemFilter == null || itemFilter.test(gasStack);
-        }
-
-        return gasFilter.test(gasStack);
     }
 
     private @Nullable Predicate<GasStack> getItemFilterTest() {

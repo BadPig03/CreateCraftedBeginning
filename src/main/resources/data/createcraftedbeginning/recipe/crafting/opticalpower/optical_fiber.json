@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GAG"
+  ],
+  "key": {
+    "G": {
+      "tag": "c:glass_blocks"
+    },
+    "A": {
+      "tag": "c:plates/amethyst_crystal"
+    }
+  },
+  "result": {
+    "count": 8,
+    "id": "createcraftedbeginning:optical_fiber"
+  }
+}

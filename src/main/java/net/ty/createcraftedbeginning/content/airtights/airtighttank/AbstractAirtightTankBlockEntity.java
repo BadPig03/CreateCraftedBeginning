@@ -32,6 +32,18 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         gasStorage = new AirtightTankGasStorage(this);
     }
 
+    protected static int calculateCoords(BlockPos pos, Axis axis) {
+        return axis.choose(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    static int configuredMaxLength() {
+        return Math.max(1, CCBConfig.server().machines.airtightTank.maxHeight.get());
+    }
+
+    static int configuredMaxWidth() {
+        return Math.max(1, CCBConfig.server().machines.airtightTank.maxWidth.get());
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
     }
@@ -174,10 +186,6 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
         return gasStorage.getCapability();
     }
 
-    protected static int calculateCoords(BlockPos pos, Axis axis) {
-        return axis.choose(pos.getX(), pos.getY(), pos.getZ());
-    }
-
     protected abstract void updateMultiBlockState();
 
     protected final void initializeTank(GasStorageHandler tankInventory) {
@@ -202,14 +210,6 @@ public abstract class AbstractAirtightTankBlockEntity extends SmartBlockEntity i
 
     @SuppressWarnings("unused")
     protected abstract long volumePerBlock();
-
-    static int configuredMaxLength() {
-        return Math.max(1, CCBConfig.server().machines.airtightTank.maxHeight.get());
-    }
-
-    static int configuredMaxWidth() {
-        return Math.max(1, CCBConfig.server().machines.airtightTank.maxWidth.get());
-    }
 
     void tickController() {
     }

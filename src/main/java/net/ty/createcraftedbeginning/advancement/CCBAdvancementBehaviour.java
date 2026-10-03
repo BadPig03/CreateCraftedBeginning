@@ -35,6 +35,15 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
         addAll(advancements);
     }
 
+    public static void setPlacedBy(Level level, BlockPos pos, @Nullable LivingEntity entity) {
+        CCBAdvancementBehaviour behaviour = get(level, pos, TYPE);
+        if (behaviour == null || entity instanceof FakePlayer || !(entity instanceof ServerPlayer player)) {
+            return;
+        }
+
+        behaviour.setPlayer(player.getUUID());
+    }
+
     @Override
     public BehaviourType<?> getType() {
         return TYPE;
@@ -64,15 +73,6 @@ public class CCBAdvancementBehaviour extends BlockEntityBehaviour {
         }
 
         compoundTag.putUUID(COMPOUND_KEY_OWNER, playerId);
-    }
-
-    public static void setPlacedBy(Level level, BlockPos pos, @Nullable LivingEntity entity) {
-        CCBAdvancementBehaviour behaviour = get(level, pos, TYPE);
-        if (behaviour == null || entity instanceof FakePlayer || !(entity instanceof ServerPlayer player)) {
-            return;
-        }
-
-        behaviour.setPlayer(player.getUUID());
     }
 
     public void add(CCBAdvancement advancement) {

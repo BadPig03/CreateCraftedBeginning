@@ -31,11 +31,21 @@ public final class GasStorageEncodingGameTests {
         DataComponentPatch components = DataComponentPatch.builder().set(DataComponents.MAX_STACK_SIZE, 16).build();
         GasStorageEntry stored = GasStorageEntry.of(CCBGases.NATURAL_AIR.get(), 1234, components);
         for (GasStorageEntry entry : List.of(GasStorageEntry.empty(), stored)) {
-            Tag expected = GasStorageEntry.CODEC.encodeStart(NbtOps.INSTANCE, entry).result().orElseThrow(() -> new IllegalStateException("Expected valid gas storage test data to encode."));
+            Tag expected = GasStorageEntry.CODEC.encodeStart(NbtOps.INSTANCE, entry).getOrThrow(error -> new IllegalStateException("Failed to encode gas storage test data: " + error));
             CompoundTag ordinary = GasStorageView.writeAmountOnly(entry, false);
             CompoundTag creative = GasStorageView.writeAmountOnly(entry, true);
-            helper.assertValueEqual(ordinary.get("gas"), expected, "ordinary gas entry payload");
-            helper.assertValueEqual(creative.get("gas"), expected, "creative gas entry payload");
+            Tag ordinaryGas = ordinary.get("gas");
+            if (ordinaryGas == null) {
+                throw new NullPointerException("Expected the 'gas' tag in the ordinary gas storage payload.");
+            }
+
+            Tag creativeGas = creative.get("gas");
+            if (creativeGas == null) {
+                throw new NullPointerException("Expected the 'gas' tag in the creative gas storage payload.");
+            }
+
+            helper.assertValueEqual(ordinaryGas, expected, "ordinary gas entry payload");
+            helper.assertValueEqual(creativeGas, expected, "creative gas entry payload");
             helper.assertTrue(!ordinary.contains("creative") && creative.getBoolean("creative"), "Gas storage creative flags changed during encoding.");
         }
         helper.succeed();

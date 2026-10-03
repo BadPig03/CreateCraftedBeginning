@@ -33,6 +33,17 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
         super(type, pos, state);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredContext) -> shaft.getItemCapability());
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredDirection) -> shaft.getFluidCapability());
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredDirection) -> shaft.getGasCapability());
+    }
+
+    public static boolean isUpperStore(BlockState blockState) {
+        AirtightForgingPressStructuralPosition structuralPosition = blockState.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
+        return structuralPosition.isUpperStore() && structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER;
+    }
+
     @Override
     public int getMaxValue() {
         AirtightForgingPressBlockEntity press = getMasterBlockEntity();
@@ -103,17 +114,6 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
     public @Nullable InventoryIdentifier getGasInventoryIdentifier(Direction ignoredDirection) {
         BlockPos masterPos = AirtightForgingPressStructural.getMaster(getBlockPos(), getBlockState());
         return new Single(masterPos);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredContext) -> shaft.getItemCapability());
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredDirection) -> shaft.getFluidCapability());
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT.get(), (shaft, ignoredDirection) -> shaft.getGasCapability());
-    }
-
-    public static boolean isUpperStore(BlockState blockState) {
-        AirtightForgingPressStructuralPosition structuralPosition = blockState.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
-        return structuralPosition.isUpperStore() && structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER;
     }
 
     @Nullable AirtightForgingPressBlockEntity getMasterBlockEntity() {

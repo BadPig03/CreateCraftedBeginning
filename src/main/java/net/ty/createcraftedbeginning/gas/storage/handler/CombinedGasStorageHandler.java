@@ -295,7 +295,11 @@ public class CombinedGasStorageHandler implements GasStorageHandler {
         public @Nullable PredictedTransferLimits predictTransferLimits(GasStack gas, long storedAmount) {
             long amount = Math.max(0, Math.min(getMaxAmount(), storedAmount));
             if (enforceVariety && delegate.getGasStack().isEmpty() != (amount == 0)) {
-                return null;
+                for (int otherTank = 0; otherTank < tankCount; otherTank++) {
+                    if (otherTank != tank && canFillPressureCompartment(otherTank)) {
+                        return null;
+                    }
+                }
             }
 
             PredictedTransferLimits limits = delegate.predictTransferLimits(gas, amount);

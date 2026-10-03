@@ -48,6 +48,14 @@ public class CreativeGasCanisterItem extends Item implements GasFilter {
         this.blockItem = blockItem;
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerItem(CanisterCapabilities.ITEM, (canister, ignoredContext) -> new CreativeGasCanisterContainerContents(canister), CCBItems.CREATIVE_GAS_CANISTER);
+    }
+
+    private static boolean hasGas(ItemStack canister) {
+        return canister.getCapability(CanisterCapabilities.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents && !canisterContents.isEmpty();
+    }
+
     @Override
     public boolean supportsEnchantment(ItemStack canister, Holder<Enchantment> enchantment) {
         return false;
@@ -127,6 +135,7 @@ public class CreativeGasCanisterItem extends Item implements GasFilter {
         }
         else {
             tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(storedGas).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+            tooltip.addAll(storedGas.getGasType().getTooltip(storedGas));
         }
         long pressurePa = canisterContents.getTankPressurePa(0);
         ChatFormatting pressureColor = GasPressureLimits.isOverpressure(pressurePa) ? ChatFormatting.RED : ChatFormatting.GOLD;
@@ -160,14 +169,6 @@ public class CreativeGasCanisterItem extends Item implements GasFilter {
         }
 
         return candidateGas -> !candidateGas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, candidateGas);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerItem(CanisterCapabilities.ITEM, (canister, ignoredContext) -> new CreativeGasCanisterContainerContents(canister), CCBItems.CREATIVE_GAS_CANISTER);
-    }
-
-    private static boolean hasGas(ItemStack canister) {
-        return canister.getCapability(CanisterCapabilities.ITEM) instanceof CreativeGasCanisterContainerContents canisterContents && !canisterContents.isEmpty();
     }
 
     public static class CreativeGasCanisterBlockItem extends BlockItem {

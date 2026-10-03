@@ -72,6 +72,26 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         setLazyTickRate(LAZY_TICK_RATE);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.BREEZE_CHAMBER.get(), (chamber, context) -> chamber.isControllerActive() ? null : chamber.tankBehaviour.getCapability());
+    }
+
+    public static int getMaxWindCapacity() {
+        return Math.max(1, CCBConfig.server().machines.breezeChamber.maxWindChargeTicks.get());
+    }
+
+    public static int getMaxEffectiveThreshold() {
+        return Math.max(1, getMaxWindCapacity() / 2);
+    }
+
+    public static int getOverflowThreshold() {
+        return Math.max(1, getMaxWindCapacity() * 3 / 4);
+    }
+
+    public static void setClientTicker(Consumer<BreezeChamberBlockEntity> ticker) {
+        clientTicker = ticker;
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.LUXURY_TREAT, CCBAdvancements.BAD_APPLE, CCBAdvancements.IS_THIS_EVEN_SCIENTIFIC);
@@ -130,26 +150,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     @Override
     public InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
         return new Single(worldPosition);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.BREEZE_CHAMBER.get(), (chamber, context) -> chamber.isControllerActive() ? null : chamber.tankBehaviour.getCapability());
-    }
-
-    public static int getMaxWindCapacity() {
-        return Math.max(1, CCBConfig.server().machines.breezeChamber.maxWindChargeTicks.get());
-    }
-
-    public static int getMaxEffectiveThreshold() {
-        return Math.max(1, getMaxWindCapacity() / 2);
-    }
-
-    public static int getOverflowThreshold() {
-        return Math.max(1, getMaxWindCapacity() * 3 / 4);
-    }
-
-    public static void setClientTicker(Consumer<BreezeChamberBlockEntity> ticker) {
-        clientTicker = ticker;
     }
 
     public boolean isCreative() {

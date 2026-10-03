@@ -36,6 +36,13 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity {
         setLazyTickRate(LAZY_TICK_RATE);
     }
 
+    private static float calculateStressCapacity(float generatedSpeed) {
+        float absoluteSpeed = Mth.abs(generatedSpeed);
+        int maxRotationSpeed = AllConfigs.server().kinetics.maxRotationSpeed.get();
+        float baseStressCapacity = (float) BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get());
+        return absoluteSpeed * baseStressCapacity / maxRotationSpeed;
+    }
+
     @Override
     public void tick() {
         super.tick();
@@ -107,12 +114,5 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity {
 
     void refreshStructure() {
         core.getStructureManager().tick();
-    }
-
-    private static float calculateStressCapacity(float generatedSpeed) {
-        float absoluteSpeed = Mth.abs(generatedSpeed);
-        int maxRotationSpeed = AllConfigs.server().kinetics.maxRotationSpeed.get();
-        float baseStressCapacity = (float) BlockStressValues.getCapacity(CCBBlocks.TESLA_TURBINE_BLOCK.get());
-        return absoluteSpeed * baseStressCapacity / maxRotationSpeed;
     }
 }

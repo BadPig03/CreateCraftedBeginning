@@ -11,21 +11,41 @@ final class AmethystCollectorPanelTextureMapping {
     }
 
     static int stripStart(int tiles) {
-        return tiles >= 3 ? 0 : tiles == 2 ? 48 : 80;
+        if (tiles >= 3) {
+            return 0;
+        }
+
+        if (tiles == 2) {
+            return 48;
+        }
+
+        return 80;
     }
 
     static double tileCoordinate(int index, int length, int sourceTiles, double local) {
-        int tile = index == 0 ? 0 : index == length - 1 ? sourceTiles - 1 : 1;
+        int tile = 1;
+        if (index == 0) {
+            tile = 0;
+        }
+        else if (index == length - 1) {
+            tile = sourceTiles - 1;
+        }
         return tile * 16 + local;
     }
 
     static double topU(int x, int width, int depth, double localX) {
         if (width == 1 && depth > 1) {
-            return (depth == 2 ? 96 : 112) + localX;
+            if (depth == 2) {
+                return 96 + localX;
+            }
+
+            return 112 + localX;
         }
+
         if (depth == 1 && width > 1) {
             return 80 + tileCoordinate(x, width, Math.min(3, width), localX);
         }
+
         int tiles = Math.min(3, Math.max(width, depth));
         return stripStart(tiles) + tileCoordinate(x, width, tiles, localX);
     }
@@ -34,9 +54,15 @@ final class AmethystCollectorPanelTextureMapping {
         if (width == 1 && depth > 1) {
             return 32 + tileCoordinate(z, depth, Math.min(3, depth), localZ);
         }
+
         if (depth == 1 && width > 1) {
-            return (width == 2 ? 16 : 0) + localZ;
+            if (width == 2) {
+                return 16 + localZ;
+            }
+
+            return 0 + localZ;
         }
+
         int tiles = Math.min(3, Math.max(width, depth));
         return (3 - tiles) * 16 + tileCoordinate(z, depth, tiles, localZ);
     }
@@ -48,22 +74,42 @@ final class AmethystCollectorPanelTextureMapping {
 
     static double bottomU(int x, int width, int depth, double localX) {
         if (width == 1 && depth > 1) {
-            return (depth == 2 ? 96 : 112) + localX;
+            if (depth == 2) {
+                return 96 + localX;
+            }
+
+            return 112 + localX;
         }
+
         if (depth == 1 && width > 1) {
-            return (width == 2 ? 80 : 48) + tileCoordinate(x, width, Math.min(3, width), localX);
+            if (width == 2) {
+                return 80 + tileCoordinate(x, width, width, localX);
+            }
+
+            return 48 + tileCoordinate(x, width, 3, localX);
         }
+
         int tiles = Math.min(3, Math.max(width, depth));
         return stripStart(tiles) + tileCoordinate(x, width, tiles, localX);
     }
 
     static double bottomV(int z, int width, int depth, double localZ) {
         if (width == 1 && depth > 1) {
-            return (depth == 2 ? 96 : 80) + tileCoordinate(z, depth, Math.min(3, depth), localZ);
+            if (depth == 2) {
+                return 96 + tileCoordinate(z, depth, depth, localZ);
+            }
+
+            return 80 + tileCoordinate(z, depth, 3, localZ);
         }
+
         if (depth == 1 && width > 1) {
-            return (width == 2 ? 80 : 96) + localZ;
+            if (width == 2) {
+                return 80 + localZ;
+            }
+
+            return 96 + localZ;
         }
+
         int tiles = Math.min(3, Math.max(width, depth));
         return 64 + tileCoordinate(z, depth, tiles, localZ);
     }

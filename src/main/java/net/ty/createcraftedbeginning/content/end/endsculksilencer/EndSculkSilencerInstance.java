@@ -22,6 +22,10 @@ record EndSculkSilencerInstance(BlockPos registrationPos, BlockPos effectCenter,
         return chunkKey(blockPos.getX() >> 4, blockPos.getZ() >> 4);
     }
 
+    private static long chunkKey(int chunkX, int chunkZ) {
+        return chunkX & 0xFFFFFFFFL | (long) chunkZ << 32;
+    }
+
     boolean hasSameCoverage(BlockPos otherEffectCenter, short otherRange) {
         return range == otherRange && chunkKey(effectCenter) == chunkKey(otherEffectCenter);
     }
@@ -35,9 +39,5 @@ record EndSculkSilencerInstance(BlockPos registrationPos, BlockPos effectCenter,
                 consumer.accept(chunkKey(chunkX, chunkZ));
             }
         }
-    }
-
-    private static long chunkKey(int chunkX, int chunkZ) {
-        return chunkX & 0xFFFFFFFFL | (long) chunkZ << 32;
     }
 }

@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.gas.network.solver.graph;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.gas.network.GasFlowResistance;
 import net.ty.createcraftedbeginning.gas.network.GasTransportEdgeProperties;
 import net.ty.createcraftedbeginning.gas.network.GasTransportPressureDrive;
@@ -25,6 +26,7 @@ final class GasNonlinearPressureSolver {
     private static final int MAX_ACTIVE_SET_ITERATIONS = 16;
     private static final int MAX_REGULARIZED_ITERATIONS = 128;
     private static final int MAX_REGULARIZATION_ATTEMPTS = 12;
+    private static final int MAX_RECOVERY_STEP_ATTEMPTS = 12;
     private static final double INITIAL_REGULARIZATION = 1.0E-4;
     private static final double MIN_REGULARIZATION = 1.0E-12;
 
@@ -97,6 +99,7 @@ final class GasNonlinearPressureSolver {
                 }
                 failedRecoveryPressures = previous;
                 tryEarlyRecovery = false;
+                Arrays.fill(constraintStates, EdgeConstraintState.LINEAR);
             }
         }
         for (int activeSetIteration = 0; !converged && activeSetIteration < MAX_ACTIVE_SET_ITERATIONS; activeSetIteration++) {
@@ -239,9 +242,34 @@ final class GasNonlinearPressureSolver {
                         incident.subList(counts[i], incident.size()).clear();
                     }
                 }
-                double updatedResidual = residuals.nonlinearResidualNorm(calculateActualFlows());
-                if (Double.isFinite(updatedResidual) && updatedResidual <= residual + nodeCount * tolerance) {
-                    accepted = true;
+                double[] candidatePressures = new double[nodeCount];
+                for (int i = 0; i < nodeCount; i++) {
+                    PressureNode node = nodes.get(i);
+                    if (!node.fixed && Double.isFinite(node.pressurePa)) {
+                        node.pressurePa = GasPressureLimits.clampToHardLimit(node.pressurePa);
+                    }
+                    candidatePressures[i] = node.pressurePa;
+                }
+                double stepFraction = 1;
+                for (int stepAttempt = 0; stepAttempt < MAX_RECOVERY_STEP_ATTEMPTS; stepAttempt++) {
+                    EdgeFlow[] candidateFlows = calculateActualFlows();
+                    double updatedResidual = residuals.nonlinearResidualNorm(candidateFlows);
+                    if (Double.isFinite(updatedResidual) && updatedResidual <= residual + nodeCount * tolerance) {
+                        accepted = true;
+                        break;
+                    }
+
+                    stepFraction *= 0.5;
+                    for (int i = 0; i < nodeCount; i++) {
+                        PressureNode node = nodes.get(i);
+                        if (node.fixed) {
+                            continue;
+                        }
+
+                        node.pressurePa = previous[i] + stepFraction * (candidatePressures[i] - previous[i]);
+                    }
+                }
+                if (accepted) {
                     regularization = Math.max(MIN_REGULARIZATION, regularization * 0.25);
                     break;
                 }

@@ -10,6 +10,7 @@ import net.ty.createcraftedbeginning.gametests.compat.curios.CuriosCanisterPackG
 import net.ty.createcraftedbeginning.gametests.compat.functionalstorage.GasDrawerConnectionsGameTests;
 import net.ty.createcraftedbeginning.gametests.compat.functionalstorage.GasDrawerPressureTransferGameTests;
 import net.ty.createcraftedbeginning.gametests.compat.jade.gas.GasStorageEncodingGameTests;
+import net.ty.createcraftedbeginning.gametests.compat.jei.PotionFractionationDisplayGameTests;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -27,6 +28,9 @@ public final class OptionalCompatGameTests {
         }
         if (CCBCompatMods.JADE.isLoaded()) {
             event.register(GasStorageEncodingGameTests.class);
+        }
+        if (CCBCompatMods.JEI.isLoaded()) {
+            event.register(PotionFractionationDisplayGameTests.class);
         }
         if (!CCBCompatMods.FUNCTIONAL_STORAGE.isLoaded()) {
             return;

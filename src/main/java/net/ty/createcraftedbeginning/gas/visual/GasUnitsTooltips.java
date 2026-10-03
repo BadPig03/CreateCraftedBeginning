@@ -76,6 +76,9 @@ public final class GasUnitsTooltips {
         }
         else {
             CCBLang.gasName(gasStack).style(ChatFormatting.GRAY).forGoggles(tooltip, indent);
+            for (Component line : gasStack.getGasType().getTooltip(gasStack)) {
+                CCBLang.builder().add(line).forGoggles(tooltip, indent);
+            }
             tooltip.add(CommonComponents.EMPTY);
             CCBLang.translate("gui.gas_container.amount").style(ChatFormatting.GRAY).forGoggles(tooltip, indent);
             if (infinite) {

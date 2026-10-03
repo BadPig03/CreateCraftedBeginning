@@ -32,28 +32,10 @@ public final class ReactorKettleMixingRecipe extends ReactorKettleRecipe {
         this.brewing = brewing;
     }
 
-    @Override
-    public NonNullList<ItemStack> getRemainingItems(RecipeInput input) {
-        return source.getRemainingItems(input);
-    }
-
-    @Override
-    public List<ItemStack> rollResults(RandomSource random) {
-        return source.rollResults(random);
-    }
-
-    public boolean isBrewing() {
-        return brewing;
-    }
-
     public static boolean isSupported(RecipeHolder<?> holder) {
         Recipe<?> recipe = holder.value();
         Class<?> recipeClass = recipe.getClass();
-        if (recipeClass != MixingRecipe.class && recipeClass != ChilledMixingRecipe.class) {
-            return false;
-        }
-
-        return recipe.getType() == AllRecipeTypes.MIXING.getType() && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
+        return (recipeClass == MixingRecipe.class || recipeClass == ChilledMixingRecipe.class) && recipe.getType() == AllRecipeTypes.MIXING.getType() && !AllRecipeTypes.shouldIgnoreInAutomation(holder);
     }
 
     public static RecipeHolder<ReactorKettleRecipe> convert(RecipeHolder<?> holder) {
@@ -82,5 +64,19 @@ public final class ReactorKettleMixingRecipe extends ReactorKettleRecipe {
         TemperatureMatching matching = condition.supportsCompatibleMatching() ? TemperatureMatching.COMPATIBLE : TemperatureMatching.EXACT;
         ReactorKettleRecipe converted = new Builder<>(params -> new ReactorKettleMixingRecipe(params, source, brewing), holder.id()).withItemIngredients(source.getIngredients().toArray(Ingredient[]::new)).withItemOutputs(source.getRollableResults().stream().map(output -> new ProcessingOutput(output.getStack().copy(), output.getChance())).toArray(ProcessingOutput[]::new)).withFluidIngredients(source.getFluidIngredients().toArray(SizedFluidIngredient[]::new)).withFluidOutputs(source.getFluidResults().stream().map(FluidStack::copy).toArray(FluidStack[]::new)).temperatureCondition(condition).temperatureMatching(matching).duration(0).build();
         return new RecipeHolder<>(holder.id(), converted);
+    }
+
+    @Override
+    public NonNullList<ItemStack> getRemainingItems(RecipeInput input) {
+        return source.getRemainingItems(input);
+    }
+
+    @Override
+    public List<ItemStack> rollResults(RandomSource random) {
+        return source.rollResults(random);
+    }
+
+    public boolean isBrewing() {
+        return brewing;
     }
 }

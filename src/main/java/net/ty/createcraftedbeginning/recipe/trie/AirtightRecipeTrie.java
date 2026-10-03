@@ -76,12 +76,6 @@ public class AirtightRecipeTrie<R extends Recipe<?>> {
         return variants;
     }
 
-    public List<R> lookup(Set<AbstractVariant> availableVariants) {
-        List<R> candidates = trie.lookup(getAvailableIngredients(availableVariants));
-        candidates.sort(Comparator.comparingInt(recipeOrder::get));
-        return candidates;
-    }
-
     @Internal
     @Contract(" -> new")
     public static <R extends Recipe<?>> @NotNull Builder<R> builder() {
@@ -131,6 +125,12 @@ public class AirtightRecipeTrie<R extends Recipe<?>> {
 
             variants.add(new AbstractGas(gasStack.getGasType()));
         }
+    }
+
+    public List<R> lookup(Set<AbstractVariant> availableVariants) {
+        List<R> candidates = trie.lookup(getAvailableIngredients(availableVariants));
+        candidates.sort(Comparator.comparingInt(recipeOrder::get));
+        return candidates;
     }
 
     private IntSet getAvailableIngredients(Set<AbstractVariant> variants) {

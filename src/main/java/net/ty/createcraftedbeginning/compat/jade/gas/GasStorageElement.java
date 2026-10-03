@@ -12,6 +12,7 @@ import net.minecraft.world.phys.Vec2;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.jade.internal.JadeClientInternalBridge;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -25,34 +26,14 @@ import java.util.function.BiConsumer;
 public class GasStorageElement extends Element {
     private static final ResourceLocation BACKGROUND = CCBAPI.asResource("gas/full");
 
-    private final GasStorageEntry gas;
+    private final GasStack gas;
 
-    public GasStorageElement(GasStorageEntry gas) {
-        this.gas = gas;
+    public GasStorageElement(GasStack gas) {
+        this.gas = gas.copy();
     }
 
-    @Override
-    public Vec2 getSize() {
-        return new Vec2(16, 16);
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void render(GuiGraphics guiGraphics, float x, float y, float maxX, float maxY) {
-        if (gas.isEmpty()) {
-            return;
-        }
-
-        drawGas(guiGraphics, x, y, gas, size.x, size.y);
-    }
-
-    @Override
-    public @Nullable String getMessage() {
-        return null;
-    }
-
-    private static void getGasSpriteAndColor(GasStorageEntry gas, BiConsumer<@Nullable TextureAtlasSprite, Integer> consumer) {
-        int tint = JadeClientInternalBridge.applyOverlayAlpha(gas.gasType().getTint());
+    private static void getGasSpriteAndColor(GasStack gas, BiConsumer<@Nullable TextureAtlasSprite, Integer> consumer) {
+        int tint = JadeClientInternalBridge.applyOverlayAlpha(gas.getHint());
         consumer.accept(Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(BACKGROUND), tint);
     }
 
@@ -78,11 +59,31 @@ public class GasStorageElement extends Element {
         graphics.flush();
     }
 
-    private static void drawGas(GuiGraphics graphics, float x, float y, GasStorageEntry gas, float width, float height) {
+    private static void drawGas(GuiGraphics graphics, float x, float y, GasStack gas, float width, float height) {
         float gasHeight = Math.max(1, height);
         getGasSpriteAndColor(gas, (sprite, color) -> {
             float maxY = y + height;
             fill(graphics, x, maxY - gasHeight, x + width, maxY, color);
         });
+    }
+
+    @Override
+    public Vec2 getSize() {
+        return new Vec2(16, 16);
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void render(GuiGraphics guiGraphics, float x, float y, float maxX, float maxY) {
+        if (gas.isEmpty()) {
+            return;
+        }
+
+        drawGas(guiGraphics, x, y, gas, size.x, size.y);
+    }
+
+    @Override
+    public @Nullable String getMessage() {
+        return null;
     }
 }

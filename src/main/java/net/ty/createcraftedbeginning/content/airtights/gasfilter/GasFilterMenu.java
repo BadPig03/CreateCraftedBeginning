@@ -45,6 +45,11 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
         super(type, id, inv, stack);
     }
 
+    @Contract("_, _, _ -> new")
+    static GasFilterMenu create(int id, Inventory inv, ItemStack filter) {
+        return new GasFilterMenu(CCBMenuTypes.GAS_FILTER_MENU.get(), id, inv, filter);
+    }
+
     @Override
     protected ItemStack createOnClient(RegistryFriendlyByteBuf extraData) {
         return ItemStack.STREAM_CODEC.decode(extraData);
@@ -179,11 +184,6 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
         filterInventory.setStackInSlot(slotIndex, virtualItem);
         getSlot(slotIndex + PLAYER_INVENTORY_SLOTS).setChanged();
-    }
-
-    @Contract("_, _, _ -> new")
-    static GasFilterMenu create(int id, Inventory inv, ItemStack filter) {
-        return new GasFilterMenu(CCBMenuTypes.GAS_FILTER_MENU.get(), id, inv, filter);
     }
 
     private void tryToInsert(ItemStack canisterStack) {

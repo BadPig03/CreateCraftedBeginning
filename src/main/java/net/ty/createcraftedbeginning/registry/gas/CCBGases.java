@@ -6,6 +6,7 @@ import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.Gas;
 import net.ty.createcraftedbeginning.api.gas.GasBuilder;
 import net.ty.createcraftedbeginning.api.gas.GasHolder;
+import net.ty.createcraftedbeginning.content.airtights.potiongas.PotionGas;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBGasTags;
 import org.jetbrains.annotations.Contract;
 
@@ -31,6 +32,8 @@ public class CCBGases {
     public static final GasHolder<Gas, Gas> SCULK_AIR = GAS_REGISTER.register("sculk_air", builder().tint(0x111B21).tag(CCBGasTags.SCULK.tag));
 
     public static final GasHolder<Gas, Gas> STEAM = GAS_REGISTER.register("steam", builder().tint(0xE7EEF2));
+
+    public static final GasHolder<Gas, PotionGas> POTION_GAS = GAS_REGISTER.register("potion_gas", () -> new PotionGas(builder().tint(0xC080D0).usableInEquipment(false)));
 
     public static final GasHolder<Gas, Gas> CREATIVE_AIR = GAS_REGISTER.register("creative_air", builder().tint(0x000000).tag(CCBGasTags.CREATIVE.tag));
 

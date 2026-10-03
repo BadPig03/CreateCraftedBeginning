@@ -53,6 +53,7 @@ public final class OpticalFiberModel extends BakedModelWrapperWithData {
         if (state == null || side != null || ports == null || ports == 0) {
             return base;
         }
+
         if (renderType != null && !getRenderTypes(state, random, data).contains(renderType)) {
             return base;
         }

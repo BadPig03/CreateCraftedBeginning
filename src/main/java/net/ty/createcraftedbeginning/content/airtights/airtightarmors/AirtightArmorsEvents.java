@@ -18,7 +18,6 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightboots.upgrades.AirtightBootsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.AirtightChestplateUpgradeRegistry;
-import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightchestplate.upgrades.ElytraUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.AirtightHelmetUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.upgrades.AirtightLeggingsUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.GlobalAirtightUpgradesConsumptionManager;
@@ -69,7 +68,6 @@ public class AirtightArmorsEvents {
             return;
         }
 
-        ElytraUpgrade.tickBoostPulse(player);
         GlobalAirtightUpgradesConsumptionManager.tick(player);
         if (level.getGameTime() % 20 != 0 || !AirtightArmorSet.isEntireArmoredUp(player)) {
             return;
@@ -101,7 +99,6 @@ public class AirtightArmorsEvents {
             return;
         }
 
-        ElytraUpgrade.clearBoostPulse(player);
         GlobalAirtightUpgradesConsumptionManager.clearTracking(player);
     }
 
@@ -111,7 +108,6 @@ public class AirtightArmorsEvents {
             return;
         }
 
-        ElytraUpgrade.clearBoostPulse(player);
         GlobalAirtightUpgradesConsumptionManager.clear(player);
         GlobalAirtightUpgradesConsumptionManager.syncToClient(player);
     }

@@ -1,59 +1,63 @@
 {
-	"format_version": "1.9.0",
-	"credit": "Made with Blockbench",
-	"parent": "minecraft:block/block",
-	"texture_size": [32, 32],
-	"textures": {
-		"particle": "createcraftedbeginning:block/optical_fiber/fiber",
-		"fiber": "createcraftedbeginning:block/optical_fiber/fiber",
-		"outline": "createcraftedbeginning:block/optical_fiber/outline"
-	},
-	"elements": [
-		{
-			"from": [0, 6, 6],
-			"to": [16, 10, 10],
-			"faces": {
-				"north": {"uv": [16, 3, 8, 5], "texture": "#fiber"},
-				"south": {"uv": [8, 3, 16, 5], "texture": "#fiber"},
-				"up": {"uv": [8, 5, 16, 3], "texture": "#fiber"},
-				"down": {"uv": [8, 3, 16, 5], "texture": "#fiber"}
-			}
-		},
-		{
-			"name": "outline",
-			"from": [0, 5.7, 10.3],
-			"to": [16, 10.3, 10.3],
-			"shade": false,
-			"faces": {
-				"north": {"uv": [0, 0, 16, 16], "texture": "#outline"}
-			}
-		},
-		{
-			"name": "outline",
-			"from": [0, 5.7, 5.7],
-			"to": [16, 10.3, 5.7],
-			"shade": false,
-			"faces": {
-				"south": {"uv": [0, 0, 16, 16], "texture": "#outline"}
-			}
-		},
-		{
-			"name": "outline",
-			"from": [0, 5.7, 5.7],
-			"to": [16, 5.7, 10.3],
-			"shade": false,
-			"faces": {
-				"up": {"uv": [0, 0, 16, 16], "texture": "#outline"}
-			}
-		},
-		{
-			"name": "outline",
-			"from": [0, 10.3, 5.7],
-			"to": [16, 10.3, 10.3],
-			"shade": false,
-			"faces": {
-				"down": {"uv": [0, 0, 16, 16], "texture": "#outline"}
-			}
-		}
-	]
+  "format_version": "1.9.0",
+  "credit": "Made with Blockbench",
+  "parent": "minecraft:block/block",
+  "texture_size": [32, 32],
+  "textures": {
+    "fiber": "createcraftedbeginning:block/optical_fiber/fiber",
+    "outline": "createcraftedbeginning:block/optical_fiber/outline",
+    "particle": "createcraftedbeginning:block/amethyst_collector_panel/particle"
+  },
+  "elements": [
+    {
+      "from": [0, 6, 6],
+      "to": [16, 10, 10],
+      "faces": {
+        "north": {"uv": [16, 3, 8, 5], "texture": "#fiber"},
+        "south": {"uv": [8, 3, 16, 5], "texture": "#fiber"},
+        "up": {"uv": [8, 5, 16, 3], "texture": "#fiber"},
+        "down": {"uv": [8, 3, 16, 5], "texture": "#fiber"}
+      }
+    },
+    {
+      "name": "outline",
+      "from": [0, 5.7, 10.3],
+      "to": [16, 10.3, 10.3],
+      "shade": false,
+      "neoforge_data": {"block_light": 15, "sky_light": 15, "ambient_occlusion": false},
+      "faces": {
+        "north": {"uv": [0, 0, 16, 16], "texture": "#outline"}
+      }
+    },
+    {
+      "name": "outline",
+      "from": [0, 5.7, 5.7],
+      "to": [16, 10.3, 5.7],
+      "shade": false,
+      "neoforge_data": {"block_light": 15, "sky_light": 15, "ambient_occlusion": false},
+      "faces": {
+        "south": {"uv": [0, 0, 16, 16], "texture": "#outline"}
+      }
+    },
+    {
+      "name": "outline",
+      "from": [0, 5.7, 5.7],
+      "to": [16, 5.7, 10.3],
+      "shade": false,
+      "neoforge_data": {"block_light": 15, "sky_light": 15, "ambient_occlusion": false},
+      "faces": {
+        "up": {"uv": [0, 0, 16, 16], "texture": "#outline"}
+      }
+    },
+    {
+      "name": "outline",
+      "from": [0, 10.3, 5.7],
+      "to": [16, 10.3, 10.3],
+      "shade": false,
+      "neoforge_data": {"block_light": 15, "sky_light": 15, "ambient_occlusion": false},
+      "faces": {
+        "down": {"uv": [0, 0, 16, 16], "texture": "#outline"}
+      }
+    }
+  ]
 }

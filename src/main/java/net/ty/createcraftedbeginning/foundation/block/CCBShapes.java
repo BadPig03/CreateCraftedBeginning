@@ -16,11 +16,6 @@ import java.util.function.BiFunction;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBShapes {
-    public static final VoxelShaper LASER_EMITTER = shape(0, 0, 0, 16, 13, 16).add(4, 13, 4, 12, 16, 12).forDirectional(Direction.UP);
-    public static final VoxelShaper LASER_RECEIVER = shape(0, 0, 0, 16, 13, 16).add(2, 13, 2, 14, 16, 14).forDirectional(Direction.UP);
-    public static final VoxelShaper OPTICAL_FIBER_END = shape(6, 8, 6, 10, 16, 10).add(5, 7, 5, 11, 10, 11).forDirectional(Direction.UP);
-    public static final VoxelShape OPTICAL_FIBER_JUNCTION = Block.box(5, 5, 5, 11, 11, 11);
-    public static final VoxelShaper OPTICAL_FIBER_DEVICE_PORT = shape(5, 14, 5, 11, 17, 11).forDirectional(Direction.UP);
     public static final VoxelShaper AIRTIGHT_ENGINE = shape(0, 0, 0, 16, 2, 16).add(2, 2, 2, 14, 6, 14).add(0, 6, 0, 16, 10, 16).add(2, 10, 2, 14, 14, 14).forDirectional(Direction.UP);
     public static final VoxelShaper AIRTIGHT_HATCH = shape(2, 2, 0, 14, 14, 1).add(3, 0, 0, 13, 16, 10).forHorizontal(Direction.SOUTH);
     public static final VoxelShaper AIRTIGHT_PIPE = shape(4, 0, 4, 12, 16, 12).forAxis();
@@ -37,6 +32,19 @@ public class CCBShapes {
     public static final VoxelShaper TESLA_TURBINE = shape(0, 1, 0, 16, 15, 16).forAxis();
     public static final VoxelShaper TESLA_TURBINE_NOZZLE = shape(0, -0.1, -0.1, 7, 16.1, 16.1).add(7, 1, 1, 12, 15, 15).add(12, -0.1, -0.1, 19, 16.1, 16.1).forDirectional(Direction.WEST);
     public static final VoxelShaper TESLA_TURBINE_NOZZLE_VERTICAL = shape(-0.1, 0, -0.1, 16.1, 7, 16.1).add(1, 7, 1, 15, 12, 15).add(-0.1, 12, -0.1, 16.1, 19, 16.1).forDirectional(Direction.DOWN);
+    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_CORNER = shape(0, 0, 0, 16, 16, 16).remove(2, 0, 2, 16, 2, 16).add(4, 0, 4, 8, 2, 8).add(2, 0, 4, 4, 2, 13).add(4, 0, 2, 13, 2, 4).add(2, 0, 13, 3, 2, 16).add(13, 0, 2, 16, 2, 3).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_MID = shape(0, 0, 0, 16, 16, 16).remove(0, 0, 2, 16, 2, 16).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_MID_CLOSED = shape(0, 0, 0, 16, 16, 16).remove(0, 0, 3, 16, 2, 16).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_MID_CORNER = shape(4, 0, 4, 8, 16, 8).add(1, 0, 1, 4, 16, 13).add(1, 0, 13, 4, 1, 16).add(4, 0, 1, 13, 16, 4).add(13, 0, 1, 16, 1, 4).add(13, 1, 2, 16, 16, 3).add(2, 1, 13, 3, 16, 16).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_MID_MID = shape(0, 0, 1, 16, 1, 4).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_MID_MID_CLOSED = shape(0, 0, 1, 16, 1, 4).add(0, 1, 2, 16, 16, 3).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_BOTTOM_MID = shape(0, 0, 0, 16, 16, 16).remove(0, 2, 2, 16, 16, 16).add(0, 15, 2, 16, 16, 4).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_BOTTOM_CORNER = shape(0, 0, 0, 16, 16, 16).remove(2, 2, 2, 16, 16, 16).add(2, 2, 2, 3, 15, 14).add(3, 2, 2, 4, 15, 13).add(4, 2, 2, 5, 15, 12).add(5, 2, 2, 6, 15, 11).add(6, 2, 2, 7, 15, 10).add(7, 2, 2, 8, 15, 9).add(8, 2, 2, 9, 15, 8).add(9, 2, 2, 10, 15, 7).add(10, 2, 2, 11, 15, 6).add(11, 2, 2, 12, 15, 5).add(12, 2, 2, 13, 15, 4).add(13, 2, 2, 14, 15, 3).add(4, 15, 4, 8, 16, 8).add(2, 15, 4, 4, 16, 16).add(4, 15, 2, 16, 16, 4).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_TOP_MID = shape(0, 2, 0, 16, 16, 16).remove(4, 4, 0, 12, 12, 1).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_BOTTOM_MID = shape(0, 0, 0, 16, 11, 16).add(0, 11, 12, 16, 13, 16).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_TOP_CORNER = shape(0, 2, 0, 16, 16, 16).add(1, 0, 1, 11, 1, 11).add(2, 1, 2, 10, 2, 10).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_MID_CORNER = shape(3, 0, 3, 9, 7, 9).add(2, 7, 2, 10, 16, 10).add(1, 10, 1, 11, 11, 11).add(1, 12, 1, 11, 13, 11).add(1, 14, 1, 11, 15, 11).forHorizontal(Direction.NORTH);
+    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_BOTTOM_CORNER = shape(0, 0, 0, 16, 11, 16).add(2, 11, 2, 10, 13, 10).add(3, 13, 3, 9, 16, 9).add(12, 11, 12, 16, 13, 16).forHorizontal(Direction.NORTH);
 
     public static final VoxelShape CHAMBER_BLOCK_SHAPE = shape(0, 0, 0, 16, 2, 16).add(1, 2, 1, 15, 15, 15).build();
     public static final VoxelShape CHAMBER_BLOCK_SPECIAL_COLLISION_SHAPE = shape(0, 0, 0, 16, 2, 16).build();
@@ -54,22 +62,13 @@ public class CCBShapes {
     public static final VoxelShape AIRTIGHT_FORGING_PRESS_BOTTOM_CENTER_SHAPE = shape(0, 0, 0, 16, 13, 16).build();
     public static final VoxelShape AIRTIGHT_FORGING_PRESS_CENTER_SHAPE = shape(-2, 10, -2, 18, 16, 18).build();
 
+    public static final VoxelShaper LASER_EMITTER = shape(0, 0, 0, 16, 13, 16).add(4, 13, 4, 12, 16, 12).forDirectional(Direction.UP);
+    public static final VoxelShaper OPTICAL_FIBER_END = shape(6, 8, 6, 10, 16, 10).add(5, 7, 5, 11, 10, 11).forDirectional(Direction.UP);
+    public static final VoxelShaper OPTICAL_FIBER_DEVICE_PORT = shape(5, 14, 5, 11, 17, 11).forDirectional(Direction.UP);
+
     public static final VoxelShape AMETHYST_COLLECTOR_PANEL_SHAPE = shape(0, 8, 0, 16, 10, 16).add(0, 5, 0, 3, 8, 3).add(0, 5, 13, 3, 8, 16).add(13, 5, 13, 16, 8, 16).add(13, 5, 0, 16, 8, 3).add(0, 0, 0, 2, 5, 2).add(0, 0, 14, 2, 5, 16).add(14, 0, 14, 16, 5, 16).add(14, 0, 0, 16, 5, 2).add(0, 6, 3, 2, 8, 13).add(3, 6, 0, 13, 8, 2).add(14, 6, 3, 16, 8, 13).add(3, 6, 14, 13, 8, 16).build();
-
-    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_CORNER = shape(0, 0, 0, 16, 16, 16).remove(2, 0, 2, 16, 2, 16).add(4, 0, 4, 8, 2, 8).add(2, 0, 4, 4, 2, 13).add(4, 0, 2, 13, 2, 4).add(2, 0, 13, 3, 2, 16).add(13, 0, 2, 16, 2, 3).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_MID = shape(0, 0, 0, 16, 16, 16).remove(0, 0, 2, 16, 2, 16).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_TOP_MID_CLOSED = shape(0, 0, 0, 16, 16, 16).remove(0, 0, 3, 16, 2, 16).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_MID_CORNER = shape(4, 0, 4, 8, 16, 8).add(1, 0, 1, 4, 16, 13).add(1, 0, 13, 4, 1, 16).add(4, 0, 1, 13, 16, 4).add(13, 0, 1, 16, 1, 4).add(13, 1, 2, 16, 16, 3).add(2, 1, 13, 3, 16, 16).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_MID_MID = shape(0, 0, 1, 16, 1, 4).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_MID_MID_CLOSED = shape(0, 0, 1, 16, 1, 4).add(0, 1, 2, 16, 16, 3).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_BOTTOM_MID = shape(0, 0, 0, 16, 16, 16).remove(0, 2, 2, 16, 16, 16).add(0, 15, 2, 16, 16, 4).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_REACTOR_KETTLE_BOTTOM_CORNER = shape(0, 0, 0, 16, 16, 16).remove(2, 2, 2, 16, 16, 16).add(2, 2, 2, 3, 15, 14).add(3, 2, 2, 4, 15, 13).add(4, 2, 2, 5, 15, 12).add(5, 2, 2, 6, 15, 11).add(6, 2, 2, 7, 15, 10).add(7, 2, 2, 8, 15, 9).add(8, 2, 2, 9, 15, 8).add(9, 2, 2, 10, 15, 7).add(10, 2, 2, 11, 15, 6).add(11, 2, 2, 12, 15, 5).add(12, 2, 2, 13, 15, 4).add(13, 2, 2, 14, 15, 3).add(4, 15, 4, 8, 16, 8).add(2, 15, 4, 4, 16, 16).add(4, 15, 2, 16, 16, 4).forHorizontal(Direction.NORTH);
-
-    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_TOP_MID = shape(0, 2, 0, 16, 16, 16).remove(4, 4, 0, 12, 12, 1).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_BOTTOM_MID = shape(0, 0, 0, 16, 11, 16).add(0, 11, 12, 16, 13, 16).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_TOP_CORNER = shape(0, 2, 0, 16, 16, 16).add(1, 0, 1, 11, 1, 11).add(2, 1, 2, 10, 2, 10).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_MID_CORNER = shape(3, 0, 3, 9, 7, 9).add(2, 7, 2, 10, 16, 10).add(1, 10, 1, 11, 11, 11).add(1, 12, 1, 11, 13, 11).add(1, 14, 1, 11, 15, 11).forHorizontal(Direction.NORTH);
-    public static final VoxelShaper AIRTIGHT_FORGING_PRESS_BOTTOM_CORNER = shape(0, 0, 0, 16, 11, 16).add(2, 11, 2, 10, 13, 10).add(3, 13, 3, 9, 16, 9).add(12, 11, 12, 16, 13, 16).forHorizontal(Direction.NORTH);
+    public static final VoxelShape PHOTOTHERMAL_RECEIVER = shape(0, 0, 0, 16, 12, 16).add(1, 12, 1, 15, 13, 15).add(0, 13, 0, 16, 15, 16).add(1, 15, 1, 15, 16, 15).build();
+    public static final VoxelShape OPTICAL_FIBER_JUNCTION = Block.box(5, 5, 5, 11, 11, 11);
 
     @Contract("_, _, _, _, _, _ -> new")
     private static Builder shape(double x1, double y1, double z1, double x2, double y2, double z2) {

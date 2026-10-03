@@ -123,7 +123,7 @@ public final class CanisterContainerSuppliers {
         for (GasCanisterContainer container : getAllSuppliers(player)) {
             for (int tankIndex = 0; tankIndex < container.getTanks(); tankIndex++) {
                 GasStack gasContent = container.getGasInTank(tankIndex);
-                if (gasContent.isEmpty()) {
+                if (gasContent.isEmpty() || !gasContent.getGasType().isUsableInEquipment()) {
                     continue;
                 }
 
@@ -131,10 +131,6 @@ public final class CanisterContainerSuppliers {
             }
         }
         return GasStack.EMPTY;
-    }
-
-    public static boolean isAnyContainerAvailable(Player player) {
-        return !getAllSuppliers(player).isEmpty();
     }
 
     public static void invalidateCache(Player player) {
@@ -147,7 +143,7 @@ public final class CanisterContainerSuppliers {
         for (GasCanisterContainer container : getAllSuppliers(player)) {
             for (int tankIndex = 0; tankIndex < container.getTanks(); tankIndex++) {
                 GasStack gasContent = container.getGasInTank(tankIndex);
-                if (gasContent.isEmpty()) {
+                if (gasContent.isEmpty() || !gasContent.getGasType().isUsableInEquipment()) {
                     continue;
                 }
 

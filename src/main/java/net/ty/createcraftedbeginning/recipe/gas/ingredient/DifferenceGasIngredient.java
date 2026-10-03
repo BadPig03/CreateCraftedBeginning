@@ -22,6 +22,11 @@ public class DifferenceGasIngredient extends GasIngredient {
         this.subtracted = subtracted;
     }
 
+    @Contract(value = "_, _ -> new", pure = true)
+    public static GasIngredient of(GasIngredient base, GasIngredient subtracted) {
+        return new DifferenceGasIngredient(base, subtracted);
+    }
+
     @Override
     public boolean test(GasStack stack) {
         return base.test(stack) && !subtracted.test(stack);
@@ -50,11 +55,6 @@ public class DifferenceGasIngredient extends GasIngredient {
     @Override
     public Stream<GasStack> generateStacks() {
         return base.generateStacks().filter(subtracted.negate());
-    }
-
-    @Contract(value = "_, _ -> new", pure = true)
-    public static GasIngredient of(GasIngredient base, GasIngredient subtracted) {
-        return new DifferenceGasIngredient(base, subtracted);
     }
 
     public GasIngredient base() {

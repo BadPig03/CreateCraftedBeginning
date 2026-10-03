@@ -54,6 +54,48 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
         registerDefaultState(defaultBlockState().setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false).setValue(UP, false).setValue(DOWN, false));
     }
 
+    static boolean hasPlacementConnection(Level level, BlockPos pos, Direction direction) {
+        BlockPos adjacentPos = pos.relative(direction);
+        BlockState adjacentState = level.getBlockState(adjacentPos);
+        return adjacentState.getBlock() instanceof AirtightEncasedPipeBlock || !adjacentState.isAir() && (!adjacentState.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(adjacentState)) && GasTransportBehaviour.isValidConnectionTarget(level, adjacentPos, adjacentState, direction);
+    }
+
+    private static boolean isOpenAt(BlockState state, Direction direction) {
+        return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
+    }
+
+    private static void openReciprocalEncasedConnections(Level level, BlockPos pos, BlockState state) {
+        for (Direction direction : Iterate.directions) {
+            if (!isOpenAt(state, direction)) {
+                continue;
+            }
+
+            BlockPos adjacentPos = pos.relative(direction);
+            BlockState adjacentState = level.getBlockState(adjacentPos);
+            if (!(adjacentState.getBlock() instanceof AirtightEncasedPipeBlock)) {
+                continue;
+            }
+
+            Property<Boolean> oppositeProperty = PROPERTY_BY_DIRECTION.get(direction.getOpposite());
+            if (adjacentState.getValue(oppositeProperty)) {
+                continue;
+            }
+
+            level.setBlockAndUpdate(adjacentPos, adjacentState.setValue(oppositeProperty, true));
+            markConnectionsDirty(level, adjacentPos);
+            level.scheduleTick(adjacentPos, adjacentState.getBlock(), 1, TickPriority.HIGH);
+        }
+    }
+
+    private static void markConnectionsDirty(Level level, BlockPos pos) {
+        GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
+        if (transport == null) {
+            return;
+        }
+
+        transport.markConnectionsDirty();
+    }
+
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = defaultBlockState();
@@ -179,47 +221,5 @@ public class AirtightEncasedPipeBlock extends PipeBlock implements IBE<AirtightE
     @Override
     public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return currentState.getValue(PROPERTY_BY_DIRECTION.get(localFace));
-    }
-
-    static boolean hasPlacementConnection(Level level, BlockPos pos, Direction direction) {
-        BlockPos adjacentPos = pos.relative(direction);
-        BlockState adjacentState = level.getBlockState(adjacentPos);
-        return adjacentState.getBlock() instanceof AirtightEncasedPipeBlock || !adjacentState.isAir() && (!adjacentState.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(adjacentState)) && GasTransportBehaviour.isValidConnectionTarget(level, adjacentPos, adjacentState, direction);
-    }
-
-    private static boolean isOpenAt(BlockState state, Direction direction) {
-        return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
-    }
-
-    private static void openReciprocalEncasedConnections(Level level, BlockPos pos, BlockState state) {
-        for (Direction direction : Iterate.directions) {
-            if (!isOpenAt(state, direction)) {
-                continue;
-            }
-
-            BlockPos adjacentPos = pos.relative(direction);
-            BlockState adjacentState = level.getBlockState(adjacentPos);
-            if (!(adjacentState.getBlock() instanceof AirtightEncasedPipeBlock)) {
-                continue;
-            }
-
-            Property<Boolean> oppositeProperty = PROPERTY_BY_DIRECTION.get(direction.getOpposite());
-            if (adjacentState.getValue(oppositeProperty)) {
-                continue;
-            }
-
-            level.setBlockAndUpdate(adjacentPos, adjacentState.setValue(oppositeProperty, true));
-            markConnectionsDirty(level, adjacentPos);
-            level.scheduleTick(adjacentPos, adjacentState.getBlock(), 1, TickPriority.HIGH);
-        }
-    }
-
-    private static void markConnectionsDirty(Level level, BlockPos pos) {
-        GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
-        if (transport == null) {
-            return;
-        }
-
-        transport.markConnectionsDirty();
     }
 }

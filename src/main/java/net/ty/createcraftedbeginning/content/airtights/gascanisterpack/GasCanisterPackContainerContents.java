@@ -35,6 +35,27 @@ public class GasCanisterPackContainerContents implements GasCanisterContainer {
         canisters = normalizeCanisters(pack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_CONTENTS, ItemContainerContents.EMPTY));
     }
 
+    private static boolean isInvalidTank(int tankIndex) {
+        return tankIndex < 0 || tankIndex >= MAX_COUNT;
+    }
+
+    private static List<ItemStack> normalizeCanisters(ItemContainerContents storedContents) {
+        List<ItemStack> normalizedCanisters = new ArrayList<>(MAX_COUNT);
+        for (int tankIndex = 0; tankIndex < MAX_COUNT; tankIndex++) {
+            ItemStack canister = tankIndex < storedContents.getSlots() ? storedContents.getStackInSlot(tankIndex) : ItemStack.EMPTY;
+            normalizedCanisters.add(normalizeCanister(canister));
+        }
+        return normalizedCanisters;
+    }
+
+    private static ItemStack normalizeCanister(ItemStack canister) {
+        if (canister.isEmpty() || !(canister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents)) {
+            return ItemStack.EMPTY;
+        }
+
+        return canister.copyWithCount(1);
+    }
+
     @Override
     public boolean isEmpty() {
         return IntStream.range(0, MAX_COUNT).allMatch(this::isEmpty);
@@ -254,27 +275,6 @@ public class GasCanisterPackContainerContents implements GasCanisterContainer {
             canisters.set(tankIndex, normalizeCanister(canister));
         }
         save();
-    }
-
-    private static boolean isInvalidTank(int tankIndex) {
-        return tankIndex < 0 || tankIndex >= MAX_COUNT;
-    }
-
-    private static List<ItemStack> normalizeCanisters(ItemContainerContents storedContents) {
-        List<ItemStack> normalizedCanisters = new ArrayList<>(MAX_COUNT);
-        for (int tankIndex = 0; tankIndex < MAX_COUNT; tankIndex++) {
-            ItemStack canister = tankIndex < storedContents.getSlots() ? storedContents.getStackInSlot(tankIndex) : ItemStack.EMPTY;
-            normalizedCanisters.add(normalizeCanister(canister));
-        }
-        return normalizedCanisters;
-    }
-
-    private static ItemStack normalizeCanister(ItemStack canister) {
-        if (canister.isEmpty() || !(canister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents)) {
-            return ItemStack.EMPTY;
-        }
-
-        return canister.copyWithCount(1);
     }
 
     private @Nullable GasCanisterContainerContents getCanisterContents(int tankIndex) {

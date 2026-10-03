@@ -25,72 +25,6 @@ public final class GasCraftingOrders {
         this.recipes = recipes;
     }
 
-    public TransferResult transfer(Recipe<?> recipe, ItemStack output, int outputPerCraft, List<BigItemStack> requirements, InventorySummary stock, boolean maximum, boolean execute, Supplier<InventorySummary> currentStock) {
-        GasCraftableBigItemStack entry = recipes.stream().filter(candidate -> candidate instanceof GasCraftableBigItemStack gas && gas.matches(recipe, output)).map(candidate -> (GasCraftableBigItemStack) candidate).findFirst().orElse(null);
-        boolean newEntry = entry == null;
-        if (newEntry && recipes.size() >= 9) {
-            return TransferResult.FULL;
-        }
-
-        if (entry == null) {
-            entry = new GasCraftableBigItemStack(output, recipe, outputPerCraft, requirements);
-        }
-        List<BigItemStack> inputs = entry.getRequirements();
-        if (!canFitNewOrderTypes(orders, inputs)) {
-            return TransferResult.FULL;
-        }
-
-        int availableSets = getMaxAdditionalSets(stock, orders, inputs);
-        int requestedSets = maximum ? availableSets : 1;
-        if (availableSets <= 0) {
-            return TransferResult.UNAVAILABLE;
-        }
-
-        if (!execute) {
-            return TransferResult.SUCCESS;
-        }
-
-        if (!add(entry, requestedSets, currentStock.get())) {
-            return TransferResult.UNAVAILABLE;
-        }
-
-        return TransferResult.SUCCESS;
-    }
-
-    public boolean add(GasCraftableBigItemStack recipe, int requestedSets, @Nullable InventorySummary stock) {
-        List<BigItemStack> requirements = recipe.getRequirements();
-        if (stock == null || !canFitNewOrderTypes(orders, requirements)) {
-            return false;
-        }
-
-        int sets = Math.min(requestedSets, getMaxAdditionalSets(stock, orders, requirements));
-        if (sets <= 0) {
-            return false;
-        }
-
-        if (!recipes.contains(recipe)) {
-            recipes.add(recipe);
-        }
-        recipe.count = (int) Mth.clamp((long) recipe.count + (long) recipe.getOutputPerCraft() * sets, 0L, BigItemStack.INF);
-        requirements.forEach(requirement -> addToOrders(requirement, sets));
-        return true;
-    }
-
-    public boolean remove(GasCraftableBigItemStack recipe, int requestedSets) {
-        int output = recipe.getOutputPerCraft();
-        int sets = Math.min(requestedSets, recipe.count / output);
-        if (sets <= 0) {
-            return false;
-        }
-
-        recipe.count -= output * sets;
-        recipe.getRequirements().forEach(requirement -> removeFromOrders(requirement, sets));
-        if (recipe.count <= 0) {
-            recipes.remove(recipe);
-        }
-        return true;
-    }
-
     public static int getMatchingCount(List<BigItemStack> stacks, ItemStack targetStack) {
         int matchingCount = 0;
         for (BigItemStack entry : stacks) {
@@ -174,6 +108,72 @@ public final class GasCraftingOrders {
 
     private static @Nullable BigItemStack findMatchingOrder(List<BigItemStack> orders, ItemStack targetStack) {
         return orders.stream().filter(order -> ItemStack.isSameItemSameComponents(order.stack, targetStack)).findFirst().orElse(null);
+    }
+
+    public TransferResult transfer(Recipe<?> recipe, ItemStack output, int outputPerCraft, List<BigItemStack> requirements, InventorySummary stock, boolean maximum, boolean execute, Supplier<InventorySummary> currentStock) {
+        GasCraftableBigItemStack entry = recipes.stream().filter(candidate -> candidate instanceof GasCraftableBigItemStack gas && gas.matches(recipe, output)).map(candidate -> (GasCraftableBigItemStack) candidate).findFirst().orElse(null);
+        boolean newEntry = entry == null;
+        if (newEntry && recipes.size() >= 9) {
+            return TransferResult.FULL;
+        }
+
+        if (entry == null) {
+            entry = new GasCraftableBigItemStack(output, recipe, outputPerCraft, requirements);
+        }
+        List<BigItemStack> inputs = entry.getRequirements();
+        if (!canFitNewOrderTypes(orders, inputs)) {
+            return TransferResult.FULL;
+        }
+
+        int availableSets = getMaxAdditionalSets(stock, orders, inputs);
+        int requestedSets = maximum ? availableSets : 1;
+        if (availableSets <= 0) {
+            return TransferResult.UNAVAILABLE;
+        }
+
+        if (!execute) {
+            return TransferResult.SUCCESS;
+        }
+
+        if (!add(entry, requestedSets, currentStock.get())) {
+            return TransferResult.UNAVAILABLE;
+        }
+
+        return TransferResult.SUCCESS;
+    }
+
+    public boolean add(GasCraftableBigItemStack recipe, int requestedSets, @Nullable InventorySummary stock) {
+        List<BigItemStack> requirements = recipe.getRequirements();
+        if (stock == null || !canFitNewOrderTypes(orders, requirements)) {
+            return false;
+        }
+
+        int sets = Math.min(requestedSets, getMaxAdditionalSets(stock, orders, requirements));
+        if (sets <= 0) {
+            return false;
+        }
+
+        if (!recipes.contains(recipe)) {
+            recipes.add(recipe);
+        }
+        recipe.count = (int) Mth.clamp((long) recipe.count + (long) recipe.getOutputPerCraft() * sets, 0L, BigItemStack.INF);
+        requirements.forEach(requirement -> addToOrders(requirement, sets));
+        return true;
+    }
+
+    public boolean remove(GasCraftableBigItemStack recipe, int requestedSets) {
+        int output = recipe.getOutputPerCraft();
+        int sets = Math.min(requestedSets, recipe.count / output);
+        if (sets <= 0) {
+            return false;
+        }
+
+        recipe.count -= output * sets;
+        recipe.getRequirements().forEach(requirement -> removeFromOrders(requirement, sets));
+        if (recipe.count <= 0) {
+            recipes.remove(recipe);
+        }
+        return true;
     }
 
     private void addToOrders(BigItemStack requirement, int sets) {

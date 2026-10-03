@@ -15,7 +15,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class BoilerSteamOutletProduction {
-    private static final int TICKS_PER_SECOND = 20;
     private static final int OUTPUT_BUFFER_TICKS = 5;
 
     private static final String COMPOUND_KEY_PRODUCTION_RATE = "ProductionRate";
@@ -110,8 +109,13 @@ final class BoilerSteamOutletProduction {
         return productionRateChanged;
     }
 
-    double getProductionRatePerSecond() {
-        return currentProductionRate * TICKS_PER_SECOND;
+    double getProductionRatio() {
+        double fullLoadProductionRate = getFullLoadProductionRate();
+        if (fullLoadProductionRate <= 0) {
+            return 0;
+        }
+
+        return Mth.clamp(currentProductionRate / fullLoadProductionRate, 0.0, 1.0);
     }
 
     void write(CompoundTag compoundTag, boolean clientPacket) {

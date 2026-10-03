@@ -60,6 +60,37 @@ public class AirtightValveBlock extends KineticBlock implements IBE<AirtightValv
         registerDefaultState(defaultBlockState().setValue(AXIS, Axis.Z).setValue(DIRECTIONAL_FACING, DirectionalFacing.NULL).setValue(OPEN, false).setValue(WATERLOGGED, false));
     }
 
+    static Axis getShaftAxis(BlockState state) {
+        Axis gasAxis = state.getValue(AXIS);
+        Axis panelAxis = getPanelDirection(state).getAxis();
+        if (gasAxis != Axis.X && panelAxis != Axis.X) {
+            return Axis.X;
+        }
+
+        if (gasAxis != Axis.Y && panelAxis != Axis.Y) {
+            return Axis.Y;
+        }
+
+        return Axis.Z;
+    }
+
+    private static Direction getPanelDirection(BlockState state) {
+        Axis gasAxis = state.getValue(AXIS);
+        if (gasAxis != Axis.Y) {
+            return Direction.UP;
+        }
+
+        return DirectionalFacing.getDirection(state.getValue(DIRECTIONAL_FACING)).getOpposite();
+    }
+
+    private static boolean isGasFace(BlockState state, Direction direction) {
+        return direction.getAxis() == state.getValue(AXIS);
+    }
+
+    private static BlockState setDirectionalFacing(BlockState state, Direction direction) {
+        return state.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(direction));
+    }
+
     @Override
     protected MapCodec<? extends KineticBlock> codec() {
         return simpleCodec(AirtightValveBlock::new);
@@ -207,36 +238,5 @@ public class AirtightValveBlock extends KineticBlock implements IBE<AirtightValv
     @Override
     public BlockEntityType<? extends AirtightValveBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.AIRTIGHT_VALVE.get();
-    }
-
-    static Axis getShaftAxis(BlockState state) {
-        Axis gasAxis = state.getValue(AXIS);
-        Axis panelAxis = getPanelDirection(state).getAxis();
-        if (gasAxis != Axis.X && panelAxis != Axis.X) {
-            return Axis.X;
-        }
-
-        if (gasAxis != Axis.Y && panelAxis != Axis.Y) {
-            return Axis.Y;
-        }
-
-        return Axis.Z;
-    }
-
-    private static Direction getPanelDirection(BlockState state) {
-        Axis gasAxis = state.getValue(AXIS);
-        if (gasAxis != Axis.Y) {
-            return Direction.UP;
-        }
-
-        return DirectionalFacing.getDirection(state.getValue(DIRECTIONAL_FACING)).getOpposite();
-    }
-
-    private static boolean isGasFace(BlockState state, Direction direction) {
-        return direction.getAxis() == state.getValue(AXIS);
-    }
-
-    private static BlockState setDirectionalFacing(BlockState state, Direction direction) {
-        return state.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(direction));
     }
 }

@@ -26,6 +26,12 @@ public class EndSculkSilencerRenderer extends KineticBlockEntityRenderer<EndScul
         super(context);
     }
 
+    static void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer, float angleDegrees) {
+        SuperByteBuffer core = CachedBuffers.partial(CCBPartialModels.END_SCULK_SILENCER_CORE, context.state);
+        float angle = angleDegrees * Mth.DEG_TO_RAD;
+        core.transform(matrices.getModel()).translate(0, 0.5, 0).rotateCentered(angle, Axis.X).rotateCentered(angle, Axis.Y).rotateCentered(Mth.PI / 4, Axis.Z).light(LevelRenderer.getLightColor(renderWorld, context.localPos)).useLevelLight(context.world, matrices.getWorld()).renderInto(matrices.getViewProjection(), buffer.getBuffer(RenderType.cutoutMipped()));
+    }
+
     @Override
     protected void renderSafe(EndSculkSilencerBlockEntity silencer, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         SuperByteBuffer core = getRotatedModel(silencer, silencer.getBlockState());
@@ -40,11 +46,5 @@ public class EndSculkSilencerRenderer extends KineticBlockEntityRenderer<EndScul
     @Override
     protected SuperByteBuffer getRotatedModel(EndSculkSilencerBlockEntity silencer, BlockState blockState) {
         return CachedBuffers.partial(CCBPartialModels.END_SCULK_SILENCER_CORE, blockState);
-    }
-
-    static void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer, float angleDegrees) {
-        SuperByteBuffer core = CachedBuffers.partial(CCBPartialModels.END_SCULK_SILENCER_CORE, context.state);
-        float angle = angleDegrees * Mth.DEG_TO_RAD;
-        core.transform(matrices.getModel()).translate(0, 0.5, 0).rotateCentered(angle, Axis.X).rotateCentered(angle, Axis.Y).rotateCentered(Mth.PI / 4, Axis.Z).light(LevelRenderer.getLightColor(renderWorld, context.localPos)).useLevelLight(context.world, matrices.getWorld()).renderInto(matrices.getViewProjection(), buffer.getBuffer(RenderType.cutoutMipped()));
     }
 }

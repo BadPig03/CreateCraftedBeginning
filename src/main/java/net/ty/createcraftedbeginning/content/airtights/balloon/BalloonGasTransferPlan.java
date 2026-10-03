@@ -56,6 +56,41 @@ public final class BalloonGasTransferPlan {
         return new BalloonGasTransferPlan(target, gas, sourcePressurePa, policy, acceptedAmount, fills);
     }
 
+    private static long appendPass(GasHandler target, GasStack gas, long sourcePressurePa, boolean matchingPass, long remainingAmount, List<PlannedFill> fills) {
+        for (int tankIndex = 0; tankIndex < target.getTanks() && remainingAmount > 0; tankIndex++) {
+            GasStack storedGas = target.getGasInTank(tankIndex);
+            boolean matching = !storedGas.isEmpty() && GasStack.isSameGasSameComponents(storedGas, gas);
+            if (matchingPass != matching || !matching && !storedGas.isEmpty()) {
+                continue;
+            }
+
+            Optional<GasPressureTransferEndpoint> endpoint = GasPressureTransferEndpoint.tryHandler(target, tankIndex);
+            if (endpoint.isEmpty() || alreadyPlanned(fills, endpoint.get())) {
+                continue;
+            }
+
+            long transferableAmount = GasPressureFillService.getTransferableAmount(endpoint.get(), gas, remainingAmount, sourcePressurePa);
+            if (transferableAmount <= 0) {
+                continue;
+            }
+
+            fills.add(new PlannedFill(endpoint.get(), transferableAmount));
+            remainingAmount -= transferableAmount;
+        }
+        return remainingAmount;
+    }
+
+    private static boolean alreadyPlanned(List<PlannedFill> fills, GasPressureTransferEndpoint endpoint) {
+        for (PlannedFill fill : fills) {
+            if (!fill.endpoint().identifiesSameCompartment(endpoint)) {
+                continue;
+            }
+
+            return true;
+        }
+        return false;
+    }
+
     public GasStack gas() {
         return gas.copy();
     }
@@ -111,41 +146,6 @@ public final class BalloonGasTransferPlan {
         }
 
         return new ExecutionResult(transferredAmount, transferredAmount == gas.getAmount());
-    }
-
-    private static long appendPass(GasHandler target, GasStack gas, long sourcePressurePa, boolean matchingPass, long remainingAmount, List<PlannedFill> fills) {
-        for (int tankIndex = 0; tankIndex < target.getTanks() && remainingAmount > 0; tankIndex++) {
-            GasStack storedGas = target.getGasInTank(tankIndex);
-            boolean matching = !storedGas.isEmpty() && GasStack.isSameGasSameComponents(storedGas, gas);
-            if (matchingPass != matching || !matching && !storedGas.isEmpty()) {
-                continue;
-            }
-
-            Optional<GasPressureTransferEndpoint> endpoint = GasPressureTransferEndpoint.tryHandler(target, tankIndex);
-            if (endpoint.isEmpty() || alreadyPlanned(fills, endpoint.get())) {
-                continue;
-            }
-
-            long transferableAmount = GasPressureFillService.getTransferableAmount(endpoint.get(), gas, remainingAmount, sourcePressurePa);
-            if (transferableAmount <= 0) {
-                continue;
-            }
-
-            fills.add(new PlannedFill(endpoint.get(), transferableAmount));
-            remainingAmount -= transferableAmount;
-        }
-        return remainingAmount;
-    }
-
-    private static boolean alreadyPlanned(List<PlannedFill> fills, GasPressureTransferEndpoint endpoint) {
-        for (PlannedFill fill : fills) {
-            if (!fill.endpoint().identifiesSameCompartment(endpoint)) {
-                continue;
-            }
-
-            return true;
-        }
-        return false;
     }
 
     public enum TransferPolicy {

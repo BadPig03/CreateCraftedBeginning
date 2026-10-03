@@ -36,6 +36,32 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
         display = new AirtightManometerDisplay(this);
     }
 
+    private static long pressureDisplayBucket(long pressurePa) {
+        if (pressurePa < GasPressure.VACUUM_PA) {
+            return NO_PRESSURE_READING;
+        }
+
+        return roundNonNegative(pressurePa);
+    }
+
+    private static long pressureDifferenceDisplayBucket(long minPressurePa, long maxPressurePa) {
+        if (minPressurePa < GasPressure.VACUUM_PA || maxPressurePa < minPressurePa) {
+            return NO_PRESSURE_READING;
+        }
+
+        return pressureDisplayBucket(maxPressurePa - minPressurePa);
+    }
+
+    private static long roundNonNegative(long value) {
+        long quotient = value / PRESSURE_DISPLAY_STEP_PA;
+        long remainder = value % PRESSURE_DISPLAY_STEP_PA;
+        if (remainder >= 500L) {
+            return quotient + 1;
+        }
+
+        return quotient;
+    }
+
     @Override
     protected float getNeedleTargetAngle() {
         return Mth.lerp(getPressureProgress(), NEEDLE_MIN_ANGLE, NEEDLE_MAX_ANGLE);
@@ -140,31 +166,5 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
         }
 
         return GasPressureDisplayScale.fractionForPressure(maxPressurePa);
-    }
-
-    private static long pressureDisplayBucket(long pressurePa) {
-        if (pressurePa < GasPressure.VACUUM_PA) {
-            return NO_PRESSURE_READING;
-        }
-
-        return roundNonNegative(pressurePa);
-    }
-
-    private static long pressureDifferenceDisplayBucket(long minPressurePa, long maxPressurePa) {
-        if (minPressurePa < GasPressure.VACUUM_PA || maxPressurePa < minPressurePa) {
-            return NO_PRESSURE_READING;
-        }
-
-        return pressureDisplayBucket(maxPressurePa - minPressurePa);
-    }
-
-    private static long roundNonNegative(long value) {
-        long quotient = value / PRESSURE_DISPLAY_STEP_PA;
-        long remainder = value % PRESSURE_DISPLAY_STEP_PA;
-        if (remainder >= 500L) {
-            return quotient + 1;
-        }
-
-        return quotient;
     }
 }

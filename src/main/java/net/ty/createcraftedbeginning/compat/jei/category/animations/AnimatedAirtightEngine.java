@@ -22,6 +22,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AnimatedAirtightEngine extends AnimatedKinetics {
     private static final int SCALE = 23;
 
+    private static float getPistonOffset() {
+        float phase = AnimationTickHolder.getRenderTime() * 32 * AirtightEngineBlockEntity.DELTA_TIME % Mth.TWO_PI;
+        return 0.2F - 0.2F * Mth.sin(phase);
+    }
+
     @SuppressWarnings("ConstantExpression")
     @Override
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
@@ -43,10 +48,5 @@ public class AnimatedAirtightEngine extends AnimatedKinetics {
         blockElement(CCBPartialModels.AIRTIGHT_ENGINE_PISTON).rotateBlock(0, 0, 90).atLocal(-0.75, 1, -0.5).scale(SCALE).render(graphics);
 
         poseStack.popPose();
-    }
-
-    private static float getPistonOffset() {
-        float phase = AnimationTickHolder.getRenderTime() * 32 * AirtightEngineBlockEntity.DELTA_TIME % Mth.TWO_PI;
-        return 0.2F - 0.2F * Mth.sin(phase);
     }
 }

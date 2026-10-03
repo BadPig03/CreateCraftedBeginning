@@ -23,9 +23,9 @@ import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.ExperienceConversionUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HarvestOptimizationUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.LiquidReplacementUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.MagnetUpgrade;
-import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.SilkTouchUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.gas.interaction.GasInteractionFeedback;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -101,22 +101,22 @@ final class AirtightHandheldDrillEvents {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    private static void onSilkTouchDrillBlockDrops(BlockDropsEvent event) {
+    private static void onDrillMiningEnchantmentDrops(BlockDropsEvent event) {
         if (!(event.getBreaker() instanceof Player player)) {
             return;
         }
 
         ItemStack drill = event.getTool();
-        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL) || !SilkTouchUpgrade.INSTANCE.canApply(drill) || ExperienceConversionUpgrade.INSTANCE.canApply(drill)) {
+        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL) || !HarvestOptimizationUpgrade.INSTANCE.isInstalled(drill) || ExperienceConversionUpgrade.INSTANCE.canApply(drill)) {
             return;
         }
 
         ServerLevel level = event.getLevel();
         BlockPos blockPos = event.getPos();
         BlockState blockState = event.getState();
-        ItemStack silkTouchTool = AirtightHandheldDrillMining.createDrillUsedTool(drill, level);
+        ItemStack usedTool = AirtightHandheldDrillMining.createDrillUsedTool(drill, level);
         event.getDrops().clear();
-        for (ItemStack dropStack : Block.getDrops(blockState, level, blockPos, event.getBlockEntity(), player, silkTouchTool)) {
+        for (ItemStack dropStack : Block.getDrops(blockState, level, blockPos, event.getBlockEntity(), player, usedTool)) {
             if (dropStack.isEmpty()) {
                 continue;
             }
@@ -124,7 +124,7 @@ final class AirtightHandheldDrillEvents {
             event.getDrops().add(new ItemEntity(level, blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5, dropStack));
         }
 
-        int experience = EnchantmentHelper.processBlockExperience(level, silkTouchTool, blockState.getExpDrop(level, blockPos, event.getBlockEntity(), player, silkTouchTool));
+        int experience = EnchantmentHelper.processBlockExperience(level, usedTool, blockState.getExpDrop(level, blockPos, event.getBlockEntity(), player, usedTool));
         event.setDroppedExperience(experience);
     }
 

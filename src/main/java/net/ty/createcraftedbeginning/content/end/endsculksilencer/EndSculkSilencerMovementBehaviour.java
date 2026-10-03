@@ -28,69 +28,6 @@ import java.util.UUID;
 public final class EndSculkSilencerMovementBehaviour implements MovementBehaviour {
     private static final short MOVING_RANGE = 1;
 
-    @Override
-    public void tick(MovementContext context) {
-        if (context.world.isClientSide) {
-            tickAnimation(context);
-            return;
-        }
-
-        if (!(context.world instanceof ServerLevel serverLevel)) {
-            return;
-        }
-
-        BlockPos registrationPos = getRegistrationPos(context);
-        if (registrationPos == null) {
-            return;
-        }
-
-        if (context.disabled || context.position == null) {
-            GlobalEndSculkSilencerManager.removeMoving(serverLevel, registrationPos);
-            return;
-        }
-
-        BlockPos effectCenter = SubLevelBridge.resolve(serverLevel, context.position).blockPos();
-        GlobalEndSculkSilencerManager.updateMoving(serverLevel, registrationPos, effectCenter, MOVING_RANGE);
-    }
-
-    @Override
-    public void onDisabledByControls(MovementContext context) {
-        MovementBehaviour.super.onDisabledByControls(context);
-        removeRegistration(context);
-    }
-
-    @Override
-    public boolean mustTickWhileDisabled() {
-        return true;
-    }
-
-    @Override
-    public void stopMoving(MovementContext context) {
-        removeRegistration(context);
-    }
-
-    @Override
-    public boolean disableBlockEntityRendering() {
-        return true;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
-        if (VisualizationManager.supportsVisualization(context.world)) {
-            return;
-        }
-
-        float angle = getAnimationAngle(context, AnimationTickHolder.getPartialTicks(context.world));
-        EndSculkSilencerRenderer.renderInContraption(context, renderWorld, matrices, buffer, angle);
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld simulationWorld, MovementContext movementContext) {
-        return new EndSculkSilencerActorVisual(visualizationContext, simulationWorld, movementContext);
-    }
-
     static float getAnimationAngle(MovementContext context, float partialTicks) {
         return getAnimationState(context).angle.getValue(partialTicks);
     }
@@ -152,6 +89,69 @@ public final class EndSculkSilencerMovementBehaviour implements MovementBehaviou
         value = (value ^ value >>> 30) * 0xBF58476D1CE4E5B9L;
         value = (value ^ value >>> 27) * 0x94D049BB133111EBL;
         return value ^ value >>> 31;
+    }
+
+    @Override
+    public void tick(MovementContext context) {
+        if (context.world.isClientSide) {
+            tickAnimation(context);
+            return;
+        }
+
+        if (!(context.world instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        BlockPos registrationPos = getRegistrationPos(context);
+        if (registrationPos == null) {
+            return;
+        }
+
+        if (context.disabled || context.position == null) {
+            GlobalEndSculkSilencerManager.removeMoving(serverLevel, registrationPos);
+            return;
+        }
+
+        BlockPos effectCenter = SubLevelBridge.resolve(serverLevel, context.position).blockPos();
+        GlobalEndSculkSilencerManager.updateMoving(serverLevel, registrationPos, effectCenter, MOVING_RANGE);
+    }
+
+    @Override
+    public void onDisabledByControls(MovementContext context) {
+        MovementBehaviour.super.onDisabledByControls(context);
+        removeRegistration(context);
+    }
+
+    @Override
+    public boolean mustTickWhileDisabled() {
+        return true;
+    }
+
+    @Override
+    public void stopMoving(MovementContext context) {
+        removeRegistration(context);
+    }
+
+    @Override
+    public boolean disableBlockEntityRendering() {
+        return true;
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
+        if (VisualizationManager.supportsVisualization(context.world)) {
+            return;
+        }
+
+        float angle = getAnimationAngle(context, AnimationTickHolder.getPartialTicks(context.world));
+        EndSculkSilencerRenderer.renderInContraption(context, renderWorld, matrices, buffer, angle);
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public ActorVisual createVisual(VisualizationContext visualizationContext, VirtualRenderWorld simulationWorld, MovementContext movementContext) {
+        return new EndSculkSilencerActorVisual(visualizationContext, simulationWorld, movementContext);
     }
 
     private static final class AnimationState {

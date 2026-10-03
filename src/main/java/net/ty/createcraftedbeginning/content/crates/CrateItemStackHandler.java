@@ -156,15 +156,6 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
         setStoredItems(slot, stack, Math.min(stack.getCount(), getConfiguredCapacity()));
     }
 
-    ItemStack getStoredItem(int slot) {
-        validateSlotIndex(slot);
-        if (content.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-
-        return content.copy();
-    }
-
     @Internal
     public int getCountInSlot(int slot) {
         validateSlotIndex(slot);
@@ -175,6 +166,20 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
     public void setStoredItems(int slot, ItemStack stack, int newCount) {
         validateSlotIndex(slot);
         applyStoredItems(stack, newCount, true);
+    }
+
+    @Internal
+    public final int getRemainingCapacity() {
+        return Math.max(0, getConfiguredCapacity() - count);
+    }
+
+    ItemStack getStoredItem(int slot) {
+        validateSlotIndex(slot);
+        if (content.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        return content.copy();
     }
 
     void validateSlotIndex(int slot) {
@@ -195,11 +200,6 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
 
     final int getConfiguredCapacity() {
         return Math.max(0, maxCountSupplier.getAsInt());
-    }
-
-    @Internal
-    public final int getRemainingCapacity() {
-        return Math.max(0, getConfiguredCapacity() - count);
     }
 
     final <T> T runInBatch(Supplier<T> action) {

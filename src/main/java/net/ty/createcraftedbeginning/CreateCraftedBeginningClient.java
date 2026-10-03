@@ -17,7 +17,6 @@ import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.Airtigh
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillRenderHandler;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.client.BreezeChamberClientAnimation;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.client.BreezeCoolerClientAnimation;
-import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerClient;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerClient;
 import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
 import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
@@ -47,7 +46,6 @@ public class CreateCraftedBeginningClient {
 
         BreezeChamberClientAnimation.initialize();
         BreezeCoolerClientAnimation.initialize();
-        EndIncinerationBlowerClient.initialize();
         EndSculkSilencerClient.initialize();
 
         AirtightCannonRenderHandler.INSTANCE.registerListeners(eventBus);

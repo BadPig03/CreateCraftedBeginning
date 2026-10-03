@@ -23,6 +23,14 @@ final class GasPackagerPendingGas {
 
     private GasStack pendingGas = GasStack.EMPTY;
 
+    private static ItemStack copyOrEmpty(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        return stack.copy();
+    }
+
     boolean isEmpty() {
         return pendingGas.isEmpty();
     }
@@ -73,14 +81,6 @@ final class GasPackagerPendingGas {
 
     void clear() {
         pendingGas = GasStack.EMPTY;
-    }
-
-    private static ItemStack copyOrEmpty(ItemStack stack) {
-        if (stack.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-
-        return stack.copy();
     }
 
     record InsertionResult(ItemStack returnedPackage, boolean inventoryChanged) {

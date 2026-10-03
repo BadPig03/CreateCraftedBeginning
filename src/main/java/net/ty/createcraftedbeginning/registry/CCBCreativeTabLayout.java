@@ -38,6 +38,10 @@ public final class CCBCreativeTabLayout {
         List<ItemStack> unassignedItems = new ArrayList<>();
         Map<Item, CCBCreativeTabSection> sections = itemSections;
         for (ItemStack stack : baseItems) {
+            if (stack.isEmpty()) {
+                continue;
+            }
+
             CCBCreativeTabSection section = sections.get(stack.getItem());
             if (section == null) {
                 unassignedItems.add(stack);

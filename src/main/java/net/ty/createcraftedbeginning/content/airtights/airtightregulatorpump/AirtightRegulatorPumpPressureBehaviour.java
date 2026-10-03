@@ -35,17 +35,6 @@ final class AirtightRegulatorPumpPressureBehaviour extends ScrollValueBehaviour 
         value = pressureStepForPa(owner.getOutletSetPressurePa());
     }
 
-    @Override
-    public ValueSettingsBoard createBoard(Player player, BlockHitResult hitResult) {
-        return new ValueSettingsBoard(label, max, 2, List.of(CCBLang.text("atm").component()), new ValueSettingsFormatter(AirtightRegulatorPumpPressureBehaviour::formatPressureSetting));
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
-        syncFromOwner();
-    }
-
     static long defaultOutletSetPressurePa() {
         return normalizePressurePa(pressurePaForUnclampedStep(DEFAULT_OUTLET_SET_PRESSURE_STEPS));
     }
@@ -56,10 +45,6 @@ final class AirtightRegulatorPumpPressureBehaviour extends ScrollValueBehaviour 
 
     static long normalizePressurePa(long pressurePa) {
         return pressurePaForStep(pressureStepForPa(pressurePa));
-    }
-
-    void syncFromOwner() {
-        value = pressureStepForPa(owner.getOutletSetPressurePa());
     }
 
     private static MutableComponent formatPressureSetting(ValueSettings settings) {
@@ -86,5 +71,20 @@ final class AirtightRegulatorPumpPressureBehaviour extends ScrollValueBehaviour 
 
     private static long pressurePaForUnclampedStep(int pressureStep) {
         return Math.round((double) Math.max(0, pressureStep) * GasPressure.REFERENCE_PRESSURE_PA / STEPS_PER_ATMOSPHERE);
+    }
+
+    @Override
+    public ValueSettingsBoard createBoard(Player player, BlockHitResult hitResult) {
+        return new ValueSettingsBoard(label, max, 2, List.of(CCBLang.text("atm").component()), new ValueSettingsFormatter(AirtightRegulatorPumpPressureBehaviour::formatPressureSetting));
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        syncFromOwner();
+    }
+
+    void syncFromOwner() {
+        value = pressureStepForPa(owner.getOutletSetPressurePa());
     }
 }

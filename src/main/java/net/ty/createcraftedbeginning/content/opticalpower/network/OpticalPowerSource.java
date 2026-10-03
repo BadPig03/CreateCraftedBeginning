@@ -16,18 +16,18 @@ import java.util.List;
 public interface OpticalPowerSource {
     Source getOpticalPowerSource(Level level, BlockPos pos, BlockState state);
 
-    default int getCurrentOpticalPowerPoints(Level level, BlockPos pos, BlockState state, Source discoveredSource) {
-        return getOpticalPowerSource(level, pos, state).powerPoints();
+    default int getCurrentOpticalPowerLp(Level level, BlockPos pos, BlockState state, Source discoveredSource) {
+        return getOpticalPowerSource(level, pos, state).powerLp();
     }
 
-    record Source(BlockPos key, int powerPoints, List<BlockPos> dependencies, List<BlockPos> powerDependencies, boolean dynamic, boolean topologyValid) {
-        public Source(BlockPos key, int powerPoints) {
-            this(key, powerPoints, List.of(key), List.of(key), false, true);
+    record Source(BlockPos key, int powerLp, List<BlockPos> dependencies, List<BlockPos> powerDependencies, boolean dynamic, boolean topologyValid) {
+        public Source(BlockPos key, int powerLp) {
+            this(key, powerLp, List.of(key), List.of(key), false, true);
         }
 
         public Source {
             key = key.immutable();
-            powerPoints = Math.max(0, powerPoints);
+            powerLp = Math.max(0, powerLp);
             dependencies = immutablePositions(dependencies);
             powerDependencies = immutablePositions(powerDependencies);
         }

@@ -5,7 +5,6 @@ import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
-import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfiles;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
 import net.ty.createcraftedbeginning.api.turbinehandlers.AirtightTurbineHandlers;
 import net.ty.createcraftedbeginning.gas.atmosphere.AtmosphereStateResolver;
@@ -29,7 +28,7 @@ final class TeslaTurbineGasHandler implements GasPressureBoundary {
 
     @Override
     public boolean isGasValid(int tank, GasStack stack) {
-        return tank == 0 && !stack.isEmpty() && GameplayPressureProfiles.orderedProfiles().stream().anyMatch(profile -> AirtightTurbineHandlers.resolve(stack, profile).getMaxLevel() > 0);
+        return tank == 0 && !stack.isEmpty() && AirtightTurbineHandlers.resolve(stack).getMaxLevel() > 0;
     }
 
     @Override
@@ -82,10 +81,15 @@ final class TeslaTurbineGasHandler implements GasPressureBoundary {
 
     @Override
     public long fillFromPressure(GasStack resource, long sourcePressurePa, GasAction action) {
-        if (resource.isEmpty() || AirtightTurbineHandlers.resolve(resource, sourcePressurePa).getMaxLevel() <= 0) {
+        if (resource.isEmpty()) {
             return 0;
         }
 
-        return flowMeter.fill(resource, sourcePressurePa, action, clockwise);
+        float typeLevel = AirtightTurbineHandlers.resolve(resource).getLevel(sourcePressurePa);
+        if (typeLevel <= 0) {
+            return 0;
+        }
+
+        return flowMeter.fill(resource, typeLevel, action, clockwise);
     }
 }

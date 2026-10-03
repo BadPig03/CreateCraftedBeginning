@@ -40,6 +40,30 @@ public enum GasCanisterOverlay implements Layer {
     private static final ItemStack CREATIVE_CANISTER = new ItemStack(CCBItems.CREATIVE_GAS_CANISTER.asItem());
     private static final ItemStack PACK = new ItemStack(CCBItems.GAS_CANISTER_PACK.asItem());
 
+    private static void renderCanister(GuiGraphics guiGraphics, int packType, int xOffset, int yOffset) {
+        if (packType == -1) {
+            GuiGameElement.of(CANISTER).at(xOffset, yOffset).render(guiGraphics);
+            return;
+        }
+
+        if (packType == -2) {
+            GuiGameElement.of(CREATIVE_CANISTER).at(xOffset, yOffset).render(guiGraphics);
+            return;
+        }
+
+        ItemStack packStack = PACK.copy();
+        packStack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
+        GuiGameElement.of(packStack).at(xOffset, yOffset).render(guiGraphics);
+    }
+
+    private static MutableComponent getAmountText(boolean isCreative, long amount, long maxAmount) {
+        if (isCreative) {
+            return CCBLang.translateDirect("gui.gas_container.infinity").withStyle(ChatFormatting.GOLD);
+        }
+
+        return GasUnitFormat.amount(amount).color(Color.mixColors(CanisterDisplayColors.COLOR_RED, CanisterDisplayColors.COLOR_WHITE, Mth.clamp(2.0F * amount / maxAmount, 0.0F, 1.0F))).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(GasUnitFormat.amount(maxAmount).style(ChatFormatting.GRAY)).component();
+    }
+
     @Override
     public void render(GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
         Minecraft client = Minecraft.getInstance();
@@ -77,29 +101,5 @@ public enum GasCanisterOverlay implements Layer {
         guiGraphics.drawString(font, amountText, 17 + xOffset, font.lineHeight + yOffset, 0);
 
         poseStack.popPose();
-    }
-
-    private static void renderCanister(GuiGraphics guiGraphics, int packType, int xOffset, int yOffset) {
-        if (packType == -1) {
-            GuiGameElement.of(CANISTER).at(xOffset, yOffset).render(guiGraphics);
-            return;
-        }
-
-        if (packType == -2) {
-            GuiGameElement.of(CREATIVE_CANISTER).at(xOffset, yOffset).render(guiGraphics);
-            return;
-        }
-
-        ItemStack packStack = PACK.copy();
-        packStack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
-        GuiGameElement.of(packStack).at(xOffset, yOffset).render(guiGraphics);
-    }
-
-    private static MutableComponent getAmountText(boolean isCreative, long amount, long maxAmount) {
-        if (isCreative) {
-            return CCBLang.translateDirect("gui.gas_container.infinity").withStyle(ChatFormatting.GOLD);
-        }
-
-        return GasUnitFormat.amount(amount).color(Color.mixColors(CanisterDisplayColors.COLOR_RED, CanisterDisplayColors.COLOR_WHITE, Mth.clamp(2.0F * amount / maxAmount, 0.0F, 1.0F))).add(CCBLang.text(" / ").style(ChatFormatting.WHITE)).add(GasUnitFormat.amount(maxAmount).style(ChatFormatting.GRAY)).component();
     }
 }

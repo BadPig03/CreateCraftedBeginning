@@ -33,25 +33,6 @@ public final class ForgingPressCraftPlanner {
         this.recipe = recipe;
     }
 
-    public float getPressureSpeedMultiplier() {
-        Level level = press.getLevel();
-        if (level == null) {
-            return 1;
-        }
-
-        ForgingOperationPlan operationPlan = planOperation(level);
-        if (operationPlan == null) {
-            return 1;
-        }
-
-        return GasRecipePressureSpeed.multiplier(operationPlan.craftPlan().gasPlan());
-    }
-
-    public boolean matches() {
-        Level level = press.getLevel();
-        return level != null && planOperation(level) != null;
-    }
-
     static boolean planFluidConsumption(List<SizedFluidIngredient> ingredients, IFluidHandler fluidHandler, int[] amounts, int crafts) {
         for (SizedFluidIngredient ingredient : ingredients) {
             long required = (long) ingredient.amount() * crafts;
@@ -84,37 +65,6 @@ public final class ForgingPressCraftPlanner {
             }
         }
         return true;
-    }
-
-    @Nullable ForgingOperationPlan planOperation(Level level) {
-        IItemHandler pressHeadInventory = press.getPressHeadInventory();
-        if (!matchesNonConsumableSlot(pressHeadInventory, getIngredient(1))) {
-            return null;
-        }
-
-        boolean copyInputComponents = shouldCopyInputComponents(pressHeadInventory.getStackInSlot(0));
-        IItemHandler additionInventory = press.getAdditionInventory();
-        IItemHandler inputInventory = press.getInputInventory();
-        Ingredient inputIngredient = getIngredient(0);
-        Ingredient additionIngredient = getIngredient(2);
-        int maxCrafts = getMaxItemCrafts(additionInventory, additionIngredient, inputInventory, inputIngredient);
-        if (maxCrafts <= 0) {
-            return null;
-        }
-
-        ItemStack inputStack = getConsumableStack(inputInventory, inputIngredient);
-        if (inputStack == null) {
-            return null;
-        }
-
-        IFluidHandler fluidHandler = press.getFluidCapability();
-        GasStorageHandler gasHandler = press.getGasCapability();
-        CraftPlan craftPlan = findLargestCraftPlan(level, inputStack, copyInputComponents, fluidHandler, gasHandler, maxCrafts);
-        if (craftPlan == null) {
-            return null;
-        }
-
-        return new ForgingOperationPlan(inputStack, inputIngredient, additionIngredient, copyInputComponents, craftPlan);
     }
 
     private static boolean matchesNonConsumableSlot(IItemHandler inventory, Ingredient ingredient) {
@@ -150,7 +100,7 @@ public final class ForgingPressCraftPlanner {
 
     private static int getAvailableCrafts(IItemHandler inventory, Ingredient ingredient, int maxCrafts) {
         if (ingredient.isEmpty()) {
-            if (!(inventory.getStackInSlot(0).isEmpty())) {
+            if (!inventory.getStackInSlot(0).isEmpty()) {
                 return 0;
             }
 
@@ -165,8 +115,55 @@ public final class ForgingPressCraftPlanner {
         return extractedStack.getCount();
     }
 
-    private static boolean shouldCopyInputComponents(ItemStack pressHead) {
-        return !CCBConfig.server().machines.airtightForgingPress.requireSmithingTemplateForComponentCopy.get() || pressHead.getItem() instanceof SmithingTemplateItem;
+    public float getPressureSpeedMultiplier() {
+        Level level = press.getLevel();
+        if (level == null) {
+            return 1;
+        }
+
+        ForgingOperationPlan operationPlan = planOperation(level);
+        if (operationPlan == null) {
+            return 1;
+        }
+
+        return GasRecipePressureSpeed.multiplier(operationPlan.craftPlan().gasPlan());
+    }
+
+    public boolean matches() {
+        Level level = press.getLevel();
+        return level != null && planOperation(level) != null;
+    }
+
+    @Nullable ForgingOperationPlan planOperation(Level level) {
+        IItemHandler pressHeadInventory = press.getPressHeadInventory();
+        if (!matchesNonConsumableSlot(pressHeadInventory, getIngredient(1))) {
+            return null;
+        }
+
+        ItemStack pressHead = pressHeadInventory.getStackInSlot(0);
+        boolean copyInputComponents = !CCBConfig.server().machines.airtightForgingPress.requireSmithingTemplateForComponentCopy.get() || pressHead.getItem() instanceof SmithingTemplateItem;
+        IItemHandler additionInventory = press.getAdditionInventory();
+        IItemHandler inputInventory = press.getInputInventory();
+        Ingredient inputIngredient = getIngredient(0);
+        Ingredient additionIngredient = getIngredient(2);
+        int maxCrafts = getMaxItemCrafts(additionInventory, additionIngredient, inputInventory, inputIngredient);
+        if (maxCrafts <= 0) {
+            return null;
+        }
+
+        ItemStack inputStack = getConsumableStack(inputInventory, inputIngredient);
+        if (inputStack == null) {
+            return null;
+        }
+
+        IFluidHandler fluidHandler = press.getFluidCapability();
+        GasStorageHandler gasHandler = press.getGasCapability();
+        CraftPlan craftPlan = findLargestCraftPlan(level, inputStack, copyInputComponents, fluidHandler, gasHandler, maxCrafts);
+        if (craftPlan == null) {
+            return null;
+        }
+
+        return new ForgingOperationPlan(inputStack, inputIngredient, additionIngredient, copyInputComponents, craftPlan);
     }
 
     private @Nullable CraftPlan findLargestCraftPlan(Level level, ItemStack input, boolean copyInputComponents, IFluidHandler fluidHandler, GasStorageHandler gasHandler, int maxCrafts) {

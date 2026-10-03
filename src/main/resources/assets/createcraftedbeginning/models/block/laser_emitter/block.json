@@ -5,9 +5,9 @@
 	"render_type": "minecraft:cutout_mipped",
 	"texture_size": [64, 64],
 	"textures": {
-		"3": "createcraftedbeginning:block/laser/outline",
-		"laser": "createcraftedbeginning:block/laser/texture",
-		"particle": "createcraftedbeginning:block/optical_power/particle"
+		"3": "createcraftedbeginning:block/laser_emitter/outline",
+		"laser": "createcraftedbeginning:block/laser_emitter/texture",
+		"particle": "createcraftedbeginning:block/amethyst_collector_panel/particle"
 	},
 	"elements": [
 		{
@@ -15,12 +15,12 @@
 			"to": [16, 13, 16],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
 			"faces": {
-				"north": {"uv": [4, 4.75, 8, 8], "texture": "#laser"},
-				"east": {"uv": [4, 4.75, 8, 8], "texture": "#laser"},
-				"south": {"uv": [4, 4.75, 8, 8], "texture": "#laser"},
-				"west": {"uv": [4, 4.75, 8, 8], "texture": "#laser"},
-				"up": {"uv": [4, 4, 0, 0], "texture": "#laser"},
-				"down": {"uv": [4, 0, 0, 4], "texture": "#laser"}
+				"north": {"uv": [8, 9.5, 16, 16], "texture": "#laser"},
+				"east": {"uv": [8, 9.5, 16, 16], "texture": "#laser"},
+				"south": {"uv": [8, 9.5, 16, 16], "texture": "#laser"},
+				"west": {"uv": [8, 9.5, 16, 16], "texture": "#laser"},
+				"up": {"uv": [8, 0, 16, 8], "texture": "#laser"},
+				"down": {"uv": [8, 0, 16, 8], "texture": "#laser"}
 			}
 		},
 		{
@@ -28,12 +28,10 @@
 			"to": [15, 16, 15],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
 			"faces": {
-				"north": {"uv": [0.25, 4, 3.75, 4.75], "texture": "#laser"},
-				"east": {"uv": [0.25, 4, 3.75, 4.75], "texture": "#laser"},
-				"south": {"uv": [0.25, 4, 3.75, 4.75], "texture": "#laser"},
-				"west": {"uv": [0.25, 4, 3.75, 4.75], "texture": "#laser"},
-				"up": {"uv": [3.5, 16, 0, 12.5], "texture": "#laser"},
-				"down": {"uv": [3.5, 12.5, 0, 16], "texture": "#laser"}
+				"north": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"east": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"south": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"west": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"}
 			}
 		},
 		{
@@ -41,12 +39,10 @@
 			"to": [1, 16, 15],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
 			"faces": {
-				"north": {"uv": [0.25, 4, 3.75, 4.75], "texture": "#laser"},
-				"east": {"uv": [0.25, 4, 3.75, 4.75], "texture": "#laser"},
-				"south": {"uv": [0.25, 4, 3.75, 4.75], "texture": "#laser"},
-				"west": {"uv": [0.25, 4, 3.75, 4.75], "texture": "#laser"},
-				"up": {"uv": [3.5, 16, 0, 12.5], "texture": "#laser"},
-				"down": {"uv": [3.5, 12.5, 0, 16], "texture": "#laser"}
+				"north": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"east": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"south": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"west": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"}
 			}
 		},
 		{
@@ -54,12 +50,12 @@
 			"to": [12, 16, 12],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
 			"faces": {
-				"north": {"uv": [5, 11.25, 7, 12], "texture": "#laser"},
-				"east": {"uv": [5, 11.25, 7, 12], "texture": "#laser"},
-				"south": {"uv": [5, 11.25, 7, 12], "texture": "#laser"},
-				"west": {"uv": [5, 11.25, 7, 12], "texture": "#laser"},
-				"up": {"uv": [7, 11, 5, 9], "texture": "#laser"},
-				"down": {"uv": [7, 9, 5, 11], "texture": "#laser"}
+				"north": {"uv": [2, 14.5, 6, 16], "texture": "#laser"},
+				"east": {"uv": [2, 14.5, 6, 16], "texture": "#laser"},
+				"south": {"uv": [2, 14.5, 6, 16], "texture": "#laser"},
+				"west": {"uv": [2, 14.5, 6, 16], "texture": "#laser"},
+				"up": {"uv": [6, 14, 2, 10], "texture": "#laser"},
+				"down": {"uv": [6, 10, 2, 14], "texture": "#laser"}
 			}
 		},
 		{

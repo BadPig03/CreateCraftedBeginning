@@ -78,6 +78,10 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         serialization = new GasInjectionChamberSerialization(this, operation, filter, visualState, display);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.GAS_INJECTION_CHAMBER.get(), (blockEntity, direction) -> direction == Direction.UP ? blockEntity.exposedGasHandler : null);
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartGasTankBehaviour.single(this, CCBConfig.server().machines.gasInjectionChamber.gasVolume.get() * GasUnits.LITERS_PER_KILOLITER, GasPressureLimits.HARD_PRESSURE_PA).whenTankUpdates(this::scheduleBasinCheck);
@@ -173,10 +177,6 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
         }
 
         return new MultiFace(worldPosition, Set.of(Direction.UP));
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.GAS_INJECTION_CHAMBER.get(), (blockEntity, direction) -> direction == Direction.UP ? blockEntity.exposedGasHandler : null);
     }
 
     @Internal

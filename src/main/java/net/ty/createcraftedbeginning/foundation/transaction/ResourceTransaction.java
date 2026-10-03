@@ -39,6 +39,51 @@ public final class ResourceTransaction {
         };
     }
 
+    private static <S> CapturedParticipant capture(TransactionParticipant<S> participant) {
+        S snapshot = participant.snapshot();
+        return new CapturedParticipant() {
+            @Override
+            public boolean execute() {
+                return participant.execute();
+            }
+
+            @Override
+            public void restore() {
+                participant.restore(snapshot);
+            }
+        };
+    }
+
+    private static void rollback(List<CapturedParticipant> participants, int attemptedParticipants, @Nullable Throwable primaryFailure) {
+        Throwable rollbackFailure = null;
+        for (int index = attemptedParticipants - 1; index >= 0; index--) {
+            try {
+                participants.get(index).restore();
+            }
+            catch (RuntimeException | Error throwable) {
+                if (primaryFailure != null) {
+                    primaryFailure.addSuppressed(throwable);
+                }
+                else if (rollbackFailure == null) {
+                    rollbackFailure = throwable;
+                }
+                else {
+                    rollbackFailure.addSuppressed(throwable);
+                }
+            }
+        }
+
+        if (primaryFailure != null || rollbackFailure == null) {
+            return;
+        }
+
+        if (rollbackFailure instanceof RuntimeException runtimeException) {
+            throw runtimeException;
+        }
+
+        throw (Error) rollbackFailure;
+    }
+
     public ResourceTransaction require(BooleanSupplier requirement) {
         return add(participant(requirement, () -> Boolean.TRUE, () -> true, ignored -> {}));
     }
@@ -87,51 +132,6 @@ public final class ResourceTransaction {
                 rollback(captured, attemptedParticipants, failure);
             }
         }
-    }
-
-    private static <S> CapturedParticipant capture(TransactionParticipant<S> participant) {
-        S snapshot = participant.snapshot();
-        return new CapturedParticipant() {
-            @Override
-            public boolean execute() {
-                return participant.execute();
-            }
-
-            @Override
-            public void restore() {
-                participant.restore(snapshot);
-            }
-        };
-    }
-
-    private static void rollback(List<CapturedParticipant> participants, int attemptedParticipants, @Nullable Throwable primaryFailure) {
-        Throwable rollbackFailure = null;
-        for (int index = attemptedParticipants - 1; index >= 0; index--) {
-            try {
-                participants.get(index).restore();
-            }
-            catch (RuntimeException | Error throwable) {
-                if (primaryFailure != null) {
-                    primaryFailure.addSuppressed(throwable);
-                }
-                else if (rollbackFailure == null) {
-                    rollbackFailure = throwable;
-                }
-                else {
-                    rollbackFailure.addSuppressed(throwable);
-                }
-            }
-        }
-
-        if (primaryFailure != null || rollbackFailure == null) {
-            return;
-        }
-
-        if (rollbackFailure instanceof RuntimeException runtimeException) {
-            throw runtimeException;
-        }
-
-        throw (Error) rollbackFailure;
     }
 
     private interface CapturedParticipant {

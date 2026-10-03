@@ -33,6 +33,26 @@ public final class GasDrawerHandler implements GasStorageHandler {
         }
     }
 
+    public static boolean hasResources(List<GasStack> resources) {
+        for (GasStack gasStack : resources) {
+            if (gasStack == null || gasStack.isEmpty()) {
+                continue;
+            }
+
+            return true;
+        }
+        return false;
+    }
+
+    private static long fillTank(GasDrawerTank tank, GasStack resource, GasAction action) {
+        long acceptedAmount = tank.fill(resource, GasAction.SIMULATE);
+        if (acceptedAmount <= 0 || !action.execute()) {
+            return acceptedAmount;
+        }
+
+        return tank.fill(resource, GasAction.EXECUTE);
+    }
+
     @Override
     public GasPressureCompartment getPressureCompartment(int tank) {
         if (!isValidTank(tank)) {
@@ -208,17 +228,6 @@ public final class GasDrawerHandler implements GasStorageHandler {
         return tanks[tank].getPressureModel();
     }
 
-    public static boolean hasResources(List<GasStack> resources) {
-        for (GasStack gasStack : resources) {
-            if (gasStack == null || gasStack.isEmpty()) {
-                continue;
-            }
-
-            return true;
-        }
-        return false;
-    }
-
     public GasDrawerTank[] getInternalTanks() {
         return tanks;
     }
@@ -282,15 +291,6 @@ public final class GasDrawerHandler implements GasStorageHandler {
         owner.endTransaction(commit);
     }
 
-    private static long fillTank(GasDrawerTank tank, GasStack resource, GasAction action) {
-        long acceptedAmount = tank.fill(resource, GasAction.SIMULATE);
-        if (acceptedAmount <= 0 || !action.execute()) {
-            return acceptedAmount;
-        }
-
-        return tank.fill(resource, GasAction.EXECUTE);
-    }
-
     private long fillExisting(GasStack resource, GasAction action) {
         for (GasDrawerTank tank : tanks) {
             GasStack storedGas = tank.getStoredStack();
@@ -352,35 +352,31 @@ public final class GasDrawerHandler implements GasStorageHandler {
 
             long amount = Math.max(0, Math.min(getMaxAmount(), storedAmount));
             GasStack projectedGas = amount == 0 ? GasStack.EMPTY : gas.copyWithAmount(amount);
-            // Apply the same first-matching-slot rule to the projected contents. Delegating
-            // directly to the tank would expose sibling slots that the live pressure view blocks.
             for (int index = 0; index < tanks.length; index++) {
                 GasStack contents = index == tankIndex ? projectedGas : tanks[index].getStoredStack();
                 if (contents.isEmpty() || !GasStack.isSameGasSameComponents(contents, gas)) {
                     continue;
                 }
-                return index == tankIndex ? limits : blockedProjection(gas, amount);
+
+                if (index != tankIndex) {
+                    return blockedProjection(gas, amount);
+                }
+
+                return limits;
             }
 
-            // With no matching stored gas, only the first eligible empty slot can fill.
             for (int index = 0; index < tanks.length; index++) {
                 if (index == tankIndex) {
                     if (limits.fillLimit() > 0) {
                         return new PredictedTransferLimits(0, limits.fillLimit());
                     }
+
+                    continue;
                 }
-                else if (tanks[index].getStoredStack().isEmpty() && tanks[index].fill(gas.copyWithAmount(1), GasAction.SIMULATE) > 0) {
+
+                if (tanks[index].getStoredStack().isEmpty() && tanks[index].fill(gas.copyWithAmount(1), GasAction.SIMULATE) > 0) {
                     return blockedProjection(gas, amount);
                 }
-            }
-            return new PredictedTransferLimits(0, 0);
-        }
-
-        private @Nullable PredictedTransferLimits blockedProjection(GasStack gas, long amount) {
-            // Emptying the selected slot can activate another compartment. The per-compartment
-            // prediction API cannot rebuild that sibling's endpoints; do not claim equilibrium.
-            if (amount == 0 && canPressureDrainTank(tankIndex, gas)) {
-                return null;
             }
             return new PredictedTransferLimits(0, 0);
         }
@@ -416,6 +412,14 @@ public final class GasDrawerHandler implements GasStorageHandler {
         @Override
         public boolean isGasValid(GasStack stack) {
             return canPressureFillTank(tankIndex, stack);
+        }
+
+        private @Nullable PredictedTransferLimits blockedProjection(GasStack gas, long amount) {
+            if (amount == 0 && canPressureDrainTank(tankIndex, gas)) {
+                return null;
+            }
+
+            return new PredictedTransferLimits(0, 0);
         }
 
         private boolean canPressureDrainTank(int sourceTank, GasStack resource) {

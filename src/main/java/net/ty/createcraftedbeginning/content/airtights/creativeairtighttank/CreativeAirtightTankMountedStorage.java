@@ -27,14 +27,14 @@ public class CreativeAirtightTankMountedStorage extends WrapperMountedGasStorage
         super(type, tank);
     }
 
-    @Override
-    public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity blockEntity) {
-    }
-
     static CreativeAirtightTankMountedStorage fromTank(CreativeAirtightTankBlockEntity tank) {
         CreativeGasReservoir tankInventory = tank.getTankInventory();
         CreativeGasReservoir tankCopy = new CreativeGasReservoir(tankInventory.getLimits(), tankInventory.getFixedPressurePa(), () -> {});
         tankCopy.setContainedGas(tankInventory.getGasStack());
         return new CreativeAirtightTankMountedStorage(tankCopy);
+    }
+
+    @Override
+    public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity blockEntity) {
     }
 }

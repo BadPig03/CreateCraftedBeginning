@@ -34,6 +34,10 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
         display = new PortableGasInterfaceDisplay(this);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.PORTABLE_GAS_INTERFACE.get(), (blockEntity, context) -> blockEntity.capability);
+    }
+
     @Override
     public void startTransferringTo(Contraption contraption, float distance) {
         if (connectedEntity == contraption.entity || !(contraption.getStorage() instanceof MountedGasStorageAccess mountedStorage)) {
@@ -81,10 +85,6 @@ public class PortableGasInterfaceBlockEntity extends PortableStorageInterfaceBlo
     @Override
     public MutableComponent format(int value) {
         return display.format(value);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.PORTABLE_GAS_INTERFACE.get(), (blockEntity, context) -> blockEntity.capability);
     }
 
     GasStorageHandler getGasCapability() {

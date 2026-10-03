@@ -28,6 +28,10 @@ class AirtightAssemblyDriverLevelCalculator {
         this.driverCore = driverCore;
     }
 
+    private static int readLevel(CompoundTag compoundTag, String key) {
+        return Mth.clamp(NbtValues.getIntOrDefault(compoundTag, key, 0), 0, MAX_LEVEL);
+    }
+
     void updateWindChargingLevel(int newLevel) {
         if (!setWindChargingLevel(newLevel)) {
             return;
@@ -115,10 +119,6 @@ class AirtightAssemblyDriverLevelCalculator {
         setSupplyLevel(storedSupplyLevel);
         windChargingLevel = clientPacket ? readLevel(compoundTag, COMPOUND_KEY_WIND_CHARGING_LEVEL) : 0;
         residueLevel = readLevel(compoundTag, COMPOUND_KEY_RESIDUE_LEVEL);
-    }
-
-    private static int readLevel(CompoundTag compoundTag, String key) {
-        return Mth.clamp(NbtValues.getIntOrDefault(compoundTag, key, 0), 0, MAX_LEVEL);
     }
 
     private double getMinimumLevel() {

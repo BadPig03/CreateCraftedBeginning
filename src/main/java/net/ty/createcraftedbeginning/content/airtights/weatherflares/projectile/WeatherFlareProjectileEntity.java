@@ -71,6 +71,15 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         this.startY = startY;
     }
 
+    public static void build(EntityType.Builder<WeatherFlareProjectileEntity> builder) {
+        builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
+    }
+
+    @Contract(" -> new")
+    private static ItemStack getDefaultItem() {
+        return new ItemStack(CCBItems.SUNNY_FLARE.asItem());
+    }
+
     @Override
     public void push(double x, double y, double z) {
     }
@@ -211,17 +220,8 @@ public class WeatherFlareProjectileEntity extends AbstractHurtingProjectile impl
         return DoubleDoubleImmutablePair.of(target.position().x - position().x, target.position().z - position().z);
     }
 
-    public static void build(EntityType.Builder<WeatherFlareProjectileEntity> builder) {
-        builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
-    }
-
     public void setCopied(boolean copied) {
         this.copied = copied;
-    }
-
-    @Contract(" -> new")
-    private static ItemStack getDefaultItem() {
-        return new ItemStack(CCBItems.SUNNY_FLARE.asItem());
     }
 
     private void explode() {

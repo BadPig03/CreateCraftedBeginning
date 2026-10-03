@@ -72,7 +72,7 @@
     "client.create.RedstoneRequesterScreenMixin",
     "client.create.StockKeeperRequestScreenMixin",
     "client.minecraft.AbstractContainerScreenMixin",
-    "client.minecraft.CreativeModeTabMixin",
+    "client.minecraft.CreativeModeInventoryScreenMixin",
     "client.minecraft.EntityRenderDispatcherMixin",
     "client.minecraft.GameRendererMixin",
     "client.minecraft.GuiGraphicsMixin"

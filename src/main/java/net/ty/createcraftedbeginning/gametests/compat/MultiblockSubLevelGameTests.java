@@ -80,8 +80,13 @@ public final class MultiblockSubLevelGameTests {
             Set<BlockPos> parts = MultiblockAssemblyGameTests.gather(level, core);
             BlockPos movedCore;
             try {
+                BoundingBox3i bounds = BoundingBox3i.from(parts);
+                if (bounds == null) {
+                    throw new NullPointerException("Expected assembly bounds at " + core + '.');
+                }
+
                 Class<?> mover = Class.forName("dev.ryanhcode.sable.api.SubLevelAssemblyHelper");
-                Object subLevel = mover.getMethod("assembleBlocks", ServerLevel.class, BlockPos.class, Iterable.class, BoundingBox3ic.class).invoke(null, level, core, parts, BoundingBox3i.from(parts));
+                Object subLevel = mover.getMethod("assembleBlocks", ServerLevel.class, BlockPos.class, Iterable.class, BoundingBox3ic.class).invoke(null, level, core, parts, bounds);
                 if (subLevel == null) {
                     throw new NullPointerException("Expected an assembled machine sub-level at " + core + '.');
                 }

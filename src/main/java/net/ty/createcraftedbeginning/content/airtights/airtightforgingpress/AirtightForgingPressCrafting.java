@@ -55,6 +55,50 @@ public final class AirtightForgingPressCrafting {
         return AirtightForgingPressAutomationPlanner.planSmithingRecipe(press, recipe).map(plan -> press.commitCraft(plan.consumption(), plan.output())).orElse(false);
     }
 
+    private static boolean insertOutputs(SmartInventory inventory, List<ItemStack> outputItems) {
+        for (ItemStack outputStack : outputItems) {
+            if (outputStack.isEmpty()) {
+                continue;
+            }
+
+            ItemStack remainingStack = ItemHandlerHelper.insertItemStacked(inventory, outputStack.copy(), false);
+            if (remainingStack.isEmpty()) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean canConsumeItem(IItemHandler inventory, ItemStack expectedStack, int amount) {
+        if (amount <= 0) {
+            return true;
+        }
+
+        ItemStack currentStack = inventory.getStackInSlot(0);
+        if (currentStack.isEmpty() || expectedStack.isEmpty() || currentStack.getCount() < amount || !ItemStack.isSameItemSameComponents(currentStack, expectedStack)) {
+            return false;
+        }
+
+        ItemStack simulatedExtraction = inventory.extractItem(0, amount, true);
+        return simulatedExtraction.getCount() == amount && ItemStack.isSameItemSameComponents(simulatedExtraction, expectedStack);
+    }
+
+    private static boolean consumeItem(IItemHandler inventory, ItemStack expectedStack, int amount) {
+        if (amount <= 0) {
+            return true;
+        }
+
+        ItemStack extractedStack = inventory.extractItem(0, amount, false);
+        return extractedStack.getCount() == amount && ItemStack.isSameItemSameComponents(extractedStack, expectedStack);
+    }
+
+    private static TransactionParticipant<ItemStack> itemConsumptionParticipant(IItemHandlerModifiable inventory, ItemStack expectedStack, int amount) {
+        return ResourceTransaction.participant(() -> canConsumeItem(inventory, expectedStack, amount), () -> inventory.getStackInSlot(0).copy(), () -> consumeItem(inventory, expectedStack, amount), snapshot -> inventory.setStackInSlot(0, snapshot.copy()));
+    }
+
     Optional<OutputPlan> planOutputs(List<ItemStack> outputItems) {
         SmartInventory simulatedOutput = createOutputSimulation();
         if (!insertOutputs(simulatedOutput, outputItems)) {
@@ -125,50 +169,6 @@ public final class AirtightForgingPressCrafting {
 
         press.getBehaviour(CCBAdvancementBehaviour.TYPE).awardPlayer(CCBAdvancements.SUPERMASSIVE);
         return true;
-    }
-
-    private static boolean insertOutputs(SmartInventory inventory, List<ItemStack> outputItems) {
-        for (ItemStack outputStack : outputItems) {
-            if (outputStack.isEmpty()) {
-                continue;
-            }
-
-            ItemStack remainingStack = ItemHandlerHelper.insertItemStacked(inventory, outputStack.copy(), false);
-            if (remainingStack.isEmpty()) {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private static boolean canConsumeItem(IItemHandler inventory, ItemStack expectedStack, int amount) {
-        if (amount <= 0) {
-            return true;
-        }
-
-        ItemStack currentStack = inventory.getStackInSlot(0);
-        if (currentStack.isEmpty() || expectedStack.isEmpty() || currentStack.getCount() < amount || !ItemStack.isSameItemSameComponents(currentStack, expectedStack)) {
-            return false;
-        }
-
-        ItemStack simulatedExtraction = inventory.extractItem(0, amount, true);
-        return simulatedExtraction.getCount() == amount && ItemStack.isSameItemSameComponents(simulatedExtraction, expectedStack);
-    }
-
-    private static boolean consumeItem(IItemHandler inventory, ItemStack expectedStack, int amount) {
-        if (amount <= 0) {
-            return true;
-        }
-
-        ItemStack extractedStack = inventory.extractItem(0, amount, false);
-        return extractedStack.getCount() == amount && ItemStack.isSameItemSameComponents(extractedStack, expectedStack);
-    }
-
-    private static TransactionParticipant<ItemStack> itemConsumptionParticipant(IItemHandlerModifiable inventory, ItemStack expectedStack, int amount) {
-        return ResourceTransaction.participant(() -> canConsumeItem(inventory, expectedStack, amount), () -> inventory.getStackInSlot(0).copy(), () -> consumeItem(inventory, expectedStack, amount), snapshot -> inventory.setStackInSlot(0, snapshot.copy()));
     }
 
     private boolean canConsumeFluid(ConsumptionPlan consumptionPlan) {

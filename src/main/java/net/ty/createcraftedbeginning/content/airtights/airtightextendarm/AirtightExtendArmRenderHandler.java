@@ -45,24 +45,6 @@ public class AirtightExtendArmRenderHandler {
     private AirtightExtendArmRenderHandler() {
     }
 
-    public void tick() {
-        lastHandAnimation = handAnimation;
-        handAnimation *= Mth.clamp(handAnimation, 0.8F, 0.99F);
-        updatePose();
-    }
-
-    public void registerListeners(IEventBus bus) {
-        bus.addListener(EventPriority.LOWEST, this::onRenderPlayerHand);
-    }
-
-    float getAnimation(float partialTicks) {
-        return Mth.lerp(partialTicks, lastHandAnimation, handAnimation);
-    }
-
-    PartialModel getPose() {
-        return pose;
-    }
-
     private static void renderPlayerArm(RenderHandEvent event, EntityRenderDispatcher renderDispatcher, LocalPlayer player, boolean isRightHand, float handSign) {
         PoseStack poseStack = event.getPoseStack();
         poseStack.pushPose();
@@ -85,6 +67,24 @@ public class AirtightExtendArmRenderHandler {
         }
 
         poseStack.popPose();
+    }
+
+    public void tick() {
+        lastHandAnimation = handAnimation;
+        handAnimation *= Mth.clamp(handAnimation, 0.8F, 0.99F);
+        updatePose();
+    }
+
+    public void registerListeners(IEventBus bus) {
+        bus.addListener(EventPriority.LOWEST, this::onRenderPlayerHand);
+    }
+
+    float getAnimation(float partialTicks) {
+        return Mth.lerp(partialTicks, lastHandAnimation, handAnimation);
+    }
+
+    PartialModel getPose() {
+        return pose;
     }
 
     private void updatePose() {

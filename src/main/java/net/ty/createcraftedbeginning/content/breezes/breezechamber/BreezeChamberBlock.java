@@ -69,6 +69,52 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(WIND_LEVEL, WindLevel.CALM));
     }
 
+    static WindLevel getWindLevelOf(BlockState blockState) {
+        return blockState.getValue(WIND_LEVEL);
+    }
+
+    static InteractionResultHolder<ItemStack> tryInsert(Level level, BlockPos chamberPos, ItemStack inputStack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
+        if (!(level.getBlockEntity(chamberPos) instanceof BreezeChamberBlockEntity chamber)) {
+            return InteractionResultHolder.fail(ItemStack.EMPTY);
+        }
+
+        InteractionResultHolder<ItemStack> insertionResult = chamber.tryUpdateChargerByItem(inputStack, forceOverflow, simulate);
+        if (insertionResult.getResult() != InteractionResult.SUCCESS) {
+            return InteractionResultHolder.fail(ItemStack.EMPTY);
+        }
+
+        if (doNotConsume) {
+            return InteractionResultHolder.success(ItemStack.EMPTY);
+        }
+
+        ItemStack remainder = insertionResult.getObject();
+        if (remainder.isEmpty()) {
+            FoodProperties foodProperties = inputStack.getItem().getFoodProperties(inputStack, null);
+            if (foodProperties != null) {
+                remainder = foodProperties.usingConvertsTo().orElse(ItemStack.EMPTY);
+            }
+            if (remainder.isEmpty()) {
+                remainder = inputStack.hasCraftingRemainingItem() ? inputStack.getCraftingRemainingItem() : ItemStack.EMPTY;
+            }
+        }
+        if (simulate || level.isClientSide) {
+            return InteractionResultHolder.success(remainder);
+        }
+
+        inputStack.shrink(1);
+        return InteractionResultHolder.success(remainder);
+    }
+
+    private static ItemInteractionResult setGoggles(BreezeChamberBlockEntity chamber, boolean hasGoggles) {
+        if (chamber.hasGoggles() == hasGoggles) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        chamber.setGoggles(hasGoggles);
+        chamber.notifyUpdate();
+        return ItemInteractionResult.SUCCESS;
+    }
+
     @Override
     protected boolean isPathfindable(BlockState state, PathComputationType pathComputationType) {
         return false;
@@ -230,52 +276,6 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
     @Override
     public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return true;
-    }
-
-    static WindLevel getWindLevelOf(BlockState blockState) {
-        return blockState.getValue(WIND_LEVEL);
-    }
-
-    static InteractionResultHolder<ItemStack> tryInsert(Level level, BlockPos chamberPos, ItemStack inputStack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
-        if (!(level.getBlockEntity(chamberPos) instanceof BreezeChamberBlockEntity chamber)) {
-            return InteractionResultHolder.fail(ItemStack.EMPTY);
-        }
-
-        InteractionResultHolder<ItemStack> insertionResult = chamber.tryUpdateChargerByItem(inputStack, forceOverflow, simulate);
-        if (insertionResult.getResult() != InteractionResult.SUCCESS) {
-            return InteractionResultHolder.fail(ItemStack.EMPTY);
-        }
-
-        if (doNotConsume) {
-            return InteractionResultHolder.success(ItemStack.EMPTY);
-        }
-
-        ItemStack remainder = insertionResult.getObject();
-        if (remainder.isEmpty()) {
-            FoodProperties foodProperties = inputStack.getItem().getFoodProperties(inputStack, null);
-            if (foodProperties != null) {
-                remainder = foodProperties.usingConvertsTo().orElse(ItemStack.EMPTY);
-            }
-            if (remainder.isEmpty()) {
-                remainder = inputStack.hasCraftingRemainingItem() ? inputStack.getCraftingRemainingItem() : ItemStack.EMPTY;
-            }
-        }
-        if (simulate || level.isClientSide) {
-            return InteractionResultHolder.success(remainder);
-        }
-
-        inputStack.shrink(1);
-        return InteractionResultHolder.success(remainder);
-    }
-
-    private static ItemInteractionResult setGoggles(BreezeChamberBlockEntity chamber, boolean hasGoggles) {
-        if (chamber.hasGoggles() == hasGoggles) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        }
-
-        chamber.setGoggles(hasGoggles);
-        chamber.notifyUpdate();
-        return ItemInteractionResult.SUCCESS;
     }
 
     public enum WindLevel implements StringRepresentable {

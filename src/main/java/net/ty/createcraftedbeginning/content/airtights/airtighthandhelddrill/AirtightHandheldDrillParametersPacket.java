@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.net.base.ServerboundPacketPayload;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -17,9 +16,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record AirtightHandheldDrillParametersPacket(AirtightHandheldDrillMiningTemplates template, BlockPos sizeParams, Direction direction, BlockPos relativeParams) implements ServerboundPacketPayload {
+public record AirtightHandheldDrillParametersPacket(AirtightHandheldDrillMiningTemplates template, BlockPos sizeParams, DrillMiningDirection direction, BlockPos relativeParams) implements ServerboundPacketPayload {
 
-    public static final StreamCodec<ByteBuf, AirtightHandheldDrillParametersPacket> STREAM_CODEC = StreamCodec.composite(AirtightHandheldDrillMiningTemplates.STREAM_CODEC, AirtightHandheldDrillParametersPacket::template, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::sizeParams, Direction.STREAM_CODEC, AirtightHandheldDrillParametersPacket::direction, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::relativeParams, AirtightHandheldDrillParametersPacket::new);
+    public static final StreamCodec<ByteBuf, AirtightHandheldDrillParametersPacket> STREAM_CODEC = StreamCodec.composite(AirtightHandheldDrillMiningTemplates.STREAM_CODEC, AirtightHandheldDrillParametersPacket::template, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::sizeParams, DrillMiningDirection.STREAM_CODEC, AirtightHandheldDrillParametersPacket::direction, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::relativeParams, AirtightHandheldDrillParametersPacket::new);
 
     @Override
     public void handle(ServerPlayer player) {
@@ -53,6 +52,6 @@ public record AirtightHandheldDrillParametersPacket(AirtightHandheldDrillMiningT
             }
         }
 
-        return AirtightHandheldDrillSettings.isRelativePositionValid(template, miningSize, direction, relativePosition);
+        return AirtightHandheldDrillSettings.isRelativePositionValid(template, miningSize, relativePosition);
     }
 }

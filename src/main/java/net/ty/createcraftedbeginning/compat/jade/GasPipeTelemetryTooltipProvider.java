@@ -41,6 +41,35 @@ public enum GasPipeTelemetryTooltipProvider implements IServerDataProvider<Block
     private static final String OUTLET_SET_PRESSURE_KEY = "OutletSetPressure";
     private static final String VALVE_OPEN_KEY = "ValveOpen";
 
+    static @Nullable CompoundTag createServerData(@Nullable BlockEntity blockEntity) {
+        if (blockEntity == null) {
+            return null;
+        }
+
+        CompoundTag telemetryData = new CompoundTag();
+        switch (AirtightTelemetryVisibility.pipeReadout(blockEntity)) {
+            case FLOW -> telemetryData.putLong(FLOW_RATE_KEY, ((AirtightFlowmeterBlockEntity) blockEntity).getFlowRate());
+            case PRESSURE -> {
+                AirtightManometerBlockEntity manometer = (AirtightManometerBlockEntity) blockEntity;
+                if (!manometer.hasPressureReading()) {
+                    return telemetryData;
+                }
+
+                telemetryData.putLong(MIN_PRESSURE_KEY, manometer.getMinPressurePa());
+                telemetryData.putLong(MAX_PRESSURE_KEY, manometer.getMaxPressurePa());
+            }
+            case PUMP_CONFIGURATION -> telemetryData.putLong(MAX_PRESSURE_BOOST_KEY, ((AirtightPumpBlockEntity) blockEntity).getPumpMaxPressureBoostPa());
+            case REGULATOR_CONFIGURATION -> {
+                AirtightRegulatorPumpBlockEntity regulatorPump = (AirtightRegulatorPumpBlockEntity) blockEntity;
+                telemetryData.putLong(MAX_PRESSURE_RISE_KEY, regulatorPump.getMaxPressureRisePa());
+                telemetryData.putLong(OUTLET_SET_PRESSURE_KEY, regulatorPump.getOutletSetPressurePa());
+            }
+            case VALVE_STATE -> telemetryData.putBoolean(VALVE_OPEN_KEY, ((AirtightValveBlockEntity) blockEntity).isOpen());
+            case NONE -> { return null; }
+        }
+        return telemetryData;
+    }
+
     @Override
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
         PipeReadout readout = AirtightTelemetryVisibility.pipeReadout(accessor.getBlockEntity());
@@ -112,34 +141,5 @@ public enum GasPipeTelemetryTooltipProvider implements IServerDataProvider<Block
     @Override
     public ResourceLocation getUid() {
         return JadePlugin.GAS_PIPE_TELEMETRY_TOOLTIP;
-    }
-
-    static @Nullable CompoundTag createServerData(@Nullable BlockEntity blockEntity) {
-        if (blockEntity == null) {
-            return null;
-        }
-
-        CompoundTag telemetryData = new CompoundTag();
-        switch (AirtightTelemetryVisibility.pipeReadout(blockEntity)) {
-            case FLOW -> telemetryData.putLong(FLOW_RATE_KEY, ((AirtightFlowmeterBlockEntity) blockEntity).getFlowRate());
-            case PRESSURE -> {
-                AirtightManometerBlockEntity manometer = (AirtightManometerBlockEntity) blockEntity;
-                if (!manometer.hasPressureReading()) {
-                    return telemetryData;
-                }
-
-                telemetryData.putLong(MIN_PRESSURE_KEY, manometer.getMinPressurePa());
-                telemetryData.putLong(MAX_PRESSURE_KEY, manometer.getMaxPressurePa());
-            }
-            case PUMP_CONFIGURATION -> telemetryData.putLong(MAX_PRESSURE_BOOST_KEY, ((AirtightPumpBlockEntity) blockEntity).getPumpMaxPressureBoostPa());
-            case REGULATOR_CONFIGURATION -> {
-                AirtightRegulatorPumpBlockEntity regulatorPump = (AirtightRegulatorPumpBlockEntity) blockEntity;
-                telemetryData.putLong(MAX_PRESSURE_RISE_KEY, regulatorPump.getMaxPressureRisePa());
-                telemetryData.putLong(OUTLET_SET_PRESSURE_KEY, regulatorPump.getOutletSetPressurePa());
-            }
-            case VALVE_STATE -> telemetryData.putBoolean(VALVE_OPEN_KEY, ((AirtightValveBlockEntity) blockEntity).isOpen());
-            case NONE -> { return null; }
-        }
-        return telemetryData;
     }
 }

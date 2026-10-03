@@ -25,6 +25,7 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class GasCanisterContainerContents implements AirtightHatchCanister {
     public static final int ECONOMIZE_MAX_LEVEL = 3;
+    private static final int ECONOMIZE_MINIMUM_DRAIN_LEVEL = 5;
     private final ItemStack canister;
 
     protected GasStack gas;
@@ -33,6 +34,67 @@ public class GasCanisterContainerContents implements AirtightHatchCanister {
         this.canister = canister;
         GasStack storedGas = canister.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, GasStack.EMPTY).copy();
         gas = canContain(storedGas) ? storedGas : GasStack.EMPTY;
+    }
+
+    public static long getEconomizedDrainAmount(long logicalAmount, ItemStack itemStack) {
+        if (logicalAmount <= 0) {
+            return 0;
+        }
+
+        return Math.max(1, (logicalAmount * getEconomizeCostPercent(itemStack) + 99) / 100);
+    }
+
+    public static long getLogicalAmountFromEconomizedDrain(long physicalDrain, ItemStack itemStack) {
+        if (physicalDrain <= 0) {
+            return 0;
+        }
+
+        int costPercent = getEconomizeCostPercent(itemStack);
+        if (costPercent == 0) {
+            return Long.MAX_VALUE;
+        }
+
+        return physicalDrain * 100 / costPercent;
+    }
+
+    public static long getDefaultVolume() {
+        return CCBConfig.server().equipment.gasCanister.gasVolume.get() * GasUnits.LITERS_PER_KILOLITER;
+    }
+
+    public static long getDefaultMaxPressurePa() {
+        return GasPressure.pascals(CCBConfig.server().equipment.gasCanister.maxPressure.getF());
+    }
+
+    protected static boolean isInvalidTank(int tankIndex) {
+        return tankIndex != 0;
+    }
+
+    private static long getEnchantedVolume(ItemStack itemStack) {
+        long capacityLevel = 0;
+        for (Entry<Holder<Enchantment>> entry : itemStack.getTagEnchantments().entrySet()) {
+            if (!entry.getKey().is(AllEnchantments.CAPACITY)) {
+                continue;
+            }
+
+            capacityLevel = entry.getIntValue();
+            break;
+        }
+
+        return getDefaultVolume() * (1 + capacityLevel);
+    }
+
+    private static int getEconomizeCostPercent(ItemStack itemStack) {
+        int economizeLevel = 0;
+        for (Entry<Holder<Enchantment>> entry : itemStack.getTagEnchantments().entrySet()) {
+            if (!entry.getKey().is(CCBEnchantments.ECONOMIZE)) {
+                continue;
+            }
+
+            economizeLevel = entry.getIntValue();
+            break;
+        }
+
+        return 100 - Mth.clamp(economizeLevel, 0, ECONOMIZE_MINIMUM_DRAIN_LEVEL) * 20;
     }
 
     @Override
@@ -193,62 +255,6 @@ public class GasCanisterContainerContents implements AirtightHatchCanister {
 
         gas = newContents.copy();
         return true;
-    }
-
-    public static long getEconomizedDrainAmount(long logicalAmount, ItemStack itemStack) {
-        if (logicalAmount <= 0) {
-            return 0;
-        }
-
-        return (logicalAmount * getEconomizeCostPercent(itemStack) + 99) / 100;
-    }
-
-    public static long getLogicalAmountFromEconomizedDrain(long physicalDrain, ItemStack itemStack) {
-        if (physicalDrain <= 0) {
-            return 0;
-        }
-
-        return physicalDrain * 100 / getEconomizeCostPercent(itemStack);
-    }
-
-    public static long getDefaultVolume() {
-        return CCBConfig.server().equipment.gasCanister.gasVolume.get() * GasUnits.LITERS_PER_KILOLITER;
-    }
-
-    public static long getDefaultMaxPressurePa() {
-        return GasPressure.pascals(CCBConfig.server().equipment.gasCanister.maxPressure.getF());
-    }
-
-    protected static boolean isInvalidTank(int tankIndex) {
-        return tankIndex != 0;
-    }
-
-    private static long getEnchantedVolume(ItemStack itemStack) {
-        long capacityLevel = 0;
-        for (Entry<Holder<Enchantment>> entry : itemStack.getTagEnchantments().entrySet()) {
-            if (!entry.getKey().is(AllEnchantments.CAPACITY)) {
-                continue;
-            }
-
-            capacityLevel = entry.getIntValue();
-            break;
-        }
-
-        return getDefaultVolume() * (1 + capacityLevel);
-    }
-
-    private static int getEconomizeCostPercent(ItemStack itemStack) {
-        int economizeLevel = 0;
-        for (Entry<Holder<Enchantment>> entry : itemStack.getTagEnchantments().entrySet()) {
-            if (!entry.getKey().is(CCBEnchantments.ECONOMIZE)) {
-                continue;
-            }
-
-            economizeLevel = entry.getIntValue();
-            break;
-        }
-
-        return 100 - Mth.clamp(economizeLevel, 0, ECONOMIZE_MAX_LEVEL) * 20;
     }
 
     private boolean canContain(GasStack contents) {

@@ -37,26 +37,6 @@ public final class GasPipeTelemetryTargets {
         return topology.cachedArtifact(CACHE_KEY, () -> discover(level, topology));
     }
 
-    List<BlockPos> pressureTargetPositions() {
-        return pressureTargetPositions;
-    }
-
-    Map<BlockPos, Integer> pressureTargetIndicesByPosition() {
-        return pressureTargetIndicesByPosition;
-    }
-
-    Set<BlockPos> flowTargetPositions() {
-        return flowTargetPositions;
-    }
-
-    int pressureTargetCount() {
-        return pressureTargetPositions.size();
-    }
-
-    int flowTargetCount() {
-        return flowTargetPositions.size();
-    }
-
     private static GasPipeTelemetryTargets discover(Level level, Snapshot topology) {
         List<BlockPos> orderedPositions = topology.pipePositions().stream().sorted(GasNetworkTopology::compareBlockPositions).map(BlockPos::immutable).toList();
         if (orderedPositions.isEmpty()) {
@@ -82,5 +62,25 @@ public final class GasPipeTelemetryTargets {
             pressureIndices.put(pressureTargets.get(index), index);
         }
         return new GasPipeTelemetryTargets(List.copyOf(pressureTargets), Map.copyOf(pressureIndices), Set.copyOf(flowTargets));
+    }
+
+    List<BlockPos> pressureTargetPositions() {
+        return pressureTargetPositions;
+    }
+
+    Map<BlockPos, Integer> pressureTargetIndicesByPosition() {
+        return pressureTargetIndicesByPosition;
+    }
+
+    Set<BlockPos> flowTargetPositions() {
+        return flowTargetPositions;
+    }
+
+    int pressureTargetCount() {
+        return pressureTargetPositions.size();
+    }
+
+    int flowTargetCount() {
+        return flowTargetPositions.size();
     }
 }

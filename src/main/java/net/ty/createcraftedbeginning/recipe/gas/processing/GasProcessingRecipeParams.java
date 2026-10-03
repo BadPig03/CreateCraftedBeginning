@@ -30,6 +30,18 @@ public class GasProcessingRecipeParams extends ProcessingRecipeParams {
         gasResults = NonNullList.create();
     }
 
+    protected static <P extends GasProcessingRecipeParams> MapCodec<P> gasRecipeCodec(Supplier<P> factory) {
+        return RecordCodecBuilder.mapCodec(instance -> instance.group(codec(factory).forGetter(Function.identity()), GasRecipeData.MAP_CODEC.forGetter(GasProcessingRecipeParams::gasRecipeData)).apply(instance, (params, gasRecipeData) -> {
+            params.gasRequirements.addAll(gasRecipeData.requirements());
+            params.gasResults.addAll(gasRecipeData.results());
+            return params;
+        }));
+    }
+
+    protected static <P extends GasProcessingRecipeParams> StreamCodec<RegistryFriendlyByteBuf, P> gasRecipeStreamCodec(Supplier<P> factory) {
+        return streamCodec(factory);
+    }
+
     @Override
     protected void encode(RegistryFriendlyByteBuf buffer) {
         super.encode(buffer);
@@ -42,18 +54,6 @@ public class GasProcessingRecipeParams extends ProcessingRecipeParams {
         super.decode(buffer);
         gasRequirements = CatnipStreamCodecBuilders.nonNullList(GasRecipeRequirement.STREAM_CODEC).decode(buffer);
         gasResults = CatnipStreamCodecBuilders.nonNullList(GasStack.STREAM_CODEC).decode(buffer);
-    }
-
-    protected static <P extends GasProcessingRecipeParams> MapCodec<P> gasRecipeCodec(Supplier<P> factory) {
-        return RecordCodecBuilder.mapCodec(instance -> instance.group(codec(factory).forGetter(Function.identity()), GasRecipeData.MAP_CODEC.forGetter(GasProcessingRecipeParams::gasRecipeData)).apply(instance, (params, gasRecipeData) -> {
-            params.gasRequirements.addAll(gasRecipeData.requirements());
-            params.gasResults.addAll(gasRecipeData.results());
-            return params;
-        }));
-    }
-
-    protected static <P extends GasProcessingRecipeParams> StreamCodec<RegistryFriendlyByteBuf, P> gasRecipeStreamCodec(Supplier<P> factory) {
-        return streamCodec(factory);
     }
 
     protected final GasRecipeData gasRecipeData() {

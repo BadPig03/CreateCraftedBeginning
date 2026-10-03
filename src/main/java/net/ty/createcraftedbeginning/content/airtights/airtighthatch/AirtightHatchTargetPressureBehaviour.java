@@ -42,6 +42,27 @@ final class AirtightHatchTargetPressureBehaviour extends ScrollValueBehaviour {
         value = pressureStepForPa(DEFAULT_TARGET_PRESSURE_PA);
     }
 
+    private static MutableComponent formatPressureSetting(ValueSettings settings) {
+        MutableComponent component = CCBLang.text(formatPressureStep(settings.value())).component();
+        if (pressurePaForStep(settings.value()) > GasPressureLimits.SAFE_PRESSURE_PA) {
+            component.withStyle(ChatFormatting.RED);
+        }
+        return component;
+    }
+
+    private static String formatPressureStep(int pressureStep) {
+        return String.format(Locale.ROOT, "%.1f", (double) Mth.clamp(pressureStep, 0, MAX_PRESSURE_STEPS) / STEPS_PER_ATMOSPHERE);
+    }
+
+    private static int pressureStepForPa(long pressurePa) {
+        double pressureAtm = (double) Math.max(GasPressure.VACUUM_PA, pressurePa) / GasPressure.REFERENCE_PRESSURE_PA;
+        return Mth.clamp((int) Math.round(pressureAtm * STEPS_PER_ATMOSPHERE), 0, MAX_PRESSURE_STEPS);
+    }
+
+    private static long pressurePaForStep(int pressureStep) {
+        return Math.round((double) Mth.clamp(pressureStep, 0, MAX_PRESSURE_STEPS) * GasPressure.REFERENCE_PRESSURE_PA / STEPS_PER_ATMOSPHERE);
+    }
+
     @Override
     public String getClipboardKey() {
         return "HatchTargetPressure";
@@ -95,27 +116,6 @@ final class AirtightHatchTargetPressureBehaviour extends ScrollValueBehaviour {
     void setTargetPressurePa(long pressurePa) {
         syncRangeToCanister();
         setValue(pressureStepForPa(pressurePa));
-    }
-
-    private static MutableComponent formatPressureSetting(ValueSettings settings) {
-        MutableComponent component = CCBLang.text(formatPressureStep(settings.value())).component();
-        if (pressurePaForStep(settings.value()) > GasPressureLimits.SAFE_PRESSURE_PA) {
-            component.withStyle(ChatFormatting.RED);
-        }
-        return component;
-    }
-
-    private static String formatPressureStep(int pressureStep) {
-        return String.format(Locale.ROOT, "%.1f", (double) Mth.clamp(pressureStep, 0, MAX_PRESSURE_STEPS) / STEPS_PER_ATMOSPHERE);
-    }
-
-    private static int pressureStepForPa(long pressurePa) {
-        double pressureAtm = (double) Math.max(GasPressure.VACUUM_PA, pressurePa) / GasPressure.REFERENCE_PRESSURE_PA;
-        return Mth.clamp((int) Math.round(pressureAtm * STEPS_PER_ATMOSPHERE), 0, MAX_PRESSURE_STEPS);
-    }
-
-    private static long pressurePaForStep(int pressureStep) {
-        return Math.round((double) Mth.clamp(pressureStep, 0, MAX_PRESSURE_STEPS) * GasPressure.REFERENCE_PRESSURE_PA / STEPS_PER_ATMOSPHERE);
     }
 
     private void syncRangeToCanister() {

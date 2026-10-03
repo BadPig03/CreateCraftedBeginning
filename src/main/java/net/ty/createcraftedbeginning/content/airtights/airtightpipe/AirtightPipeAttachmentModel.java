@@ -41,6 +41,31 @@ public final class AirtightPipeAttachmentModel extends BakedModelWrapperWithData
         this.ambientOcclusion = ambientOcclusion;
     }
 
+    @Contract("_ -> new")
+    public static AirtightPipeAttachmentModel withAO(BakedModel template) {
+        return new AirtightPipeAttachmentModel(template, true);
+    }
+
+    private static AirtightPipeAttachmentPartial[] getPartials(AirtightPipeAttachmentTypes attachmentType) {
+        return switch (attachmentType) {
+            case NONE -> new AirtightPipeAttachmentPartial[0];
+            case RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.RIM};
+            case DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.DRAIN};
+            case INLET_RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.INLET_RIM};
+            case INLET_DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.INLET_DRAIN};
+            case OUTLET_RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.OUTLET_RIM};
+            case OUTLET_DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.OUTLET_DRAIN};
+        };
+    }
+
+    private static Direction getAttachmentModelDirection(AirtightPipeAttachmentTypes attachmentType, Direction connectionDirection) {
+        if (attachmentType != AirtightPipeAttachmentTypes.INLET_RIM && attachmentType != AirtightPipeAttachmentTypes.INLET_DRAIN) {
+            return connectionDirection;
+        }
+
+        return connectionDirection.getOpposite();
+    }
+
     @Override
     protected Builder gatherModelData(Builder builder, BlockAndTintGetter level, BlockPos pos, BlockState state, ModelData blockEntityData) {
         PipeModelData pipeData = new PipeModelData();
@@ -130,31 +155,6 @@ public final class AirtightPipeAttachmentModel extends BakedModelWrapperWithData
         }
 
         return ChunkRenderTypeSet.union(renderTypes);
-    }
-
-    @Contract("_ -> new")
-    public static AirtightPipeAttachmentModel withAO(BakedModel template) {
-        return new AirtightPipeAttachmentModel(template, true);
-    }
-
-    private static AirtightPipeAttachmentPartial[] getPartials(AirtightPipeAttachmentTypes attachmentType) {
-        return switch (attachmentType) {
-            case NONE -> new AirtightPipeAttachmentPartial[0];
-            case RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.RIM};
-            case DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.DRAIN};
-            case INLET_RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.INLET_RIM};
-            case INLET_DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.INLET_DRAIN};
-            case OUTLET_RIM -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.OUTLET_RIM};
-            case OUTLET_DRAIN -> new AirtightPipeAttachmentPartial[]{AirtightPipeAttachmentPartial.OUTLET_DRAIN};
-        };
-    }
-
-    private static Direction getAttachmentModelDirection(AirtightPipeAttachmentTypes attachmentType, Direction connectionDirection) {
-        if (attachmentType != AirtightPipeAttachmentTypes.INLET_RIM && attachmentType != AirtightPipeAttachmentTypes.INLET_DRAIN) {
-            return connectionDirection;
-        }
-
-        return connectionDirection.getOpposite();
     }
 
     private static final class PipeModelData {

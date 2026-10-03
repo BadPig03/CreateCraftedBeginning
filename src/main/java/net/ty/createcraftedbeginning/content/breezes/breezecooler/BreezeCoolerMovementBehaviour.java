@@ -35,43 +35,6 @@ public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
     private static final String COMPOUND_KEY_CONDUCTOR = "Conductor";
     private static CameraEntityProvider cameraEntityProvider = context -> null;
 
-    @Override
-    public void tick(MovementContext context) {
-        Level level = context.world;
-        if (!level.isClientSide()) {
-            return;
-        }
-
-        RandomSource random = level.getRandom();
-        Vec3 position = context.position;
-        Vec3 particlePos = position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125F).multiply(1, 0, 1));
-        if (random.nextInt(3) == 0 && context.motion.length() < 0.015625F) {
-            level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
-        }
-        LerpedFloat headAngle = getHeadAngle(context);
-        boolean shouldTurnQuickly = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
-        float currentAngle = headAngle.getValue();
-        float targetAngle = getTargetAngle(context);
-        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5F, shouldTurnQuickly ? Chaser.EXP : Chaser.exp(5));
-        headAngle.tickChaser();
-    }
-
-    @Override
-    public @Nullable ItemStack canBeDisabledVia(MovementContext context) {
-        return null;
-    }
-
-    @Override
-    public boolean disableBlockEntityRendering() {
-        return true;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
-        BreezeCoolerRenderer.renderInContraption(context, matrices, buffer, getHeadAngle(context), shouldRenderHat(context), renderWorld);
-    }
-
     public static void setCameraEntityProvider(CameraEntityProvider provider) {
         cameraEntityProvider = provider;
     }
@@ -129,6 +92,43 @@ public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void tick(MovementContext context) {
+        Level level = context.world;
+        if (!level.isClientSide()) {
+            return;
+        }
+
+        RandomSource random = level.getRandom();
+        Vec3 position = context.position;
+        Vec3 particlePos = position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125F).multiply(1, 0, 1));
+        if (random.nextInt(3) == 0 && context.motion.length() < 0.015625F) {
+            level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
+        }
+        LerpedFloat headAngle = getHeadAngle(context);
+        boolean shouldTurnQuickly = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
+        float currentAngle = headAngle.getValue();
+        float targetAngle = getTargetAngle(context);
+        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5F, shouldTurnQuickly ? Chaser.EXP : Chaser.exp(5));
+        headAngle.tickChaser();
+    }
+
+    @Override
+    public @Nullable ItemStack canBeDisabledVia(MovementContext context) {
+        return null;
+    }
+
+    @Override
+    public boolean disableBlockEntityRendering() {
+        return true;
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
+        BreezeCoolerRenderer.renderInContraption(context, matrices, buffer, getHeadAngle(context), shouldRenderHat(context), renderWorld);
     }
 
     @FunctionalInterface

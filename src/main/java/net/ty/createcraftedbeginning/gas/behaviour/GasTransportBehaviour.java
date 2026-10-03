@@ -56,6 +56,28 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         connectionsDirty = true;
     }
 
+    public static boolean isValidConnectionTarget(@Nullable Level level, BlockPos pos, BlockState state, Direction directionFromPipe) {
+        if (level == null) {
+            return false;
+        }
+
+        Direction localFace = directionFromPipe.getOpposite();
+        return state.getBlock() instanceof GasConnectable component && component.canConnectOnFace(pos, state, localFace) || state.getDestroySpeed(level, pos) != -1 && (state.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(state)) || GasCapabilities.hasBlockHandler(level, pos, localFace);
+    }
+
+    private static void finalizePendingTransfer(Level level, BlockPos pos, GasPipeConnection connection) {
+        if (!connection.hasPendingTransfer()) {
+            return;
+        }
+
+        GasStack unrecoveredTransfer = connection.finalizePendingTransferForOwnerRemoval(level, pos);
+        if (unrecoveredTransfer.isEmpty()) {
+            return;
+        }
+
+        GasReleaseService.release(level, GasReleaseRequest.radial(unrecoveredTransfer, pos, GasReleaseCause.RUPTURE));
+    }
+
     @Override
     public BehaviourType<?> getType() {
         return TYPE;
@@ -135,15 +157,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         }
 
         super.unload();
-    }
-
-    public static boolean isValidConnectionTarget(@Nullable Level level, BlockPos pos, BlockState state, Direction directionFromPipe) {
-        if (level == null) {
-            return false;
-        }
-
-        Direction localFace = directionFromPipe.getOpposite();
-        return state.getBlock() instanceof GasConnectable component && component.canConnectOnFace(pos, state, localFace) || state.getDestroySpeed(level, pos) != -1 && (state.canBeReplaced() || CCBBlockTags.GAS_SOURCES.matches(state)) || GasCapabilities.hasBlockHandler(level, pos, localFace);
     }
 
     public void finalizePendingTransfersBeforeBlockRemoval() {
@@ -270,19 +283,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
 
     protected boolean acceptsGas(GasStack gas, BlockState state, Direction direction) {
         return true;
-    }
-
-    private static void finalizePendingTransfer(Level level, BlockPos pos, GasPipeConnection connection) {
-        if (!connection.hasPendingTransfer()) {
-            return;
-        }
-
-        GasStack unrecoveredTransfer = connection.finalizePendingTransferForOwnerRemoval(level, pos);
-        if (unrecoveredTransfer.isEmpty()) {
-            return;
-        }
-
-        GasReleaseService.release(level, GasReleaseRequest.radial(unrecoveredTransfer, pos, GasReleaseCause.RUPTURE));
     }
 
     private void createConnectionData() {

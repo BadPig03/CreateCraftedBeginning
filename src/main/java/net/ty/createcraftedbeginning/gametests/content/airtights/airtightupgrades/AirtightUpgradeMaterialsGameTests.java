@@ -9,8 +9,10 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
@@ -20,17 +22,20 @@ import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.GogglesUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtighthelmet.upgrades.VisionUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HandheldDrillFilterButton;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HarvestOptimizationUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.MagnetUpgrade;
-import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.SilkTouchUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightItemUpgrades;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu.InventoryHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeMaterials;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeMaterialsSyncPacket;
+import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @ParametersAreNonnullByDefault
@@ -39,6 +44,50 @@ import java.util.Map;
 @PrefixGameTestTemplate(false)
 public final class AirtightUpgradeMaterialsGameTests {
     private AirtightUpgradeMaterialsGameTests() {
+    }
+
+    @GameTest(template = "gametest/empty_3x3")
+    public static void creativeInstallationBypassesMaterialsButPreservesUpgradeValidation(GameTestHelper helper) {
+        List<Item> equipmentItems = List.of(CCBItems.AIRTIGHT_HANDHELD_DRILL.get(), CCBItems.AIRTIGHT_HELMET.get(), CCBItems.AIRTIGHT_CHESTPLATE.get(), CCBItems.AIRTIGHT_LEGGINGS.get(), CCBItems.AIRTIGHT_BOOTS.get());
+        ResourceLocation unknownUpgradeId = CCBAPI.asResource("unknown_upgrade");
+        for (GameType gameType : List.of(GameType.CREATIVE, GameType.SURVIVAL)) {
+            Player player = helper.makeMockPlayer(gameType);
+            boolean creative = gameType == GameType.CREATIVE;
+            Inventory inventory = player.getInventory();
+            for (Item item : equipmentItems) {
+                ItemStack equipment = new ItemStack(item);
+                player.setItemInHand(InteractionHand.MAIN_HAND, equipment);
+                AirtightUpgradableMenu menu = (AirtightUpgradableMenu) ((MenuProvider) item).createMenu(1, inventory, player);
+                if (menu == null) {
+                    throw new NullPointerException("Expected an airtight upgrade menu for '" + item + "'.");
+                }
+
+                List<AirtightUpgrade> upgrades = AirtightItemUpgrades.getAllUpgrades(equipment).stream().filter(upgrade -> !upgrade.startsInstalled()).toList();
+                AirtightUpgrade first = upgrades.getFirst();
+                AirtightUpgrade second = upgrades.get(1);
+                ResourceLocation firstId = first.getID();
+                ResourceLocation secondId = second.getID();
+                InventoryHandler materials = menu.getMenuInventory();
+                helper.assertTrue(menu.tryInstallUpgrade(firstId) == creative, "Only creative players may install without materials");
+                helper.assertTrue(!menu.tryInstallUpgrade(unknownUpgradeId), "Creative mode must not allow unknown upgrade IDs");
+                materials.setStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX, new ItemStack(Items.DIRT));
+                helper.assertTrue(menu.tryInstallUpgrade(secondId) == creative, "Only creative players may ignore mismatched materials");
+                helper.assertTrue(materials.getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX).is(Items.DIRT), "Bypassed or rejected installation must preserve slot contents");
+                if (creative) {
+                    helper.assertTrue(!menu.tryInstallUpgrade(firstId), "Creative mode must not install the same upgrade twice");
+                    AirtightUpgradeStatus installedStatus = menu.getStatus(first);
+                    helper.assertTrue(installedStatus.isInstalled() && installedStatus.isEnabled(), "Creative installation must immediately enable the upgrade");
+                    helper.assertTrue(menu.getStatus(second).isEnabled(), "Creative installation with mismatched materials must immediately enable the upgrade");
+                    continue;
+                }
+
+                materials.setStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX, new ItemStack(second.getUpgradeItem(player.level())));
+                helper.assertTrue(menu.tryInstallUpgrade(secondId), "Survival installation with the configured material must still succeed");
+                helper.assertTrue(menu.getStatus(second).isEnabled(), "Survival installation must immediately enable the upgrade");
+                helper.assertTrue(materials.getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX).isEmpty(), "Survival installation must still consume one material");
+            }
+        }
+        helper.succeed();
     }
 
     @GameTest(template = "gametest/empty_3x3")
@@ -67,7 +116,7 @@ public final class AirtightUpgradeMaterialsGameTests {
             assertRejected(helper, HandheldDrillFilterButton.INSTANCE.getID(), ironId);
             helper.assertTrue(MagnetUpgrade.INSTANCE.getUpgradeItem(level) == Items.IRON_BLOCK, "Invalid overrides must retain the last valid material");
 
-            AirtightUpgradeMaterials.set(SilkTouchUpgrade.INSTANCE.getID(), ironId);
+            AirtightUpgradeMaterials.set(HarvestOptimizationUpgrade.INSTANCE.getID(), ironId);
             AirtightUpgradeMaterials.set(GogglesUpgrade.INSTANCE.getID(), ironId);
             AirtightUpgradeMaterials.set(VisionUpgrade.INSTANCE.getID(), ironId);
             Player player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -77,7 +126,7 @@ public final class AirtightUpgradeMaterialsGameTests {
                 throw new NullPointerException("Expected an airtight handheld drill upgrade menu.");
             }
 
-            assertSharedMaterialInstallation(helper, drillMenu, SilkTouchUpgrade.INSTANCE, MagnetUpgrade.INSTANCE);
+            assertSharedMaterialInstallation(helper, drillMenu, HarvestOptimizationUpgrade.INSTANCE, MagnetUpgrade.INSTANCE);
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(CCBItems.AIRTIGHT_HELMET.asItem()));
             AirtightUpgradableMenu helmetMenu = (AirtightUpgradableMenu) CCBItems.AIRTIGHT_HELMET.get().createMenu(2, player.getInventory(), player);
             if (helmetMenu == null) {

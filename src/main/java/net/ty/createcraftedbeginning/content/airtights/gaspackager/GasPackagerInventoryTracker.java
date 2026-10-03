@@ -27,6 +27,29 @@ final class GasPackagerInventoryTracker {
     private boolean availablePackagingPermitted;
     private long availableItemsScanTick = Long.MIN_VALUE;
 
+    private static InventorySummary createGasInventorySummary(List<PackagingTankSnapshot> tankSnapshot, boolean packagingPermitted) {
+        InventorySummary inventorySummary = new InventorySummary();
+        if (!packagingPermitted) {
+            return inventorySummary;
+        }
+
+        for (PackagingTankSnapshot tank : tankSnapshot) {
+            GasStack tankGas = tank.gas();
+            int amount = (int) Mth.clamp(tank.packageableAmount(), 0L, BigItemStack.INF);
+            if (tankGas.isEmpty() || amount <= 0) {
+                continue;
+            }
+
+            ItemStack virtualItem = VirtualGasItems.createVirtualItem(tankGas.copyWithAmount(1));
+            if (virtualItem.isEmpty()) {
+                continue;
+            }
+
+            inventorySummary.add(virtualItem, amount);
+        }
+        return inventorySummary;
+    }
+
     ScanResult scan(@Nullable InventoryIdentifier identifier, @Nullable GasHandler handler, long currentTick, boolean packagingPermitted) {
         if (identifier == null || handler == null) {
             return new ScanResult(clear(), null, false);
@@ -60,29 +83,6 @@ final class GasPackagerInventoryTracker {
 
     InventorySummary clearAvailableItems() {
         return clear();
-    }
-
-    private static InventorySummary createGasInventorySummary(List<PackagingTankSnapshot> tankSnapshot, boolean packagingPermitted) {
-        InventorySummary inventorySummary = new InventorySummary();
-        if (!packagingPermitted) {
-            return inventorySummary;
-        }
-
-        for (PackagingTankSnapshot tank : tankSnapshot) {
-            GasStack tankGas = tank.gas();
-            int amount = (int) Mth.clamp(tank.packageableAmount(), 0L, BigItemStack.INF);
-            if (tankGas.isEmpty() || amount <= 0) {
-                continue;
-            }
-
-            ItemStack virtualItem = VirtualGasItems.createVirtualItem(tankGas.copyWithAmount(1));
-            if (virtualItem.isEmpty()) {
-                continue;
-            }
-
-            inventorySummary.add(virtualItem, amount);
-        }
-        return inventorySummary;
     }
 
     private InventorySummary clear() {

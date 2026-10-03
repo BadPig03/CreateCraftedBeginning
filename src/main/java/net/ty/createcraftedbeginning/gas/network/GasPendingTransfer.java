@@ -34,6 +34,11 @@ final class GasPendingTransfer {
     private int retiredRecoveryDelayTicks = RETIRED_RECOVERY_INITIAL_DELAY_TICKS;
     private int retiredRecoveryCooldownTicks;
 
+    private static RecoveryOrigin readOrigin(CompoundTag compoundTag) {
+        String serializedOrigin = NbtValues.getStringOrDefault(compoundTag, COMPOUND_KEY_PENDING_TRANSFER_ORIGIN, RecoveryOrigin.ANY_ENDPOINT.serializedName);
+        return RecoveryOrigin.fromSerializedName(serializedOrigin);
+    }
+
     boolean isEmpty() {
         return transfer.isEmpty();
     }
@@ -159,11 +164,6 @@ final class GasPendingTransfer {
         origin = transfer.isEmpty() ? RecoveryOrigin.UNSPECIFIED : readOrigin(compoundTag);
         retiredRecoveryDelayTicks = RETIRED_RECOVERY_INITIAL_DELAY_TICKS;
         retiredRecoveryCooldownTicks = 0;
-    }
-
-    private static RecoveryOrigin readOrigin(CompoundTag compoundTag) {
-        String serializedOrigin = NbtValues.getStringOrDefault(compoundTag, COMPOUND_KEY_PENDING_TRANSFER_ORIGIN, RecoveryOrigin.ANY_ENDPOINT.serializedName);
-        return RecoveryOrigin.fromSerializedName(serializedOrigin);
     }
 
     private void setTransfer(GasStack nextTransfer, @Nullable GasConnectionEndpoint endpoint, @Nullable GasConnectionEndpoint previousEndpoint) {

@@ -56,53 +56,6 @@ public enum GasStorageTooltipProvider implements IServerDataProvider<BlockAccess
     private static final String OVERPRESSURE_STRESS_KEY = "Stress";
     private static final String OVERPRESSURE_STATUS_KEY = "Status";
 
-    @Override
-    public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
-        CompoundTag serverData = accessor.getServerData();
-        if (!serverData.contains(GasStorageDataProvider.STORAGE_KEY) || !serverData.contains(GasStorageDataProvider.STORAGE_UID_KEY) || !JadePlugin.GAS_STORAGE_BLOCK_TOOLTIP.toString().equals(serverData.getString(GasStorageDataProvider.STORAGE_UID_KEY))) {
-            return;
-        }
-
-        BlockEntity storageOwner = findStorageOwner(accessor.getBlockEntity());
-        if (storageOwner == null) {
-            return;
-        }
-
-        StorageReadout readout = AirtightTelemetryVisibility.storageReadout(storageOwner);
-        GasStorageDataProvider.appendData(tooltip, serverData, accessor.showDetails(), readout.capacity(), readout.pressure());
-        appendOverpressureTooltip(tooltip, serverData);
-    }
-
-    @Override
-    public void appendServerData(CompoundTag compoundTag, BlockAccessor blockAccessor) {
-        Level level = blockAccessor.getLevel();
-        BlockPos pos = blockAccessor.getPosition();
-        BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (blockEntity == null || blockEntity instanceof TeslaTurbineNozzleBlockEntity) {
-            return;
-        }
-
-        Set<GasHandler> gasHandlers = getGasHandlers(level, pos, blockEntity);
-        if (gasHandlers.isEmpty()) {
-            return;
-        }
-
-        BlockEntity storageOwner = findStorageOwner(blockEntity);
-        if (storageOwner == null) {
-            return;
-        }
-
-        boolean isCreative = blockEntity instanceof CreativeGasContainer container && container.isCreative(level, level.getBlockState(pos), pos);
-        StorageReadout readout = AirtightTelemetryVisibility.storageReadout(storageOwner);
-        GasStorageDataProvider.readData(compoundTag, gasHandlers, JadePlugin.GAS_STORAGE_BLOCK_TOOLTIP, isCreative, readout.capacity(), readout.pressure());
-        appendOverpressureServerData(compoundTag, storageOwner);
-    }
-
-    @Override
-    public ResourceLocation getUid() {
-        return JadePlugin.GAS_STORAGE_BLOCK_TOOLTIP;
-    }
-
     private static @Nullable BlockEntity findStorageOwner(@Nullable BlockEntity blockEntity) {
         if (blockEntity == null || blockEntity.isRemoved()) {
             return null;
@@ -234,5 +187,52 @@ public enum GasStorageTooltipProvider implements IServerDataProvider<BlockAccess
         }
 
         return OverpressureTooltips.snapshot(overpressure, tankBehaviour.getCapability());
+    }
+
+    @Override
+    public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
+        CompoundTag serverData = accessor.getServerData();
+        if (!serverData.contains(GasStorageDataProvider.STORAGE_KEY) || !serverData.contains(GasStorageDataProvider.STORAGE_UID_KEY) || !JadePlugin.GAS_STORAGE_BLOCK_TOOLTIP.toString().equals(serverData.getString(GasStorageDataProvider.STORAGE_UID_KEY))) {
+            return;
+        }
+
+        BlockEntity storageOwner = findStorageOwner(accessor.getBlockEntity());
+        if (storageOwner == null) {
+            return;
+        }
+
+        StorageReadout readout = AirtightTelemetryVisibility.storageReadout(storageOwner);
+        GasStorageDataProvider.appendData(tooltip, serverData, accessor.showDetails(), readout.capacity(), readout.pressure());
+        appendOverpressureTooltip(tooltip, serverData);
+    }
+
+    @Override
+    public void appendServerData(CompoundTag compoundTag, BlockAccessor blockAccessor) {
+        Level level = blockAccessor.getLevel();
+        BlockPos pos = blockAccessor.getPosition();
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity == null || blockEntity instanceof TeslaTurbineNozzleBlockEntity) {
+            return;
+        }
+
+        Set<GasHandler> gasHandlers = getGasHandlers(level, pos, blockEntity);
+        if (gasHandlers.isEmpty()) {
+            return;
+        }
+
+        BlockEntity storageOwner = findStorageOwner(blockEntity);
+        if (storageOwner == null) {
+            return;
+        }
+
+        boolean isCreative = blockEntity instanceof CreativeGasContainer container && container.isCreative(level, level.getBlockState(pos), pos);
+        StorageReadout readout = AirtightTelemetryVisibility.storageReadout(storageOwner);
+        GasStorageDataProvider.readData(compoundTag, gasHandlers, JadePlugin.GAS_STORAGE_BLOCK_TOOLTIP, isCreative, readout.capacity(), readout.pressure());
+        appendOverpressureServerData(compoundTag, storageOwner);
+    }
+
+    @Override
+    public ResourceLocation getUid() {
+        return JadePlugin.GAS_STORAGE_BLOCK_TOOLTIP;
     }
 }

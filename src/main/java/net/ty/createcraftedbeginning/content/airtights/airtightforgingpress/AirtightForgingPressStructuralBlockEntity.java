@@ -37,6 +37,14 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
         setLazyTickRate(10);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL.get(), (structural, ignoredContext) -> structural.getItemCapability());
+    }
+
+    public static boolean isLowerStore(BlockState blockState) {
+        return blockState.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).isLowerStore();
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         AirtightForgingPressStructuralPosition structuralPosition = getBlockState().getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION);
@@ -109,14 +117,6 @@ public class AirtightForgingPressStructuralBlockEntity extends SmartBlockEntity 
     @Override
     public MutableComponent format(int value) {
         return CCBLang.text(String.valueOf(value) + ' ').add(CCBLang.translate("gui.threshold.items")).component();
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS_STRUCTURAL.get(), (structural, ignoredContext) -> structural.getItemCapability());
-    }
-
-    public static boolean isLowerStore(BlockState blockState) {
-        return blockState.getValue(AirtightForgingPressStructuralBlock.STRUCTURAL_POSITION).isLowerStore();
     }
 
     void syncFilterFromMaster(ItemStack filterStack) {

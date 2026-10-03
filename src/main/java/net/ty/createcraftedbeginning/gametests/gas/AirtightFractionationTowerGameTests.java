@@ -2,6 +2,11 @@ package net.ty.createcraftedbeginning.gametests.gas;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.api.packager.InventoryIdentifier;
+import com.simibubi.create.content.fluids.potion.PotionFluid;
+import com.simibubi.create.content.fluids.potion.PotionFluid.BottleType;
+import com.simibubi.create.content.kinetics.motor.CreativeMotorBlock;
+import com.simibubi.create.content.kinetics.motor.CreativeMotorBlockEntity;
+import com.simibubi.create.content.kinetics.simpleRelays.CogWheelBlock;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock.HeatLevel;
 import com.simibubi.create.foundation.item.SmartInventory;
@@ -10,6 +15,7 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -18,12 +24,17 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.ChunkPos;
@@ -31,6 +42,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
@@ -56,16 +68,26 @@ import net.ty.createcraftedbeginning.api.gas.GasUnits;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseCause;
+import net.ty.createcraftedbeginning.api.thermoregulatorhandlers.AirtightThermoregulatorHandler;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.config.CCBMachines.AirtightFractionationTower;
 import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerFailurePacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerMode;
+import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerRecipeLookup;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.potiongas.PotionGas;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverPort;
 import net.ty.createcraftedbeginning.gametests.recipe.RecipeIndexTestScope;
 import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseState;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.recipe.FractionationTowerCraftPlanner;
 import net.ty.createcraftedbeginning.recipe.FractionationTowerRecipe;
@@ -77,7 +99,9 @@ import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -87,6 +111,267 @@ public final class AirtightFractionationTowerGameTests {
     private static final BlockPos ORIGIN = new BlockPos(1, 1, 1);
 
     private AirtightFractionationTowerGameTests() {
+    }
+
+    @GameTest(template = "gametest/empty_5x12x5", timeoutTicks = 40)
+    public static void potionFractionationPausesReloadsAndMergesExtendedProducts(GameTestHelper helper) {
+        assembleTower(helper);
+        helper.setBlock(ORIGIN.below(), AllBlocks.BLAZE_BURNER.getDefaultState().setValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED));
+        LayerPorts input = requireLayerPorts(helper, ORIGIN);
+        LayerPorts middle = requireLayerPorts(helper, ORIGIN.above());
+        LayerPorts top = requireLayerPorts(helper, ORIGIN.above(2));
+        input.fluids().fill(PotionFluid.of(250, new PotionContents(Potions.SWIFTNESS), BottleType.REGULAR), FluidAction.EXECUTE);
+        tickTower(helper, 70);
+        top.gases().fill(new GasStack(CCBGases.STEAM.get(), 1000), GasAction.EXECUTE);
+        tickTower(helper, 220);
+        helper.assertTrue(input.fluids().getFluidInTank(0).getAmount() == 250 && middle.fluids().getFluidInTank(0).isEmpty(), "Blocked potion output must not consume input or produce water.");
+        AirtightFractionationTowerBlockEntity controller = requireTowerController(helper);
+        Provider provider = helper.getLevel().registryAccess();
+        BlockPos center = controller.getBlockPos();
+        CompoundTag saved = controller.saveWithFullMetadata(provider);
+        BlockEntity restored = BlockEntity.loadStatic(center, controller.getBlockState(), saved, provider);
+        if (restored == null) {
+            throw new NullPointerException("Expected a restored potion fractionation controller at " + center + '.');
+        }
+
+        helper.getLevel().setBlockEntity(restored);
+        input = requireLayerPorts(helper, ORIGIN);
+        top.gases().drain(1000, GasAction.EXECUTE);
+        tickTower(helper, 129);
+        helper.assertTrue(input.fluids().getFluidInTank(0).getAmount() == 250, "Reloaded potion fractionation must retain its remaining processing time.");
+        tickTower(helper, 1);
+        helper.assertTrue(input.fluids().getFluidInTank(0).isEmpty() && middle.fluids().getFluidInTank(0).getAmount() == 250 && top.gases().getGasInTank(0).getAmount() == 7200, "One speed potion must produce water and 7200 GU atomically.");
+        input.fluids().fill(PotionFluid.of(250, new PotionContents(Potions.LONG_SWIFTNESS), BottleType.SPLASH), FluidAction.EXECUTE);
+        tickTower(helper, 200);
+        helper.assertTrue(input.fluids().getFluidInTank(0).isEmpty() && middle.fluids().getFluidInTank(0).getAmount() == 500 && top.gases().getGasInTank(0).getAmount() == 26400, "Extended potion gas must merge with the normalized regular product and add 19200 GU.");
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty_5x12x5", timeoutTicks = 40)
+    public static void instantPotionFractionationCompletesOneBatchAtomically(GameTestHelper helper) {
+        assembleTower(helper);
+        helper.setBlock(ORIGIN.below(), AllBlocks.BLAZE_BURNER.getDefaultState().setValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED));
+        LayerPorts input = requireLayerPorts(helper, ORIGIN);
+        LayerPorts middle = requireLayerPorts(helper, ORIGIN.above());
+        LayerPorts top = requireLayerPorts(helper, ORIGIN.above(2));
+        input.fluids().fill(PotionFluid.of(250, new PotionContents(Potions.STRONG_HEALING), BottleType.LINGERING), FluidAction.EXECUTE);
+        tickTower(helper, 199);
+        helper.assertTrue(input.fluids().getFluidInTank(0).getAmount() == 250 && middle.fluids().getFluidInTank(0).isEmpty() && top.gases().getGasInTank(0).isEmpty(), "Instant potion fractionation must not consume or produce resources before completion.");
+        tickTower(helper, 1);
+        helper.assertTrue(input.fluids().getFluidInTank(0).isEmpty() && middle.fluids().getFluidInTank(0).getAmount() == 250 && top.gases().getGasInTank(0).getAmount() == 800, "One completed instant potion batch must atomically produce water and 800 GU.");
+        tickTower(helper, 200);
+        helper.assertTrue(top.gases().getGasInTank(0).getAmount() == 800, "An empty input must not produce another instant potion batch.");
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty_5x12x5", timeoutTicks = 40)
+    public static void potionFractionationRestartsAfterInputChangeAndRecipeReload(GameTestHelper helper) {
+        assembleTower(helper);
+        helper.setBlock(ORIGIN.below(), AllBlocks.BLAZE_BURNER.getDefaultState().setValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED));
+        LayerPorts input = requireLayerPorts(helper, ORIGIN);
+        LayerPorts top = requireLayerPorts(helper, ORIGIN.above(2));
+        input.fluids().fill(PotionFluid.of(250, new PotionContents(Potions.SWIFTNESS), BottleType.REGULAR), FluidAction.EXECUTE);
+        tickTower(helper, 100);
+        input.fluids().drain(250, FluidAction.EXECUTE);
+        input.fluids().fill(PotionFluid.of(250, new PotionContents(Potions.LONG_SWIFTNESS), BottleType.REGULAR), FluidAction.EXECUTE);
+        tickTower(helper, 1);
+        tickTower(helper, 100);
+        AirtightFractionationTowerRecipeLookup.invalidateRecipeCaches();
+        tickTower(helper, 1);
+        tickTower(helper, 199);
+        helper.assertTrue(top.gases().getGasInTank(0).isEmpty() && input.fluids().getFluidInTank(0).getAmount() == 250, "Changed input and reloaded recipes must not reuse earlier progress.");
+        tickTower(helper, 1);
+        helper.assertTrue(input.fluids().getFluidInTank(0).isEmpty() && top.gases().getGasInTank(0).getAmount() == 19200, "Restarted fractionation must use only the current potion contents.");
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty_5x12x5", timeoutTicks = 40)
+    public static void compoundPotionFractionationPausesReloadsAndCommitsAllProducts(GameTestHelper helper) {
+        placeTank(helper, 3, 4);
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL.get()));
+        helper.assertTrue(usePanel(helper, player, ORIGIN).consumesAction(), "Expected a four-layer tower for compound fractionation.");
+        helper.setBlock(ORIGIN.below(), AllBlocks.BLAZE_BURNER.getDefaultState().setValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED));
+        LayerPorts input = requireLayerPorts(helper, ORIGIN);
+        LayerPorts water = requireLayerPorts(helper, ORIGIN.above());
+        LayerPorts speed = requireLayerPorts(helper, ORIGIN.above(2));
+        LayerPorts strength = requireLayerPorts(helper, ORIGIN.above(3));
+        PotionContents contents = new PotionContents(Optional.empty(), Optional.empty(), List.of(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 9600, 1), new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 3600)));
+        input.fluids().fill(PotionFluid.of(250, contents, BottleType.LINGERING), FluidAction.EXECUTE);
+        tickTower(helper, 70);
+        strength.gases().fill(new GasStack(CCBGases.STEAM.get(), 1000), GasAction.EXECUTE);
+        tickTower(helper, 220);
+        helper.assertTrue(input.fluids().getFluidInTank(0).getAmount() == 250 && water.fluids().getFluidInTank(0).isEmpty() && speed.gases().getGasInTank(0).isEmpty(), "A blocked final gas layer must pause all compound outputs without consuming the potion.");
+        AirtightFractionationTowerBlockEntity controller = requireTowerController(helper);
+        Provider provider = helper.getLevel().registryAccess();
+        BlockPos center = controller.getBlockPos();
+        BlockEntity restored = BlockEntity.loadStatic(center, controller.getBlockState(), controller.saveWithFullMetadata(provider), provider);
+        if (restored == null) {
+            throw new NullPointerException("Expected the reloaded compound fractionation controller at " + center + '.');
+        }
+
+        helper.getLevel().setBlockEntity(restored);
+        input = requireLayerPorts(helper, ORIGIN);
+        strength.gases().drain(1000, GasAction.EXECUTE);
+        tickTower(helper, 129);
+        helper.assertTrue(input.fluids().getFluidInTank(0).getAmount() == 250 && water.fluids().getFluidInTank(0).isEmpty() && speed.gases().getGasInTank(0).isEmpty() && strength.gases().getGasInTank(0).isEmpty(), "Reload must restore compound progress without producing any resource before completion.");
+        tickTower(helper, 1);
+        GasStack speedGas = speed.gases().getGasInTank(0);
+        GasStack strengthGas = strength.gases().getGasInTank(0);
+        MobEffectInstance speedEffect = PotionGas.findReleaseEffect(speedGas);
+        MobEffectInstance strengthEffect = PotionGas.findReleaseEffect(strengthGas);
+        if (speedEffect == null || strengthEffect == null) {
+            throw new NullPointerException("Expected both single-effect gas products after compound fractionation.");
+        }
+
+        helper.assertTrue(input.fluids().getFluidInTank(0).isEmpty() && water.fluids().getFluidInTank(0).is(Fluids.WATER) && water.fluids().getFluidInTank(0).getAmount() == 250, "Completing the batch must consume the potion and return its water exactly once.");
+        helper.assertTrue(speedGas.getAmount() == 7200 && speedEffect.getEffect().equals(MobEffects.MOVEMENT_SPEED) && speedEffect.getAmplifier() == 0 && strengthGas.getAmount() == 19200 && strengthEffect.getEffect().equals(MobEffects.DAMAGE_BOOST) && strengthEffect.getAmplifier() == 1, "The two gas layers must retain independent yields and levels after reload.");
+        tickTower(helper, 220);
+        helper.assertTrue(water.fluids().getFluidInTank(0).getAmount() == 250 && speed.gases().getGasInTank(0).getAmount() == 7200 && strength.gases().getGasInTank(0).getAmount() == 19200, "An empty compound input must not repeat any output.");
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty_5x12x5", timeoutTicks = 40)
+    public static void mixedPotionReloadsAndProductsUseTheirOwnReleaseRules(GameTestHelper helper) {
+        placeTank(helper, 3, 4);
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL.get()));
+        helper.assertTrue(usePanel(helper, player, ORIGIN).consumesAction(), "Expected a four-layer tower for mixed potion fractionation.");
+        helper.setBlock(ORIGIN.below(), AllBlocks.BLAZE_BURNER.getDefaultState().setValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED));
+        LayerPorts input = requireLayerPorts(helper, ORIGIN);
+        LayerPorts water = requireLayerPorts(helper, ORIGIN.above());
+        LayerPorts healing = requireLayerPorts(helper, ORIGIN.above(2));
+        LayerPorts speed = requireLayerPorts(helper, ORIGIN.above(3));
+        PotionContents contents = new PotionContents(Optional.of(Potions.SWIFTNESS), Optional.empty(), List.of(new MobEffectInstance(MobEffects.HEAL, 0, 1)));
+        input.fluids().fill(PotionFluid.of(250, contents, BottleType.SPLASH), FluidAction.EXECUTE);
+        tickTower(helper, 70);
+        speed.gases().fill(new GasStack(CCBGases.STEAM.get(), 1000), GasAction.EXECUTE);
+        tickTower(helper, 220);
+        helper.assertTrue(input.fluids().getFluidInTank(0).getAmount() == 250 && water.fluids().getFluidInTank(0).isEmpty() && healing.gases().getGasInTank(0).isEmpty(), "A blocked sustained product must prevent early instant gas, water and input consumption.");
+        ServerLevel level = helper.getLevel();
+        Provider provider = level.registryAccess();
+        AirtightFractionationTowerBlockEntity controller = requireTowerController(helper);
+        BlockPos center = controller.getBlockPos();
+        BlockEntity restored = BlockEntity.loadStatic(center, controller.getBlockState(), controller.saveWithFullMetadata(provider), provider);
+        if (restored == null) {
+            throw new NullPointerException("Expected the reloaded mixed potion controller at " + center + '.');
+        }
+
+        level.setBlockEntity(restored);
+        input = requireLayerPorts(helper, ORIGIN);
+        speed.gases().drain(1000, GasAction.EXECUTE);
+        tickTower(helper, 129);
+        helper.assertTrue(input.fluids().getFluidInTank(0).getAmount() == 250 && water.fluids().getFluidInTank(0).isEmpty() && healing.gases().getGasInTank(0).isEmpty() && speed.gases().getGasInTank(0).isEmpty(), "Reload must preserve mixed potion progress and wait for full batch completion.");
+        tickTower(helper, 1);
+        helper.assertTrue(input.fluids().getFluidInTank(0).isEmpty() && water.fluids().getFluidInTank(0).getAmount() == 250 && healing.gases().getGasInTank(0).getAmount() == 800 && speed.gases().getGasInTank(0).getAmount() == 7200, "Mixed completion must atomically produce one water batch, 800 GU healing and 7200 GU speed.");
+        tickTower(helper, 220);
+        helper.assertTrue(water.fluids().getFluidInTank(0).getAmount() == 250 && healing.gases().getGasInTank(0).getAmount() == 800 && speed.gases().getGasInTank(0).getAmount() == 7200, "An empty mixed input must not repeat completed outputs.");
+        GasStack healingGas = healing.gases().drain(300, GasAction.EXECUTE);
+        GasStack speedGas = speed.gases().drain(20, GasAction.EXECUTE);
+        BlockPos releasePos = ORIGIN.offset(1, 5, 1);
+        BlockPos source = helper.absolutePos(releasePos);
+        Villager target = helper.spawnWithNoFreeWill(EntityType.VILLAGER, releasePos);
+        target.setHealth(1);
+        GasReleaseState healingState = new GasReleaseState();
+        GasReleaseState speedState = new GasReleaseState();
+        GasReleaseService.release(level, GasReleaseRequest.radial(healingGas.copyWithAmount(99), source, GasReleaseCause.ATMOSPHERIC_OUTLET), healingState);
+        GasReleaseService.release(level, GasReleaseRequest.radial(speedGas.copyWithAmount(19), source, GasReleaseCause.ATMOSPHERIC_OUTLET), speedState);
+        helper.assertTrue(target.getHealth() == 1 && target.getActiveEffects().isEmpty(), "Separated products must wait for their own 100 GU and 20 GU thresholds.");
+        GasReleaseService.release(level, GasReleaseRequest.radial(healingGas.copyWithAmount(1), source, GasReleaseCause.ATMOSPHERIC_OUTLET), healingState);
+        GasReleaseService.release(level, GasReleaseRequest.radial(speedGas.copyWithAmount(1), source, GasReleaseCause.ATMOSPHERIC_OUTLET), speedState);
+        MobEffectInstance speedEffect = target.getEffect(MobEffects.MOVEMENT_SPEED);
+        if (speedEffect == null) {
+            throw new NullPointerException("Expected the separated speed gas to apply its sustained effect.");
+        }
+
+        helper.assertTrue(target.getHealth() == 9 && speedEffect.getDuration() == 60 && speedEffect.getAmplifier() == 0 && !target.hasEffect(MobEffects.HEAL), "Separated healing II must apply instantly while speed uses the existing three-second refresh rule.");
+        helper.assertTrue(!GasReleaseService.release(level, GasReleaseRequest.radial(healingGas.copyWithAmount(100), source, GasReleaseCause.ATMOSPHERIC_OUTLET), healingState).effectDue(), "Separated instant gas must retain the outlet cooldown.");
+        GasReleaseService.release(level, GasReleaseRequest.radial(healingGas.copyWithAmount(100), source, GasReleaseCause.MANUAL_VENT));
+        helper.assertTrue(target.getHealth() == 9, "A second outlet must not bypass the separated instant gas target cooldown.");
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty_5x12x5", timeoutTicks = 40)
+    public static void compoundPotionRequiresEnoughProductLayers(GameTestHelper helper) {
+        assembleTower(helper);
+        helper.setBlock(ORIGIN.below(), AllBlocks.BLAZE_BURNER.getDefaultState().setValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED));
+        LayerPorts input = requireLayerPorts(helper, ORIGIN);
+        input.fluids().fill(PotionFluid.of(250, new PotionContents(Potions.TURTLE_MASTER), BottleType.REGULAR), FluidAction.EXECUTE);
+        tickTower(helper, 220);
+        helper.assertTrue(input.fluids().getFluidInTank(0).getAmount() == 250 && requireLayerPorts(helper, ORIGIN.above()).fluids().getFluidInTank(0).isEmpty() && requireLayerPorts(helper, ORIGIN.above(2)).gases().getGasInTank(0).isEmpty(), "A three-layer tower must not consume or partially split a two-effect potion.");
+        helper.assertTrue(!requireTowerController(helper).getUpdateTag(helper.getLevel().registryAccess()).getCompound("Crafting").contains("Recipe"), "A tower without enough product layers must not start compound processing.");
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty_5x12x5", timeoutTicks = 40)
+    public static void compoundPotionInputChangeAndRecipeReloadResetWholeBatch(GameTestHelper helper) {
+        placeTank(helper, 3, 4);
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL.get()));
+        helper.assertTrue(usePanel(helper, player, ORIGIN).consumesAction(), "Expected a four-layer tower for compound input changes.");
+        helper.setBlock(ORIGIN.below(), AllBlocks.BLAZE_BURNER.getDefaultState().setValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED));
+        LayerPorts input = requireLayerPorts(helper, ORIGIN);
+        LayerPorts water = requireLayerPorts(helper, ORIGIN.above());
+        LayerPorts firstGas = requireLayerPorts(helper, ORIGIN.above(2));
+        LayerPorts secondGas = requireLayerPorts(helper, ORIGIN.above(3));
+        input.fluids().fill(PotionFluid.of(250, new PotionContents(Potions.TURTLE_MASTER), BottleType.REGULAR), FluidAction.EXECUTE);
+        tickTower(helper, 100);
+        input.fluids().drain(250, FluidAction.EXECUTE);
+        PotionContents replacement = new PotionContents(Optional.empty(), Optional.empty(), List.of(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 3600), new MobEffectInstance(MobEffects.DAMAGE_BOOST, 9600, 1)));
+        input.fluids().fill(PotionFluid.of(250, replacement, BottleType.SPLASH), FluidAction.EXECUTE);
+        tickTower(helper, 1);
+        tickTower(helper, 100);
+        AirtightFractionationTowerRecipeLookup.invalidateRecipeCaches();
+        tickTower(helper, 1);
+        tickTower(helper, 199);
+        helper.assertTrue(input.fluids().getFluidInTank(0).getAmount() == 250 && water.fluids().getFluidInTank(0).isEmpty() && firstGas.gases().getGasInTank(0).isEmpty() && secondGas.gases().getGasInTank(0).isEmpty(), "Changing a compound potion and reloading recipes must discard old progress for all outputs.");
+        tickTower(helper, 1);
+        helper.assertTrue(input.fluids().getFluidInTank(0).isEmpty() && water.fluids().getFluidInTank(0).getAmount() == 250 && firstGas.gases().getGasInTank(0).getAmount() == 7200 && secondGas.gases().getGasInTank(0).getAmount() == 19200, "Only the replacement compound potion may produce a completed batch.");
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty_5x12x5", timeoutTicks = 530)
+    public static void photothermalReceiverHeatsTowerAndCoolsAfterLightStops(GameTestHelper helper) {
+        assembleTower(helper);
+        BlockPos receiverPos = ORIGIN.below();
+        helper.setBlock(receiverPos, CCBBlocks.PHOTOTHERMAL_RECEIVER_BLOCK.getDefaultState());
+        PhotothermalReceiverBlockEntity receiver = CCBBlocks.PHOTOTHERMAL_RECEIVER_BLOCK.get().getBlockEntity(helper.getLevel(), helper.absolutePos(receiverPos));
+        if (receiver == null) {
+            throw new NullPointerException("Expected a photothermal receiver below the fractionation tower at " + receiverPos + '.');
+        }
+
+        assertTowerThermalState(helper, AirtightThermoregulatorHandler.NONE, AirtightFractionationTowerMode.NONE);
+        int[] ticks = {0};
+        helper.onEachTick(() -> {
+            int tick = ++ticks[0];
+            if (tick < 380) {
+                int powerLp = 16;
+                if (tick >= 150) {
+                    powerLp = 32;
+                }
+                if (tick >= 300) {
+                    powerLp = 48;
+                }
+
+                receiver.receiveLaser(receiver.getBlockPos().west(), PhotothermalReceiverPort.WEST, powerLp);
+            }
+
+            if (tick == 130) {
+                assertTowerThermalState(helper, AirtightThermoregulatorHandler.HEATED, AirtightFractionationTowerMode.FRACTIONATION);
+            }
+            if (tick == 270) {
+                assertTowerThermalState(helper, AirtightThermoregulatorHandler.HEATED, AirtightFractionationTowerMode.FRACTIONATION);
+            }
+            if (tick == 370) {
+                assertTowerThermalState(helper, AirtightThermoregulatorHandler.SUPERHEATED, AirtightFractionationTowerMode.FRACTIONATION);
+            }
+            if (tick < 500) {
+                return;
+            }
+
+            assertTowerThermalState(helper, AirtightThermoregulatorHandler.NONE, AirtightFractionationTowerMode.NONE);
+            helper.succeed();
+        });
     }
 
     @GameTest(template = "gametest/empty_5x12x5", timeoutTicks = 40)
@@ -702,6 +987,87 @@ public final class AirtightFractionationTowerGameTests {
         receiver.handleUpdateTag(controller.getUpdateTag(provider), provider);
         helper.assertTrue(receiver.getUpdateTag(provider).getCompound("Crafting").isEmpty(), "Completion must synchronize cleared processing state; server=" + controller.getUpdateTag(provider).getCompound("Crafting") + ", receiver=" + receiver.getUpdateTag(provider).getCompound("Crafting"));
         helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty_20x12x20", timeoutTicks = 240)
+    public static void slowPumpsEmptyFractionationGasProductsWithoutRemainder(GameTestHelper helper) {
+        assembleTower(helper);
+        helper.setBlock(ORIGIN.below(), AllBlocks.BLAZE_BURNER.getDefaultState().setValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.SEETHING));
+        LayerPorts input = requireLayerPorts(helper, ORIGIN);
+        input.items().insertItem(0, new ItemStack(Items.IRON_INGOT), false);
+        FractionationTowerRecipe recipe = new Builder(CCBAPI.asResource("test/tower_last_gas_unit")).require(Items.IRON_INGOT).temperatureCondition(TemperatureCondition.SUPERHEATED).duration(2).outputAtLayer(1, new GasStack(CCBGases.NATURAL_AIR.get(), 100)).outputAtLayer(2, new GasStack(CCBGases.MOIST_AIR.get(), 100)).build();
+        try (RecipeIndexTestScope ignored = new RecipeIndexTestScope(helper.getLevel(), List.of(recipe))) {
+            tickTower(helper, 40);
+        }
+        helper.assertTrue(recipe.validate().isEmpty(), "Invalid fractionation pump fixture recipe: " + recipe.validate());
+        assertPumpsExtractLayerProducts(helper, 1, List.of(new GasStack(CCBGases.NATURAL_AIR.get(), 100), new GasStack(CCBGases.MOIST_AIR.get(), 100)));
+    }
+
+    @GameTest(template = "gametest/empty_20x12x20", timeoutTicks = 1600)
+    public static void mixedPotionProductsPumpIntoSeparateTanksWithoutLoss(GameTestHelper helper) {
+        placeTank(helper, 3, 4);
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL.get()));
+        helper.assertTrue(usePanel(helper, player, ORIGIN).consumesAction(), "Expected a four-layer tower for pumping mixed potion products.");
+        helper.setBlock(ORIGIN.below(), AllBlocks.BLAZE_BURNER.getDefaultState().setValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED));
+        PotionContents contents = new PotionContents(Optional.of(Potions.SWIFTNESS), Optional.of(0x123456), List.of(new MobEffectInstance(MobEffects.HEAL, 0, 1)));
+        requireLayerPorts(helper, ORIGIN).fluids().fill(PotionFluid.of(250, contents, BottleType.LINGERING), FluidAction.EXECUTE);
+        tickTower(helper, 200);
+        GasStack healing = requireLayerPorts(helper, ORIGIN.above(2)).gases().getGasInTank(0).copy();
+        GasStack speed = requireLayerPorts(helper, ORIGIN.above(3)).gases().getGasInTank(0).copy();
+        helper.assertTrue(healing.getAmount() == 800 && speed.getAmount() == 7200, "Mixed pump acceptance must start with both full potion gas products.");
+        helper.assertTrue(requireLayerPorts(helper, ORIGIN).fluids().getFluidInTank(0).isEmpty() && requireLayerPorts(helper, ORIGIN.above()).fluids().getFluidInTank(0).getAmount() == 250, "Pumping must begin after the mixed input has become its water and gas products.");
+        assertPumpsExtractLayerProducts(helper, 2, List.of(healing, speed));
+    }
+
+    private static void assertPumpsExtractLayerProducts(GameTestHelper helper, int firstLayer, List<GasStack> expected) {
+        List<GasStorageHandler> sources = new ArrayList<>();
+        List<AirtightTankBlockEntity> targets = new ArrayList<>();
+        List<AirtightPumpBlockEntity> pumps = new ArrayList<>();
+        for (int index = 0; index < expected.size(); index++) {
+            int layer = firstLayer + index;
+            GasStack product = expected.get(index);
+            GasStorageHandler source = requireLayerPorts(helper, ORIGIN.above(layer)).gases();
+            helper.assertValueEqual(source.getGasInTank(0).getAmount(), product.getAmount(), "generated gas in layer " + layer);
+            sources.add(source);
+            BlockPos pumpPos = ORIGIN.offset(3, layer, index);
+            BlockPos targetPos = pumpPos.east();
+            BlockPos cogPos = pumpPos.south();
+            BlockPos motorPos = cogPos.east();
+            helper.setBlock(targetPos, CCBBlocks.AIRTIGHT_TANK_BLOCK.getDefaultState());
+            helper.setBlock(pumpPos, CCBBlocks.AIRTIGHT_PUMP_BLOCK.getDefaultState().setValue(BlockStateProperties.FACING, Direction.EAST));
+            helper.setBlock(cogPos, AllBlocks.COGWHEEL.getDefaultState().setValue(CogWheelBlock.AXIS, Axis.X));
+            helper.setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.WEST));
+            BlockEntity pumpEntity = helper.getBlockEntity(pumpPos);
+            BlockEntity motorEntity = helper.getBlockEntity(motorPos);
+            AirtightTankBlockEntity target = CCBBlocks.AIRTIGHT_TANK_BLOCK.get().getBlockEntity(helper.getLevel(), helper.absolutePos(targetPos));
+            if (target == null) {
+                throw new NullPointerException("Expected pump, motor and target tank for fractionation layer " + layer + '.');
+            }
+
+            AirtightPumpBlockEntity pump = (AirtightPumpBlockEntity) pumpEntity;
+            CreativeMotorBlockEntity motor = (CreativeMotorBlockEntity) motorEntity;
+            motor.generatedSpeed.setValue(32);
+            pumps.add(pump);
+            targets.add(target);
+        }
+        int[] stableTicks = {0};
+        helper.succeedWhen(() -> {
+            for (int index = 0; index < sources.size(); index++) {
+                helper.assertTrue(Math.abs(pumps.get(index).getSpeed()) == 32, "Fractionation pump must run at 32 RPM.");
+                long remaining = sources.get(index).getGasInTank(0).getAmount();
+                GasStack receivedGas = targets.get(index).getTankInventory().getGasStack();
+                long received = receivedGas.getAmount();
+                GasStack product = expected.get(index);
+                helper.assertTrue(receivedGas.isEmpty() || GasStack.isSameGasSameComponents(receivedGas, product), "Pumping a product must retain its gas components without mixing layers.");
+                helper.assertValueEqual(remaining + received, product.getAmount(), "conserved gas for fractionation layer " + (firstLayer + index));
+                if (remaining != 0) {
+                    stableTicks[0] = 0;
+                }
+                helper.assertValueEqual(remaining, 0L, "gas remaining in fractionation layer " + (firstLayer + index));
+            }
+            helper.assertTrue(++stableTicks[0] >= 12, "Empty fractionation outputs must remain stable for 12 ticks.");
+        });
     }
 
     private static void verifyOutputRollback(GameTestHelper helper, boolean throwOnOutput) {

@@ -56,6 +56,19 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
     }
 
+    public static boolean isOpenAt(BlockState state, Direction direction) {
+        return direction.getAxis() == state.getValue(AXIS);
+    }
+
+    private static void markConnectionsDirty(Level level, BlockPos pos) {
+        GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
+        if (transport == null) {
+            return;
+        }
+
+        transport.markConnectionsDirty();
+    }
+
     @Override
     public Optional<ItemStack> removeBracket(BlockGetter level, BlockPos pos, boolean inOnReplacedContext) {
         BracketedBlockEntityBehaviour bracketBehaviour = BlockEntityBehaviour.get(level, pos, BracketedBlockEntityBehaviour.TYPE);
@@ -183,18 +196,5 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         GasNetworkTopology.invalidate(level, pos);
-    }
-
-    public static boolean isOpenAt(BlockState state, Direction direction) {
-        return direction.getAxis() == state.getValue(AXIS);
-    }
-
-    private static void markConnectionsDirty(Level level, BlockPos pos) {
-        GasTransportBehaviour transport = BlockEntityBehaviour.get(level, pos, GasTransportBehaviour.TYPE);
-        if (transport == null) {
-            return;
-        }
-
-        transport.markConnectionsDirty();
     }
 }

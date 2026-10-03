@@ -33,6 +33,81 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
     private static final String COMPOUND_KEY_WORKING_POSITION = "WorkingPosition";
     private static final String COMPOUND_KEY_CLIENT_PREVIOUS_POSITION = "ClientPreviousPosition";
 
+    public static LerpedFloat getAnimation(MovementContext context) {
+        if (context.temporaryData instanceof LerpedFloat connectionAnimation) {
+            return connectionAnimation;
+        }
+
+        LerpedFloat connectionAnimation = LerpedFloat.linear();
+        context.temporaryData = connectionAnimation;
+        return connectionAnimation;
+    }
+
+    private static @Nullable PortableGasInterfaceBlockEntity findStationaryInterface(Level level, BlockPos searchPos, BlockState movingState, Direction facing) {
+        for (int interfaceOffset = 0; interfaceOffset < 2; interfaceOffset++) {
+            PortableGasInterfaceBlockEntity stationary = getStationaryInterfaceAt(level, searchPos.relative(facing, interfaceOffset), movingState, facing);
+            if (stationary == null) {
+                continue;
+            }
+
+            return stationary;
+        }
+        return null;
+    }
+
+    private static @Nullable PortableGasInterfaceBlockEntity getStationaryInterfaceAt(Level level, BlockPos interfacePos, BlockState movingState, Direction facing) {
+        if (!(level.getBlockEntity(interfacePos) instanceof PortableGasInterfaceBlockEntity stationary)) {
+            return null;
+        }
+
+        BlockState stationaryState = level.getBlockState(interfacePos);
+        if (stationaryState.getBlock() != movingState.getBlock() || stationaryState.getValue(PortableGasInterfaceBlock.FACING) != facing.getOpposite()) {
+            return null;
+        }
+
+        if (stationary.isPowered()) {
+            return null;
+        }
+
+        return stationary;
+    }
+
+    private static Optional<Direction> getValidFacing(MovementContext context) {
+        Vec3 localFacing = Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal());
+        Vec3 rotatedFacing = context.rotation.apply(localFacing);
+        Direction worldFacing = Direction.getNearest(rotatedFacing.x, rotatedFacing.y, rotatedFacing.z);
+        if (rotatedFacing.distanceTo(Vec3.atLowerCornerOf(worldFacing.getNormal())) > 0.5F) {
+            return Optional.empty();
+        }
+
+        return Optional.of(worldFacing);
+    }
+
+    private static boolean shouldStall(MovementContext context, Vec3 targetPosition, boolean isOnCarriage) {
+        if (context.stall || isOnCarriage) {
+            return false;
+        }
+
+        Vec3 nextPosition = context.position.add(context.motion);
+        return context.position.closerThan(targetPosition, targetPosition.distanceTo(nextPosition));
+    }
+
+    private static void updateClientConnection(MovementContext context, BlockPos movingPos, PortableGasInterfaceBlockEntity stationary) {
+        context.data.put(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION, NbtUtils.writeBlockPos(movingPos));
+        boolean shouldAnimateConnection = context.contraption instanceof CarriageContraption || context.contraption.entity.isStalled() || context.motion.lengthSqr() == 0;
+        if (!shouldAnimateConnection) {
+            return;
+        }
+
+        getAnimation(context).chase(stationary.getDistance() / 2, 0.25F, Chaser.LINEAR);
+    }
+
+    private static void startTransfer(MovementContext context, PortableGasInterfaceBlockEntity stationary, Direction facing) {
+        Vec3 connectionOffset = VecHelper.getCenterOf(stationary.getBlockPos()).subtract(context.position);
+        Vec3 projectedOffset = VecHelper.project(connectionOffset, Vec3.atLowerCornerOf(facing.getNormal()));
+        stationary.startTransferringTo(context.contraption, (float) (projectedOffset.length() + 1.85F - 1));
+    }
+
     @Override
     public Vec3 getActiveAreaOffset(MovementContext context) {
         return Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal()).scale(1.85);
@@ -116,81 +191,6 @@ public class PortableGasInterfaceMovement extends PortableStorageInterfaceMoveme
         context.data.remove(COMPOUND_KEY_WORKING_POSITION);
         context.stall = false;
         getAnimation(context).chase(0, 0.25F, Chaser.LINEAR);
-    }
-
-    public static LerpedFloat getAnimation(MovementContext context) {
-        if (context.temporaryData instanceof LerpedFloat connectionAnimation) {
-            return connectionAnimation;
-        }
-
-        LerpedFloat connectionAnimation = LerpedFloat.linear();
-        context.temporaryData = connectionAnimation;
-        return connectionAnimation;
-    }
-
-    private static @Nullable PortableGasInterfaceBlockEntity findStationaryInterface(Level level, BlockPos searchPos, BlockState movingState, Direction facing) {
-        for (int interfaceOffset = 0; interfaceOffset < 2; interfaceOffset++) {
-            PortableGasInterfaceBlockEntity stationary = getStationaryInterfaceAt(level, searchPos.relative(facing, interfaceOffset), movingState, facing);
-            if (stationary == null) {
-                continue;
-            }
-
-            return stationary;
-        }
-        return null;
-    }
-
-    private static @Nullable PortableGasInterfaceBlockEntity getStationaryInterfaceAt(Level level, BlockPos interfacePos, BlockState movingState, Direction facing) {
-        if (!(level.getBlockEntity(interfacePos) instanceof PortableGasInterfaceBlockEntity stationary)) {
-            return null;
-        }
-
-        BlockState stationaryState = level.getBlockState(interfacePos);
-        if (stationaryState.getBlock() != movingState.getBlock() || stationaryState.getValue(PortableGasInterfaceBlock.FACING) != facing.getOpposite()) {
-            return null;
-        }
-
-        if (stationary.isPowered()) {
-            return null;
-        }
-
-        return stationary;
-    }
-
-    private static Optional<Direction> getValidFacing(MovementContext context) {
-        Vec3 localFacing = Vec3.atLowerCornerOf(context.state.getValue(PortableGasInterfaceBlock.FACING).getNormal());
-        Vec3 rotatedFacing = context.rotation.apply(localFacing);
-        Direction worldFacing = Direction.getNearest(rotatedFacing.x, rotatedFacing.y, rotatedFacing.z);
-        if (rotatedFacing.distanceTo(Vec3.atLowerCornerOf(worldFacing.getNormal())) > 0.5F) {
-            return Optional.empty();
-        }
-
-        return Optional.of(worldFacing);
-    }
-
-    private static boolean shouldStall(MovementContext context, Vec3 targetPosition, boolean isOnCarriage) {
-        if (context.stall || isOnCarriage) {
-            return false;
-        }
-
-        Vec3 nextPosition = context.position.add(context.motion);
-        return context.position.closerThan(targetPosition, targetPosition.distanceTo(nextPosition));
-    }
-
-    private static void updateClientConnection(MovementContext context, BlockPos movingPos, PortableGasInterfaceBlockEntity stationary) {
-        context.data.put(COMPOUND_KEY_CLIENT_PREVIOUS_POSITION, NbtUtils.writeBlockPos(movingPos));
-        boolean shouldAnimateConnection = context.contraption instanceof CarriageContraption || context.contraption.entity.isStalled() || context.motion.lengthSqr() == 0;
-        if (!shouldAnimateConnection) {
-            return;
-        }
-
-        getAnimation(context).chase(stationary.getDistance() / 2, 0.25F, Chaser.LINEAR);
-    }
-
-    private static void startTransfer(MovementContext context, PortableGasInterfaceBlockEntity stationary, Direction facing) {
-        Vec3 connectionOffset = VecHelper.getCenterOf(stationary.getBlockPos()).subtract(context.position);
-        Vec3 projectedOffset = VecHelper.project(connectionOffset, Vec3.atLowerCornerOf(facing.getNormal()));
-        stationary.startTransferringTo(context.contraption, (float) (projectedOffset.length() + 1.85F - 1));
     }
 
     private void tickClient(MovementContext context) {

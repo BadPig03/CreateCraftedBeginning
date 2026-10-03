@@ -465,6 +465,15 @@ public final class GasPressureFlowGraph {
             return new EdgeFlow(Math.max(0, flowRate), Math.max(0, fromPressureConductance), Math.max(0, toPressureConductance), Math.max(0, constantFlowRate));
         }
 
+        private static EdgeFlow actual(double flowRate) {
+            return new EdgeFlow(Math.max(0, flowRate), 0, 0, 0);
+        }
+
+        private static EdgeFlow fixed(double flowRate) {
+            double fixedFlowRate = Math.max(0, flowRate);
+            return new EdgeFlow(fixedFlowRate, 0, 0, fixedFlowRate);
+        }
+
         double symmetricConductance() {
             if (fromPressureConductance == toPressureConductance) {
                 return fromPressureConductance;
@@ -475,15 +484,6 @@ public final class GasPressureFlowGraph {
 
         double linearizedFlowRate(double fromPressurePa, double toPressurePa) {
             return constantFlowRate + fromPressureConductance * fromPressurePa - toPressureConductance * toPressurePa;
-        }
-
-        private static EdgeFlow actual(double flowRate) {
-            return new EdgeFlow(Math.max(0, flowRate), 0, 0, 0);
-        }
-
-        private static EdgeFlow fixed(double flowRate) {
-            double fixedFlowRate = Math.max(0, flowRate);
-            return new EdgeFlow(fixedFlowRate, 0, 0, fixedFlowRate);
         }
     }
 

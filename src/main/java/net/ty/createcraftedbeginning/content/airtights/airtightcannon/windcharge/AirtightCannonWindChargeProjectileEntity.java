@@ -69,6 +69,14 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         this.initMotion = initMotion;
     }
 
+    public static void playLaunchSound(Level level, Vec3 location, float pitch) {
+        CCBSoundEvents.WIND_CHARGE_LAUNCH.playAt(level, location, 1, pitch, true);
+    }
+
+    public static void build(Builder<AirtightCannonWindChargeProjectileEntity> builder) {
+        builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
+    }
+
     @Override
     public void addAdditionalSaveData(CompoundTag compoundTag) {
         super.addAdditionalSaveData(compoundTag);
@@ -228,14 +236,6 @@ public class AirtightCannonWindChargeProjectileEntity extends AbstractWindCharge
         }
 
         initMotion = new Vec3(motionX, motionY, motionZ);
-    }
-
-    public static void playLaunchSound(Level level, Vec3 location, float pitch) {
-        CCBSoundEvents.WIND_CHARGE_LAUNCH.playAt(level, location, 1, pitch, true);
-    }
-
-    public static void build(Builder<AirtightCannonWindChargeProjectileEntity> builder) {
-        builder.sized(DEFAULT_SIZE, DEFAULT_SIZE).eyeHeight(0);
     }
 
     public void setSourcePressurePa(long sourcePressurePa) {

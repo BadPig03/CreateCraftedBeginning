@@ -4,7 +4,6 @@ import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsBoard;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsFormatter;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollValueBehaviour;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.BlockHitResult;
@@ -36,25 +35,8 @@ final class CreativeAirtightTankPressureBehaviour extends ScrollValueBehaviour {
         value = MAX_PRESSURE_STEPS;
     }
 
-    @Override
-    public void tick() {
-        super.tick();
-        syncFromController();
-    }
-
-    @Override
-    public ValueSettingsBoard createBoard(Player player, BlockHitResult hitResult) {
-        return new ValueSettingsBoard(label, max, 2, List.of(CCBLang.text("atm").component()), new ValueSettingsFormatter(CreativeAirtightTankPressureBehaviour::formatPressureSetting));
-    }
-
     static long normalizePressurePa(long pressurePa) {
         return pressurePaForStep(pressureStepForPa(pressurePa));
-    }
-
-    void syncFromController() {
-        long pressurePa = normalizePressurePa(owner.getFixedPressurePa());
-        owner.mirrorLocalFixedPressurePa(pressurePa);
-        value = pressureStepForPa(pressurePa);
     }
 
     private static void applyPressureSetting(CreativeAirtightTankBlockEntity tank, int pressureStep) {
@@ -63,10 +45,6 @@ final class CreativeAirtightTankPressureBehaviour extends ScrollValueBehaviour {
             controller = tank;
         }
         controller.setLocalFixedPressurePa(pressurePaForStep(pressureStep));
-    }
-
-    private static MutableComponent formatPressureSetting(ValueSettings settings) {
-        return CCBLang.text(formatPressureStep(settings.value())).component();
     }
 
     private static String formatPressureStep(int pressureStep) {
@@ -80,5 +58,22 @@ final class CreativeAirtightTankPressureBehaviour extends ScrollValueBehaviour {
 
     private static long pressurePaForStep(int pressureStep) {
         return Math.round((double) Mth.clamp(pressureStep, 0, MAX_PRESSURE_STEPS) * GasPressure.REFERENCE_PRESSURE_PA / STEPS_PER_ATMOSPHERE);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        syncFromController();
+    }
+
+    @Override
+    public ValueSettingsBoard createBoard(Player player, BlockHitResult hitResult) {
+        return new ValueSettingsBoard(label, max, 2, List.of(CCBLang.text("atm").component()), new ValueSettingsFormatter(settings -> CCBLang.text(formatPressureStep(settings.value())).component()));
+    }
+
+    void syncFromController() {
+        long pressurePa = normalizePressurePa(owner.getFixedPressurePa());
+        owner.mirrorLocalFixedPressurePa(pressurePa);
+        value = pressureStepForPa(pressurePa);
     }
 }

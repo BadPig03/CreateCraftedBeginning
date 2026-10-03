@@ -41,6 +41,10 @@ record AmethystCollectorPanelGeometry(BlockPos anchor, List<BlockPos> dependenci
         return findGeometry(origin, pos -> (!(level instanceof Level world) || world.isLoaded(pos)) && isCollector(level, pos));
     }
 
+    static AmethystCollectorPanelGeometry withPlacement(Level level, BlockPos origin, BlockPos placementPos) {
+        return findGeometry(origin, pos -> level.isLoaded(pos) && (pos.equals(placementPos) || isCollector(level, pos)));
+    }
+
     static @Nullable AmethystCollectorPanelRectangle rectangleFromKnownValidDependencies(List<BlockPos> dependencies) {
         if (dependencies.isEmpty()) {
             return null;
@@ -48,20 +52,18 @@ record AmethystCollectorPanelGeometry(BlockPos anchor, List<BlockPos> dependenci
 
         BlockPos first = dependencies.getFirst();
         int minX = first.getX();
-        int maxX = first.getX();
+        int maxX = minX;
         int minZ = first.getZ();
-        int maxZ = first.getZ();
+        int maxZ = minZ;
         for (BlockPos dependency : dependencies) {
-            minX = Math.min(minX, dependency.getX());
-            maxX = Math.max(maxX, dependency.getX());
-            minZ = Math.min(minZ, dependency.getZ());
-            maxZ = Math.max(maxZ, dependency.getZ());
+            int x = dependency.getX();
+            int z = dependency.getZ();
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minZ = Math.min(minZ, z);
+            maxZ = Math.max(maxZ, z);
         }
         return new AmethystCollectorPanelRectangle(new BlockPos(minX, first.getY(), minZ), minX, maxX, minZ, maxZ);
-    }
-
-    boolean isActive(BlockPos pos) {
-        return topologyValid && activeRectangle != null && activeRectangle.contains(pos);
     }
 
     private static AmethystCollectorPanelGeometry findGeometry(BlockPos origin, Predicate<BlockPos> isCollector) {
@@ -73,19 +75,21 @@ record AmethystCollectorPanelGeometry(BlockPos anchor, List<BlockPos> dependenci
         Set<BlockPos> visited = new HashSet<>();
         frontier.add(origin.immutable());
         int minX = origin.getX();
-        int maxX = origin.getX();
+        int maxX = minX;
         int minZ = origin.getZ();
-        int maxZ = origin.getZ();
+        int maxZ = minZ;
         while (!frontier.isEmpty()) {
             BlockPos current = frontier.removeFirst();
             if (!visited.add(current)) {
                 continue;
             }
 
-            minX = Math.min(minX, current.getX());
-            maxX = Math.max(maxX, current.getX());
-            minZ = Math.min(minZ, current.getZ());
-            maxZ = Math.max(maxZ, current.getZ());
+            int x = current.getX();
+            int z = current.getZ();
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minZ = Math.min(minZ, z);
+            maxZ = Math.max(maxZ, z);
             if (visited.size() > AmethystCollectorPanelBlock.MAX_AREA || maxX - minX + 1 > AmethystCollectorPanelBlock.MAX_SIDE || maxZ - minZ + 1 > AmethystCollectorPanelBlock.MAX_SIDE) {
                 List<BlockPos> dependencies = sortedDependencies(visited);
                 BlockPos anchor = dependencies.isEmpty() ? origin.immutable() : dependencies.getFirst();
@@ -141,4 +145,9 @@ record AmethystCollectorPanelGeometry(BlockPos anchor, List<BlockPos> dependenci
     private static AmethystCollectorPanelGeometry invalid(BlockPos anchor, List<BlockPos> dependencies) {
         return new AmethystCollectorPanelGeometry(anchor, dependencies, List.of(), null, false);
     }
+
+    boolean isActive(BlockPos pos) {
+        return topologyValid && activeRectangle != null && activeRectangle.contains(pos);
+    }
+
 }

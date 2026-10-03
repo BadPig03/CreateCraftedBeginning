@@ -37,32 +37,6 @@ final class GasInjectionChamberBasinOutputs {
         return resultStacks;
     }
 
-    Optional<BasinPlan> preview(BasinBlockEntity basin, BasinInputs inputs) {
-        return createPlan(basin, inputs, false);
-    }
-
-    Optional<BasinPlan> roll(BasinBlockEntity basin, BasinInputs inputs) {
-        return createPlan(basin, inputs, true);
-    }
-
-    FluidStack getBatchFluidResult(GasInjectionRecipe recipe, int batchSize) {
-        if (!recipe.hasFluidOutput() || batchSize <= 0) {
-            return FluidStack.EMPTY;
-        }
-
-        FluidStack resultPerBatch = recipe.getFluidResult();
-        if (resultPerBatch.isEmpty()) {
-            return FluidStack.EMPTY;
-        }
-
-        long resultAmount = (long) resultPerBatch.getAmount() * batchSize;
-        if (resultAmount <= 0 || resultAmount > Integer.MAX_VALUE) {
-            return FluidStack.EMPTY;
-        }
-
-        return resultPerBatch.copyWithAmount((int) resultAmount);
-    }
-
     private static void addResultStack(List<ItemStack> resultStacks, ItemStack stackToAdd) {
         if (stackToAdd.isEmpty()) {
             return;
@@ -105,6 +79,32 @@ final class GasInjectionChamberBasinOutputs {
             }
         }
         return resultStacks;
+    }
+
+    Optional<BasinPlan> preview(BasinBlockEntity basin, BasinInputs inputs) {
+        return createPlan(basin, inputs, false);
+    }
+
+    Optional<BasinPlan> roll(BasinBlockEntity basin, BasinInputs inputs) {
+        return createPlan(basin, inputs, true);
+    }
+
+    FluidStack getBatchFluidResult(GasInjectionRecipe recipe, int batchSize) {
+        if (!recipe.hasFluidOutput() || batchSize <= 0) {
+            return FluidStack.EMPTY;
+        }
+
+        FluidStack resultPerBatch = recipe.getFluidResult();
+        if (resultPerBatch.isEmpty()) {
+            return FluidStack.EMPTY;
+        }
+
+        long resultAmount = (long) resultPerBatch.getAmount() * batchSize;
+        if (resultAmount <= 0 || resultAmount > Integer.MAX_VALUE) {
+            return FluidStack.EMPTY;
+        }
+
+        return resultPerBatch.copyWithAmount((int) resultAmount);
     }
 
     private Optional<BasinPlan> createPlan(BasinBlockEntity basin, BasinInputs inputs, boolean rollRandomItemOutputs) {

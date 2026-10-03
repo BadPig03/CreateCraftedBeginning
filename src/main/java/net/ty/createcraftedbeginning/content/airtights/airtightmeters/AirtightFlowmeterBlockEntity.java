@@ -32,6 +32,32 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
         display = new AirtightFlowmeterDisplay(this);
     }
 
+    private static long flowDisplayBucket(long flowRate) {
+        if (flowRate < GasUnits.GU_PER_KGU) {
+            return flowRate;
+        }
+
+        if (flowRate < GasUnits.GU_PER_MGU) {
+            return GasUnits.GU_PER_KGU + roundNonNegative(flowRate, GasUnits.GU_PER_KGU / 100);
+        }
+
+        if (flowRate < GasUnits.GU_PER_GGU) {
+            return GasUnits.GU_PER_MGU + roundNonNegative(flowRate, GasUnits.GU_PER_MGU / 100);
+        }
+
+        return GasUnits.GU_PER_GGU + roundNonNegative(flowRate, GasUnits.GU_PER_GGU / 100);
+    }
+
+    private static long roundNonNegative(long value, long divisor) {
+        long quotient = value / divisor;
+        long remainder = value % divisor;
+        if (remainder >= (divisor + 1) / 2) {
+            return quotient + 1;
+        }
+
+        return quotient;
+    }
+
     @Override
     protected float getNeedleTargetAngle() {
         return Mth.lerp(getFlowProgress(), NEEDLE_MIN_ANGLE, NEEDLE_MAX_ANGLE);
@@ -91,31 +117,5 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
 
     private float getFlowProgress() {
         return Mth.clamp((float) flowRate / MAX_FLOW_RATE, 0, 1);
-    }
-
-    private static long flowDisplayBucket(long flowRate) {
-        if (flowRate < GasUnits.GU_PER_KGU) {
-            return flowRate;
-        }
-
-        if (flowRate < GasUnits.GU_PER_MGU) {
-            return GasUnits.GU_PER_KGU + roundNonNegative(flowRate, GasUnits.GU_PER_KGU / 100);
-        }
-
-        if (flowRate < GasUnits.GU_PER_GGU) {
-            return GasUnits.GU_PER_MGU + roundNonNegative(flowRate, GasUnits.GU_PER_MGU / 100);
-        }
-
-        return GasUnits.GU_PER_GGU + roundNonNegative(flowRate, GasUnits.GU_PER_GGU / 100);
-    }
-
-    private static long roundNonNegative(long value, long divisor) {
-        long quotient = value / divisor;
-        long remainder = value % divisor;
-        if (remainder >= (divisor + 1) / 2) {
-            return quotient + 1;
-        }
-
-        return quotient;
     }
 }

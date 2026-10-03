@@ -30,6 +30,14 @@ public abstract class GasProcessingRecipe<I extends RecipeInput, P extends GasPr
         gasResults = gasRecipeData.resultStacks();
     }
 
+    public static <P extends GasProcessingRecipeParams, R extends GasProcessingRecipe<?, P>> MapCodec<R> gasRecipeCodec(Factory<P, R> factory, MapCodec<P> paramsCodec) {
+        return codec(factory, paramsCodec);
+    }
+
+    public static <P extends GasProcessingRecipeParams, R extends GasProcessingRecipe<?, P>> StreamCodec<RegistryFriendlyByteBuf, R> gasRecipeStreamCodec(Factory<P, R> factory, StreamCodec<RegistryFriendlyByteBuf, P> paramsCodec) {
+        return streamCodec(factory, paramsCodec);
+    }
+
     @Override
     public List<String> validate() {
         List<String> errors = super.validate();
@@ -49,14 +57,6 @@ public abstract class GasProcessingRecipe<I extends RecipeInput, P extends GasPr
     @Override
     public GasRecipeData getGasRecipeData() {
         return gasRecipeData;
-    }
-
-    public static <P extends GasProcessingRecipeParams, R extends GasProcessingRecipe<?, P>> MapCodec<R> gasRecipeCodec(Factory<P, R> factory, MapCodec<P> paramsCodec) {
-        return codec(factory, paramsCodec);
-    }
-
-    public static <P extends GasProcessingRecipeParams, R extends GasProcessingRecipe<?, P>> StreamCodec<RegistryFriendlyByteBuf, R> gasRecipeStreamCodec(Factory<P, R> factory, StreamCodec<RegistryFriendlyByteBuf, P> paramsCodec) {
-        return streamCodec(factory, paramsCodec);
     }
 
     public NonNullList<SizedGasIngredient> getGasIngredients() {

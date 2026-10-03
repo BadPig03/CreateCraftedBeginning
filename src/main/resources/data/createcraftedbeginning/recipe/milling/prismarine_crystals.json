@@ -1,0 +1,15 @@
+{
+  "type": "create:milling",
+  "ingredients": [
+    {
+      "item": "minecraft:prismarine_crystals"
+    }
+  ],
+  "processing_time": 150,
+  "results": [
+    {
+      "chance": 0.8,
+      "id": "minecraft:quartz"
+    }
+  ]
+}

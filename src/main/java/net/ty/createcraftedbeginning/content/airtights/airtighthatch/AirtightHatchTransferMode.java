@@ -27,6 +27,10 @@ enum AirtightHatchTransferMode implements INamedIconOptions {
         translationKey = "createcraftedbeginning.gui.airtight_hatch.transfer_mode." + Lang.asId(name());
     }
 
+    static AirtightHatchTransferMode fromValue(int modeValue) {
+        return VALUES[clamp(modeValue, 0, VALUES.length - 1)];
+    }
+
     @Override
     public CCBIcons getIcon() {
         return icon;
@@ -35,9 +39,5 @@ enum AirtightHatchTransferMode implements INamedIconOptions {
     @Override
     public String getTranslationKey() {
         return translationKey;
-    }
-
-    static AirtightHatchTransferMode fromValue(int modeValue) {
-        return VALUES[clamp(modeValue, 0, VALUES.length - 1)];
     }
 }

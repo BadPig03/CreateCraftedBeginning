@@ -17,10 +17,13 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBPartialModels {
+    public static final PartialModel PHOTOTHERMAL_RECEIVER_HORIZONTAL_PORT = block("photothermal_receiver/ports/horizontal");
+    public static final PartialModel PHOTOTHERMAL_RECEIVER_HORIZONTAL_GLOW_PORT = block("photothermal_receiver/ports/horizontal_glow");
+    public static final PartialModel PHOTOTHERMAL_RECEIVER_VERTICAL_PORT = block("photothermal_receiver/ports/vertical");
+    public static final PartialModel PHOTOTHERMAL_RECEIVER_VERTICAL_GLOW_PORT = block("photothermal_receiver/ports/vertical_glow");
+
     public static final PartialModel BREEZE_TRAIN_HAT = entity("train_hat");
     public static final PartialModel BREEZE_LOGISTICS_HAT = entity("logistics_hat");
-
-    public static final PartialModel PNEUMATIC_ENGINE_COGS = block("pneumatic_engine/block_cogs");
 
     public static final PartialModel AIRTIGHT_PUMP_COGS = block("airtight_pump/block_cogs");
     public static final PartialModel AIRTIGHT_METER_NEEDLE = block("airtight_meters/needle");
@@ -86,11 +89,9 @@ public class CCBPartialModels {
     public static final PartialModel AIR_VENT_CLOSED = block("air_vent/closed");
     public static final PartialModel AIR_VENT_OPENED = block("air_vent/opened");
 
-    public static final PartialModel END_INCINERATION_BLOWER_CORE = block("end_incineration_blower/core");
     public static final PartialModel END_SCULK_SILENCER_CORE = block("end_sculk_silencer/core");
 
     public static final PartialModel SHAFT_HALF_UP = block("shaft_half_up");
-    public static final PartialModel SHAFT_HALF_DOWN = block("shaft_half_down");
 
     public static final PartialModel BALLOON_10X8 = balloon("balloon_10x8");
     public static final PartialModel BALLOON_10X12 = balloon("balloon_10x12");

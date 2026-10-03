@@ -28,6 +28,15 @@ class TeslaTurbineLevelCalculator {
         this.turbine = turbine;
     }
 
+    private static float readLevel(CompoundTag compoundTag, String key) {
+        float level = NbtValues.getFloatOrDefault(compoundTag, key, 0);
+        if (!Float.isFinite(level)) {
+            return 0;
+        }
+
+        return Mth.clamp(level, 0, MAX_LEVEL);
+    }
+
     void updateSupplyLevel(float newLevel) {
         if (!setSupplyLevel(newLevel)) {
             return;
@@ -89,15 +98,6 @@ class TeslaTurbineLevelCalculator {
 
         supplyLevel = readLevel(compoundTag, COMPOUND_KEY_SUPPLY_LEVEL);
         typeLevel = readLevel(compoundTag, COMPOUND_KEY_TYPE_LEVEL);
-    }
-
-    private static float readLevel(CompoundTag compoundTag, String key) {
-        float level = NbtValues.getFloatOrDefault(compoundTag, key, 0);
-        if (!Float.isFinite(level)) {
-            return 0;
-        }
-
-        return Mth.clamp(level, 0, MAX_LEVEL);
     }
 
     private int getRotorLevel() {

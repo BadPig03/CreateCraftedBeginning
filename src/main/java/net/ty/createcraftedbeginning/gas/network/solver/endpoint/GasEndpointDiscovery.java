@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.gas.network.solver.endpoint;
 
-import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.foundation.ICapabilityProvider;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -13,7 +12,6 @@ import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
-import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifiers;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
@@ -70,9 +68,7 @@ public final class GasEndpointDiscovery {
                 continue;
             }
 
-            BlockFace inventoryFace = endpointFace.getOpposite();
-            InventoryIdentifier identifier = GasInventoryIdentifiers.get(level, inventoryFace);
-            accesses.add(new PressureBoundaryAccess(endpointFace, inventoryFace, handler, identifier));
+            accesses.add(new PressureBoundaryAccess(endpointFace, handler));
         }
         return List.copyOf(accesses);
     }
@@ -192,13 +188,5 @@ public final class GasEndpointDiscovery {
     }
 
     @Internal
-    public record PressureBoundaryAccess(BlockFace pipeFace, BlockFace inventoryFace, GasPressureBoundary handler, @Nullable InventoryIdentifier identifier) {
-        long simulateDrainAmount(GasStack gas) {
-            return GasTransferExecutor.simulateDrainAmount(handler, gas, Long.MAX_VALUE);
-        }
-
-        long simulateFillAmount(GasStack gas) {
-            return GasTransferExecutor.simulateFillAmount(handler, gas, Long.MAX_VALUE, GasPressureLimits.HARD_PRESSURE_PA);
-        }
-    }
+    public record PressureBoundaryAccess(BlockFace pipeFace, GasPressureBoundary handler) {}
 }

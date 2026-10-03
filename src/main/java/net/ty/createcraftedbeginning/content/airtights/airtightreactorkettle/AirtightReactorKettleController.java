@@ -58,6 +58,22 @@ public final class AirtightReactorKettleController {
         observedRecipeCacheVersion = AirtightReactorKettleRecipeLookup.getRecipeCacheVersion();
     }
 
+    private static float sanitizeKineticSpeed(float speed) {
+        if (!Float.isFinite(speed)) {
+            return 0;
+        }
+
+        return speed;
+    }
+
+    private static float sanitizePressureSpeedMultiplier(float multiplier) {
+        if (Float.isFinite(multiplier) && multiplier >= 1.0F) {
+            return multiplier;
+        }
+
+        return 1;
+    }
+
     @Internal
     public void tick() {
         if (kettle.getLevel() == null) {
@@ -492,22 +508,6 @@ public final class AirtightReactorKettleController {
         processingKineticSpeed = 0;
         pressureSpeedMultiplier = 1;
         clearRecipes();
-    }
-
-    private static float sanitizeKineticSpeed(float speed) {
-        if (!Float.isFinite(speed)) {
-            return 0;
-        }
-
-        return speed;
-    }
-
-    private static float sanitizePressureSpeedMultiplier(float multiplier) {
-        if (Float.isFinite(multiplier) && multiplier >= 1.0F) {
-            return multiplier;
-        }
-
-        return 1;
     }
 
     private void clearRecipes() {

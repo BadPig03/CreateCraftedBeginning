@@ -32,6 +32,38 @@ class AirtightForgingPressStructureManager {
         this.press = press;
     }
 
+    private static float getSpeed(BlockPos pressPos, Level level) {
+        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
+        if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
+            return 0;
+        }
+
+        return shaft.getSpeed();
+    }
+
+    private static float getTheoreticalSpeed(BlockPos pressPos, Level level) {
+        AirtightForgingPressStructuralShaftBlockEntity shaft = getKineticTooltipSource(pressPos, level);
+        if (shaft == null) {
+            return 0;
+        }
+
+        return Mth.abs(shaft.getTheoreticalSpeed());
+    }
+
+    private static @Nullable AirtightForgingPressStructuralShaftBlockEntity getKineticTooltipSource(BlockPos pressPos, Level level) {
+        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
+        if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
+            return null;
+        }
+
+        return shaft;
+    }
+
+    private static boolean isOverstressed(BlockPos pressPos, Level level) {
+        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
+        return level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft && shaft.getOverstressed();
+    }
+
     void tick() {
         if (!evaluate()) {
             return;
@@ -85,38 +117,6 @@ class AirtightForgingPressStructureManager {
         }
 
         return getKineticTooltipSource(press.getBlockPos(), level);
-    }
-
-    private static float getSpeed(BlockPos pressPos, Level level) {
-        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
-        if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
-            return 0;
-        }
-
-        return shaft.getSpeed();
-    }
-
-    private static float getTheoreticalSpeed(BlockPos pressPos, Level level) {
-        AirtightForgingPressStructuralShaftBlockEntity shaft = getKineticTooltipSource(pressPos, level);
-        if (shaft == null) {
-            return 0;
-        }
-
-        return Mth.abs(shaft.getTheoreticalSpeed());
-    }
-
-    private static @Nullable AirtightForgingPressStructuralShaftBlockEntity getKineticTooltipSource(BlockPos pressPos, Level level) {
-        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
-        if (!(level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft)) {
-            return null;
-        }
-
-        return shaft;
-    }
-
-    private static boolean isOverstressed(BlockPos pressPos, Level level) {
-        BlockPos shaftPos = pressPos.offset(AirtightForgingPressStructuralPosition.TOP_CENTER.getStructureOffset());
-        return level.getBlockEntity(shaftPos) instanceof AirtightForgingPressStructuralShaftBlockEntity shaft && shaft.getOverstressed();
     }
 
     private boolean evaluate() {

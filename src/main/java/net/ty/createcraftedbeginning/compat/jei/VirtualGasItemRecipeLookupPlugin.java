@@ -34,51 +34,6 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
         this.runtimeSupplier = runtimeSupplier;
     }
 
-    @Override
-    public <V> List<RecipeType<?>> getRecipeTypes(IFocus<V> focus) {
-        GasFocus gasFocus = readGasFocus(focus);
-        if (gasFocus == null) {
-            return List.of();
-        }
-
-        IJeiRuntime runtime = runtimeSupplier.get();
-        if (runtime == null) {
-            return List.of();
-        }
-
-        List<RecipeType<?>> matchingTypes = new ArrayList<>();
-        runtime.getRecipeManager().createRecipeCategoryLookup().get().forEach(category -> {
-            boolean hasMatchingRecipe = runtime.getRecipeManager().createRecipeLookup(category.getRecipeType()).get().anyMatch(recipe -> recipeMatches(recipe, gasFocus));
-            if (!hasMatchingRecipe) {
-                return;
-            }
-
-            matchingTypes.add(category.getRecipeType());
-        });
-
-        return matchingTypes;
-    }
-
-    @Override
-    public <T, V> List<T> getRecipes(IRecipeCategory<T> recipeCategory, IFocus<V> focus) {
-        GasFocus gasFocus = readGasFocus(focus);
-        if (gasFocus == null) {
-            return List.of();
-        }
-
-        IJeiRuntime runtime = runtimeSupplier.get();
-        if (runtime == null) {
-            return List.of();
-        }
-
-        return runtime.getRecipeManager().createRecipeLookup(recipeCategory.getRecipeType()).get().filter(recipe -> recipeMatches(recipe, gasFocus)).toList();
-    }
-
-    @Override
-    public <T> List<T> getRecipes(IRecipeCategory<T> recipeCategory) {
-        return List.of();
-    }
-
     private static boolean recipeMatches(Object recipeObject, GasFocus focus) {
         Object unwrappedRecipe = recipeObject instanceof RecipeHolder<?> holder ? holder.value() : recipeObject;
         if (unwrappedRecipe instanceof GasAwareRecipe gasRecipe) {
@@ -123,6 +78,51 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
         }
 
         return new GasFocus(gasStack.copyWithAmount(GasUnits.GU_PER_KGU), focus.getRole());
+    }
+
+    @Override
+    public <V> List<RecipeType<?>> getRecipeTypes(IFocus<V> focus) {
+        GasFocus gasFocus = readGasFocus(focus);
+        if (gasFocus == null) {
+            return List.of();
+        }
+
+        IJeiRuntime runtime = runtimeSupplier.get();
+        if (runtime == null) {
+            return List.of();
+        }
+
+        List<RecipeType<?>> matchingTypes = new ArrayList<>();
+        runtime.getRecipeManager().createRecipeCategoryLookup().get().forEach(category -> {
+            boolean hasMatchingRecipe = runtime.getRecipeManager().createRecipeLookup(category.getRecipeType()).get().anyMatch(recipe -> recipeMatches(recipe, gasFocus));
+            if (!hasMatchingRecipe) {
+                return;
+            }
+
+            matchingTypes.add(category.getRecipeType());
+        });
+
+        return matchingTypes;
+    }
+
+    @Override
+    public <T, V> List<T> getRecipes(IRecipeCategory<T> recipeCategory, IFocus<V> focus) {
+        GasFocus gasFocus = readGasFocus(focus);
+        if (gasFocus == null) {
+            return List.of();
+        }
+
+        IJeiRuntime runtime = runtimeSupplier.get();
+        if (runtime == null) {
+            return List.of();
+        }
+
+        return runtime.getRecipeManager().createRecipeLookup(recipeCategory.getRecipeType()).get().filter(recipe -> recipeMatches(recipe, gasFocus)).toList();
+    }
+
+    @Override
+    public <T> List<T> getRecipes(IRecipeCategory<T> recipeCategory) {
+        return List.of();
     }
 
     private record GasFocus(GasStack gas, RecipeIngredientRole role) {}

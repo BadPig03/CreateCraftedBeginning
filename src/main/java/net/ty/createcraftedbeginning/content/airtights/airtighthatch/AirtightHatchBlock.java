@@ -77,6 +77,14 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(CANISTER_TYPE, CanisterType.EMPTY));
     }
 
+    static boolean hasValidAttachment(LevelReader level, BlockPos hatchPos, BlockState hatchState) {
+        Direction facing = hatchState.getValue(FACING);
+        BlockPos targetPos = hatchPos.relative(facing);
+        BlockState targetState = level.getBlockState(targetPos);
+        Direction targetFace = facing.getOpposite();
+        return canSupportCenter(level, targetPos, targetFace) && targetState.getBlock() instanceof GasConnectable component && component.canConnectOnFace(targetPos, targetState, targetFace);
+    }
+
     @Override
     protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
         return simpleCodec(AirtightHatchBlock::new);
@@ -295,14 +303,6 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
     @Override
     public BlockEntityType<? extends AirtightHatchBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.AIRTIGHT_HATCH.get();
-    }
-
-    static boolean hasValidAttachment(LevelReader level, BlockPos hatchPos, BlockState hatchState) {
-        Direction facing = hatchState.getValue(FACING);
-        BlockPos targetPos = hatchPos.relative(facing);
-        BlockState targetState = level.getBlockState(targetPos);
-        Direction targetFace = facing.getOpposite();
-        return canSupportCenter(level, targetPos, targetFace) && targetState.getBlock() instanceof GasConnectable component && component.canConnectOnFace(targetPos, targetState, targetFace);
     }
 
     public enum CanisterType implements StringRepresentable {

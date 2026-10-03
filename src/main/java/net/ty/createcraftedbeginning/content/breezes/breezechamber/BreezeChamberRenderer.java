@@ -38,18 +38,6 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
         super(context);
     }
 
-    @Override
-    protected void renderSafe(BreezeChamberBlockEntity chamber, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay) {
-        Level level = chamber.getLevel();
-        if (level == null) {
-            return;
-        }
-
-        WindLevel windLevel = chamber.getWindLevel();
-        boolean isGale = windLevel.isActive();
-        renderShared(poseStack, null, bufferSource, level, chamber.getBlockState(), chamber.getWindLevelForRender(), chamber.getHeadAnimation().getValue(partialTicks) * 0.175F, AngleHelper.rad(chamber.getHeadAngle().getValue(partialTicks)), chamber.hasGoggles(), chamber.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : null, isGale, isGale ? 24 : 0, chamber.hashCode(), light, null);
-    }
-
     static void renderInContraption(MovementContext context, ContraptionMatrices matrices, MultiBufferSource bufferSource, LerpedFloat headAngle, boolean isConductor, VirtualRenderWorld renderWorld) {
         Level level = context.world;
         boolean drawGoggles = NbtValues.getBooleanOrDefault(context.blockEntityData, COMPOUND_KEY_GOGGLES, false);
@@ -133,5 +121,17 @@ public class BreezeChamberRenderer extends SmartBlockEntityRenderer<BreezeChambe
         }
 
         return CCBPartialModels.BREEZE_ILL;
+    }
+
+    @Override
+    protected void renderSafe(BreezeChamberBlockEntity chamber, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay) {
+        Level level = chamber.getLevel();
+        if (level == null) {
+            return;
+        }
+
+        WindLevel windLevel = chamber.getWindLevel();
+        boolean isGale = windLevel.isActive();
+        renderShared(poseStack, null, bufferSource, level, chamber.getBlockState(), chamber.getWindLevelForRender(), chamber.getHeadAnimation().getValue(partialTicks) * 0.175F, AngleHelper.rad(chamber.getHeadAngle().getValue(partialTicks)), chamber.hasGoggles(), chamber.hasTrainHat() ? CCBPartialModels.BREEZE_TRAIN_HAT : null, isGale, isGale ? 24 : 0, chamber.hashCode(), light, null);
     }
 }

@@ -30,11 +30,6 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
     public PortableGasInterfaceRenderer(Context ignored) {
     }
 
-    @Override
-    protected void renderSafe(PortableGasInterfaceBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay) {
-        render(blockEntity.getBlockState(), blockEntity.isConnected(), blockEntity.getExtensionDistance(partialTicks), null, buffer -> buffer.light(light).renderInto(poseStack, bufferSource.getBuffer(RenderType.solid())));
-    }
-
     static void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource bufferSource) {
         LerpedFloat connectionAnimation = PortableGasInterfaceMovement.getAnimation(context);
         boolean lit = connectionAnimation.settled();
@@ -81,5 +76,10 @@ public class PortableGasInterfaceRenderer extends SafeBlockEntityRenderer<Portab
             default -> 90;
         };
         buffer.center().rotateYDegrees(AngleHelper.horizontalAngle(facing)).rotateXDegrees(xRotation).uncenter();
+    }
+
+    @Override
+    protected void renderSafe(PortableGasInterfaceBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay) {
+        render(blockEntity.getBlockState(), blockEntity.isConnected(), blockEntity.getExtensionDistance(partialTicks), null, buffer -> buffer.light(light).renderInto(poseStack, bufferSource.getBuffer(RenderType.solid())));
     }
 }

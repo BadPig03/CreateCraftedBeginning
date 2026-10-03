@@ -21,6 +21,11 @@ final class AirtightAssemblyDriverGasHandler implements GasPressureBoundary {
         this.flowMeter = flowMeter;
     }
 
+    private static boolean isUsable(AirtightEngineHandler engineHandler) {
+        double workFactor = engineHandler.getWorkFactor();
+        return GasConsumptionMath.isFinite(workFactor) && workFactor > 0 && engineHandler.getMaxLevel() > 0;
+    }
+
     @Override
     public boolean isGasValid(int tank, GasStack gasStack) {
         return tank == 0 && !gasStack.isEmpty() && GameplayPressureProfiles.orderedProfiles().stream().anyMatch(profile -> isUsable(AirtightEngineHandlers.resolve(gasStack, profile)));
@@ -58,10 +63,5 @@ final class AirtightAssemblyDriverGasHandler implements GasPressureBoundary {
         }
 
         return flowMeter.fill(resource, sourcePressurePa, action);
-    }
-
-    private static boolean isUsable(AirtightEngineHandler engineHandler) {
-        double workFactor = engineHandler.getWorkFactor();
-        return GasConsumptionMath.isFinite(workFactor) && workFactor > 0 && engineHandler.getMaxLevel() > 0;
     }
 }

@@ -56,7 +56,7 @@ public final class AirtightForgingPressAssemblyGameTests {
             ItemStack output = press.getOutputInventory().getStackInSlot(0);
             helper.assertValueEqual(output.getCount(), 8, "advanced batch size");
             helper.assertTrue(output.is(Items.PAPER), "Ordinary pressing overrode assembly pressing");
-            helper.assertValueEqual(output.getOrDefault(AllDataComponents.SEQUENCED_ASSEMBLY, new SequencedAssembly(assembly.id(), 1, 0)), new SequencedAssembly(assembly.id(), 1, 0.16666667f), "first step progress");
+            helper.assertValueEqual(output.getOrDefault(AllDataComponents.SEQUENCED_ASSEMBLY, new SequencedAssembly(assembly.id(), 1, 0)), new SequencedAssembly(assembly.id(), 1, 0.16666667F), "first step progress");
             helper.assertTrue(press.getInputInventory().isEmpty(), "Batch input was not consumed");
         });
     }
@@ -107,7 +107,7 @@ public final class AirtightForgingPressAssemblyGameTests {
             SequencedAssemblyRecipe.getRecipe(helper.getLevel(), assemblyInput(assembly, 3, 1), AllRecipeTypes.PRESSING.getType(), PressingRecipe.class).orElseThrow(() -> new NoSuchElementException("Expected a shared pressing step in a later loop."));
             helper.assertTrue(AirtightForgingPressCrafting.applyPressingRecipe(press, recipe), "Assembly failed after another machine queried the shared step");
             ItemStack output = press.getOutputInventory().getStackInSlot(0);
-            helper.assertValueEqual(output.getOrDefault(AllDataComponents.SEQUENCED_ASSEMBLY, new SequencedAssembly(assembly.id(), 1, 0)), new SequencedAssembly(assembly.id(), 1, 0.16666667f), "progress after shared recipe rebinding");
+            helper.assertValueEqual(output.getOrDefault(AllDataComponents.SEQUENCED_ASSEMBLY, new SequencedAssembly(assembly.id(), 1, 0)), new SequencedAssembly(assembly.id(), 1, 0.16666667F), "progress after shared recipe rebinding");
             helper.assertValueEqual(output.getCount(), 2, "rebound batch size");
         });
     }
@@ -205,20 +205,28 @@ public final class AirtightForgingPressAssemblyGameTests {
         });
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @GameTest(template = "gametest/empty_5x5x5", timeoutTicks = 30)
     public static void registeredHeavyCoreAssemblyAdvancesItsLoopAndFinishes(GameTestHelper helper) {
         withPress(helper, press -> {
             RecipeHolder<?> registered = helper.getLevel().getRecipeManager().byKey(CCBAPI.asResource("sequenced_assembly/heavy_core")).orElseThrow(() -> new NoSuchElementException("Expected the registered heavy core assembly recipe."));
             Recipe<?> registeredRecipe = registered.value();
             helper.assertTrue(registeredRecipe instanceof SequencedAssemblyRecipe, "Heavy core recipe was not a sequenced assembly");
-            RecipeHolder<SequencedAssemblyRecipe> assembly = new RecipeHolder<>(registered.id(), (SequencedAssemblyRecipe) registeredRecipe);
+            if (!(registeredRecipe instanceof SequencedAssemblyRecipe recipe)) {
+                return;
+            }
+
+            RecipeHolder<SequencedAssemblyRecipe> assembly = new RecipeHolder<>(registered.id(), recipe);
             SmartInventory input = press.getInputInventory();
             input.setStackInSlot(0, assemblyInput(assembly, 4, 1));
             AirtightForgingPressPressingRecipe intermediate = AirtightForgingPressRecipeLookup.getMatchingPressingRecipe(press).orElseThrow(() -> new NoSuchElementException("Expected the registered heavy core pressing step."));
             helper.assertTrue(AirtightForgingPressCrafting.applyPressingRecipe(press, intermediate), "Heavy core intermediate pressing failed");
             SmartInventory output = press.getOutputInventory();
-            helper.assertValueEqual(output.getStackInSlot(0).get(AllDataComponents.SEQUENCED_ASSEMBLY), new SequencedAssembly(assembly.id(), 5, 0.25F), "heavy core loop progress");
+            SequencedAssembly progress = output.getStackInSlot(0).get(AllDataComponents.SEQUENCED_ASSEMBLY);
+            if (progress == null) {
+                throw new NullPointerException("Expected sequenced assembly progress in heavy core output slot 0.");
+            }
+
+            helper.assertValueEqual(progress, new SequencedAssembly(assembly.id(), 5, 0.25F), "heavy core loop progress");
             output.setStackInSlot(0, ItemStack.EMPTY);
             input.setStackInSlot(0, assemblyInput(assembly, 19, 1));
             AirtightForgingPressPressingRecipe last = AirtightForgingPressRecipeLookup.getMatchingPressingRecipe(press).orElseThrow(() -> new NoSuchElementException("Expected the final heavy core pressing step."));

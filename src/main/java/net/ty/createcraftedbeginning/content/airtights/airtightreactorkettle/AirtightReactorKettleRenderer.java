@@ -53,20 +53,6 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         super(context);
     }
 
-    @Override
-    protected void renderSafe(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        super.renderSafe(kettle, partialTicks, poseStack, buffer, light, overlay);
-        boolean useVisualization = VisualizationManager.supportsVisualization(kettle.getLevel());
-        if (!useVisualization) {
-            renderMixerModels(kettle, partialTicks, poseStack, buffer, light);
-        }
-        float fluidLevel = renderFluids(kettle, partialTicks, poseStack, buffer, light);
-        if (!useVisualization) {
-            renderWindowsModels(kettle, partialTicks, poseStack, buffer, light);
-        }
-        renderItems(kettle, fluidLevel, partialTicks, poseStack, buffer, light, overlay);
-    }
-
     @SuppressWarnings("ConstantExpression")
     private static float renderFluids(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
         SmartFluidTankBehaviour inputTank = kettle.getInputFluidTank();
@@ -280,6 +266,20 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
             totalUnits += renderedUnits;
         }
         return totalUnits;
+    }
+
+    @Override
+    protected void renderSafe(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        super.renderSafe(kettle, partialTicks, poseStack, buffer, light, overlay);
+        boolean useVisualization = VisualizationManager.supportsVisualization(kettle.getLevel());
+        if (!useVisualization) {
+            renderMixerModels(kettle, partialTicks, poseStack, buffer, light);
+        }
+        float fluidLevel = renderFluids(kettle, partialTicks, poseStack, buffer, light);
+        if (!useVisualization) {
+            renderWindowsModels(kettle, partialTicks, poseStack, buffer, light);
+        }
+        renderItems(kettle, fluidLevel, partialTicks, poseStack, buffer, light, overlay);
     }
 
     protected record ItemPlacement(Vec3 position, float angle, Vec3[] copyOffsets) {}

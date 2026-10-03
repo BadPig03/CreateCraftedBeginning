@@ -26,6 +26,13 @@ public class ReactorKettleRecipeParams extends GasProcessingRecipeParams {
         temperatureRecipeData = TemperatureRecipeData.DEFAULT;
     }
 
+    protected static <P extends ReactorKettleRecipeParams> MapCodec<P> reactorKettleCodec(Supplier<P> factory) {
+        return RecordCodecBuilder.mapCodec(instance -> instance.group(gasRecipeCodec(factory).forGetter(Function.identity()), TemperatureRecipeData.MAP_CODEC.forGetter(ReactorKettleRecipeParams::temperatureRecipeData)).apply(instance, (params, temperatureRecipeData) -> {
+            params.temperatureRecipeData = temperatureRecipeData;
+            return params;
+        }));
+    }
+
     @Override
     protected void encode(RegistryFriendlyByteBuf buffer) {
         super.encode(buffer);
@@ -36,13 +43,6 @@ public class ReactorKettleRecipeParams extends GasProcessingRecipeParams {
     protected void decode(RegistryFriendlyByteBuf buffer) {
         super.decode(buffer);
         temperatureRecipeData = TemperatureRecipeData.STREAM_CODEC.decode(buffer);
-    }
-
-    protected static <P extends ReactorKettleRecipeParams> MapCodec<P> reactorKettleCodec(Supplier<P> factory) {
-        return RecordCodecBuilder.mapCodec(instance -> instance.group(gasRecipeCodec(factory).forGetter(Function.identity()), TemperatureRecipeData.MAP_CODEC.forGetter(ReactorKettleRecipeParams::temperatureRecipeData)).apply(instance, (params, temperatureRecipeData) -> {
-            params.temperatureRecipeData = temperatureRecipeData;
-            return params;
-        }));
     }
 
     protected final TemperatureRecipeData temperatureRecipeData() {

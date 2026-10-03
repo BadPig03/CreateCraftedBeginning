@@ -1,4 +1,4 @@
-// 1.21.1	2026-09-29T10:37:05.1918812	Create Crafted Beginning's Gas Processing Recipes
+// 1.21.1	2026-09-30T11:18:11.2325333	Create Crafted Beginning's Gas Processing Recipes
 377cd6bf2efb55d6ccd6a4fee548a6ef35a9973d data/createcraftedbeginning/recipe/dissipation/ethereal.json
 5148e35da66a7b47d765ebdbf6419ae6b520e053 data/createcraftedbeginning/recipe/dissipation/natural.json
 dcc09df522729411e90b6712414d8a419704c452 data/createcraftedbeginning/recipe/dissipation/ultrawarm.json
@@ -14,6 +14,7 @@ fbfa003ab8545280580330c983f0946d753fed1f data/createcraftedbeginning/recipe/forg
 300a4f36a7384837c038f9d7a819d77e34f57c33 data/createcraftedbeginning/recipe/fractionation_tower/brimstone_fractionation.json
 679dfce0ec04796538aa11516afb7a36ac4b7d60 data/createcraftedbeginning/recipe/fractionation_tower/moist_air_condensation.json
 2ac9fc37a2d54d4222a07d73e46bf43ee38bd19a data/createcraftedbeginning/recipe/gas_injection/acacia_leaves.json
+a331d9b8668201440a8ec3726047502700406215 data/createcraftedbeginning/recipe/gas_injection/aerogel_block.json
 4c5cfca143fd69c8d29b737cb5592f07324eb89b data/createcraftedbeginning/recipe/gas_injection/azalea.json
 e7b36a668951369e59406dae0a32792abe49fa43 data/createcraftedbeginning/recipe/gas_injection/azalea_leaves.json
 7520c2b42d9dee4c279bbf7bd48940b0051edb62 data/createcraftedbeginning/recipe/gas_injection/big_dripleaf.json

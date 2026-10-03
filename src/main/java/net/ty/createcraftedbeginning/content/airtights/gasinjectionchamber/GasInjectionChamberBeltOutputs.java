@@ -28,6 +28,36 @@ public final class GasInjectionChamberBeltOutputs {
         this.filter = filter;
     }
 
+    private static void addResultStack(List<ItemStack> resultStacks, ItemStack stackToAdd) {
+        if (stackToAdd.isEmpty()) {
+            return;
+        }
+
+        ItemStack remainingStack = stackToAdd.copy();
+        for (ItemStack existingStack : resultStacks) {
+            if (!ItemStack.isSameItemSameComponents(existingStack, remainingStack)) {
+                continue;
+            }
+
+            int availableSpace = existingStack.getMaxStackSize() - existingStack.getCount();
+            if (availableSpace <= 0) {
+                continue;
+            }
+
+            int movedCount = Math.min(availableSpace, remainingStack.getCount());
+            existingStack.grow(movedCount);
+            remainingStack.shrink(movedCount);
+            if (remainingStack.isEmpty()) {
+                return;
+            }
+        }
+
+        while (!remainingStack.isEmpty()) {
+            int splitCount = Math.min(remainingStack.getCount(), remainingStack.getMaxStackSize());
+            resultStacks.add(remainingStack.split(splitCount));
+        }
+    }
+
     @Internal
     public Optional<List<ItemStack>> createResults(BeltPlan plan) {
         Level level = chamber.getLevel();
@@ -71,36 +101,6 @@ public final class GasInjectionChamberBeltOutputs {
         }
 
         return Optional.of(resultStacks);
-    }
-
-    private static void addResultStack(List<ItemStack> resultStacks, ItemStack stackToAdd) {
-        if (stackToAdd.isEmpty()) {
-            return;
-        }
-
-        ItemStack remainingStack = stackToAdd.copy();
-        for (ItemStack existingStack : resultStacks) {
-            if (!ItemStack.isSameItemSameComponents(existingStack, remainingStack)) {
-                continue;
-            }
-
-            int availableSpace = existingStack.getMaxStackSize() - existingStack.getCount();
-            if (availableSpace <= 0) {
-                continue;
-            }
-
-            int movedCount = Math.min(availableSpace, remainingStack.getCount());
-            existingStack.grow(movedCount);
-            remainingStack.shrink(movedCount);
-            if (remainingStack.isEmpty()) {
-                return;
-            }
-        }
-
-        while (!remainingStack.isEmpty()) {
-            int splitCount = Math.min(remainingStack.getCount(), remainingStack.getMaxStackSize());
-            resultStacks.add(remainingStack.split(splitCount));
-        }
     }
 
     private boolean isFanProcessingOperationStillValid(@Nullable ResourceLocation typeId) {

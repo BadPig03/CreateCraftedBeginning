@@ -36,6 +36,6 @@ public final class AirtightHandheldDrillUpgradeRegistry {
     }
 
     public static void registerUpgrades() {
-        REGISTRY.registerAll(SilkTouchUpgrade.INSTANCE, MagnetUpgrade.INSTANCE, ExperienceConversionUpgrade.INSTANCE, LiquidReplacementUpgrade.INSTANCE, HandheldDrillFilterButton.INSTANCE, HandheldDrillContainerProtectionButton.INSTANCE, HandheldDrillOutlineDisplayButton.INSTANCE, HandheldDrillAttackModeButton.INSTANCE);
+        REGISTRY.registerAll(HarvestOptimizationUpgrade.INSTANCE, MagnetUpgrade.INSTANCE, ExperienceConversionUpgrade.INSTANCE, LiquidReplacementUpgrade.INSTANCE, HandheldDrillFilterButton.INSTANCE, HandheldDrillContainerProtectionButton.INSTANCE, HandheldDrillOutlineDisplayButton.INSTANCE, HandheldDrillAttackModeButton.INSTANCE, HandheldDrillAerogelProtectionButton.INSTANCE);
     }
 }

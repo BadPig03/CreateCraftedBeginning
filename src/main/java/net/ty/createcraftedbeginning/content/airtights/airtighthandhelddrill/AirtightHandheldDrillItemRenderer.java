@@ -35,6 +35,11 @@ final class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRen
     private AirtightHandheldDrillItemRenderer() {
     }
 
+    @SubscribeEvent
+    private static void register(RegisterClientExtensionsEvent event) {
+        event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem(), new AirtightHandheldDrillItemRenderer()), CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem());
+    }
+
     @Override
     protected void render(ItemStack drill, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         renderer.render(model.getOriginalModel(), light);
@@ -58,10 +63,5 @@ final class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRen
         renderer.render(drillFront, light);
 
         poseStack.popPose();
-    }
-
-    @SubscribeEvent
-    private static void register(RegisterClientExtensionsEvent event) {
-        event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem(), new AirtightHandheldDrillItemRenderer()), CCBItems.AIRTIGHT_HANDHELD_DRILL.asItem());
     }
 }

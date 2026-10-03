@@ -2,11 +2,6 @@ package net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpane
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -15,26 +10,8 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 record AmethystCollectorPanelRectangle(BlockPos anchor, int minX, int maxX, int minZ, int maxZ) {
-    private static final float BASE_RAIN_OUTPUT_MULTIPLIER = 0.5F;
-    private static final double SKY_SAMPLE_HEIGHT = 0.6251;
-
     AmethystCollectorPanelRectangle {
         anchor = anchor.immutable();
-    }
-
-    static int calculatePowerPoints(Level level, AmethystCollectorPanelRectangle rectangle) {
-        if (!level.isDay() || !hasOpenSky(level, rectangle)) {
-            return 0;
-        }
-
-        int powerPoints = getRatedPowerPoints(rectangle);
-        BlockPos anchor = rectangle.anchor();
-        if (!SubLevelBridge.isRainingAtWorld(level, getSkySample(anchor.getX(), anchor.getY(), anchor.getZ()))) {
-            return powerPoints;
-        }
-
-        float rainMultiplier = Mth.clamp(BASE_RAIN_OUTPUT_MULTIPLIER * CCBConfig.server().opticalPower.amethystCollectorPanel.rainOutputMultiplier.getF(), 0.0F, 1.0F);
-        return Mth.floor(powerPoints * rainMultiplier);
     }
 
     static @Nullable AmethystCollectorPanelRectangle findLargestRectangle(List<BlockPos> dependencies) {
@@ -45,18 +22,20 @@ record AmethystCollectorPanelRectangle(BlockPos anchor, int minX, int maxX, int 
         BlockPos first = dependencies.getFirst();
         int y = first.getY();
         int minX = first.getX();
-        int maxX = first.getX();
+        int maxX = minX;
         int minZ = first.getZ();
-        int maxZ = first.getZ();
+        int maxZ = minZ;
         for (BlockPos dependency : dependencies) {
             if (dependency.getY() != y) {
                 return null;
             }
 
-            minX = Math.min(minX, dependency.getX());
-            maxX = Math.max(maxX, dependency.getX());
-            minZ = Math.min(minZ, dependency.getZ());
-            maxZ = Math.max(maxZ, dependency.getZ());
+            int x = dependency.getX();
+            int z = dependency.getZ();
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minZ = Math.min(minZ, z);
+            maxZ = Math.max(maxZ, z);
         }
 
         int width = maxX - minX + 1;
@@ -92,22 +71,6 @@ record AmethystCollectorPanelRectangle(BlockPos anchor, int minX, int maxX, int 
             }
         }
         return best;
-    }
-
-    boolean contains(BlockPos pos) {
-        return pos.getY() == anchor.getY() && pos.getX() >= minX && pos.getX() <= maxX && pos.getZ() >= minZ && pos.getZ() <= maxZ;
-    }
-
-    int width() {
-        return maxX - minX + 1;
-    }
-
-    int depth() {
-        return maxZ - minZ + 1;
-    }
-
-    int area() {
-        return width() * depth();
     }
 
     private static boolean isFilledRectangle(int occupiedMask, int minX, int maxX, int minZ, int maxZ) {
@@ -164,30 +127,19 @@ record AmethystCollectorPanelRectangle(BlockPos anchor, int minX, int maxX, int 
         return candidateDepth > bestDepth;
     }
 
-    private static boolean hasOpenSky(Level level, AmethystCollectorPanelRectangle rectangle) {
-        if (!level.dimensionType().hasSkyLight()) {
-            return false;
-        }
-
-        int y = rectangle.anchor().getY();
-        for (int x = rectangle.minX(); x <= rectangle.maxX(); x++) {
-            for (int z = rectangle.minZ(); z <= rectangle.maxZ(); z++) {
-                if (SubLevelBridge.canSeeWorldSky(level, getSkySample(x, y, z))) {
-                    continue;
-                }
-
-                return false;
-            }
-        }
-        return true;
+    boolean contains(BlockPos pos) {
+        return pos.getY() == anchor.getY() && pos.getX() >= minX && pos.getX() <= maxX && pos.getZ() >= minZ && pos.getZ() <= maxZ;
     }
 
-    private static Vec3 getSkySample(int x, int y, int z) {
-        return new Vec3(x + 0.5, y + SKY_SAMPLE_HEIGHT, z + 0.5);
+    int width() {
+        return maxX - minX + 1;
     }
 
-    private static int getRatedPowerPoints(AmethystCollectorPanelRectangle rectangle) {
-        int shortSide = Math.min(rectangle.width(), rectangle.depth());
-        return 1 << Mth.clamp(shortSide - 1, 0, 4);
+    int depth() {
+        return maxZ - minZ + 1;
+    }
+
+    int area() {
+        return width() * depth();
     }
 }

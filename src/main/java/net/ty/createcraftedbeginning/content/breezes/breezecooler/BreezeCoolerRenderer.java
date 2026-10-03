@@ -38,24 +38,6 @@ public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerB
         super(context);
     }
 
-    @Override
-    protected void renderSafe(BreezeCoolerBlockEntity cooler, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay) {
-        Level level = cooler.getLevel();
-        if (level == null) {
-            return;
-        }
-
-        boolean isChilled = cooler.getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED);
-        PartialModel hatModel = null;
-        if (cooler.hasTrainHat()) {
-            hatModel = CCBPartialModels.BREEZE_TRAIN_HAT;
-        }
-        else if (cooler.isStockKeeper()) {
-            hatModel = CCBPartialModels.BREEZE_LOGISTICS_HAT;
-        }
-        renderShared(poseStack, null, bufferSource, level, cooler.getBlockState(), cooler.getFrostLevelForRender(), cooler.getHeadAnimation().getValue(partialTicks) * 0.175F, AngleHelper.rad(cooler.getHeadAngle().getValue(partialTicks)), cooler.hasGoggles(), hatModel, isChilled, isChilled ? 24 : 0, cooler.hashCode(), light, null);
-    }
-
     public static void renderShared(PoseStack poseStack, @Nullable PoseStack modelTransform, MultiBufferSource bufferSource, Level level, BlockState blockState, FrostLevel frostLevel, float animation, float horizontalAngle, boolean shouldDrawGoggles, @Nullable PartialModel hatModel, boolean shouldDrawWind, float windSpeed, int animationSeed, int light, @Nullable Matrix4f matrixWorld) {
         float renderTime = AnimationTickHolder.getRenderTime(level);
         float headY = Mth.sin((renderTime + animationSeed % 13 * 16) / 16 % Mth.TWO_PI) / (frostLevel.isAtLeast(FrostLevel.CHILLED) ? 64 : 16) - animation * 0.75F;
@@ -135,5 +117,23 @@ public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerB
         }
 
         return CCBPartialModels.BREEZE_RIMING;
+    }
+
+    @Override
+    protected void renderSafe(BreezeCoolerBlockEntity cooler, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay) {
+        Level level = cooler.getLevel();
+        if (level == null) {
+            return;
+        }
+
+        boolean isChilled = cooler.getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED);
+        PartialModel hatModel = null;
+        if (cooler.hasTrainHat()) {
+            hatModel = CCBPartialModels.BREEZE_TRAIN_HAT;
+        }
+        else if (cooler.isStockKeeper()) {
+            hatModel = CCBPartialModels.BREEZE_LOGISTICS_HAT;
+        }
+        renderShared(poseStack, null, bufferSource, level, cooler.getBlockState(), cooler.getFrostLevelForRender(), cooler.getHeadAnimation().getValue(partialTicks) * 0.175F, AngleHelper.rad(cooler.getHeadAngle().getValue(partialTicks)), cooler.hasGoggles(), hatModel, isChilled, isChilled ? 24 : 0, cooler.hashCode(), light, null);
     }
 }

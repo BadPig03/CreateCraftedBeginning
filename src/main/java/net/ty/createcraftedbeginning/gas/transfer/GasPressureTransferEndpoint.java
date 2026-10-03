@@ -73,6 +73,10 @@ public final class GasPressureTransferEndpoint {
         };
     }
 
+    private static double normalizePressure(double pressurePa) {
+        return GasPressureLimits.clampToHardLimit(pressurePa);
+    }
+
     public boolean identifiesSameCompartment(GasPressureTransferEndpoint other) {
         return access.identityOwner() == other.access.identityOwner() && access.identityTank() == other.access.identityTank();
     }
@@ -172,10 +176,6 @@ public final class GasPressureTransferEndpoint {
         return Mth.clamp(restored, 0L, gas.getAmount());
     }
 
-    private static double normalizePressure(double pressurePa) {
-        return GasPressureLimits.clampToHardLimit(pressurePa);
-    }
-
     private interface Access {
         Object identityOwner();
 
@@ -207,6 +207,14 @@ public final class GasPressureTransferEndpoint {
     }
 
     private record CompartmentAccess(GasPressureCompartment compartment) implements Access {
+        private static double pressureExact(GasPressureCompartment compartment) {
+            if (compartment.getPressureModel() == PressureModel.FIXED) {
+                return Math.max(GasPressure.VACUUM_PA, compartment.getPressurePa());
+            }
+
+            return GasPressure.pressureExact(compartment.getStoredAmount(), compartment.getVolume());
+        }
+
         @Override
         public Object identityOwner() {
             return compartment.getCompartmentIdentity();
@@ -275,14 +283,6 @@ public final class GasPressureTransferEndpoint {
         @Override
         public long restore(GasStack gas, GasAction action) {
             return compartment.restoreDrainedGas(gas, action);
-        }
-
-        private static double pressureExact(GasPressureCompartment compartment) {
-            if (compartment.getPressureModel() == PressureModel.FIXED) {
-                return Math.max(GasPressure.VACUUM_PA, compartment.getPressurePa());
-            }
-
-            return GasPressure.pressureExact(compartment.getStoredAmount(), compartment.getVolume());
         }
     }
 

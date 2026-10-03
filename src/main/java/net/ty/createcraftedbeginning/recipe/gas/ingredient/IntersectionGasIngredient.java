@@ -26,6 +26,18 @@ public class IntersectionGasIngredient extends GasIngredient {
         this.children = children;
     }
 
+    public static GasIngredient of(GasIngredient @NotNull ... ingredients) {
+        if (ingredients.length == 0) {
+            throw new IllegalArgumentException("IntersectionGasIngredient requires at least one child; use 'GasIngredient.empty()' for an empty ingredient.");
+        }
+
+        if (ingredients.length == 1) {
+            return ingredients[0];
+        }
+
+        return new IntersectionGasIngredient(Arrays.asList(ingredients));
+    }
+
     @Override
     public boolean test(GasStack stack) {
         return children.stream().allMatch(child -> child.test(stack));
@@ -54,18 +66,6 @@ public class IntersectionGasIngredient extends GasIngredient {
     @Override
     public Stream<GasStack> generateStacks() {
         return children.stream().flatMap(GasIngredient::generateStacks).filter(this);
-    }
-
-    public static GasIngredient of(GasIngredient @NotNull ... ingredients) {
-        if (ingredients.length == 0) {
-            throw new IllegalArgumentException("IntersectionGasIngredient requires at least one child; use 'GasIngredient.empty()' for an empty ingredient.");
-        }
-
-        if (ingredients.length == 1) {
-            return ingredients[0];
-        }
-
-        return new IntersectionGasIngredient(Arrays.asList(ingredients));
     }
 
     public List<GasIngredient> children() {

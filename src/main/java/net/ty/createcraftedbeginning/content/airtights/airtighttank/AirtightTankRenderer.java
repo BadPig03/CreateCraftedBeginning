@@ -24,26 +24,6 @@ public class AirtightTankRenderer<T extends AirtightTankBlockEntity> extends Sma
         super(context);
     }
 
-    @Override
-    protected void renderSafe(T tank, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        if (!tank.isController() || !tank.hasTankGauge()) {
-            return;
-        }
-
-        Direction.Axis mainAxis = tank.getMainConnectionAxis();
-        int xSize = mainAxis == Direction.Axis.X ? tank.getHeight() : tank.getWidth();
-        int zSize = mainAxis == Direction.Axis.Z ? tank.getHeight() : tank.getWidth();
-        float needleAngle = tank.getTankGaugeNeedleAngle(partialTicks);
-        BlockState state = tank.getBlockState();
-        for (Direction direction : Iterate.horizontalDirections) {
-            if (tank.isTankGaugeOccluded(direction)) {
-                continue;
-            }
-
-            renderGauge(direction, xSize, zSize, needleAngle, state, poseStack, buffer, light, overlay);
-        }
-    }
-
     @SuppressWarnings("ConstantExpression")
     private static void renderGauge(Direction direction, int xSize, int zSize, float needleAngle, BlockState state, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         double x = switch (direction) {
@@ -92,5 +72,25 @@ public class AirtightTankRenderer<T extends AirtightTankBlockEntity> extends Sma
         }
 
         return 180;
+    }
+
+    @Override
+    protected void renderSafe(T tank, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        if (!tank.isController() || !tank.hasTankGauge()) {
+            return;
+        }
+
+        Direction.Axis mainAxis = tank.getMainConnectionAxis();
+        int xSize = mainAxis == Direction.Axis.X ? tank.getHeight() : tank.getWidth();
+        int zSize = mainAxis == Direction.Axis.Z ? tank.getHeight() : tank.getWidth();
+        float needleAngle = tank.getTankGaugeNeedleAngle(partialTicks);
+        BlockState state = tank.getBlockState();
+        for (Direction direction : Iterate.horizontalDirections) {
+            if (tank.isTankGaugeOccluded(direction)) {
+                continue;
+            }
+
+            renderGauge(direction, xSize, zSize, needleAngle, state, poseStack, buffer, light, overlay);
+        }
     }
 }

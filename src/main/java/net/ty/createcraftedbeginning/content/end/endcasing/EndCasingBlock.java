@@ -15,7 +15,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerPlacementHelper;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerPlacementHelper;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
@@ -30,6 +29,10 @@ public class EndCasingBlock extends CasingBlock {
 
     public EndCasingBlock(Properties properties) {
         super(properties);
+    }
+
+    public static void registerPlacementHelpers() {
+        PLACEMENT_HELPERS.put(CCBBlocks.END_SCULK_SILENCER_BLOCK.asItem(), PlacementHelpers.register(new EndSculkSilencerPlacementHelper()));
     }
 
     @Override
@@ -50,10 +53,5 @@ public class EndCasingBlock extends CasingBlock {
         }
 
         return placementHelper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult);
-    }
-
-    public static void registerPlacementHelpers() {
-        PLACEMENT_HELPERS.put(CCBBlocks.END_INCINERATION_BLOWER_BLOCK.asItem(), PlacementHelpers.register(new EndIncinerationBlowerPlacementHelper()));
-        PLACEMENT_HELPERS.put(CCBBlocks.END_SCULK_SILENCER_BLOCK.asItem(), PlacementHelpers.register(new EndSculkSilencerPlacementHelper()));
     }
 }

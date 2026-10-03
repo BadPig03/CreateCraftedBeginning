@@ -30,32 +30,6 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
         super(context);
     }
 
-    @Override
-    protected void renderSafe(GasInjectionChamberBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        super.renderSafe(blockEntity, partialTicks, poseStack, buffer, light, overlay);
-        if (VisualizationManager.supportsVisualization(blockEntity.getLevel())) {
-            return;
-        }
-
-        poseStack.pushPose();
-
-        BlockState blockState = blockEntity.getBlockState();
-        float processingTicks = blockEntity.getRenderedProcessingTicks(partialTicks);
-
-        poseStack.translate(0, getNozzleSqueeze(processingTicks), 0);
-        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE, blockState, poseStack, buffer, light);
-        poseStack.translate(0, getNozzleSqueezePart(processingTicks), 0);
-        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_TOP, blockState, poseStack, buffer, light);
-        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_BOTTOM, blockState, poseStack, buffer, light);
-
-        ItemStack installedFilter = blockEntity.getInstalledFilter();
-        if (!installedFilter.isEmpty()) {
-            renderInstalledFilter(installedFilter, blockState, poseStack, buffer, light, overlay);
-        }
-
-        poseStack.popPose();
-    }
-
     @SuppressWarnings("ConstantExpression")
     static float getNozzleSqueeze(float ticks) {
         if (ticks < 0) {
@@ -112,5 +86,31 @@ public class GasInjectionChamberRenderer extends SmartBlockEntityRenderer<GasInj
 
         int filterColor = filterStack.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF);
         CachedBuffers.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER_INNER, blockState).color(filterColor >> 16 & 0xFF, filterColor >> 8 & 0xFF, filterColor & 0xFF, 0xFF).light(light).overlay(overlay).renderInto(poseStack, vertexConsumer);
+    }
+
+    @Override
+    protected void renderSafe(GasInjectionChamberBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        super.renderSafe(blockEntity, partialTicks, poseStack, buffer, light, overlay);
+        if (VisualizationManager.supportsVisualization(blockEntity.getLevel())) {
+            return;
+        }
+
+        poseStack.pushPose();
+
+        BlockState blockState = blockEntity.getBlockState();
+        float processingTicks = blockEntity.getRenderedProcessingTicks(partialTicks);
+
+        poseStack.translate(0, getNozzleSqueeze(processingTicks), 0);
+        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE, blockState, poseStack, buffer, light);
+        poseStack.translate(0, getNozzleSqueezePart(processingTicks), 0);
+        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_TOP, blockState, poseStack, buffer, light);
+        renderPart(CCBPartialModels.GAS_INJECTION_CHAMBER_NOZZLE_BOTTOM, blockState, poseStack, buffer, light);
+
+        ItemStack installedFilter = blockEntity.getInstalledFilter();
+        if (!installedFilter.isEmpty()) {
+            renderInstalledFilter(installedFilter, blockState, poseStack, buffer, light, overlay);
+        }
+
+        poseStack.popPose();
     }
 }

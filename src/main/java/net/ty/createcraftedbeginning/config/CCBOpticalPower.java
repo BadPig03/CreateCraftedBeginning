@@ -10,7 +10,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public final class CCBOpticalPower extends ConfigBase {
     public final Network network = nested(0, Network::new, "Optical Power Network");
     public final AmethystCollectorPanel amethystCollectorPanel = nested(0, AmethystCollectorPanel::new, "Amethyst Collector Panel");
-    public final LaserReceiver laserReceiver = nested(0, LaserReceiver::new, "Laser Receiver");
+    public final PhotothermalReceiver photothermalReceiver = nested(0, PhotothermalReceiver::new, "Photothermal Receiver");
 
     @Override
     public String getName() {
@@ -20,7 +20,7 @@ public final class CCBOpticalPower extends ConfigBase {
     @ParametersAreNonnullByDefault
     @MethodsReturnNonnullByDefault
     public static final class Network extends ConfigBase {
-        public final ConfigInt maxNetworkPowerSu = i(32768, 1024, 16777216, "max_network_power_su", "[Unit: equivalent SU]", "Maximum Optical Power distributed simultaneously by one Optical Fiber network. Rounded down to a multiple of 256 SU.");
+        public final ConfigInt maxNetworkPowerLp = i(512, 1, 65536, "max_network_power_lp", "[Unit: LP]", "Maximum optical power distributed simultaneously by one optical fiber network.");
 
         @Override
         public String getName() {
@@ -41,12 +41,12 @@ public final class CCBOpticalPower extends ConfigBase {
 
     @ParametersAreNonnullByDefault
     @MethodsReturnNonnullByDefault
-    public static final class LaserReceiver extends ConfigBase {
-        public final ConfigInt maxReceivedPowerSu = i(8192, 256, 4194304, "max_received_power_su", "[Unit: equivalent SU]", "Maximum combined Optical Power accepted by one Laser Receiver. Multiple beams add together up to this limit. Rounded down to a multiple of 256 SU; final mechanical output also depends on the configured stress capacity.");
+    public static final class PhotothermalReceiver extends ConfigBase {
+        public final ConfigInt maxReceivedPowerLp = i(48, 1, 48, "max_received_power_lp", "[Unit: LP]", "Maximum combined optical power absorbed by one photothermal receiver. 16 LP targets 50% heat, 32 LP targets 100%, and 48 LP targets superheating at 150%.");
 
         @Override
         public String getName() {
-            return "laser_receiver";
+            return "photothermal_receiver";
         }
     }
 }

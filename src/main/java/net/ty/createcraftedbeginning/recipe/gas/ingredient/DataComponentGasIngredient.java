@@ -40,47 +40,6 @@ public class DataComponentGasIngredient extends GasIngredient {
         stacks = gases.stream().map(gas -> new GasStack(gas, GasUnits.GU_PER_KGU, components.asPatch())).toArray(GasStack[]::new);
     }
 
-    @Override
-    public boolean test(GasStack stack) {
-        if (!strict) {
-            return gases.contains(stack.getGasHolder()) && components.test(stack);
-        }
-
-        for (GasStack gasStack : stacks) {
-            if (!GasStack.isSameGasSameComponents(stack, gasStack)) {
-                continue;
-            }
-
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(gases, components, strict);
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        return this == object || object instanceof DataComponentGasIngredient other && gases.equals(other.gases()) && components.equals(other.components()) && other.strict == strict;
-    }
-
-    @Override
-    public boolean isSimple() {
-        return false;
-    }
-
-    @Override
-    public GasIngredientType<?> getType() {
-        return GasIngredientTypes.DATA_COMPONENT.get();
-    }
-
-    @Override
-    public Stream<GasStack> generateStacks() {
-        return Stream.of(stacks);
-    }
-
     @Contract("_, _ -> new")
     public static GasIngredient of(boolean strict, GasStack stack) {
         return of(strict, stack.getComponents(), stack.getGasType());
@@ -126,6 +85,47 @@ public class DataComponentGasIngredient extends GasIngredient {
     @Contract("_, _, _ -> new")
     public static GasIngredient of(boolean strict, DataComponentPredicate predicate, HolderSet<Gas> gases) {
         return new DataComponentGasIngredient(gases, predicate, strict);
+    }
+
+    @Override
+    public boolean test(GasStack stack) {
+        if (!strict) {
+            return gases.contains(stack.getGasHolder()) && components.test(stack);
+        }
+
+        for (GasStack gasStack : stacks) {
+            if (!GasStack.isSameGasSameComponents(stack, gasStack)) {
+                continue;
+            }
+
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(gases, components, strict);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        return this == object || object instanceof DataComponentGasIngredient other && gases.equals(other.gases()) && components.equals(other.components()) && other.strict == strict;
+    }
+
+    @Override
+    public boolean isSimple() {
+        return false;
+    }
+
+    @Override
+    public GasIngredientType<?> getType() {
+        return GasIngredientTypes.DATA_COMPONENT.get();
+    }
+
+    @Override
+    public Stream<GasStack> generateStacks() {
+        return Stream.of(stacks);
     }
 
     public HolderSet<Gas> gases() {

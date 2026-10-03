@@ -30,7 +30,7 @@ public final class GasReleaseService {
 
         GasReleaseHandler releaseHandler = GasReleaseHandlers.resolve(gas, context.sourcePressurePa().orElse(GasPressure.REFERENCE_PRESSURE_PA));
         GasReleaseFeedback feedback = GasReleaseFeedback.of(context);
-        boolean effectDue = gas.getAmount() >= EFFECT_INTERVAL;
+        boolean effectDue = gas.getAmount() >= releaseHandler.getEffectInterval(gas);
         applyFeedback(context, releaseHandler, feedback, false);
         if (effectDue) {
             releaseHandler.apply(context);
@@ -49,8 +49,8 @@ public final class GasReleaseService {
         long gameTime = level.getGameTime();
         long sourcePressurePa = context.sourcePressurePa().orElse(GasPressure.REFERENCE_PRESSURE_PA);
         boolean feedbackDue = state.recordFeedback(gameTime);
-        boolean effectDue = state.recordEffect(gas, sourcePressurePa, gas.getAmount(), gameTime);
         GasReleaseHandler releaseHandler = GasReleaseHandlers.resolve(gas, sourcePressurePa);
+        boolean effectDue = state.recordEffect(gas, sourcePressurePa, gas.getAmount(), gameTime, releaseHandler.getEffectInterval(gas), releaseHandler.getEffectCooldown(gas));
         GasReleaseFeedback feedback = GasReleaseFeedback.of(context);
         if (feedbackDue) {
             applyFeedback(context, releaseHandler, feedback, true);
@@ -75,7 +75,7 @@ public final class GasReleaseService {
     private static void applyFeedback(GasReleaseContext context, GasReleaseHandler releaseHandler, GasReleaseFeedback feedback, boolean continuous) {
         Level level = context.level();
         if (releaseHandler.shouldShowOutline()) {
-            GasReleaseHandlers.showOutline(level, context.effectPos(), feedback.outlineInflation(), context.gas().getGasType().getTint());
+            GasReleaseHandlers.showOutline(level, context.effectPos(), feedback.outlineInflation(), context.gas().getHint());
         }
 
         if (continuous && level.getGameTime() % 20 != 10) {

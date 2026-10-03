@@ -26,14 +26,6 @@ class TeslaTurbineTooltipBuilder {
         this.core = core;
     }
 
-    void addToGoggleTooltip(List<Component> tooltip) {
-        TeslaTurbineLevelCalculator levelCalculator = core.getLevelCalculator();
-        addStatusLine(levelCalculator.getCurrentLevel(), tooltip);
-        addProgressBars(levelCalculator.getLevels(), tooltip);
-        addDetailedInfo(tooltip);
-        addKineticInfo(tooltip);
-    }
-
     private static void addStatusLine(int currentLevel, List<Component> tooltip) {
         MutableComponent levelText;
         if (currentLevel == 0) {
@@ -95,6 +87,14 @@ class TeslaTurbineTooltipBuilder {
         }
 
         return bar;
+    }
+
+    void addToGoggleTooltip(List<Component> tooltip) {
+        TeslaTurbineLevelCalculator levelCalculator = core.getLevelCalculator();
+        addStatusLine(levelCalculator.getCurrentLevel(), tooltip);
+        addProgressBars(levelCalculator.getLevels(), tooltip);
+        addDetailedInfo(tooltip);
+        addKineticInfo(tooltip);
     }
 
     private void addDetailedInfo(List<Component> tooltip) {

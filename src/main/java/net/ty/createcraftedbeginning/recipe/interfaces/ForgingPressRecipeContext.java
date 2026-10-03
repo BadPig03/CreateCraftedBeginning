@@ -46,6 +46,10 @@ public interface ForgingPressRecipeContext {
             finalSlots = copyStacks(finalSlots);
         }
 
+        private static @Unmodifiable List<ItemStack> copyStacks(List<ItemStack> stacks) {
+            return stacks.stream().map(ItemStack::copy).toList();
+        }
+
         @Override
         public List<ItemStack> expectedSlots() {
             return copyStacks(expectedSlots);
@@ -54,10 +58,6 @@ public interface ForgingPressRecipeContext {
         @Override
         public List<ItemStack> finalSlots() {
             return copyStacks(finalSlots);
-        }
-
-        private static @Unmodifiable List<ItemStack> copyStacks(List<ItemStack> stacks) {
-            return stacks.stream().map(ItemStack::copy).toList();
         }
     }
 

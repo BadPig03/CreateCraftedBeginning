@@ -42,6 +42,10 @@ public final class GasInjectionRecipeLookup {
         this.gasSource = gasSource;
     }
 
+    public static void invalidateRecipeCaches() {
+        AirtightRecipeTrieFinder.invalidateFailures(RECIPE_CACHE_KEY);
+    }
+
     public Optional<RecipeMatch> findRecipeMatch(ItemStack itemStack) {
         GasStack gasStack = gasSource.getGasStack();
         if (itemStack.isEmpty() || gasStack.isEmpty()) {
@@ -100,10 +104,6 @@ public final class GasInjectionRecipeLookup {
             }
         }
         return findBasinLinear(items, fluids);
-    }
-
-    public static void invalidateRecipeCaches() {
-        AirtightRecipeTrieFinder.invalidateFailures(RECIPE_CACHE_KEY);
     }
 
     public record RecipeMatch(GasInjectionRecipe recipe, boolean sequencedAssembly) {}

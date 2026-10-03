@@ -71,10 +71,7 @@ public class WindChargingCategory extends CCBRecipeCategory<WindChargingRecipe> 
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, WindChargingRecipe recipe, IFocusGroup focuses) {
-        addItemInputSlot(builder, recipe.getIngredient());
-    }
-
-    private static void addItemInputSlot(IRecipeLayoutBuilder builder, Ingredient ingredient) {
+        Ingredient ingredient = recipe.getIngredient();
         builder.addSlot(RecipeIngredientRole.INPUT, 16, 27).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient);
     }
 }

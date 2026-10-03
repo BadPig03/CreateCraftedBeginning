@@ -1,0 +1,25 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/block",
+	"render_type": "minecraft:cutout_mipped",
+	"textures": {
+		"texture": "createcraftedbeginning:block/photothermal_receiver/texture_glow",
+		"particle": "createcraftedbeginning:block/photothermal_receiver/texture"
+	},
+	"elements": [
+		{
+			"from": [6, 0, 6],
+			"to": [10, 1, 10],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [3, 11, 5, 11.5], "rotation": 180, "texture": "#texture"},
+				"east": {"uv": [5, 11, 4.5, 13], "rotation": 90, "texture": "#texture"},
+				"south": {"uv": [3, 12.5, 5, 13], "texture": "#texture"},
+				"west": {"uv": [3.5, 11, 3, 13], "rotation": 270, "texture": "#texture"},
+				"down": {"uv": [5, 11, 3, 13], "rotation": 180, "texture": "#texture"}
+			}
+		}
+	]
+}

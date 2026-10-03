@@ -44,6 +44,30 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
         showOutline = true;
     }
 
+    static void setClientTicker(Consumer<EndSculkSilencerBlockEntity> ticker) {
+        clientTicker = ticker;
+    }
+
+    static boolean meetsRequiredSpeed(float speed, short range) {
+        float speedRequirementMultiplier = Math.max(0, CCBConfig.server().machines.endSculkSilencer.requiredSpeedMultiplier.getF());
+        return range > 0 && Mth.abs(speed) >= SpeedLevel.MEDIUM.getSpeedValue() * range * Mth.sqrt(range) * speedRequirementMultiplier;
+    }
+
+    static float calculateAnimationTargetSpeed(float kineticSpeed) {
+        return EndSculkSilencerAnimationState.calculateTargetSpeed(kineticSpeed);
+    }
+
+    static AABB calculateArea(Level level, BlockPos pos, short range) {
+        int chunkRadius = Math.max(0, range - 1);
+        int centerChunkX = pos.getX() >> 4;
+        int centerChunkZ = pos.getZ() >> 4;
+        int minX = centerChunkX - chunkRadius << 4;
+        int minZ = centerChunkZ - chunkRadius << 4;
+        int maxX = centerChunkX + chunkRadius + 1 << 4;
+        int maxZ = centerChunkZ + chunkRadius + 1 << 4;
+        return new AABB(minX, level.getMinBuildHeight(), minZ, maxX, level.getMaxBuildHeight(), maxZ);
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         CCBAdvancementBehaviour advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.STEVES_REDEMPTION);
@@ -128,30 +152,6 @@ public class EndSculkSilencerBlockEntity extends EndMechanicalBlockEntity<EndScu
     public void invalidate() {
         controller.remove();
         super.invalidate();
-    }
-
-    static void setClientTicker(Consumer<EndSculkSilencerBlockEntity> ticker) {
-        clientTicker = ticker;
-    }
-
-    static boolean meetsRequiredSpeed(float speed, short range) {
-        float speedRequirementMultiplier = Math.max(0, CCBConfig.server().machines.endSculkSilencer.requiredSpeedMultiplier.getF());
-        return range > 0 && Mth.abs(speed) >= SpeedLevel.MEDIUM.getSpeedValue() * range * Mth.sqrt(range) * speedRequirementMultiplier;
-    }
-
-    static float calculateAnimationTargetSpeed(float kineticSpeed) {
-        return EndSculkSilencerAnimationState.calculateTargetSpeed(kineticSpeed);
-    }
-
-    static AABB calculateArea(Level level, BlockPos pos, short range) {
-        int chunkRadius = Math.max(0, range - 1);
-        int centerChunkX = pos.getX() >> 4;
-        int centerChunkZ = pos.getZ() >> 4;
-        int minX = centerChunkX - chunkRadius << 4;
-        int minZ = centerChunkZ - chunkRadius << 4;
-        int maxX = centerChunkX + chunkRadius + 1 << 4;
-        int maxZ = centerChunkZ + chunkRadius + 1 << 4;
-        return new AABB(minX, level.getMinBuildHeight(), minZ, maxX, level.getMaxBuildHeight(), maxZ);
     }
 
     LerpedFloat getAnimation() {

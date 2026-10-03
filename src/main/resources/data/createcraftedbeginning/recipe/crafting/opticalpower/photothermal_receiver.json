@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IAI",
+    "CBC",
+    "ICI"
+  ],
+  "key": {
+    "C": {
+      "tag": "c:plates/copper"
+    },
+    "A": {
+      "tag": "c:plates/amethyst_crystal"
+    },
+    "I": {
+      "tag": "c:plates/iron"
+    },
+    "B": {
+      "tag": "c:storage_blocks/redstone"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:photothermal_receiver"
+  }
+}

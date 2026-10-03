@@ -8,5 +8,5 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @FunctionalInterface
 public interface OpticalPowerConsumerBlockEntity {
-    void applyOpticalPowerAllocation(int powerPoints);
+    void applyOpticalPowerAllocation(int powerLp);
 }

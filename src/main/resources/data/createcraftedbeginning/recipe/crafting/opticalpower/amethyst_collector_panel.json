@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GAG",
+    "C C"
+  ],
+  "key": {
+    "G": {
+      "tag": "c:glass_blocks"
+    },
+    "A": {
+      "tag": "c:plates/amethyst_crystal"
+    },
+    "C": {
+      "tag": "c:plates/iron"
+    }
+  },
+  "result": {
+    "count": 4,
+    "id": "createcraftedbeginning:amethyst_collector_panel"
+  }
+}

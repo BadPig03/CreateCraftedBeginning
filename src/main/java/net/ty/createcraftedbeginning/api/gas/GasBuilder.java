@@ -18,6 +18,7 @@ public class GasBuilder {
     private ResourceLocation texture;
     private int tint = 0xFFFFFF;
     private int alpha = 0xFF;
+    private boolean usableInEquipment = true;
     @Nullable
     private Set<TagKey<Gas>> tags;
 
@@ -47,6 +48,11 @@ public class GasBuilder {
         return this;
     }
 
+    public GasBuilder usableInEquipment(boolean usableInEquipment) {
+        this.usableInEquipment = usableInEquipment;
+        return this;
+    }
+
     public GasBuilder tag(TagKey<Gas> tag) {
         if (tags == null) {
             tags = new HashSet<>();
@@ -65,6 +71,10 @@ public class GasBuilder {
 
     public int getAlpha() {
         return alpha;
+    }
+
+    public boolean isUsableInEquipment() {
+        return usableInEquipment;
     }
 
     @Nullable

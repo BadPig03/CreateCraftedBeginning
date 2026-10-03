@@ -69,15 +69,6 @@ public abstract class GasIngredient implements Predicate<GasStack> {
     @Nullable
     private GasStack[] stacks;
 
-    @Override
-    public abstract boolean test(GasStack gasStack);
-
-    @Override
-    public abstract int hashCode();
-
-    @Override
-    public abstract boolean equals(Object object);
-
     public static GasIngredient empty() {
         return EmptyGasIngredient.INSTANCE;
     }
@@ -113,25 +104,6 @@ public abstract class GasIngredient implements Predicate<GasStack> {
     public static GasIngredient tag(TagKey<Gas> tag) {
         return new TagGasIngredient(tag);
     }
-
-    public abstract boolean isSimple();
-
-    public abstract GasIngredientType<?> getType();
-
-    public final GasStack[] getStacks() {
-        if (stacks != null) {
-            return stacks;
-        }
-
-        stacks = generateStacks().collect(Collectors.toCollection(GasStackLinkedSet::createTypeAndComponentsSet)).toArray(GasStack[]::new);
-        return stacks;
-    }
-
-    public final boolean isEmpty() {
-        return this == empty();
-    }
-
-    protected abstract Stream<GasStack> generateStacks();
 
     private static MapCodec<GasIngredient> singleOrTagCodec() {
         return NeoForgeExtraCodecs.xor(SingleGasIngredient.CODEC, TagGasIngredient.CODEC).xmap(either -> either.map(value -> value, value -> value), ingredient -> switch (ingredient) {
@@ -175,4 +147,32 @@ public abstract class GasIngredient implements Predicate<GasStack> {
     private static GasIngredient of(Stream<Gas> gases) {
         return CompoundGasIngredient.of(gases.map(GasIngredient::single));
     }
+
+    @Override
+    public abstract boolean test(GasStack gasStack);
+
+    @Override
+    public abstract int hashCode();
+
+    @Override
+    public abstract boolean equals(Object object);
+
+    public abstract boolean isSimple();
+
+    public abstract GasIngredientType<?> getType();
+
+    public final GasStack[] getStacks() {
+        if (stacks != null) {
+            return stacks;
+        }
+
+        stacks = generateStacks().collect(Collectors.toCollection(GasStackLinkedSet::createTypeAndComponentsSet)).toArray(GasStack[]::new);
+        return stacks;
+    }
+
+    public final boolean isEmpty() {
+        return this == empty();
+    }
+
+    protected abstract Stream<GasStack> generateStacks();
 }

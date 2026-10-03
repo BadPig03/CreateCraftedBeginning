@@ -67,6 +67,52 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(FROST_LEVEL, FrostLevel.RIMING));
     }
 
+    static FrostLevel getFrostLevelOf(BlockState blockState) {
+        return blockState.getValue(FROST_LEVEL);
+    }
+
+    static InteractionResultHolder<ItemStack> tryInsert(BlockState state, Level level, BlockPos pos, ItemStack stack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
+        if (!state.hasBlockEntity()) {
+            return InteractionResultHolder.fail(ItemStack.EMPTY);
+        }
+
+        if (!(level.getBlockEntity(pos) instanceof BreezeCoolerBlockEntity cooler)) {
+            return InteractionResultHolder.fail(ItemStack.EMPTY);
+        }
+
+        if (!cooler.tryUpdateCoolantByItem(stack, forceOverflow, simulate)) {
+            return InteractionResultHolder.fail(ItemStack.EMPTY);
+        }
+
+        if (doNotConsume) {
+            return InteractionResultHolder.success(ItemStack.EMPTY);
+        }
+
+        ItemStack returnedContainer;
+        if (stack.getItem() instanceof DispensibleContainerItem) {
+            returnedContainer = new ItemStack(Items.BUCKET);
+        }
+        else {
+            returnedContainer = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
+        }
+        if (simulate || level.isClientSide) {
+            return InteractionResultHolder.success(returnedContainer);
+        }
+
+        stack.shrink(1);
+        return InteractionResultHolder.success(returnedContainer);
+    }
+
+    private static ItemInteractionResult setGoggles(BreezeCoolerBlockEntity cooler, boolean goggles) {
+        if (cooler.hasGoggles() == goggles) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        cooler.setGoggles(goggles);
+        cooler.notifyUpdate();
+        return ItemInteractionResult.SUCCESS;
+    }
+
     @Override
     protected boolean isPathfindable(BlockState state, PathComputationType pathComputationType) {
         return false;
@@ -200,52 +246,6 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
     @Override
     public BlockEntityType<? extends BreezeCoolerBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.BREEZE_COOLER.get();
-    }
-
-    static FrostLevel getFrostLevelOf(BlockState blockState) {
-        return blockState.getValue(FROST_LEVEL);
-    }
-
-    static InteractionResultHolder<ItemStack> tryInsert(BlockState state, Level level, BlockPos pos, ItemStack stack, boolean doNotConsume, boolean forceOverflow, boolean simulate) {
-        if (!state.hasBlockEntity()) {
-            return InteractionResultHolder.fail(ItemStack.EMPTY);
-        }
-
-        if (!(level.getBlockEntity(pos) instanceof BreezeCoolerBlockEntity cooler)) {
-            return InteractionResultHolder.fail(ItemStack.EMPTY);
-        }
-
-        if (!cooler.tryUpdateCoolantByItem(stack, forceOverflow, simulate)) {
-            return InteractionResultHolder.fail(ItemStack.EMPTY);
-        }
-
-        if (doNotConsume) {
-            return InteractionResultHolder.success(ItemStack.EMPTY);
-        }
-
-        ItemStack returnedContainer;
-        if (stack.getItem() instanceof DispensibleContainerItem) {
-            returnedContainer = new ItemStack(Items.BUCKET);
-        }
-        else {
-            returnedContainer = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
-        }
-        if (simulate || level.isClientSide) {
-            return InteractionResultHolder.success(returnedContainer);
-        }
-
-        stack.shrink(1);
-        return InteractionResultHolder.success(returnedContainer);
-    }
-
-    private static ItemInteractionResult setGoggles(BreezeCoolerBlockEntity cooler, boolean goggles) {
-        if (cooler.hasGoggles() == goggles) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        }
-
-        cooler.setGoggles(goggles);
-        cooler.notifyUpdate();
-        return ItemInteractionResult.SUCCESS;
     }
 
     public enum FrostLevel implements StringRepresentable {

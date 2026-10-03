@@ -32,6 +32,26 @@ final class AirtightHatchCanisterManager {
         this.hatch = hatch;
     }
 
+    private static GasTankLimits getCanisterLimits(AirtightHatchCanister canister) {
+        return new GasTankLimits(canister.getTankVolume(0), GasPressureLimits.clampToHardLimit(canister.getTankMaxPressurePa(0)));
+    }
+
+    private static CanisterType toBlockCanisterType(HatchCanisterType canisterType) {
+        if (canisterType != HatchCanisterType.CREATIVE) {
+            return CanisterType.NORMAL;
+        }
+
+        return CanisterType.CREATIVE;
+    }
+
+    private static boolean isSameSnapshot(GasStack expectedGas, GasStack actualGas) {
+        if (expectedGas.isEmpty() || actualGas.isEmpty()) {
+            return expectedGas.isEmpty() && actualGas.isEmpty();
+        }
+
+        return expectedGas.getAmount() == actualGas.getAmount() && GasStack.isSameGasSameComponents(expectedGas, actualGas);
+    }
+
     ItemStack getStoredCanister() {
         return canister.copy();
     }
@@ -288,26 +308,6 @@ final class AirtightHatchCanisterManager {
                 tankBehaviour.sendDataImmediately();
             }
         }
-    }
-
-    private static GasTankLimits getCanisterLimits(AirtightHatchCanister canister) {
-        return new GasTankLimits(canister.getTankVolume(0), GasPressureLimits.clampToHardLimit(canister.getTankMaxPressurePa(0)));
-    }
-
-    private static CanisterType toBlockCanisterType(HatchCanisterType canisterType) {
-        if (canisterType != HatchCanisterType.CREATIVE) {
-            return CanisterType.NORMAL;
-        }
-
-        return CanisterType.CREATIVE;
-    }
-
-    private static boolean isSameSnapshot(GasStack expectedGas, GasStack actualGas) {
-        if (expectedGas.isEmpty() || actualGas.isEmpty()) {
-            return expectedGas.isEmpty() && actualGas.isEmpty();
-        }
-
-        return expectedGas.getAmount() == actualGas.getAmount() && GasStack.isSameGasSameComponents(expectedGas, actualGas);
     }
 
     private boolean updateCanisterBlockState(Level level, BlockState hatchState, CanisterType canisterType) {

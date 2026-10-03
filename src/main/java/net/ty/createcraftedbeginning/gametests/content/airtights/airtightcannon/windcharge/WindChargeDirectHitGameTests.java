@@ -35,7 +35,7 @@ public final class WindChargeDirectHitGameTests {
         IronGolem nearby = helper.spawnWithNoFreeWill(EntityType.IRON_GOLEM, new BlockPos(3, 1, 2));
         float targetHealth = target.getHealth();
         float nearbyHealth = nearby.getHealth();
-        var projectile = new TestWindCharge(helper.getLevel(), CCBGases.SCULK_AIR.get().getHolder());
+        TestWindCharge projectile = new TestWindCharge(helper.getLevel(), CCBGases.SCULK_AIR.get().getHolder());
         projectile.setPos(target.position());
         projectile.hit(new EntityHitResult(target));
         helper.assertTrue(target.getHealth() == targetHealth - 6, "Sculk direct hit did not deal exactly six damage");
@@ -50,7 +50,7 @@ public final class WindChargeDirectHitGameTests {
     public static void naturalDirectHitKeepsVanillaDamage(GameTestHelper helper) {
         IronGolem target = helper.spawnWithNoFreeWill(EntityType.IRON_GOLEM, new BlockPos(2, 1, 2));
         float initialHealth = target.getHealth();
-        var projectile = new TestWindCharge(helper.getLevel(), CCBGases.NATURAL_AIR.get().getHolder());
+        TestWindCharge projectile = new TestWindCharge(helper.getLevel(), CCBGases.NATURAL_AIR.get().getHolder());
         projectile.setPos(target.position());
         projectile.hit(new EntityHitResult(target));
         helper.assertTrue(target.getHealth() == initialHealth - 1, "Natural wind charge direct-hit damage changed");

@@ -52,6 +52,23 @@ class AirtightAssemblyDriverResidueManager {
         this.driverCore = driverCore;
     }
 
+    private static int readBoundedInt(CompoundTag compoundTag, String key, int fallback, int max) {
+        return Mth.clamp(NbtValues.getIntOrDefault(compoundTag, key, fallback), 0, max);
+    }
+
+    private static Set<BlockPos> readOutletPositions(CompoundTag compoundTag) {
+        long[] storedPositions = compoundTag.getLongArray(COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS);
+        if (storedPositions.length == 0) {
+            return Set.of();
+        }
+
+        Set<BlockPos> positions = new HashSet<>(storedPositions.length);
+        for (long storedPosition : storedPositions) {
+            positions.add(BlockPos.of(storedPosition));
+        }
+        return Set.copyOf(positions);
+    }
+
     void tick(Level level) {
         if (outletsPositions.isEmpty() && driverCore.getLevelCalculator().getResidueLevel() > 0) {
             removeResidueLevel(true);
@@ -152,23 +169,6 @@ class AirtightAssemblyDriverResidueManager {
         successCount = readBoundedInt(compoundTag, COMPOUND_KEY_SUCCESS_COUNT, 0, CONSECUTIVE_SUCCESSES_COUNT);
         itemDistributionCursor = Math.max(0, NbtValues.getIntOrDefault(compoundTag, COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR, 0));
         fluidDistributionCursor = Math.max(0, NbtValues.getIntOrDefault(compoundTag, COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR, 0));
-    }
-
-    private static int readBoundedInt(CompoundTag compoundTag, String key, int fallback, int max) {
-        return Mth.clamp(NbtValues.getIntOrDefault(compoundTag, key, fallback), 0, max);
-    }
-
-    private static Set<BlockPos> readOutletPositions(CompoundTag compoundTag) {
-        long[] storedPositions = compoundTag.getLongArray(COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS);
-        if (storedPositions.length == 0) {
-            return Set.of();
-        }
-
-        Set<BlockPos> positions = new HashSet<>(storedPositions.length);
-        for (long storedPosition : storedPositions) {
-            positions.add(BlockPos.of(storedPosition));
-        }
-        return Set.copyOf(positions);
     }
 
     private void scanAndGenerateResidues(Level level) {

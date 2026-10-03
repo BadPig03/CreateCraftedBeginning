@@ -19,7 +19,7 @@ public enum AirtightChestplateElytraBoostPacket implements ServerboundPacketPayl
 
     @Override
     public void handle(ServerPlayer player) {
-        ElytraUpgrade.tryStartServerBoostPulse(player);
+        ElytraUpgrade.tryApplySpeedBoost(player);
     }
 
     @Override

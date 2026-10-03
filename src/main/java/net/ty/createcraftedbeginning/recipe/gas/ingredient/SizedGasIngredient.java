@@ -47,21 +47,6 @@ public final class SizedGasIngredient {
         this.amount = amount;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(ingredient, amount);
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        return this == object || object instanceof SizedGasIngredient other && other.amount() == amount && ingredient.equals(other.ingredient());
-    }
-
-    @Override
-    public String toString() {
-        return amount + "x " + ingredient;
-    }
-
     @Contract("_, _ -> new")
     public static SizedGasIngredient of(Gas gasType, long amount) {
         return new SizedGasIngredient(GasIngredient.of(gasType), amount);
@@ -75,6 +60,31 @@ public final class SizedGasIngredient {
     @Contract("_, _ -> new")
     public static SizedGasIngredient of(TagKey<Gas> tag, long amount) {
         return new SizedGasIngredient(GasIngredient.tag(tag), amount);
+    }
+
+    private static <T> @NotNull RecordCodecBuilder<T, String> validatedType(String requiredType) {
+        return Codec.STRING.validate(type -> {
+            if (!type.equals(requiredType)) {
+                return DataResult.error(() -> "Gas ingredient type must be '" + requiredType + "'; got '" + type + "'.");
+            }
+
+            return DataResult.success(type);
+        }).fieldOf("type").forGetter(value -> requiredType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(ingredient, amount);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        return this == object || object instanceof SizedGasIngredient other && other.amount() == amount && ingredient.equals(other.ingredient());
+    }
+
+    @Override
+    public String toString() {
+        return amount + "x " + ingredient;
     }
 
     public GasIngredient ingredient() {
@@ -104,15 +114,5 @@ public final class SizedGasIngredient {
 
     public GasStack getFirstGas() {
         return getGases()[0];
-    }
-
-    private static <T> @NotNull RecordCodecBuilder<T, String> validatedType(String requiredType) {
-        return Codec.STRING.validate(type -> {
-            if (!type.equals(requiredType)) {
-                return DataResult.error(() -> "Gas ingredient type must be '" + requiredType + "'; got '" + type + "'.");
-            }
-
-            return DataResult.success(type);
-        }).fieldOf("type").forGetter(value -> requiredType);
     }
 }

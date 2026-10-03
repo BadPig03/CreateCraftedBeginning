@@ -122,6 +122,7 @@ public final class GasParallelPumpBenchmarkGameTest {
             if (phase == 0) {
                 return prefix + "startup";
             }
+
             if (phase == 1) {
                 return prefix + "all-forward";
             }

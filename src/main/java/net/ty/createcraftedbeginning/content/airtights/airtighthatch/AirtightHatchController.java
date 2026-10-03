@@ -88,6 +88,38 @@ public final class AirtightHatchController {
         return inputOnlyPressureSafe(hatchHandler, targetHandler, Math.min(transferLimit, targetAmount - currentAmount), false);
     }
 
+    private static long transferFromHandler(GasHandler sourceHandler, GasPressureTransferEndpoint target, long transferLimit) {
+        long remaining = Math.max(0, transferLimit);
+        long transferred = 0;
+        for (int tank = 0; tank < sourceHandler.getTanks() && remaining > 0; tank++) {
+            Optional<GasPressureTransferEndpoint> source = GasPressureTransferEndpoint.tryHandler(sourceHandler, tank);
+            if (source.isEmpty()) {
+                continue;
+            }
+
+            GasPressureTransferResult result = GasPressureTransferService.transferPassive(source.get(), target, remaining, GasAction.EXECUTE);
+            transferred += result.filledAmount();
+            remaining -= result.filledAmount();
+        }
+        return transferred;
+    }
+
+    private static long transferToHandler(GasPressureTransferEndpoint source, GasHandler targetHandler, long transferLimit) {
+        long remaining = Math.max(0, transferLimit);
+        long transferred = 0;
+        for (int tank = 0; tank < targetHandler.getTanks() && remaining > 0; tank++) {
+            Optional<GasPressureTransferEndpoint> target = GasPressureTransferEndpoint.tryHandler(targetHandler, tank);
+            if (target.isEmpty()) {
+                continue;
+            }
+
+            GasPressureTransferResult result = GasPressureTransferService.transferPassive(source, target.get(), remaining, GasAction.EXECUTE);
+            transferred += result.filledAmount();
+            remaining -= result.filledAmount();
+        }
+        return transferred;
+    }
+
     void tick() {
         Level level = hatch.getLevel();
         if (level == null || level.isClientSide || hatch.isEmpty()) {
@@ -137,38 +169,6 @@ public final class AirtightHatchController {
 
     void resetTransferQuota() {
         transferRemainder = 0;
-    }
-
-    private static long transferFromHandler(GasHandler sourceHandler, GasPressureTransferEndpoint target, long transferLimit) {
-        long remaining = Math.max(0, transferLimit);
-        long transferred = 0;
-        for (int tank = 0; tank < sourceHandler.getTanks() && remaining > 0; tank++) {
-            Optional<GasPressureTransferEndpoint> source = GasPressureTransferEndpoint.tryHandler(sourceHandler, tank);
-            if (source.isEmpty()) {
-                continue;
-            }
-
-            GasPressureTransferResult result = GasPressureTransferService.transferPassive(source.get(), target, remaining, GasAction.EXECUTE);
-            transferred += result.filledAmount();
-            remaining -= result.filledAmount();
-        }
-        return transferred;
-    }
-
-    private static long transferToHandler(GasPressureTransferEndpoint source, GasHandler targetHandler, long transferLimit) {
-        long remaining = Math.max(0, transferLimit);
-        long transferred = 0;
-        for (int tank = 0; tank < targetHandler.getTanks() && remaining > 0; tank++) {
-            Optional<GasPressureTransferEndpoint> target = GasPressureTransferEndpoint.tryHandler(targetHandler, tank);
-            if (target.isEmpty()) {
-                continue;
-            }
-
-            GasPressureTransferResult result = GasPressureTransferService.transferPassive(source, target.get(), remaining, GasAction.EXECUTE);
-            transferred += result.filledAmount();
-            remaining -= result.filledAmount();
-        }
-        return transferred;
     }
 
     private long getTransferQuota() {

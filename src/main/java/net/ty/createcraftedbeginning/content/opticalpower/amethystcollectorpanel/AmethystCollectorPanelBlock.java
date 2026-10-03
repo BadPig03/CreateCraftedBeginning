@@ -1,16 +1,27 @@
 package net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel;
 
+import net.createmod.catnip.placement.IPlacementHelper;
+import net.createmod.catnip.placement.PlacementHelpers;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetworkManager;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerSource;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
+import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
@@ -18,9 +29,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSource {
+public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSource, EntityBlock {
     static final int MAX_SIDE = 5;
     static final int MAX_AREA = MAX_SIDE * MAX_SIDE;
+    private static final int PLACEMENT_HELPER_ID = PlacementHelpers.register(new AmethystCollectorPanelPlacementHelper());
     private static final Map<AmethystCollectorPanelLayout, VoxelShape> SHAPES = new ConcurrentHashMap<>();
 
     public AmethystCollectorPanelBlock(Properties properties) {
@@ -43,15 +55,30 @@ public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSo
     }
 
     @Override
-    public Source getOpticalPowerSource(Level level, BlockPos pos, BlockState state) {
-        AmethystCollectorPanelGeometry geometry = AmethystCollectorPanelGeometry.findGeometry(level, pos);
-        AmethystCollectorPanelRectangle rectangle = geometry.activeRectangle();
-        int powerPoints = geometry.topologyValid() && rectangle != null ? AmethystCollectorPanelRectangle.calculatePowerPoints(level, rectangle) : 0;
-        return new Source(geometry.anchor(), powerPoints, geometry.dependencies(), geometry.powerDependencies(), true, geometry.topologyValid());
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new AmethystCollectorPanelBlockEntity(CCBBlockEntities.AMETHYST_COLLECTOR_PANEL.get(), pos, state);
     }
 
     @Override
-    public int getCurrentOpticalPowerPoints(Level level, BlockPos pos, BlockState state, Source discoveredSource) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        IPlacementHelper helper = PlacementHelpers.get(PLACEMENT_HELPER_ID);
+        if (player.isShiftKeyDown() || !player.mayBuild() || !helper.matchesItem(stack)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        return helper.getOffset(player, level, state, pos, hitResult).placeInWorld(level, (BlockItem) stack.getItem(), player, hand, hitResult);
+    }
+
+    @Override
+    public Source getOpticalPowerSource(Level level, BlockPos pos, BlockState state) {
+        AmethystCollectorPanelGeometry geometry = AmethystCollectorPanelGeometry.findGeometry(level, pos);
+        AmethystCollectorPanelRectangle rectangle = geometry.activeRectangle();
+        int powerLp = geometry.topologyValid() && rectangle != null ? AmethystCollectorPanelPower.calculateOutput(level, rectangle).powerLp() : 0;
+        return new Source(geometry.anchor(), powerLp, geometry.dependencies(), geometry.powerDependencies(), true, geometry.topologyValid());
+    }
+
+    @Override
+    public int getCurrentOpticalPowerLp(Level level, BlockPos pos, BlockState state, Source discoveredSource) {
         if (!discoveredSource.topologyValid()) {
             return 0;
         }
@@ -61,7 +88,7 @@ public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSo
             return 0;
         }
 
-        return AmethystCollectorPanelRectangle.calculatePowerPoints(level, rectangle);
+        return AmethystCollectorPanelPower.calculateOutput(level, rectangle).powerLp();
     }
 
     @Override
@@ -96,6 +123,7 @@ public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSo
         if (layout.equals(AmethystCollectorPanelLayout.SINGLE)) {
             return CCBShapes.AMETHYST_COLLECTOR_PANEL_SHAPE;
         }
+
         return SHAPES.computeIfAbsent(layout, AmethystCollectorPanelLayout::shape);
     }
 }

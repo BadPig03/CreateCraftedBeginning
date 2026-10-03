@@ -51,7 +51,7 @@ final class AirtightPumpTransportBehaviour extends GasTransportBehaviour {
 
         long maxPressureBoostPa = Math.max(GasPressure.VACUUM_PA, pump.getPumpMaxPressureBoostPa());
         long flowRateLimit = Math.max(0, pump.getPumpFlowRateLimit());
-        double pumpCurveConductance = maxPressureBoostPa <= GasPressure.VACUUM_PA || flowRateLimit <= 0 ? Double.NaN : (double) flowRateLimit / maxPressureBoostPa;
+        double pumpCurveConductance = maxPressureBoostPa == GasPressure.VACUUM_PA || flowRateLimit <= 0 ? Double.NaN : (double) flowRateLimit / maxPressureBoostPa;
         return new GasTransportEdgeProperties(resistanceUnits, GasTransportPressureDrive.pressureBoost(maxPressureBoostPa), flowRateLimit, GasPressure.REFERENCE_PRESSURE_PA, pumpCurveConductance, true, true);
     }
 }

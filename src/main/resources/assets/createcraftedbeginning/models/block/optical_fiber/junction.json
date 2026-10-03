@@ -4,8 +4,8 @@
 	"parent": "minecraft:block/block",
 	"texture_size": [32, 32],
 	"textures": {
-		"particle": "createcraftedbeginning:block/optical_fiber/fiber",
-		"fiber": "createcraftedbeginning:block/optical_fiber/fiber"
+		"fiber": "createcraftedbeginning:block/optical_fiber/fiber",
+		"particle": "createcraftedbeginning:block/amethyst_collector_panel/particle"
 	},
 	"elements": [
 		{

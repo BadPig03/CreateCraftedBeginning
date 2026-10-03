@@ -9,6 +9,7 @@ import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.Tags.Fluids;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.datagen.recipe.generator.GasInjectionRecipeGen;
+import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBFluids;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
@@ -20,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 @MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class CCBGasInjectionRecipes extends GasInjectionRecipeGen {
+    private final GeneratedRecipe AEROGEL_BLOCK = create("aerogel_block", builder -> builder.require(Items.SLIME_BALL).require(CCBGases.NATURAL_AIR.get(), 1000).output(CCBBlocks.AEROGEL_BLOCK.get(), 2));
     private final GeneratedRecipe WIND_CHARGE = create("wind_charge", builder -> builder.require(Items.BLAZE_POWDER).require(CCBGases.NATURAL_AIR.get(), 2000).output(Items.WIND_CHARGE, 2));
     private final GeneratedRecipe BREEZE_ROD = create("breeze_rod", builder -> builder.require(Tags.Items.RODS_BLAZE).require(CCBGases.NATURAL_AIR.get(), 2000).output(Items.BREEZE_ROD));
     private final GeneratedRecipe MUSHROOM_STEM_FROM_BROWN = create("mushroom_stem_from_brown", builder -> builder.require(Blocks.BROWN_MUSHROOM_BLOCK).require(CCBGases.NATURAL_AIR.get(), 2000).output(Blocks.MUSHROOM_STEM));

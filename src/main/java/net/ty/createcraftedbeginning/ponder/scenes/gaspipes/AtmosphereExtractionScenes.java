@@ -281,7 +281,7 @@ public final class AtmosphereExtractionScenes {
 
         ParticleEmitter bubbles = scene.effects().simpleParticleEmitter(ParticleTypes.BUBBLE_COLUMN_UP, new Vec3(0, 0.04, 0));
         ParticleEmitter downwardBubbles = scene.effects().simpleParticleEmitter(ParticleTypes.CURRENT_DOWN, Vec3.ZERO);
-        
+
         scene.world().setBlock(atmospherePos, Blocks.AIR.defaultBlockState(), false);
         scene.world().setBlock(atmospherePos.above(), Blocks.AIR.defaultBlockState(), false);
 

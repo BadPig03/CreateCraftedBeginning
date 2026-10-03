@@ -29,6 +29,22 @@ public class GasFactoryGaugeRenderer extends SmartBlockEntityRenderer<GasFactory
         super(context);
     }
 
+    private static void renderBulb(FactoryPanelBehaviour behaviour, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        BlockState blockState = behaviour.blockEntity.getBlockState();
+        float xRot = FactoryPanelBlock.getXRot(blockState) + Mth.HALF_PI;
+        float yRot = FactoryPanelBlock.getYRot(blockState);
+        float glow = behaviour.bulb.getValue(partialTicks);
+        PartialModel bulbModel = behaviour.redstonePowered || behaviour.isMissingAddress() ? CCBPartialModels.GAS_FACTORY_GAUGE_BULB_RED : CCBPartialModels.GAS_FACTORY_GAUGE_BULB_LIGHT;
+        CachedBuffers.partial(bulbModel, blockState).rotateCentered(yRot, Direction.UP).rotateCentered(xRot, Direction.EAST).rotateCentered(Mth.PI, Direction.UP).translate(behaviour.slot.xOffset * 0.5, 0, behaviour.slot.yOffset * 0.5).light(glow > 0.125F ? LightTexture.FULL_BRIGHT : light).overlay(overlay).renderInto(poseStack, buffer.getBuffer(RenderType.translucent()));
+        if (glow < 0.125F) {
+            return;
+        }
+
+        glow = BoundedMath.clampMagnitude(1 - 2 * Mth.square(glow - 0.75F), 1);
+        int glowColor = (int) (200 * glow);
+        CachedBuffers.partial(bulbModel, blockState).rotateCentered(yRot, Direction.UP).rotateCentered(xRot, Direction.EAST).rotateCentered(Mth.PI, Direction.UP).translate(behaviour.slot.xOffset * 0.5, 0, behaviour.slot.yOffset * 0.5).light(LightTexture.FULL_BRIGHT).color(glowColor, glowColor, glowColor, 255).overlay(overlay).renderInto(poseStack, buffer.getBuffer(RenderTypes.additive()));
+    }
+
     @Override
     protected void renderSafe(GasFactoryGaugeBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         super.renderSafe(blockEntity, partialTicks, poseStack, buffer, light, overlay);
@@ -48,21 +64,5 @@ public class GasFactoryGaugeRenderer extends SmartBlockEntityRenderer<GasFactory
                 FactoryPanelRenderer.renderPath(behaviour, connection, partialTicks, poseStack, buffer, light, overlay);
             }
         }
-    }
-
-    private static void renderBulb(FactoryPanelBehaviour behaviour, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        BlockState blockState = behaviour.blockEntity.getBlockState();
-        float xRot = FactoryPanelBlock.getXRot(blockState) + Mth.HALF_PI;
-        float yRot = FactoryPanelBlock.getYRot(blockState);
-        float glow = behaviour.bulb.getValue(partialTicks);
-        PartialModel bulbModel = behaviour.redstonePowered || behaviour.isMissingAddress() ? CCBPartialModels.GAS_FACTORY_GAUGE_BULB_RED : CCBPartialModels.GAS_FACTORY_GAUGE_BULB_LIGHT;
-        CachedBuffers.partial(bulbModel, blockState).rotateCentered(yRot, Direction.UP).rotateCentered(xRot, Direction.EAST).rotateCentered(Mth.PI, Direction.UP).translate(behaviour.slot.xOffset * 0.5, 0, behaviour.slot.yOffset * 0.5).light(glow > 0.125F ? LightTexture.FULL_BRIGHT : light).overlay(overlay).renderInto(poseStack, buffer.getBuffer(RenderType.translucent()));
-        if (glow < 0.125F) {
-            return;
-        }
-
-        glow = BoundedMath.clampMagnitude(1 - 2 * Mth.square(glow - 0.75F), 1);
-        int glowColor = (int) (200 * glow);
-        CachedBuffers.partial(bulbModel, blockState).rotateCentered(yRot, Direction.UP).rotateCentered(xRot, Direction.EAST).rotateCentered(Mth.PI, Direction.UP).translate(behaviour.slot.xOffset * 0.5, 0, behaviour.slot.yOffset * 0.5).light(LightTexture.FULL_BRIGHT).color(glowColor, glowColor, glowColor, 255).overlay(overlay).renderInto(poseStack, buffer.getBuffer(RenderTypes.additive()));
     }
 }

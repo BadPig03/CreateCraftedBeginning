@@ -38,6 +38,12 @@ public abstract class BaseCoolerState {
         this.isCreative = isCreative;
     }
 
+    protected static boolean shouldRejectAutomaticOverflow(int remainingTime, long newTime) {
+        long currentTimeMagnitude = Math.abs((long) remainingTime);
+        long newTimeMagnitude = Math.abs(newTime);
+        return newTimeMagnitude > BreezeCoolerBlockEntity.getOverflowThreshold() && newTimeMagnitude >= currentTimeMagnitude;
+    }
+
     public int getRemainingTime() {
         return remainingTime;
     }
@@ -64,12 +70,6 @@ public abstract class BaseCoolerState {
     }
 
     public abstract boolean onSnowballImpact(BreezeCoolerBlockEntity cooler);
-
-    protected static boolean shouldRejectAutomaticOverflow(int remainingTime, long newTime) {
-        long currentTimeMagnitude = Math.abs((long) remainingTime);
-        long newTimeMagnitude = Math.abs(newTime);
-        return newTimeMagnitude > BreezeCoolerBlockEntity.getOverflowThreshold() && newTimeMagnitude >= currentTimeMagnitude;
-    }
 
     protected final void updateRemainingTime(BreezeCoolerBlockEntity cooler, long newRemainingTime, CoolingSyncMode syncMode) {
         Level level = cooler.getLevel();

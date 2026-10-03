@@ -318,6 +318,10 @@ public final class GasPendingTransferUnderfillGameTest {
     private static final class SimulateAcceptExecuteRejectSinkHandler implements GasHandler {
         private int executeFillCalls;
 
+        private static long storedAmount() {
+            return 0;
+        }
+
         @Override
         public boolean isGasValid(int tank, GasStack stack) {
             return tank == 0 && stack.is(CCBGases.NATURAL_AIR.get());
@@ -354,10 +358,6 @@ public final class GasPendingTransferUnderfillGameTest {
             }
 
             executeFillCalls++;
-            return 0;
-        }
-
-        private static long storedAmount() {
             return 0;
         }
 

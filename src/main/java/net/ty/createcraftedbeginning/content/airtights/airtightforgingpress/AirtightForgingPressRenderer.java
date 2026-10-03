@@ -35,15 +35,6 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
         super(context);
     }
 
-    @Override
-    protected void renderSafe(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        super.renderSafe(press, partialTicks, poseStack, buffer, light, overlay);
-        if (!VisualizationManager.supportsVisualization(press.getLevel())) {
-            renderPressHead(press, partialTicks, poseStack, buffer, light);
-        }
-        renderItems(press, partialTicks, poseStack, buffer, light, overlay);
-    }
-
     private static void renderPressHead(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
         SuperByteBuffer headBuffer = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_FORGING_PRESS_PRESS_HEAD, press.getBlockState());
         headBuffer.translate(0, -press.getPressHeadDistance(partialTicks), 0).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
@@ -144,6 +135,15 @@ public class AirtightForgingPressRenderer extends SmartBlockEntityRenderer<Airti
             placements[slot] = new OutputPlacement(angle, offset);
         }
         return placements;
+    }
+
+    @Override
+    protected void renderSafe(AirtightForgingPressBlockEntity press, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        super.renderSafe(press, partialTicks, poseStack, buffer, light, overlay);
+        if (!VisualizationManager.supportsVisualization(press.getLevel())) {
+            renderPressHead(press, partialTicks, poseStack, buffer, light);
+        }
+        renderItems(press, partialTicks, poseStack, buffer, light, overlay);
     }
 
     private record OutputPlacement(float angle, Vec3 offset) {}

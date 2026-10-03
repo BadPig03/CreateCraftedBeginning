@@ -10,6 +10,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
+import net.ty.createcraftedbeginning.platform.access.AirVentCrawlingAccess;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -23,11 +24,19 @@ public final class AirVentTraversal {
     }
 
     public static boolean shouldCrawl(Player player) {
+        return shouldCrawl(player, false);
+    }
+
+    public static boolean shouldCrawl(Player player, boolean wasVentCrawling) {
         if (player.isSpectator() || !player.isAlive() || player.isPassenger() || player.isSleeping() || player.isFallFlying() || player.isAutoSpinAttack() || player.getForcedPose() != null) {
             return false;
         }
 
         if (isInside(player)) {
+            return true;
+        }
+
+        if (wasVentCrawling && intersectsInterior(player, player.getDimensions(Pose.SWIMMING).makeBoundingBox(player.position()))) {
             return true;
         }
 
@@ -39,18 +48,32 @@ public final class AirVentTraversal {
         return SubLevelBridge.testLocalFrames(level, player.position(), player.getLookAngle(), ENTRY_SEARCH_RADIUS, (position, direction) -> {
             Direction lookDirection = Direction.getNearest(direction.x, direction.y, direction.z);
             BlockPos playerPos = BlockPos.containing(position);
-            if (canEnterFrom(level, playerPos.relative(lookDirection), lookDirection)) {
-                return true;
-            }
-
-            return lookDirection == Direction.UP && canEnterFrom(level, playerPos.above(2), lookDirection);
+            return canEnterFrom(level, playerPos.relative(lookDirection), lookDirection) || lookDirection == Direction.UP && canEnterFrom(level, playerPos.above(2), lookDirection);
         });
     }
 
+    public static boolean shouldPreserveLocalCrawling(Player player) {
+        if (!player.isLocalPlayer()) {
+            return false;
+        }
+
+        Pose receivedPose = player.getPose();
+        if (receivedPose != Pose.STANDING && receivedPose != Pose.CROUCHING) {
+            return false;
+        }
+
+        boolean wasVentCrawling = ((AirVentCrawlingAccess) player).ccb$isVentCrawling();
+        return wasVentCrawling && shouldCrawl(player, true);
+    }
+
     static boolean isInside(Player player) {
-        Level level = player.level();
         EntityDimensions dimensions = player.getDimensions(Pose.SWIMMING);
         AABB bounds = dimensions.makeBoundingBox(player.position()).deflate(0, dimensions.height() * CRAWLING_CORE_INSET_RATIO, 0);
+        return intersectsInterior(player, bounds);
+    }
+
+    private static boolean intersectsInterior(Player player, AABB bounds) {
+        Level level = player.level();
         return SubLevelBridge.testLocalBounds(level, bounds, localBounds -> {
             for (BlockPos pos : BlockPos.betweenClosed(BlockPos.containing(localBounds.minX, localBounds.minY, localBounds.minZ), BlockPos.containing(localBounds.maxX, localBounds.maxY, localBounds.maxZ))) {
                 if (!level.isLoaded(pos) || !(level.getBlockState(pos).getBlock() instanceof AirVentBlock)) {

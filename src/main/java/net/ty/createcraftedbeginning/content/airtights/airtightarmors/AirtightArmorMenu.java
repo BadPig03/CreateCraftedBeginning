@@ -36,6 +36,10 @@ public abstract class AirtightArmorMenu extends AirtightUpgradableMenu {
         updateStatus(contentHolder);
     }
 
+    protected static UpgradeRegistryAccess upgradeRegistry(Function<ResourceLocation, AirtightUpgrade> byId, Supplier<List<AirtightUpgradeStatus>> defaultStatuses, Supplier<List<AirtightUpgrade>> upgrades) {
+        return new UpgradeRegistryAccess(byId, defaultStatuses, upgrades);
+    }
+
     @Override
     protected void initAndReadInventory(ItemStack stack) {
         menuInventory = getInventoryHandler(stack, getMaxSlots());
@@ -50,10 +54,6 @@ public abstract class AirtightArmorMenu extends AirtightUpgradableMenu {
     public void updateStatus(ItemStack stack) {
         List<AirtightUpgrade> upgrades = upgradeRegistry.upgrades().get();
         currentStatusList = normalizeStatusList(stack.getOrDefault(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, upgradeRegistry.defaultStatuses().get()), upgrades);
-    }
-
-    protected static UpgradeRegistryAccess upgradeRegistry(Function<ResourceLocation, AirtightUpgrade> byId, Supplier<List<AirtightUpgradeStatus>> defaultStatuses, Supplier<List<AirtightUpgrade>> upgrades) {
-        return new UpgradeRegistryAccess(byId, defaultStatuses, upgrades);
     }
 
     void forEachUpgrade(Consumer<AirtightUpgrade> action) {

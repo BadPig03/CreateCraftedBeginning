@@ -115,11 +115,11 @@ public class CCBTags {
             this(namespace, path, namespace.optionalDefault, namespace.alwaysDataGenDefault);
         }
 
-        public boolean matches(BlockState state) {
-            return state.is(tag);
+        private static void init() {
         }
 
-        private static void init() {
+        public boolean matches(BlockState state) {
+            return state.is(tag);
         }
     }
 
@@ -175,11 +175,11 @@ public class CCBTags {
             this(namespace, path, namespace.optionalDefault, namespace.alwaysDataGenDefault);
         }
 
-        public boolean matches(ItemStack stack) {
-            return stack.is(tag);
+        private static void init() {
         }
 
-        private static void init() {
+        public boolean matches(ItemStack stack) {
+            return stack.is(tag);
         }
     }
 
@@ -244,15 +244,15 @@ public class CCBTags {
             this(namespace, path, namespace.optionalDefault, namespace.alwaysDataGenDefault);
         }
 
+        private static void init() {
+        }
+
         public boolean matches(Entity entity) {
             return matches(entity.getType());
         }
 
         public boolean matches(EntityType<?> type) {
             return type.is(tag);
-        }
-
-        private static void init() {
         }
     }
 

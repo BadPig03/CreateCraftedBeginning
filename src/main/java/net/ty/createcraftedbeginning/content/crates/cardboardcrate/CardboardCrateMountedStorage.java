@@ -33,6 +33,10 @@ public class CardboardCrateMountedStorage extends CrateMountedItemStorage<Cardbo
         this.discardedPackage = discardedPackage;
     }
 
+    public static CardboardCrateMountedStorage fromBlockEntity(CardboardCrateBlockEntity crate) {
+        return new CardboardCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount());
+    }
+
     @Override
     protected void afterUnmount(CardboardCrateBlockEntity crate) {
         if (!discardedPackage) {
@@ -45,10 +49,6 @@ public class CardboardCrateMountedStorage extends CrateMountedItemStorage<Cardbo
     @Override
     protected void onTrackedItemDiscarded() {
         discardedPackage = true;
-    }
-
-    public static CardboardCrateMountedStorage fromBlockEntity(CardboardCrateBlockEntity crate) {
-        return new CardboardCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount());
     }
 
     private boolean hasDiscardedPackage() {

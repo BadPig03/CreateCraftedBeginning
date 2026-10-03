@@ -64,35 +64,6 @@ public class CCBCreativeTabs {
     }
 
     private record RegistrateDisplayItemsGenerator() implements DisplayItemsGenerator {
-        @Override
-        public void accept(ItemDisplayParameters parameters, Output output) {
-            Predicate<Item> exclusionPredicate = makeExclusionPredicate();
-            List<ItemOrdering> orderings = makeOrderings();
-            EnumMap<CCBCreativeTabSection, List<ItemStack>> stacksBySection = new EnumMap<>(CCBCreativeTabSection.class);
-            Map<Item, CCBCreativeTabSection> itemSections = new IdentityHashMap<>();
-            for (CCBCreativeTabSection section : CCBCreativeTabSection.values()) {
-                List<Item> items = new LinkedList<>();
-                items.addAll(collectBlocks(exclusionPredicate, section));
-                items.addAll(collectItems(exclusionPredicate, section));
-                applyOrderings(items, orderings);
-                applySectionItems(items, section);
-
-                List<ItemStack> stacks = new ArrayList<>(items.size());
-                items.stream().map(ItemStack::new).forEach(stacks::add);
-                if (section == CCBCreativeTabSection.CANISTERS) {
-                    stacks.addAll(GasCanisterDisplayVariants.createCanisterVariants());
-                }
-
-                stacksBySection.put(section, stacks);
-                stacks.forEach(stack -> itemSections.put(stack.getItem(), section));
-            }
-
-            CCBCreativeTabLayout.setItemSections(itemSections);
-            for (CCBCreativeTabSection section : CCBCreativeTabSection.values()) {
-                outputAll(output, stacksBySection.get(section));
-            }
-        }
-
         private static Predicate<Item> makeExclusionPredicate() {
             Set<Item> exclusions = new ReferenceOpenHashSet<>();
             List<ItemProviderEntry<?, ?>> itemsExclusions = new ArrayList<>();
@@ -101,8 +72,6 @@ public class CCBCreativeTabs {
             itemsExclusions.addAll(List.of(CCBItems.BALLOON_RARE_REVERTED, CCBItems.BALLOON_RARE_SMILE, CCBItems.BALLOON_RARE_CRY, CCBItems.BALLOON_RARE_EYE, CCBItems.BALLOON_RARE_ISAAC, CCBItems.BALLOON_RARE_GHAST, CCBItems.BALLOON_RARE_TROLLFACE, CCBItems.BALLOON_RARE_TENNA, CCBItems.BALLOON_RARE_PVZ, CCBItems.BALLOON_RARE_QUESTION_MARKS, CCBItems.BALLOON_RARE_POWERFUL, CCBItems.BALLOON_RARE_CHEESE));
             itemsExclusions.stream().map(ItemProviderEntry::asItem).forEach(exclusions::add);
 
-            List<ItemProviderEntry<?, ?>> blocksExclusions = List.of(CCBBlocks.PNEUMATIC_ENGINE_BLOCK);
-            blocksExclusions.stream().map(ItemProviderEntry::asItem).forEach(exclusions::add);
             return exclusions::contains;
         }
 
@@ -160,10 +129,6 @@ public class CCBCreativeTabs {
             }
         }
 
-        private static void outputAll(Output output, List<ItemStack> stacks) {
-            stacks.forEach(stack -> output.accept(stack, TabVisibility.PARENT_AND_SEARCH_TABS));
-        }
-
         private static List<Item> collectItems(Predicate<Item> exclusionPredicate, CCBCreativeTabSection section) {
             List<Item> items = new ReferenceArrayList<>();
             for (RegistryEntry<Item, Item> entry : CCBRegistrateProvider.get().getAll(Registries.ITEM)) {
@@ -197,6 +162,37 @@ public class CCBCreativeTabs {
                 items.add(item);
             }
             return new ReferenceArrayList<>(new ReferenceLinkedOpenHashSet<>(items));
+        }
+
+        @Override
+        public void accept(ItemDisplayParameters parameters, Output output) {
+            Predicate<Item> exclusionPredicate = makeExclusionPredicate();
+            List<ItemOrdering> orderings = makeOrderings();
+            EnumMap<CCBCreativeTabSection, List<ItemStack>> stacksBySection = new EnumMap<>(CCBCreativeTabSection.class);
+            Map<Item, CCBCreativeTabSection> itemSections = new IdentityHashMap<>();
+            for (CCBCreativeTabSection section : CCBCreativeTabSection.values()) {
+                List<Item> items = new LinkedList<>();
+                items.addAll(collectBlocks(exclusionPredicate, section));
+                items.addAll(collectItems(exclusionPredicate, section));
+                applyOrderings(items, orderings);
+                applySectionItems(items, section);
+
+                List<ItemStack> stacks = new ArrayList<>(items.size());
+                items.stream().map(ItemStack::new).forEach(stacks::add);
+                if (section == CCBCreativeTabSection.CANISTERS) {
+                    stacks.addAll(GasCanisterDisplayVariants.createCanisterVariants());
+                }
+
+                stacksBySection.put(section, stacks);
+                stacks.forEach(stack -> itemSections.put(stack.getItem(), section));
+            }
+
+            CCBCreativeTabLayout.setItemSections(itemSections);
+            for (CCBCreativeTabSection section : CCBCreativeTabSection.values()) {
+                for (ItemStack stack : stacksBySection.get(section)) {
+                    output.accept(stack, TabVisibility.PARENT_AND_SEARCH_TABS);
+                }
+            }
         }
     }
 

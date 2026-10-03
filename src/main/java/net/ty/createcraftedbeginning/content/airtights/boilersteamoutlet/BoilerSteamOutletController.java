@@ -77,12 +77,8 @@ final class BoilerSteamOutletController {
         outlet.sendData();
     }
 
-    double getSteamGenerationRate() {
-        return production.getProductionRatePerSecond();
-    }
-
-    double getSteamOutputRate() {
-        return extractionMeter.getAverageExtractionRatePerSecond();
+    double getSteamGenerationRatio() {
+        return production.getProductionRatio();
     }
 
     void recordExtraction(GasStack drained, GasAction action) {

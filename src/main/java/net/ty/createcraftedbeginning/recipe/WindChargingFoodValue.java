@@ -30,29 +30,6 @@ public final class WindChargingFoodValue {
         this.stack = stack;
     }
 
-    public WindChargingData calculate() {
-        FoodProperties foodProperties = stack.getItem().getFoodProperties(stack, null);
-        if (foodProperties == null || stack.is(WIND_CHARGING_EXCLUDED)) {
-            return EMPTY;
-        }
-
-        double foodValue = 0.5 * foodProperties.nutrition() + foodProperties.saturation();
-        if (foodValue <= 0) {
-            return EMPTY;
-        }
-
-        double effectScore = getEffectScore(foodProperties.effects());
-        double chargeMultiplier = getChargeMultiplier(effectScore);
-        double calculatedTime = Math.pow(foodValue, 1.39858) * 100 * Math.abs(chargeMultiplier);
-        int chargingMagnitude = !GasConsumptionMath.isFinite(calculatedTime) || calculatedTime >= Integer.MAX_VALUE ? Integer.MAX_VALUE : Mth.ceil(calculatedTime);
-        if (chargingMagnitude <= 0) {
-            return EMPTY;
-        }
-
-        int chargingTime = chargeMultiplier < 0 ? -chargingMagnitude : chargingMagnitude;
-        return new WindChargingData(WindChargingAction.CHARGE, chargingTime, 1, ItemStack.EMPTY);
-    }
-
     private static double getEffectScore(List<PossibleEffect> effects) {
         double score = 0;
         for (PossibleEffect possibleEffect : effects) {
@@ -101,5 +78,28 @@ public final class WindChargingFoodValue {
         }
 
         return -2 * Math.min(1, -effectScore) * (1 - effectScore);
+    }
+
+    public WindChargingData calculate() {
+        FoodProperties foodProperties = stack.getItem().getFoodProperties(stack, null);
+        if (foodProperties == null || stack.is(WIND_CHARGING_EXCLUDED)) {
+            return EMPTY;
+        }
+
+        double foodValue = 0.5 * foodProperties.nutrition() + foodProperties.saturation();
+        if (foodValue <= 0) {
+            return EMPTY;
+        }
+
+        double effectScore = getEffectScore(foodProperties.effects());
+        double chargeMultiplier = getChargeMultiplier(effectScore);
+        double calculatedTime = Math.pow(foodValue, 1.39858) * 100 * Math.abs(chargeMultiplier);
+        int chargingMagnitude = !GasConsumptionMath.isFinite(calculatedTime) || calculatedTime >= Integer.MAX_VALUE ? Integer.MAX_VALUE : Mth.ceil(calculatedTime);
+        if (chargingMagnitude <= 0) {
+            return EMPTY;
+        }
+
+        int chargingTime = chargeMultiplier < 0 ? -chargingMagnitude : chargingMagnitude;
+        return new WindChargingData(WindChargingAction.CHARGE, chargingTime, 1, ItemStack.EMPTY);
     }
 }

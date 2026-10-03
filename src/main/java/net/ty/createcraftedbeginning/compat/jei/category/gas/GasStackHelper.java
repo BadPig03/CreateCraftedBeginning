@@ -8,6 +8,7 @@ import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.subtypes.UidContext;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -20,6 +21,7 @@ import net.ty.createcraftedbeginning.api.gas.GasUnits;
 import net.ty.createcraftedbeginning.client.gas.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
+import net.ty.createcraftedbeginning.content.airtights.potiongas.PotionGas;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,18 +41,28 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
 
     @Override
     public String getDisplayName(GasStack ingredient) {
-        return ingredient.getTranslationKey();
+        return ingredient.getHoverName().getString();
     }
 
     @Override
     @SuppressWarnings("removal")
     public String getUniqueId(GasStack ingredient, UidContext context) {
-        return "gas:" + getResourceLocation(ingredient);
+        String gasId = "gas:" + getResourceLocation(ingredient);
+        if (!(ingredient.getGasType() instanceof PotionGas)) {
+            return gasId;
+        }
+
+        return gasId + ingredient.getComponentsPatch();
     }
 
     @Override
     public Object getUid(GasStack ingredient, UidContext context) {
-        return getResourceLocation(ingredient);
+        ResourceLocation gasId = getResourceLocation(ingredient);
+        if (!(ingredient.getGasType() instanceof PotionGas)) {
+            return gasId;
+        }
+
+        return new PotionGasUid(gasId, ingredient.getComponentsPatch());
     }
 
     @Override
@@ -125,4 +137,6 @@ public class GasStackHelper implements IIngredientHelper<GasStack> {
     public void setColorHelper(@Nullable IColorHelper colorHelper) {
         this.colorHelper = colorHelper;
     }
+
+    private record PotionGasUid(ResourceLocation gas, DataComponentPatch components) {}
 }

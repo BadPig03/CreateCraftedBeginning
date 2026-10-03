@@ -65,6 +65,30 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         display = new BreezeCoolerDisplay(this);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.BREEZE_COOLER.get(), (cooler, context) -> cooler.tankBehaviour.getCapability());
+    }
+
+    public static int getSnowballCoolingTime() {
+        return Math.max(0, CCBConfig.server().machines.breezeCooler.coolingTicksPerSnowball.get());
+    }
+
+    public static int getDangerousFluidTemperature() {
+        return Math.max(1, CCBConfig.server().machines.breezeCooler.destructionTemperatureKelvin.get());
+    }
+
+    public static int getMaxCoolantCapacity() {
+        return Math.max(1, CCBConfig.server().machines.breezeCooler.maxCoolingTicks.get());
+    }
+
+    public static int getOverflowThreshold() {
+        return (int) Math.max(1, (long) getMaxCoolantCapacity() * 3 / 4);
+    }
+
+    public static void setClientTicker(Consumer<BreezeCoolerBlockEntity> ticker) {
+        clientTicker = ticker;
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartFluidTankBehaviour.single(this, Math.max(1, CCBConfig.server().machines.breezeCooler.fluidCapacity.get()) * FluidType.BUCKET_VOLUME);
@@ -117,30 +141,6 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     @Override
     public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         return display.addToTooltip(tooltip);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.BREEZE_COOLER.get(), (cooler, context) -> cooler.tankBehaviour.getCapability());
-    }
-
-    public static int getSnowballCoolingTime() {
-        return Math.max(0, CCBConfig.server().machines.breezeCooler.coolingTicksPerSnowball.get());
-    }
-
-    public static int getDangerousFluidTemperature() {
-        return Math.max(1, CCBConfig.server().machines.breezeCooler.destructionTemperatureKelvin.get());
-    }
-
-    public static int getMaxCoolantCapacity() {
-        return Math.max(1, CCBConfig.server().machines.breezeCooler.maxCoolingTicks.get());
-    }
-
-    public static int getOverflowThreshold() {
-        return (int) Math.max(1, (long) getMaxCoolantCapacity() * 3 / 4);
-    }
-
-    public static void setClientTicker(Consumer<BreezeCoolerBlockEntity> ticker) {
-        clientTicker = ticker;
     }
 
     public void spawnParticles() {

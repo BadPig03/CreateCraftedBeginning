@@ -30,6 +30,10 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
         tooltip = new TeslaTurbineNozzleTooltip(this);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.TESLA_TURBINE_NOZZLE.get(), TeslaTurbineNozzleBlockEntity::getGasCapability);
+    }
+
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         return this.tooltip.addToGoggleTooltip(tooltip);
@@ -50,10 +54,6 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
     public void onLoad() {
         super.onLoad();
         connection.scheduleValidation();
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.TESLA_TURBINE_NOZZLE.get(), TeslaTurbineNozzleBlockEntity::getGasCapability);
     }
 
     private @Nullable GasHandler getGasCapability(@Nullable Direction accessDirection) {

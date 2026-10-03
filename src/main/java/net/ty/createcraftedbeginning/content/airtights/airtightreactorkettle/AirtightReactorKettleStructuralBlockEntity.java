@@ -45,6 +45,16 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
         setLazyTickRate(10);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getItemCapability());
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getFluidCapability());
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getGasCapability());
+    }
+
+    public static boolean canStore(BlockState state) {
+        return state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).canStore();
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         AirtightReactorKettleStructuralPosition structuralPosition = getBlockState().getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION);
@@ -146,16 +156,6 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
     public InventoryIdentifier getGasInventoryIdentifier(Direction direction) {
         BlockPos masterPos = AirtightReactorKettleStructural.getMaster(getBlockPos(), getBlockState());
         return new Single(masterPos);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getItemCapability());
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getFluidCapability());
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL.get(), (blockEntity, direction) -> blockEntity.getGasCapability());
-    }
-
-    public static boolean canStore(BlockState state) {
-        return state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).canStore();
     }
 
     @Nullable AirtightReactorKettleBlockEntity getMasterBlockEntity() {

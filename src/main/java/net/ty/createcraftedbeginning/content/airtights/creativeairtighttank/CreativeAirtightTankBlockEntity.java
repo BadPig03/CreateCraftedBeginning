@@ -44,6 +44,14 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
         initializeTank(new CreativeGasReservoir(getVolumePerBlock(), CreativeAirtightTankPressureBehaviour.MAX_PRESSURE_PA, this::onTankStateChanged));
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.CREATIVE_AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
+    }
+
+    static long getVolumePerBlock() {
+        return Integer.MAX_VALUE * GasUnits.LITERS_PER_KILOLITER;
+    }
+
     @Override
     public CreativeGasReservoir getTankInventory() {
         return (CreativeGasReservoir) super.getTankInventory();
@@ -190,14 +198,6 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
     @Nullable
     public Object getExtraData() {
         return getFixedPressurePa();
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.CREATIVE_AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
-    }
-
-    static long getVolumePerBlock() {
-        return Integer.MAX_VALUE * GasUnits.LITERS_PER_KILOLITER;
     }
 
     void updateTankConnectivity() {

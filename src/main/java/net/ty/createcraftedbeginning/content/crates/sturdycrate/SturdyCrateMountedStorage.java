@@ -25,12 +25,12 @@ public class SturdyCrateMountedStorage extends FilteredCrateMountedItemStorage<S
         super(type, SturdyCrateBlockEntity.class, content, count, filterItem, () -> CCBConfig.server().storage.sturdyCrate.itemCapacity.get());
     }
 
+    public static SturdyCrateMountedStorage fromBlockEntity(SturdyCrateBlockEntity crate) {
+        return new SturdyCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount(), crate.getFilterItem());
+    }
+
     @Override
     protected boolean canStoreItem(ItemStack stack) {
         return stack.canFitInsideContainerItems() && super.canStoreItem(stack);
-    }
-
-    public static SturdyCrateMountedStorage fromBlockEntity(SturdyCrateBlockEntity crate) {
-        return new SturdyCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount(), crate.getFilterItem());
     }
 }

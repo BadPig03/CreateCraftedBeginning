@@ -24,6 +24,13 @@ public class AirVentRenderer extends SafeBlockEntityRenderer<AirVentBlockEntity>
     public AirVentRenderer(Context ignored) {
     }
 
+    private static void renderLouver(PartialModel model, BlockState state, Direction direction, float surfaceOffset, PoseStack poseStack, VertexConsumer consumer, int light, int overlay) {
+        poseStack.pushPose();
+        poseStack.translate(direction.getStepX() * surfaceOffset, direction.getStepY() * surfaceOffset, direction.getStepZ() * surfaceOffset);
+        CachedBuffers.partialFacing(model, state, direction.getOpposite()).light(light).overlay(overlay).renderInto(poseStack, consumer);
+        poseStack.popPose();
+    }
+
     @Override
     protected void renderSafe(AirVentBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay) {
         int visibleLouverMask = blockEntity.getVisibleLouverMask();
@@ -44,12 +51,5 @@ public class AirVentRenderer extends SafeBlockEntityRenderer<AirVentBlockEntity>
             renderLouver(louverModel, blockState, direction, LOUVER_SURFACE_OFFSET, poseStack, solidBuffer, light, overlay);
             renderLouver(louverModel, blockState, direction, -LOUVER_SURFACE_OFFSET, poseStack, solidBuffer, light, overlay);
         }
-    }
-
-    private static void renderLouver(PartialModel model, BlockState state, Direction direction, float surfaceOffset, PoseStack poseStack, VertexConsumer consumer, int light, int overlay) {
-        poseStack.pushPose();
-        poseStack.translate(direction.getStepX() * surfaceOffset, direction.getStepY() * surfaceOffset, direction.getStepZ() * surfaceOffset);
-        CachedBuffers.partialFacing(model, state, direction.getOpposite()).light(light).overlay(overlay).renderInto(poseStack, consumer);
-        poseStack.popPose();
     }
 }

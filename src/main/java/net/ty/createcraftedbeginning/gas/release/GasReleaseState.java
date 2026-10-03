@@ -9,6 +9,7 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfile;
 import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfileCompoundTags;
 import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfiles;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseHandlers;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
@@ -18,6 +19,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class GasReleaseState {
     private static final String COMPOUND_KEY_EFFECT_PROGRESS = "EffectProgress";
+    private static final String COMPOUND_KEY_EFFECT_COOLDOWN_UNTIL = "EffectCooldownUntil";
     private static final String COMPOUND_KEY_EFFECT_GAS = "EffectGas";
     private static final String COMPOUND_KEY_EFFECT_PRESSURE_PROFILE = "EffectPressureProfile";
 
@@ -26,10 +28,12 @@ public final class GasReleaseState {
     private long effectProgress;
     private long lastFeedbackTick = Long.MIN_VALUE;
     private long lastEffectTick = Long.MIN_VALUE;
+    private long effectCooldownUntil = Long.MIN_VALUE;
 
     public static GasReleaseState read(CompoundTag tag, Provider provider) {
         GasReleaseState state = new GasReleaseState();
-        long progress = Mth.clamp(NbtValues.getLongOrDefault(tag, COMPOUND_KEY_EFFECT_PROGRESS, 0), 0L, GasReleaseService.EFFECT_INTERVAL - 1);
+        state.effectCooldownUntil = NbtValues.getLongOrDefault(tag, COMPOUND_KEY_EFFECT_COOLDOWN_UNTIL, Long.MIN_VALUE);
+        long progress = Math.max(0, NbtValues.getLongOrDefault(tag, COMPOUND_KEY_EFFECT_PROGRESS, 0));
         if (progress <= 0 || !tag.contains(COMPOUND_KEY_EFFECT_GAS, Tag.TAG_COMPOUND)) {
             return state;
         }
@@ -41,12 +45,16 @@ public final class GasReleaseState {
 
         state.effectGas = gas.copyWithAmount(1);
         state.effectPressureProfile = GameplayPressureProfileCompoundTags.read(tag, COMPOUND_KEY_EFFECT_PRESSURE_PROFILE);
-        state.effectProgress = progress;
+        long interval = GasReleaseHandlers.resolve(gas, state.effectPressureProfile).getEffectInterval(gas);
+        state.effectProgress = Mth.clamp(progress, 0, interval - 1);
         return state;
     }
 
     public CompoundTag write(Provider provider) {
         CompoundTag tag = new CompoundTag();
+        if (effectCooldownUntil != Long.MIN_VALUE) {
+            tag.putLong(COMPOUND_KEY_EFFECT_COOLDOWN_UNTIL, effectCooldownUntil);
+        }
         if (effectProgress <= 0 || effectGas.isEmpty()) {
             return tag;
         }
@@ -86,7 +94,15 @@ public final class GasReleaseState {
         return true;
     }
 
-    boolean recordEffect(GasStack gas, long sourcePressurePa, long amount, long gameTime) {
+    boolean recordEffect(GasStack gas, long sourcePressurePa, long amount, long gameTime, long interval, int cooldownTicks) {
+        if (interval <= 0) {
+            throw new IllegalArgumentException("Gas release effect interval must be positive; got " + interval + " GU.");
+        }
+
+        if (cooldownTicks <= 0) {
+            throw new IllegalArgumentException("Gas release effect cooldown must be positive; got " + cooldownTicks + " ticks.");
+        }
+
         GameplayPressureProfile pressureProfile = GameplayPressureProfiles.resolve(sourcePressurePa);
         if (effectGas.isEmpty() || !GasStack.isSameGasSameComponents(effectGas, gas) || !effectPressureProfile.equals(pressureProfile)) {
             effectGas = gas.copyWithAmount(1);
@@ -94,14 +110,18 @@ public final class GasReleaseState {
             effectProgress = 0;
         }
 
-        long combinedProgress = effectProgress + amount % GasReleaseService.EFFECT_INTERVAL;
-        boolean reachedEffectInterval = amount >= GasReleaseService.EFFECT_INTERVAL || combinedProgress >= GasReleaseService.EFFECT_INTERVAL;
-        effectProgress = combinedProgress >= GasReleaseService.EFFECT_INTERVAL ? combinedProgress - GasReleaseService.EFFECT_INTERVAL : combinedProgress;
-        if (!reachedEffectInterval || lastEffectTick == gameTime) {
+        long remainder = amount % interval;
+        long remaining = interval - effectProgress;
+        boolean reachedEffectInterval = amount >= interval || remainder >= remaining;
+        effectProgress = remainder >= remaining ? remainder - remaining : effectProgress + remainder;
+        if (!reachedEffectInterval || lastEffectTick == gameTime || cooldownTicks > 1 && gameTime < effectCooldownUntil) {
             return false;
         }
 
         lastEffectTick = gameTime;
+        if (cooldownTicks > 1) {
+            effectCooldownUntil = gameTime + cooldownTicks;
+        }
         return true;
     }
 }

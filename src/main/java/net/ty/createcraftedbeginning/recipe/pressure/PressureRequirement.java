@@ -47,26 +47,6 @@ public record PressureRequirement(Optional<Long> minimumPressurePa, Optional<Lon
         return new PressureRequirement(Optional.of(minimumPressurePa), Optional.of(maximumPressurePa));
     }
 
-    public boolean hasMinimumPressure() {
-        return minimumPressurePa.isPresent();
-    }
-
-    public boolean hasMaximumPressure() {
-        return maximumPressurePa.isPresent();
-    }
-
-    public long minimumPressurePaOrVacuum() {
-        return minimumPressurePa.orElse(GasPressure.VACUUM_PA);
-    }
-
-    public long maximumPressurePaOrUnbounded() {
-        return maximumPressurePa.orElse(Long.MAX_VALUE);
-    }
-
-    public boolean allowsPressure(long pressurePa) {
-        return pressurePa >= GasPressure.VACUUM_PA && pressurePa >= minimumPressurePaOrVacuum() && pressurePa <= maximumPressurePaOrUnbounded();
-    }
-
     private static void validatePressure(String boundaryName, long pressurePa) {
         if (pressurePa >= GasPressure.VACUUM_PA) {
             return;
@@ -86,5 +66,25 @@ public record PressureRequirement(Optional<Long> minimumPressurePa, Optional<Lon
         }
 
         return Optional.of(ByteBufCodecs.VAR_LONG.decode(buffer));
+    }
+
+    public boolean hasMinimumPressure() {
+        return minimumPressurePa.isPresent();
+    }
+
+    public boolean hasMaximumPressure() {
+        return maximumPressurePa.isPresent();
+    }
+
+    public long minimumPressurePaOrVacuum() {
+        return minimumPressurePa.orElse(GasPressure.VACUUM_PA);
+    }
+
+    public long maximumPressurePaOrUnbounded() {
+        return maximumPressurePa.orElse(Long.MAX_VALUE);
+    }
+
+    public boolean allowsPressure(long pressurePa) {
+        return pressurePa >= GasPressure.VACUUM_PA && pressurePa >= minimumPressurePaOrVacuum() && pressurePa <= maximumPressurePaOrUnbounded();
     }
 }

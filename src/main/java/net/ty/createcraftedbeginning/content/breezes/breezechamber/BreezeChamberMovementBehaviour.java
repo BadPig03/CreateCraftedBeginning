@@ -35,41 +35,6 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
     private static final String COMPOUND_KEY_CONDUCTOR = "Conductor";
     private static CameraEntityProvider cameraEntityProvider = context -> null;
 
-    @Override
-    public void tick(MovementContext context) {
-        if (!context.world.isClientSide()) {
-            return;
-        }
-
-        RandomSource random = context.world.getRandom();
-        Vec3 particlePos = context.position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125F).multiply(1, 0, 1));
-        if (random.nextInt(3) == 0 && context.motion.length() < 0.015625F) {
-            context.world.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
-        }
-        LerpedFloat headAngle = getHeadAngle(context);
-        boolean shouldTurnQuickly = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
-        float currentAngle = headAngle.getValue();
-        float targetAngle = getTargetAngle(context);
-        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5F, shouldTurnQuickly ? Chaser.EXP : Chaser.exp(5));
-        headAngle.tickChaser();
-    }
-
-    @Override
-    public @Nullable ItemStack canBeDisabledVia(MovementContext context) {
-        return null;
-    }
-
-    @Override
-    public boolean disableBlockEntityRendering() {
-        return true;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
-        BreezeChamberRenderer.renderInContraption(context, matrices, buffer, getHeadAngle(context), shouldRenderHat(context), renderWorld);
-    }
-
     public static void setCameraEntityProvider(CameraEntityProvider provider) {
         cameraEntityProvider = provider;
     }
@@ -128,6 +93,41 @@ public class BreezeChamberMovementBehaviour implements MovementBehaviour {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void tick(MovementContext context) {
+        if (!context.world.isClientSide()) {
+            return;
+        }
+
+        RandomSource random = context.world.getRandom();
+        Vec3 particlePos = context.position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125F).multiply(1, 0, 1));
+        if (random.nextInt(3) == 0 && context.motion.length() < 0.015625F) {
+            context.world.addParticle(CCBParticleTypes.BREEZE_CLOUD.getParticleOptions(), particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
+        }
+        LerpedFloat headAngle = getHeadAngle(context);
+        boolean shouldTurnQuickly = shouldRenderHat(context) && !Mth.equal(context.relativeMotion.length(), 0);
+        float currentAngle = headAngle.getValue();
+        float targetAngle = getTargetAngle(context);
+        headAngle.chase(currentAngle + AngleHelper.getShortestAngleDiff(currentAngle, targetAngle), 0.5F, shouldTurnQuickly ? Chaser.EXP : Chaser.exp(5));
+        headAngle.tickChaser();
+    }
+
+    @Override
+    public @Nullable ItemStack canBeDisabledVia(MovementContext context) {
+        return null;
+    }
+
+    @Override
+    public boolean disableBlockEntityRendering() {
+        return true;
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
+        BreezeChamberRenderer.renderInContraption(context, matrices, buffer, getHeadAngle(context), shouldRenderHat(context), renderWorld);
     }
 
     @FunctionalInterface

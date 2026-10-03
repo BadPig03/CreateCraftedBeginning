@@ -18,6 +18,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CCBAirtightThermoregulatorHandlers {
     public static void register() {
         AirtightThermoregulatorHandlers.register(AllBlocks.BLAZE_BURNER.get(), new BlazeBurnerThermoregulatorHandler());
+        AirtightThermoregulatorHandlers.register(CCBBlocks.PHOTOTHERMAL_RECEIVER_BLOCK.get(), new BlazeBurnerThermoregulatorHandler());
         AirtightThermoregulatorHandlers.register(CCBBlocks.BREEZE_COOLER_BLOCK.get(), new BreezeCoolerThermoregulatorHandler());
 
         AirtightThermoregulatorHandler.REGISTRY.registerProvider(Provider.forBlockTag(AllBlockTags.PASSIVE_BOILER_HEATERS.tag, new PassiveBoilerHeatersThermoregulatorHandler()));

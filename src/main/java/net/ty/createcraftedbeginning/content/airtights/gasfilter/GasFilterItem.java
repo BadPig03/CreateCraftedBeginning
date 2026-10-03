@@ -39,6 +39,19 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
         super(properties);
     }
 
+    static GasFilterData getFilterData(ItemStack filter) {
+        return filter.getOrDefault(CCBDataComponents.GAS_FILTER_DATA, GasFilterData.EMPTY);
+    }
+
+    static ItemStackHandler createFilterInventory(GasFilterData filterData) {
+        ItemStackHandler filterInventory = new ItemStackHandler(GasFilterData.MAX_ENTRIES);
+        List<GasStack> configuredGases = filterData.gases();
+        for (int slotIndex = 0; slotIndex < configuredGases.size(); slotIndex++) {
+            filterInventory.setStackInSlot(slotIndex, VirtualGasItems.createVirtualItem(configuredGases.get(slotIndex)));
+        }
+        return filterInventory;
+    }
+
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Player player = context.getPlayer();
@@ -125,18 +138,5 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
         }
 
         return getFilterData(filterItem).compile();
-    }
-
-    static GasFilterData getFilterData(ItemStack filter) {
-        return filter.getOrDefault(CCBDataComponents.GAS_FILTER_DATA, GasFilterData.EMPTY);
-    }
-
-    static ItemStackHandler createFilterInventory(GasFilterData filterData) {
-        ItemStackHandler filterInventory = new ItemStackHandler(GasFilterData.MAX_ENTRIES);
-        List<GasStack> configuredGases = filterData.gases();
-        for (int slotIndex = 0; slotIndex < configuredGases.size(); slotIndex++) {
-            filterInventory.setStackInSlot(slotIndex, VirtualGasItems.createVirtualItem(configuredGases.get(slotIndex)));
-        }
-        return filterInventory;
     }
 }

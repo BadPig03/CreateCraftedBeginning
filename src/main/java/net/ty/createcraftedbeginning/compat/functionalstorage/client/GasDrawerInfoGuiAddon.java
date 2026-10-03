@@ -36,6 +36,32 @@ public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
         this.drawer = drawer;
     }
 
+    private static void drawSlotFrame(GuiGraphics graphics, int x, int y, int width, int height) {
+        graphics.fill(x, y, x + width, y + height, 0xFF5A5A5A);
+        graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0xFF171717);
+    }
+
+    private static Rect2i slotRect(int slot, int slots) {
+        if (slots == 1) {
+            return new Rect2i(6, 6, 36, 36);
+        }
+
+        if (slots == 2) {
+            if (slot == 0) {
+                return new Rect2i(4, 25, 40, 18);
+            }
+
+            return new Rect2i(4, 5, 40, 18);
+        }
+
+        return switch (slot) {
+            case 0 -> new Rect2i(25, 25, 18, 18);
+            case 1 -> new Rect2i(5, 25, 18, 18);
+            case 2 -> new Rect2i(25, 5, 18, 18);
+            default -> new Rect2i(5, 5, 18, 18);
+        };
+    }
+
     @Override
     public int getXSize() {
         return 0;
@@ -65,32 +91,6 @@ public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
 
             graphics.renderTooltip(Minecraft.getInstance().font, createTooltip(slot), Optional.empty(), mouseX - guiX, mouseY - guiY);
         }
-    }
-
-    private static void drawSlotFrame(GuiGraphics graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, 0xFF5A5A5A);
-        graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0xFF171717);
-    }
-
-    private static Rect2i slotRect(int slot, int slots) {
-        if (slots == 1) {
-            return new Rect2i(6, 6, 36, 36);
-        }
-
-        if (slots == 2) {
-            if (slot == 0) {
-                return new Rect2i(4, 25, 40, 18);
-            }
-
-            return new Rect2i(4, 5, 40, 18);
-        }
-
-        return switch (slot) {
-            case 0 -> new Rect2i(25, 25, 18, 18);
-            case 1 -> new Rect2i(5, 25, 18, 18);
-            case 2 -> new Rect2i(25, 5, 18, 18);
-            default -> new Rect2i(5, 5, 18, 18);
-        };
     }
 
     private void drawSlot(GuiGraphics graphics, int guiX, int guiY, int slot, Rect2i rect) {

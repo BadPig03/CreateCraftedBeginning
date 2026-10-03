@@ -5,7 +5,9 @@ import net.createmod.catnip.data.Couple;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.client.gui.CCBGUITextures;
@@ -24,6 +26,22 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public abstract class AirtightArmorScreen<T extends AirtightArmorMenu> extends AirtightUpgradableScreen<T> {
     protected AirtightArmorScreen(T menu, Inventory inv, Component title) {
         super(menu, inv, title, CCBGUITextures.ARMORS);
+    }
+
+    private static State getIndicatorState(AirtightUpgradeStatus status, boolean canInstall) {
+        if (!status.isInstalled()) {
+            if (!canInstall) {
+                return State.OFF;
+            }
+
+            return State.YELLOW;
+        }
+
+        if (!status.isEnabled()) {
+            return State.RED;
+        }
+
+        return State.GREEN;
     }
 
     @Override
@@ -54,32 +72,20 @@ public abstract class AirtightArmorScreen<T extends AirtightArmorMenu> extends A
 
     @Override
     protected void updateStates() {
+        Player player = menu.player;
+        Level level = player.level();
+        boolean creative = player.isCreative();
         ItemStack stack = menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX);
         menu.forEachUpgrade(upgrade -> {
             IconButton button = upgradeButtons.get(upgrade);
             VerticalIndicator indicator = (VerticalIndicator) upgradeIndicators.get(upgrade);
             AirtightUpgradeStatus status = menu.getStatus(upgrade);
 
-            button.active = status.isInstalled() || upgrade.testUpgradeItem(stack, menu.player.level());
-            button.green = status.isInstalled() && status.isEnabled();
+            boolean installed = status.isInstalled();
+            button.active = installed || creative || upgrade.testUpgradeItem(stack, level);
+            button.green = installed && status.isEnabled();
             indicator.setState(getIndicatorState(status, button.active));
         });
         disableUpgradeButton.visible = menu.getCurrentStatusList().stream().allMatch(AirtightUpgradeStatus::isInstalled);
-    }
-
-    private static State getIndicatorState(AirtightUpgradeStatus status, boolean canInstall) {
-        if (!status.isInstalled()) {
-            if (!canInstall) {
-                return State.OFF;
-            }
-
-            return State.YELLOW;
-        }
-
-        if (!status.isEnabled()) {
-            return State.RED;
-        }
-
-        return State.GREEN;
     }
 }

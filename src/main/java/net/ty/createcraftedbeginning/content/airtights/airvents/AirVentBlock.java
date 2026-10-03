@@ -145,10 +145,6 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
         };
     }
 
-    private static VoxelShape getConnectedShape(BlockState state) {
-        return AirVentVoxelShapes.getShape(getConnectionMask(state));
-    }
-
     private static int getPassableMask(BlockState state, BlockGetter level, BlockPos pos) {
         int connectionMask = getConnectionMask(state);
         if (!(level.getBlockEntity(pos) instanceof AirVentBlockEntity airVent)) {
@@ -280,7 +276,7 @@ public class AirVentBlock extends Block implements IBE<AirVentBlockEntity>, Simp
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return getConnectedShape(state);
+        return AirVentVoxelShapes.getShape(getConnectionMask(state));
     }
 
     @Override

@@ -10,6 +10,7 @@ import net.minecraft.gametest.framework.GameTestGenerator;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.TestFunction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.SynchedEntityData.DataValue;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -37,6 +38,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 
 import static net.ty.createcraftedbeginning.gametests.compat.SubLevelGameTestFixtures.assemble;
 import static net.ty.createcraftedbeginning.gametests.compat.SubLevelGameTestFixtures.clear;
@@ -47,6 +49,8 @@ import static net.ty.createcraftedbeginning.gametests.compat.SubLevelGameTestFix
 @GameTestHolder(CCBAPI.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class AirVentSubLevelGameTests {
+    private static final double CRAWLING_HEIGHT_EPSILON = 1.0E-6;
+
     @GameTest(template = "gametest/empty_20x12x20")
     public static void localEntry(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -81,6 +85,8 @@ public final class AirVentSubLevelGameTests {
         CrawlPlayer player = new CrawlPlayer(level, pos);
         assertPoseIndependentOccupancy(helper, player, Vec3.atLowerCornerOf(pos).add(0.5, 0.9999, 0.5), false, "local roof contact");
         assertPoseIndependentOccupancy(helper, player, Vec3.atLowerCornerOf(pos).add(0.5, -0.02, 0.5), true, "local floor contact");
+        assertCeilingCrawling(helper, player, Vec3.atLowerCornerOf(pos)::add);
+        assertSyncedPoseProtection(helper, player, Vec3.atLowerCornerOf(pos)::add);
         player.setPose(Pose.SWIMMING);
         for (double x : new double[]{0.5, 0.95, 1, 1.05, 1.5, 2.1}) {
             player.setPos(Vec3.atLowerCornerOf(pos).add(x, 0.02, 0.5));
@@ -104,6 +110,8 @@ public final class AirVentSubLevelGameTests {
 
     @GameTest(template = "gametest/empty_5x5x5")
     public static void directionalStateRotation(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos ventPos = helper.absolutePos(new BlockPos(2, 2, 2));
         BlockState vent = CCBBlocks.AIR_VENT_BLOCK.getDefaultState();
         for (Direction face : Iterate.directions) {
             BooleanProperty property = (BooleanProperty) vent.getBlock().getStateDefinition().getProperty(face.getName());
@@ -112,7 +120,7 @@ public final class AirVentSubLevelGameTests {
             }
 
             for (Rotation rotation : Rotation.values()) {
-                BlockState rotated = vent.setValue(property, true).rotate(rotation);
+                BlockState rotated = vent.setValue(property, true).rotate(level, ventPos, rotation);
                 for (Direction target : Iterate.directions) {
                     BooleanProperty targetProperty = (BooleanProperty) vent.getBlock().getStateDefinition().getProperty(target.getName());
                     if (targetProperty == null) {
@@ -206,6 +214,9 @@ public final class AirVentSubLevelGameTests {
             List<Quaterniond> orientations = List.of(new Quaterniond(), new Quaterniond().rotationY(Math.PI / 2), new Quaterniond().rotationY(Math.PI / 4), new Quaterniond().rotationX(Math.PI / 2));
             for (Quaterniond orientation : orientations) {
                 move(fixture, Vec3.atCenterOf(pos).add(0.3, 0.2, 0.4), orientation);
+                UnaryOperator<Vec3> toWorld = offset -> fixture.subLevel().logicalPose().transformPosition(Vec3.atLowerCornerOf(fixture.center()).add(offset));
+                assertCeilingCrawling(helper, player, toWorld);
+                assertSyncedPoseProtection(helper, player, toWorld);
                 Vec3 exit = Vec3.atLowerCornerOf(fixture.center()).add(2.1, 0.2, 0.5);
                 assertPoseIndependentOccupancy(helper, player, fixture.subLevel().logicalPose().transformPosition(exit), true, "physical partially outside");
                 player.setPose(Pose.SWIMMING);
@@ -237,6 +248,49 @@ public final class AirVentSubLevelGameTests {
         finally {
             clear(level, fixture);
         }
+    }
+
+    private static void assertSyncedPoseProtection(GameTestHelper helper, CrawlPlayer player, UnaryOperator<Vec3> toWorld) {
+        player.localPlayer = true;
+        player.setPos(toWorld.apply(new Vec3(0.5, 0.2, 0.5)));
+        assertCrawling(helper, player, true, "before receiving server pose");
+        for (Pose receivedPose : new Pose[]{Pose.STANDING, Pose.CROUCHING}) {
+            player.receivePose(receivedPose);
+            helper.assertValueEqual(player.getPose(), Pose.SWIMMING, "An incoming pose must not expand the local player inside a vent");
+            helper.assertTrue(Math.abs(player.getBoundingBox().getYsize() - player.getDimensions(Pose.SWIMMING).height()) < CRAWLING_HEIGHT_EPSILON, "Incoming pose must preserve crawling dimensions before movement");
+        }
+        player.setPos(toWorld.apply(new Vec3(-0.7, 0.2, 0.5)));
+        player.receivePose(Pose.STANDING);
+        helper.assertValueEqual(player.getPose(), Pose.STANDING, "An incoming standing pose must be allowed after leaving the vent");
+        player.setPos(toWorld.apply(new Vec3(0.5, 0.2, 0.5)));
+        assertCrawling(helper, player, true, "reenter before external forced pose");
+        player.setForcedPose(Pose.STANDING);
+        player.receivePose(Pose.STANDING);
+        helper.assertValueEqual(player.getPose(), Pose.STANDING, "An external forced pose must retain priority over vent protection");
+        player.setForcedPose(null);
+        assertCrawling(helper, player, true, "reenter before remote pose update");
+        player.localPlayer = false;
+        player.receivePose(Pose.STANDING);
+        helper.assertValueEqual(player.getPose(), Pose.STANDING, "Remote player poses must not be overridden by local vent protection");
+    }
+
+    private static void assertCeilingCrawling(GameTestHelper helper, CrawlPlayer player, UnaryOperator<Vec3> toWorld) {
+        player.setShiftKeyDown(false);
+        player.setPos(toWorld.apply(new Vec3(0.5, 0.2, 0.5)));
+        helper.assertTrue(AirVentTraversal.shouldCrawl(player), "Ceiling traversal must start inside the vent at " + player.position());
+        assertCrawling(helper, player, true, "enter before climbing to ceiling");
+        for (double height : new double[]{0.8, 0.84, 0.9, 0.97}) {
+            player.setPos(toWorld.apply(new Vec3(0.5, height, 0.5)));
+            assertCrawling(helper, player, true, "keep crawling at ceiling height " + height);
+        }
+        player.setPos(toWorld.apply(new Vec3(0.5, 1.7, 0.5)));
+        assertCrawling(helper, player, false, "release after leaving above vent");
+        player.setPos(toWorld.apply(new Vec3(0.5, 0.2, 0.5)));
+        assertCrawling(helper, player, true, "reenter after leaving above vent");
+        player.setPos(toWorld.apply(new Vec3(0.5, 0.9, 0.5)));
+        assertCrawling(helper, player, true, "ceiling before horizontal exit");
+        player.setPos(toWorld.apply(new Vec3(-0.7, 0.9, 0.5)));
+        assertCrawling(helper, player, false, "release after horizontal exit near ceiling");
     }
 
     private static void assertPoseIndependentOccupancy(GameTestHelper helper, CrawlPlayer player, Vec3 position, boolean expected, String stage) {
@@ -339,9 +393,15 @@ public final class AirVentSubLevelGameTests {
     private static final class CrawlPlayer extends Player {
         private boolean expanded;
         private boolean spectator;
+        private boolean localPlayer;
 
         private CrawlPlayer(Level level, BlockPos pos) {
             super(level, pos, 0, new GameProfile(UUID.randomUUID(), "VentCrawlTest"));
+        }
+
+        @Override
+        public boolean isLocalPlayer() {
+            return localPlayer;
         }
 
         @Override
@@ -365,6 +425,10 @@ public final class AirVentSubLevelGameTests {
         @Override
         public void updatePlayerPose() {
             super.updatePlayerPose();
+        }
+
+        private void receivePose(Pose pose) {
+            getEntityData().assignValues(List.of(DataValue.create(DATA_POSE, pose)));
         }
     }
 }

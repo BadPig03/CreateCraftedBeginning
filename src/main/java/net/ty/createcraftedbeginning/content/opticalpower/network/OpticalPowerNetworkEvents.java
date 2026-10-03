@@ -1,11 +1,15 @@
 package net.ty.createcraftedbeginning.content.opticalpower.network;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.server.level.ChunkLevel;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent.Load;
+import net.neoforged.neoforge.event.level.ChunkTicketLevelUpdatedEvent;
 import net.neoforged.neoforge.event.level.LevelEvent.Unload;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent.Post;
@@ -41,6 +45,18 @@ public final class OpticalPowerNetworkEvents {
         }
 
         OpticalPowerNetworkManager.onChunkAccessibilityChanged(serverLevel, event.getChunk().getPos());
+    }
+
+    @SubscribeEvent
+    public static void onChunkTicketLevelUpdated(ChunkTicketLevelUpdatedEvent event) {
+        int accessibleLevel = ChunkLevel.byStatus(ChunkStatus.FULL);
+        boolean wasAccessible = event.getOldTicketLevel() <= accessibleLevel;
+        boolean isAccessible = event.getNewTicketLevel() <= accessibleLevel;
+        if (wasAccessible == isAccessible) {
+            return;
+        }
+
+        OpticalPowerNetworkManager.queueChunkAccessibilityChange(event.getLevel(), new ChunkPos(event.getChunkPos()));
     }
 
     @SubscribeEvent

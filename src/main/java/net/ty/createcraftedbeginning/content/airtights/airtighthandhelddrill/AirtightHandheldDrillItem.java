@@ -115,7 +115,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
-        return Tiers.NETHERITE.getSpeed();
+        return Tiers.NETHERITE.getSpeed() * 3;
     }
 
     @Override
@@ -135,7 +135,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
             return InteractionResultHolder.sidedSuccess(drill, false);
         }
 
-        if (!HandheldDrillAttackModeButton.INSTANCE.canApply(drill) || !CanisterContainerSuppliers.isAnyContainerAvailable(player)) {
+        if (!HandheldDrillAttackModeButton.INSTANCE.canApply(drill) || CanisterContainerSuppliers.getFirstAvailableGasContent(player).isEmpty()) {
             return InteractionResultHolder.fail(drill);
         }
 

@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.gametests.compat;
 
+import dev.ryanhcode.sable.companion.SableCompanion;
 import dev.ryanhcode.sable.companion.SubLevelAccess;
 import dev.ryanhcode.sable.companion.math.BoundingBox3i;
 import dev.ryanhcode.sable.companion.math.BoundingBox3ic;
@@ -35,8 +36,13 @@ final class SubLevelGameTestFixtures {
             assembledParts.add(anchor);
         }
         try {
+            BoundingBox3i bounds = BoundingBox3i.from(assembledParts);
+            if (bounds == null) {
+                throw new NullPointerException("Expected assembly bounds at " + origin + '.');
+            }
+
             Class<?> mover = Class.forName("dev.ryanhcode.sable.api.SubLevelAssemblyHelper");
-            Object assembled = mover.getMethod("assembleBlocks", ServerLevel.class, BlockPos.class, Iterable.class, BoundingBox3ic.class).invoke(null, level, origin, assembledParts, BoundingBox3i.from(assembledParts));
+            Object assembled = mover.getMethod("assembleBlocks", ServerLevel.class, BlockPos.class, Iterable.class, BoundingBox3ic.class).invoke(null, level, origin, assembledParts, bounds);
             if (assembled == null) {
                 throw new NullPointerException("Expected an assembled physical fixture at " + origin + '.');
             }
@@ -100,18 +106,20 @@ final class SubLevelGameTestFixtures {
     }
 
     static void clear(ServerLevel level, Fixture fixture) {
+        if (SableCompanion.INSTANCE.getContaining(level, fixture.center()) != fixture.subLevel()) {
+            return;
+        }
+
         Object container;
+        Object plot;
         Object removed;
         MethodHandle remove;
         try {
-            if ((boolean) fixture.subLevel().getClass().getMethod("isRemoved").invoke(fixture.subLevel())) {
-                return;
-            }
-
             Class<?> containers = Class.forName("dev.ryanhcode.sable.api.sublevel.SubLevelContainer");
             Class<?> subLevel = Class.forName("dev.ryanhcode.sable.sublevel.SubLevel");
             Class<?> reason = Class.forName("dev.ryanhcode.sable.sublevel.storage.SubLevelRemovalReason");
             container = Class.forName("dev.ryanhcode.sable.mixinterface.plot.SubLevelContainerHolder").getMethod("sable$getPlotContainer").invoke(level);
+            plot = fixture.subLevel().getClass().getMethod("getPlot").invoke(fixture.subLevel());
             removed = reason.getField("REMOVED").get(null);
             remove = MethodHandles.publicLookup().findVirtual(containers, "removeSubLevel", MethodType.methodType(void.class, subLevel, reason));
         }
@@ -127,7 +135,12 @@ final class SubLevelGameTestFixtures {
             throw new NullPointerException("Expected the physical fixture removal reason at " + fixture.center() + '.');
         }
 
+        if (plot == null) {
+            throw new NullPointerException("Expected the physical fixture plot during removal at " + fixture.center() + '.');
+        }
+
         try {
+            plot.getClass().getMethod("destroyAllBlocks").invoke(plot);
             remove.invoke(container, fixture.subLevel(), removed);
         }
         catch (Throwable exception) {

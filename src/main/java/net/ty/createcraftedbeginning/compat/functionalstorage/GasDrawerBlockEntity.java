@@ -62,6 +62,42 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
         getUtilityUpgrades().setInputFilter((stack, slot) -> stack.is(FunctionalStorage.PUSHING_UPGRADE.get()) || stack.is(FunctionalStorage.PULLING_UPGRADE.get()) || stack.is(FunctionalStorage.VOID_UPGRADE.get()));
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_1.get(), (drawer, ignoredDirection) -> drawer.gasHandler);
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_2.get(), (drawer, ignoredDirection) -> drawer.gasHandler);
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_4.get(), (drawer, ignoredDirection) -> drawer.gasHandler);
+    }
+
+    private static long calculateTankVolume(double storageMultiplier) {
+        double scaledVolume = storageMultiplier / BASE_STORAGE_MULTIPLIER * BASE_TOTAL_GAS_VOLUME;
+        if (Double.isNaN(scaledVolume) || scaledVolume <= 0) {
+            return 0;
+        }
+
+        if (Double.isInfinite(scaledVolume) || scaledVolume >= Long.MAX_VALUE) {
+            return Long.MAX_VALUE;
+        }
+
+        return Mth.lfloor(scaledVolume);
+    }
+
+    private static GasTankLimits calculateTankLimits(double storageMultiplier) {
+        return GasTankLimits.atReferencePressure(calculateTankVolume(storageMultiplier));
+    }
+
+    private static boolean fillCanister(GasDrawerTank drawerTank, GasCanisterContainer canister) {
+        for (int targetTank = 0; targetTank < canister.getTanks(); targetTank++) {
+            long transferredAmount = GasDrawerTransfer.transferDrawerToCanister(drawerTank, canister, targetTank, Long.MAX_VALUE);
+            if (transferredAmount <= 0) {
+                continue;
+            }
+
+            canister.save();
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public void loadAdditional(CompoundTag compound, Provider provider) {
         super.loadAdditional(compound, provider);
@@ -168,12 +204,6 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
         super.syncObject(object);
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_1.get(), (drawer, ignoredDirection) -> drawer.gasHandler);
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_2.get(), (drawer, ignoredDirection) -> drawer.gasHandler);
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBFunctionalStorageBlockEntities.GAS_DRAWER_4.get(), (drawer, ignoredDirection) -> drawer.gasHandler);
-    }
-
     public DrawerType getDrawerType() {
         return drawerType;
     }
@@ -229,36 +259,6 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
 
         markDirty();
         syncObject(gasStorage);
-    }
-
-    private static long calculateTankVolume(double storageMultiplier) {
-        double scaledVolume = storageMultiplier / BASE_STORAGE_MULTIPLIER * BASE_TOTAL_GAS_VOLUME;
-        if (Double.isNaN(scaledVolume) || scaledVolume <= 0) {
-            return 0;
-        }
-
-        if (Double.isInfinite(scaledVolume) || scaledVolume >= Long.MAX_VALUE) {
-            return Long.MAX_VALUE;
-        }
-
-        return Mth.lfloor(scaledVolume);
-    }
-
-    private static GasTankLimits calculateTankLimits(double storageMultiplier) {
-        return GasTankLimits.atReferencePressure(calculateTankVolume(storageMultiplier));
-    }
-
-    private static boolean fillCanister(GasDrawerTank drawerTank, GasCanisterContainer canister) {
-        for (int targetTank = 0; targetTank < canister.getTanks(); targetTank++) {
-            long transferredAmount = GasDrawerTransfer.transferDrawerToCanister(drawerTank, canister, targetTank, Long.MAX_VALUE);
-            if (transferredAmount <= 0) {
-                continue;
-            }
-
-            canister.save();
-            return true;
-        }
-        return false;
     }
 
     private GasStack getVisibleStack(GasStack storedGas) {

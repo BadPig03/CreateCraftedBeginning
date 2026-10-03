@@ -99,6 +99,10 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
         serialization = new AirtightForgingPressSerialization(this, controller);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get(), (press, ignoredDirection) -> press.pressHeadInventory);
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         behaviours.add(new CCBAdvancementBehaviour(this, CCBAdvancements.SUPERMASSIVE));
@@ -230,10 +234,6 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
     @Override
     public synchronized boolean commitCraft(ConsumptionPlan consumptionPlan, OutputPlan outputPlan) {
         return crafting.commitCraft(consumptionPlan, outputPlan);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get(), (press, ignoredDirection) -> press.pressHeadInventory);
     }
 
     public void startProcessInPonderLevel() {

@@ -36,6 +36,10 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
         super(type, pos, state);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.GAS_CANISTER.get(), (canister, ignoredDirection) -> canister.tankBehaviour.getCapability());
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartGasTankBehaviour.single(this, GasCanisterContainerContents.getDefaultVolume(), GasCanisterContainerContents.getDefaultMaxPressurePa()).forbidInsertion().forbidExtraction();
@@ -82,10 +86,6 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
         SmartGasTank gasTank = tankBehaviour.getPrimaryHandler();
         GasUnitsTooltips.addContainer(tooltip, gasTank);
         return true;
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.GAS_CANISTER.get(), (canister, ignoredDirection) -> canister.tankBehaviour.getCapability());
     }
 
     void setCanisterContent(ItemStack placedCanister) {

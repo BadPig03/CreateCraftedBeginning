@@ -32,6 +32,26 @@ public class GasUnpackagerRenderer extends SmartBlockEntityRenderer<GasUnpackage
         super(context);
     }
 
+    static PartialModel getTrayModel() {
+        return CCBPartialModels.GAS_PACKAGER_TRAY_REGULAR;
+    }
+
+    static PartialModel getHatchModel(GasUnpackagerBlockEntity unpackager) {
+        if (!isHatchOpen(unpackager)) {
+            return CCBPartialModels.GAS_PACKAGER_HATCH_CLOSED;
+        }
+
+        return CCBPartialModels.GAS_PACKAGER_HATCH_OPEN;
+    }
+
+    private static boolean isHatchOpen(GasUnpackagerBlockEntity unpackager) {
+        if (unpackager.animationInward) {
+            return unpackager.animationTicks > 1 && unpackager.animationTicks < PackagerBlockEntity.CYCLE - 5;
+        }
+
+        return unpackager.animationTicks > 5 && unpackager.animationTicks < PackagerBlockEntity.CYCLE - 1;
+    }
+
     @Override
     protected void renderSafe(GasUnpackagerBlockEntity unpackager, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         super.renderSafe(unpackager, partialTicks, poseStack, buffer, light, overlay);
@@ -59,25 +79,5 @@ public class GasUnpackagerRenderer extends SmartBlockEntityRenderer<GasUnpackage
         BalloonRenderHelper.applyBottomAnchoredFixedItemScale(poseStack, balloonScale);
         Minecraft.getInstance().getItemRenderer().renderStatic(null, renderedBox, ItemDisplayContext.FIXED, false, poseStack, buffer, level, light, overlay, 0);
         poseStack.popPose();
-    }
-
-    static PartialModel getTrayModel() {
-        return CCBPartialModels.GAS_PACKAGER_TRAY_REGULAR;
-    }
-
-    static PartialModel getHatchModel(GasUnpackagerBlockEntity unpackager) {
-        if (!isHatchOpen(unpackager)) {
-            return CCBPartialModels.GAS_PACKAGER_HATCH_CLOSED;
-        }
-
-        return CCBPartialModels.GAS_PACKAGER_HATCH_OPEN;
-    }
-
-    private static boolean isHatchOpen(GasUnpackagerBlockEntity unpackager) {
-        if (unpackager.animationInward) {
-            return unpackager.animationTicks > 1 && unpackager.animationTicks < PackagerBlockEntity.CYCLE - 5;
-        }
-
-        return unpackager.animationTicks > 5 && unpackager.animationTicks < PackagerBlockEntity.CYCLE - 1;
     }
 }

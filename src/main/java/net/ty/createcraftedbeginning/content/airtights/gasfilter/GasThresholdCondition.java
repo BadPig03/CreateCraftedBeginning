@@ -35,6 +35,14 @@ public class GasThresholdCondition extends CargoThresholdCondition {
 
     private ItemStack filterItem = ItemStack.EMPTY;
 
+    private static boolean testLong(Ops operator, long currentAmount, long targetAmount) {
+        return switch (operator) {
+            case GREATER -> currentAmount > targetAmount;
+            case EQUAL -> currentAmount == targetAmount;
+            case LESS -> currentAmount < targetAmount;
+        };
+    }
+
     @Override
     protected boolean test(Level level, Train train, CompoundTag context) {
         Ops operator = getOperator();
@@ -143,13 +151,5 @@ public class GasThresholdCondition extends CargoThresholdCondition {
     @Override
     public ItemStack getItem(int slot) {
         return filterItem.copy();
-    }
-
-    private static boolean testLong(Ops operator, long currentAmount, long targetAmount) {
-        return switch (operator) {
-            case GREATER -> currentAmount > targetAmount;
-            case EQUAL -> currentAmount == targetAmount;
-            case LESS -> currentAmount < targetAmount;
-        };
     }
 }

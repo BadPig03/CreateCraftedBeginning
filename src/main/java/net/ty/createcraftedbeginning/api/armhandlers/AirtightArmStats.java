@@ -15,6 +15,14 @@ public record AirtightArmStats(float gasConsumptionMultiplier, float increasedBl
         requireNonNegativeFinite("attack knockback bonus", increasedKnockback);
     }
 
+    private static void requireNonNegativeFinite(String name, float value) {
+        if (GasConsumptionMath.isNonNegativeFinite(value)) {
+            return;
+        }
+
+        throw new IllegalArgumentException("Airtight arm " + name + " must be finite and non-negative; got " + value + '.');
+    }
+
     @Override
     public float getGasConsumptionMultiplier() {
         return gasConsumptionMultiplier;
@@ -33,13 +41,5 @@ public record AirtightArmStats(float gasConsumptionMultiplier, float increasedBl
     @Override
     public float getIncreasedKnockback() {
         return increasedKnockback;
-    }
-
-    private static void requireNonNegativeFinite(String name, float value) {
-        if (GasConsumptionMath.isNonNegativeFinite(value)) {
-            return;
-        }
-
-        throw new IllegalArgumentException("Airtight arm " + name + " must be finite and non-negative; got " + value + '.');
     }
 }

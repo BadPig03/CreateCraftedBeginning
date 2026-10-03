@@ -22,8 +22,7 @@ public enum CCBParticleTypes {
     AIRTIGHT_JETPACK(() -> new SimpleParticleType(false)),
     BREEZE_CLOUD(() -> new SimpleParticleType(false)),
     COLORED_BREEZE_CLOUD(() -> new ColoredBreezeCloudParticleType(false)),
-    BUBBLE_WITHOUT_WATER(() -> new SimpleParticleType(false)),
-    END_INCINERATION(() -> new SimpleParticleType(false));
+    BUBBLE_WITHOUT_WATER(() -> new SimpleParticleType(false));
 
     private final ParticleEntry<?> entry;
 

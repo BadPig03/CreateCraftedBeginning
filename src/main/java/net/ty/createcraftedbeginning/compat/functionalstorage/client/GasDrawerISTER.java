@@ -34,6 +34,19 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
         this.drawerType = drawerType;
     }
 
+    private static void renderSlot(Provider registryAccess, CompoundTag tileTag, int slot, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, DrawerOptions options, boolean creative, double offsetX, double offsetY, double width, double height, boolean compact) {
+        GasStack storedGas = GasDrawerBlock.readStoredGas(tileTag, slot, registryAccess);
+        if (storedGas.isEmpty()) {
+            return;
+        }
+
+        poseStack.pushPose();
+        poseStack.translate(offsetX, offsetY, 0);
+        AABB gasBounds = new AABB(0.0625, 0.078125, 0.0625, 0.0625 + width, 0.078125 + height, 0.9375);
+        GasDrawerRenderer.renderItemGas(poseStack, buffers, light, overlay, storedGas, options, gasBounds, compact, creative);
+        poseStack.popPose();
+    }
+
     @Override
     public void onResourceManagerReload(ResourceManager resourceManager) {
     }
@@ -73,18 +86,5 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
                 renderSlot(access, tileTag, 3, poseStack, buffers, light, overlay, drawerOptions, isCreative, 0, 0.5, 0.4375, 0.34375, true);
             }
         }
-    }
-
-    private static void renderSlot(Provider registryAccess, CompoundTag tileTag, int slot, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, DrawerOptions options, boolean creative, double offsetX, double offsetY, double width, double height, boolean compact) {
-        GasStack storedGas = GasDrawerBlock.readStoredGas(tileTag, slot, registryAccess);
-        if (storedGas.isEmpty()) {
-            return;
-        }
-
-        poseStack.pushPose();
-        poseStack.translate(offsetX, offsetY, 0);
-        AABB gasBounds = new AABB(0.0625, 0.078125, 0.0625, 0.0625 + width, 0.078125 + height, 0.9375);
-        GasDrawerRenderer.renderItemGas(poseStack, buffers, light, overlay, storedGas, options, gasBounds, compact, creative);
-        poseStack.popPose();
     }
 }

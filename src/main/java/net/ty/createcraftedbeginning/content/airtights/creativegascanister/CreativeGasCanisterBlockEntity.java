@@ -38,6 +38,10 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
         super(type, pos, state);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.CREATIVE_GAS_CANISTER.get(), (canister, ignoredDirection) -> canister.tankBehaviour.getCapability());
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartGasTankBehaviour.single(this, CreativeGasCanisterContainerContents.VOLUME_LITERS, CreativeGasCanisterContainerContents.PRESSURE_PA).forbidInsertion().forbidExtraction();
@@ -89,10 +93,6 @@ public class CreativeGasCanisterBlockEntity extends SmartBlockEntity implements 
     @Override
     public boolean isCreative(Level level, BlockState state, BlockPos pos) {
         return true;
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.CREATIVE_GAS_CANISTER.get(), (canister, ignoredDirection) -> canister.tankBehaviour.getCapability());
     }
 
     void setCanisterContent(ItemStack placedCanister) {

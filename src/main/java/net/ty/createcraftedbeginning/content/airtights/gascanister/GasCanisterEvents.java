@@ -44,7 +44,7 @@ final class GasCanisterEvents {
 
         OverlaySelection overlaySelection = findFirstAvailable(CanisterContainerSuppliers.getAllSuppliers(player));
         Gas currentGasType = overlaySelection.content().getGasType();
-        Gas storedGasType = CanisterContainerClients.getStoredGasType(player);
+        Gas storedGasType = Gas.findById(NBTHelper.readResourceLocation(player.getPersistentData(), CanisterContainerClients.COMPOUND_KEY_STORED_GAS_TYPE));
         if (currentGasType != storedGasType) {
             NBTHelper.writeResourceLocation(player.getPersistentData(), CanisterContainerClients.COMPOUND_KEY_STORED_GAS_TYPE, currentGasType.getResourceLocation());
             NeoForge.EVENT_BUS.post(new GasTypeChangedEvent(player, currentGasType, storedGasType));
@@ -63,7 +63,7 @@ final class GasCanisterEvents {
             for (int tankIndex = 0; tankIndex < container.getTanks(); tankIndex++) {
                 GasStack storedGas = container.getGasInTank(tankIndex);
                 long maxAmount = container.getTankMaxAmount(tankIndex);
-                if (storedGas.isEmpty() || maxAmount <= 0) {
+                if (storedGas.isEmpty() || !storedGas.getGasType().isUsableInEquipment() || maxAmount <= 0) {
                     continue;
                 }
 

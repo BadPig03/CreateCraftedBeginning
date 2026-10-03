@@ -37,52 +37,6 @@ public class BreezeCoolerBlockItem extends BlockItem {
         super(block, properties);
     }
 
-    @Override
-    public InteractionResult interactLivingEntity(ItemStack heldItem, Player player, LivingEntity target, InteractionHand hand) {
-        if (!CCBEntityFlags.BREEZE_CHAMBER_CAPTURABLE.matches(target)) {
-            return InteractionResult.PASS;
-        }
-
-        Level level = player.level();
-        spawnCaptureEffects(level, target.position());
-        if (level.isClientSide) {
-            return InteractionResult.sidedSuccess(true);
-        }
-
-        giveCoolerItemTo(player, heldItem, hand);
-        target.discard();
-        return InteractionResult.sidedSuccess(false);
-    }
-
-    @Override
-    public InteractionResult useOn(UseOnContext context) {
-        Level level = context.getLevel();
-        BlockEntity clickedBlockEntity = level.getBlockEntity(context.getClickedPos());
-        if (!CCBConfig.server().machines.breezeCooler.allowSpawnerCapture.get()) {
-            return super.useOn(context);
-        }
-
-        if (clickedBlockEntity instanceof TrialSpawnerBlockEntity spawner) {
-            InteractionResult captureResult = tryCaptureFromTrialSpawner(spawner, context);
-            if (captureResult == InteractionResult.FAIL) {
-                return super.useOn(context);
-            }
-
-            return captureResult;
-        }
-
-        if (clickedBlockEntity instanceof SpawnerBlockEntity spawner) {
-            InteractionResult captureResult = tryCaptureFromSpawner(spawner, context);
-            if (captureResult == InteractionResult.FAIL) {
-                return super.useOn(context);
-            }
-
-            return captureResult;
-        }
-
-        return super.useOn(context);
-    }
-
     private static void giveCoolerItemTo(Player player, ItemStack heldItem, InteractionHand hand) {
         ItemStack coolerItem = new ItemStack(CCBBlocks.BREEZE_COOLER_BLOCK);
         if (player.isCreative()) {
@@ -158,5 +112,51 @@ public class BreezeCoolerBlockItem extends BlockItem {
 
         giveCoolerItemTo(player, context.getItemInHand(), context.getHand());
         return InteractionResult.sidedSuccess(false);
+    }
+
+    @Override
+    public InteractionResult interactLivingEntity(ItemStack heldItem, Player player, LivingEntity target, InteractionHand hand) {
+        if (!CCBEntityFlags.BREEZE_CHAMBER_CAPTURABLE.matches(target)) {
+            return InteractionResult.PASS;
+        }
+
+        Level level = player.level();
+        spawnCaptureEffects(level, target.position());
+        if (level.isClientSide) {
+            return InteractionResult.sidedSuccess(true);
+        }
+
+        giveCoolerItemTo(player, heldItem, hand);
+        target.discard();
+        return InteractionResult.sidedSuccess(false);
+    }
+
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        Level level = context.getLevel();
+        BlockEntity clickedBlockEntity = level.getBlockEntity(context.getClickedPos());
+        if (!CCBConfig.server().machines.breezeCooler.allowSpawnerCapture.get()) {
+            return super.useOn(context);
+        }
+
+        if (clickedBlockEntity instanceof TrialSpawnerBlockEntity spawner) {
+            InteractionResult captureResult = tryCaptureFromTrialSpawner(spawner, context);
+            if (captureResult == InteractionResult.FAIL) {
+                return super.useOn(context);
+            }
+
+            return captureResult;
+        }
+
+        if (clickedBlockEntity instanceof SpawnerBlockEntity spawner) {
+            InteractionResult captureResult = tryCaptureFromSpawner(spawner, context);
+            if (captureResult == InteractionResult.FAIL) {
+                return super.useOn(context);
+            }
+
+            return captureResult;
+        }
+
+        return super.useOn(context);
     }
 }

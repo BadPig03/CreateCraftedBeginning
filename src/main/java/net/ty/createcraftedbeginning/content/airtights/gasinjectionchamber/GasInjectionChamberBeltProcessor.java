@@ -47,6 +47,37 @@ final class GasInjectionChamberBeltProcessor {
         this.planner = planner;
     }
 
+    private static boolean replaceTransportedStack(BeltPlan plan, List<ItemStack> resultStacks, TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+        if (!matchesPlanInput(plan, transported.stack)) {
+            return false;
+        }
+
+        transported.stack.shrink(plan.batchSize());
+        FanProcessingType completedFanProcessing = plan.type() == FAN_PROCESSING && plan.fanProcessingTypeId() != null ? GasInjectionChamberFilterItem.getFanProcessingType(plan.fanProcessingTypeId()).orElse(null) : null;
+        TransportedItemStack heldRemainder = null;
+        List<TransportedItemStack> transportedResults = new ArrayList<>(resultStacks.size());
+        for (ItemStack resultStack : resultStacks) {
+            TransportedItemStack transportedResult = transported.copy();
+            transportedResult.stack = resultStack.copy();
+            transportedResult.clearFanProcessingData();
+            if (completedFanProcessing != null) {
+                transportedResult.processedBy = completedFanProcessing;
+                transportedResult.processingTime = -1;
+            }
+            transportedResults.add(transportedResult);
+        }
+        if (!transported.stack.isEmpty()) {
+            heldRemainder = transported.copy();
+            heldRemainder.clearFanProcessingData();
+        }
+        handler.handleProcessingOnItem(transported, TransportedResult.convertToAndLeaveHeld(transportedResults, heldRemainder));
+        return true;
+    }
+
+    private static boolean matchesPlanInput(BeltPlan plan, ItemStack stack) {
+        return ItemStack.isSameItemSameComponents(plan.input(), stack) && stack.getCount() >= plan.batchSize();
+    }
+
     ProcessingResult onItemEntered(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         if (handler.blockEntity.isVirtual()) {
             return PASS;
@@ -100,37 +131,6 @@ final class GasInjectionChamberBeltProcessor {
         chamber.setChanged();
         chamber.notifyUpdate();
         return HOLD;
-    }
-
-    private static boolean replaceTransportedStack(BeltPlan plan, List<ItemStack> resultStacks, TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        if (!matchesPlanInput(plan, transported.stack)) {
-            return false;
-        }
-
-        transported.stack.shrink(plan.batchSize());
-        FanProcessingType completedFanProcessing = plan.type() == FAN_PROCESSING && plan.fanProcessingTypeId() != null ? GasInjectionChamberFilterItem.getFanProcessingType(plan.fanProcessingTypeId()).orElse(null) : null;
-        TransportedItemStack heldRemainder = null;
-        List<TransportedItemStack> transportedResults = new ArrayList<>(resultStacks.size());
-        for (ItemStack resultStack : resultStacks) {
-            TransportedItemStack transportedResult = transported.copy();
-            transportedResult.stack = resultStack.copy();
-            transportedResult.clearFanProcessingData();
-            if (completedFanProcessing != null) {
-                transportedResult.processedBy = completedFanProcessing;
-                transportedResult.processingTime = -1;
-            }
-            transportedResults.add(transportedResult);
-        }
-        if (!transported.stack.isEmpty()) {
-            heldRemainder = transported.copy();
-            heldRemainder.clearFanProcessingData();
-        }
-        handler.handleProcessingOnItem(transported, TransportedResult.convertToAndLeaveHeld(transportedResults, heldRemainder));
-        return true;
-    }
-
-    private static boolean matchesPlanInput(BeltPlan plan, ItemStack stack) {
-        return ItemStack.isSameItemSameComponents(plan.input(), stack) && stack.getCount() >= plan.batchSize();
     }
 
     private void executeCurrentState(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {

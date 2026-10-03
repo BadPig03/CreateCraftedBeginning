@@ -25,13 +25,6 @@ final class ReactorKettleOutputSimulation {
         this.kettle = kettle;
     }
 
-    boolean accepts(IItemHandler availableItems, IFluidHandler availableFluids, GasHandler availableGases, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases, int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts) {
-        IItemHandler outputInventory = kettle.getOutputItemCapability();
-        IFluidHandler outputFluidTank = kettle.getOutputFluidCapability();
-        GasHandler outputGasTank = kettle.getOutputGasCapability();
-        return canAcceptItemOutputsAfterInputsAreConsumed(availableItems, outputInventory, outputItems, itemAmounts) && canAcceptFluidOutputsAfterInputsAreConsumed(availableFluids, outputFluidTank, outputFluids, fluidAmounts) && canAcceptGasOutputsAfterInputsAreConsumed(availableGases, outputGasTank, outputGases, gasAmounts);
-    }
-
     private static boolean canAcceptFluidOutputsAfterInputsAreConsumed(IFluidHandler availableFluids, IFluidHandler outputTank, List<FluidStack> outputFluids, int[] extractedFluidsFromTank) {
         if (outputFluids.isEmpty()) {
             return true;
@@ -171,6 +164,13 @@ final class ReactorKettleOutputSimulation {
         }
 
         return remainingAmount <= 0;
+    }
+
+    boolean accepts(IItemHandler availableItems, IFluidHandler availableFluids, GasHandler availableGases, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases, int[] itemAmounts, int[] fluidAmounts, long[] gasAmounts) {
+        IItemHandler outputInventory = kettle.getOutputItemCapability();
+        IFluidHandler outputFluidTank = kettle.getOutputFluidCapability();
+        GasHandler outputGasTank = kettle.getOutputGasCapability();
+        return canAcceptItemOutputsAfterInputsAreConsumed(availableItems, outputInventory, outputItems, itemAmounts) && canAcceptFluidOutputsAfterInputsAreConsumed(availableFluids, outputFluidTank, outputFluids, fluidAmounts) && canAcceptGasOutputsAfterInputsAreConsumed(availableGases, outputGasTank, outputGases, gasAmounts);
     }
 
     private IItemHandlerModifiable createItemOutputSimulation(int slotCount) {

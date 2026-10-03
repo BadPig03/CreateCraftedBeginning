@@ -70,6 +70,67 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         updateConfigs();
     }
 
+    private static void addGasScrollTooltips(List<Component> tooltips) {
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasUnitFormat.format(GasRequestSteps.getScrollStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasUnitFormat.format(GasRequestSteps.getShiftStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasUnitFormat.format(GasRequestSteps.getAltStep()));
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasUnitFormat.format(GasRequestSteps.getCtrlStep()));
+    }
+
+    private static void addItemScrollTooltips(List<Component> tooltips) {
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasRequestSteps.getScrollStep());
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasRequestSteps.getShiftStep());
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasRequestSteps.getAltStep());
+        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasRequestSteps.getCtrlStep());
+    }
+
+    private static void addScrollTooltip(List<Component> tooltips, String key, Object amount) {
+        tooltips.add(CCBLang.translate(key, amount).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+    }
+
+    private static void addActionTooltip(List<Component> tooltips, String key) {
+        tooltips.add(CCBLang.translate(key).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
+    }
+
+    private static void adjustAmount(BigItemStack entry, double scrollY) {
+        if (scrollY == 0) {
+            return;
+        }
+
+        boolean isVirtualItem = VirtualGasItems.isVirtualItem(entry.stack);
+        boolean controlDown = hasControlDown();
+        boolean shiftDown = hasShiftDown();
+        int currentAmount = entry.count;
+        int step;
+        if (isVirtualItem) {
+            step = GasRequestSteps.getStep(hasAltDown(), controlDown, shiftDown);
+        }
+        else {
+            step = shiftDown ? 10 : 1;
+        }
+        if (!controlDown && scrollY > 0 && currentAmount == 1 && step > 1) {
+            step--;
+        }
+
+        int delta = scrollY > 0 ? step : -step;
+        int maxAmount = isVirtualItem ? GasFactoryGaugeBehaviour.MAX_TARGET_AMOUNT : 64;
+        entry.count = Mth.clamp(currentAmount + delta, 1, maxAmount);
+    }
+
+    private static String format(BigItemStack entry, boolean prefix) {
+        String amount = VirtualGasItems.isVirtualItem(entry.stack) ? GasRequestFormat.format(entry.count, false) : Integer.toString(entry.count);
+        if (!prefix) {
+            return amount;
+        }
+
+        return 'x' + amount;
+    }
+
+    private static String formatPrecise(BigItemStack entry) {
+        String amount = VirtualGasItems.isVirtualItem(entry.stack) ? GasRequestFormat.formatPrecise(entry.count) : Integer.toString(entry.count);
+        return 'x' + amount;
+    }
+
     @Override
     protected void init() {
         if (minecraft == null) {
@@ -268,67 +329,6 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
     public void removed() {
         sendIt(null, false);
         super.removed();
-    }
-
-    private static void addGasScrollTooltips(List<Component> tooltips) {
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasUnitFormat.format(GasRequestSteps.getScrollStep()));
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasUnitFormat.format(GasRequestSteps.getShiftStep()));
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasUnitFormat.format(GasRequestSteps.getAltStep()));
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasUnitFormat.format(GasRequestSteps.getCtrlStep()));
-    }
-
-    private static void addItemScrollTooltips(List<Component> tooltips) {
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.scroll", GasRequestSteps.getScrollStep());
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.shift_to_scroll", GasRequestSteps.getShiftStep());
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.alt_to_scroll", GasRequestSteps.getAltStep());
-        addScrollTooltip(tooltips, "gui.gas_virtual_item.ctrl_to_scroll", GasRequestSteps.getCtrlStep());
-    }
-
-    private static void addScrollTooltip(List<Component> tooltips, String key, Object amount) {
-        tooltips.add(CCBLang.translate(key, amount).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-    }
-
-    private static void addActionTooltip(List<Component> tooltips, String key) {
-        tooltips.add(CCBLang.translate(key).style(ChatFormatting.DARK_GRAY).style(ChatFormatting.ITALIC).component());
-    }
-
-    private static void adjustAmount(BigItemStack entry, double scrollY) {
-        if (scrollY == 0) {
-            return;
-        }
-
-        boolean isVirtualItem = VirtualGasItems.isVirtualItem(entry.stack);
-        boolean controlDown = hasControlDown();
-        boolean shiftDown = hasShiftDown();
-        int currentAmount = entry.count;
-        int step;
-        if (isVirtualItem) {
-            step = GasRequestSteps.getStep(hasAltDown(), controlDown, shiftDown);
-        }
-        else {
-            step = shiftDown ? 10 : 1;
-        }
-        if (!controlDown && scrollY > 0 && currentAmount == 1 && step > 1) {
-            step--;
-        }
-
-        int delta = scrollY > 0 ? step : -step;
-        int maxAmount = isVirtualItem ? GasFactoryGaugeBehaviour.MAX_TARGET_AMOUNT : 64;
-        entry.count = Mth.clamp(currentAmount + delta, 1, maxAmount);
-    }
-
-    private static String format(BigItemStack entry, boolean prefix) {
-        String amount = VirtualGasItems.isVirtualItem(entry.stack) ? GasRequestFormat.format(entry.count, false) : Integer.toString(entry.count);
-        if (!prefix) {
-            return amount;
-        }
-
-        return 'x' + amount;
-    }
-
-    private static String formatPrecise(BigItemStack entry) {
-        String amount = VirtualGasItems.isVirtualItem(entry.stack) ? GasRequestFormat.formatPrecise(entry.count) : Integer.toString(entry.count);
-        return 'x' + amount;
     }
 
     private void updateConfigs() {

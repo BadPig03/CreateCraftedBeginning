@@ -68,6 +68,30 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
         initializeTank(new SmartGasTank(getVolumePerBlock(), GasPressureLimits.HARD_PRESSURE_PA, this::onTankStateChanged));
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
+    }
+
+    public static int getConfiguredMaxLength() {
+        return configuredMaxLength();
+    }
+
+    public static int getConfiguredMaxWidth() {
+        return configuredMaxWidth();
+    }
+
+    public static BlockPos offsetInMulti(BlockPos origin, Axis axis, int lengthOffset, int uOffset, int vOffset) {
+        return switch (axis) {
+            case X -> origin.offset(lengthOffset, uOffset, vOffset);
+            case Y -> origin.offset(uOffset, lengthOffset, vOffset);
+            case Z -> origin.offset(uOffset, vOffset, lengthOffset);
+        };
+    }
+
+    static long getVolumePerBlock() {
+        return CCBConfig.server().machines.airtightTank.gasVolumePerBlock.get() * GasUnits.LITERS_PER_KILOLITER;
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         super.addBehaviours(behaviours);
@@ -261,26 +285,6 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
         return tankGaugeInstalled;
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
-    }
-
-    public static int getConfiguredMaxLength() {
-        return configuredMaxLength();
-    }
-
-    public static int getConfiguredMaxWidth() {
-        return configuredMaxWidth();
-    }
-
-    public static BlockPos offsetInMulti(BlockPos origin, Axis axis, int lengthOffset, int uOffset, int vOffset) {
-        return switch (axis) {
-            case X -> origin.offset(lengthOffset, uOffset, vOffset);
-            case Y -> origin.offset(uOffset, lengthOffset, vOffset);
-            case Z -> origin.offset(uOffset, vOffset, lengthOffset);
-        };
-    }
-
     public int getTotalTankSize() {
         return getWidth() * getWidth() * getHeight();
     }
@@ -324,10 +328,6 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     public boolean hasTankGauge() {
         AirtightTankBlockEntity controller = getControllerBE();
         return controller != null && controller.tankGaugeInstalled;
-    }
-
-    static long getVolumePerBlock() {
-        return CCBConfig.server().machines.airtightTank.gasVolumePerBlock.get() * GasUnits.LITERS_PER_KILOLITER;
     }
 
     OverpressureBehaviour getOverpressureBehaviour() {

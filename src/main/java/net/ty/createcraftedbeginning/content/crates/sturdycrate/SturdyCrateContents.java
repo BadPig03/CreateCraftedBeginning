@@ -27,6 +27,11 @@ public record SturdyCrateContents(ItemStack content, int count, ItemStack filter
         filterItem = filterItem.isEmpty() ? ItemStack.EMPTY : filterItem.copyWithCount(1);
     }
 
+    @Contract(" -> new")
+    static SturdyCrateContents empty() {
+        return new SturdyCrateContents(ItemStack.EMPTY, 0, ItemStack.EMPTY);
+    }
+
     @Override
     public ItemStack content() {
         if (content.isEmpty()) {
@@ -53,11 +58,6 @@ public record SturdyCrateContents(ItemStack content, int count, ItemStack filter
     @Override
     public int hashCode() {
         return Objects.hash(ItemStack.hashItemAndComponents(content), count, ItemStack.hashItemAndComponents(filterItem));
-    }
-
-    @Contract(" -> new")
-    static SturdyCrateContents empty() {
-        return new SturdyCrateContents(ItemStack.EMPTY, 0, ItemStack.EMPTY);
     }
 
     boolean hasData() {

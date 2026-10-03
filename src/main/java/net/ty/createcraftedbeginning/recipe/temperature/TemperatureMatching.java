@@ -19,11 +19,6 @@ public enum TemperatureMatching implements StringRepresentable {
     public static final Codec<TemperatureMatching> CODEC = StringRepresentable.fromEnum(TemperatureMatching::values);
     public static final StreamCodec<ByteBuf, TemperatureMatching> STREAM_CODEC = CatnipStreamCodecBuilders.ofEnum(TemperatureMatching.class);
 
-    @Override
-    public String getSerializedName() {
-        return Lang.asId(name());
-    }
-
     public static int getMatchPriority(TemperatureMatching currentMatching, TemperatureCondition requiredCondition, float temperature) {
         if (!currentMatching.isValidFor(requiredCondition)) {
             return 0;
@@ -56,6 +51,11 @@ public enum TemperatureMatching implements StringRepresentable {
             }
             case SUPERHEATED, SUPERCHILLED -> 0;
         };
+    }
+
+    @Override
+    public String getSerializedName() {
+        return Lang.asId(name());
     }
 
     public boolean isValidFor(TemperatureCondition requiredCondition) {

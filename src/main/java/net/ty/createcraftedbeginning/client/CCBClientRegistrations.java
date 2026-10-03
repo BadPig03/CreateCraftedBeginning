@@ -1,15 +1,11 @@
 package net.ty.createcraftedbeginning.client;
 
-import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.CreateClient;
-import com.simibubi.create.content.kinetics.base.OrientedRotatingVisual;
 import com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual;
 import com.simibubi.create.foundation.block.render.CustomBlockModels;
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
-import dev.engine_room.flywheel.lib.model.Models;
 import dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.Direction;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -69,18 +65,17 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberVisual;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerRenderer;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerVisual;
-import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerRenderer;
-import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralRenderer;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerRenderer;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerVisual;
 import net.ty.createcraftedbeginning.content.fluids.CCBFluidClientExtensions;
 import net.ty.createcraftedbeginning.content.fluids.TintedFluidType;
-import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterRenderer;
-import net.ty.createcraftedbeginning.content.opticalpower.laserreceiver.LaserReceiverRenderer;
-import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberModel;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelClientExtensions;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelModel;
-import net.ty.createcraftedbeginning.content.pneumaticengine.PneumaticEngineRenderer;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterClientExtensions;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterRenderer;
+import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberModel;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverClientExtensions;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverRenderer;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
@@ -121,6 +116,8 @@ public final class CCBClientRegistrations {
         event.registerBlock(new AirtightForgingPressClientExtensions(), CCBBlocks.AIRTIGHT_FORGING_PRESS_BLOCK.get());
         event.registerBlock(new AirtightForgingPressStructuralClientExtensions(), CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.get(), CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.get());
         event.registerBlock(new AmethystCollectorPanelClientExtensions(), CCBBlocks.AMETHYST_COLLECTOR_PANEL_BLOCK.get());
+        event.registerBlock(new LaserEmitterClientExtensions(), CCBBlocks.LASER_EMITTER_BLOCK);
+        event.registerBlock(new PhotothermalReceiverClientExtensions(), CCBBlocks.PHOTOTHERMAL_RECEIVER_BLOCK);
     }
 
     public static void registerMenuScreens(RegisterMenuScreensEvent event) {
@@ -160,16 +157,13 @@ public final class CCBClientRegistrations {
         event.registerBlockEntityRenderer(CCBBlockEntities.GAS_REPACKAGER.get(), GasRepackagerRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.GAS_FACTORY_GAUGE.get(), GasFactoryGaugeRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.LASER_EMITTER.get(), LaserEmitterRenderer::new);
-        event.registerBlockEntityRenderer(CCBBlockEntities.LASER_RECEIVER.get(), LaserReceiverRenderer::new);
-        event.registerBlockEntityRenderer(CCBBlockEntities.END_INCINERATION_BLOWER.get(), EndIncinerationBlowerRenderer::new);
-        event.registerBlockEntityRenderer(CCBBlockEntities.END_INCINERATION_BLOWER_STRUCTURAL.get(), EndIncinerationBlowerStructuralRenderer::new);
+        event.registerBlockEntityRenderer(CCBBlockEntities.PHOTOTHERMAL_RECEIVER.get(), PhotothermalReceiverRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.END_SCULK_SILENCER.get(), EndSculkSilencerRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.ANDESITE_CRATE.get(), SmartBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.BRASS_CRATE.get(), SmartBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.STURDY_CRATE.get(), SmartBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.CARDBOARD_CRATE.get(), SmartBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.AIR_VENT.get(), AirVentRenderer::new);
-        event.registerBlockEntityRenderer(CCBBlockEntities.PNEUMATIC_ENGINE.get(), PneumaticEngineRenderer::new);
 
         event.registerEntityRenderer(CCBEntityTypes.AIRTIGHT_CANNON_WIND_CHARGE_PROJECTILE.get(), AirtightCannonWindChargeProjectileEntityRenderer::new);
         event.registerEntityRenderer(CCBEntityTypes.WEATHER_FLARE_PROJECTILE.get(), WeatherFlareProjectileRenderer::new);
@@ -185,14 +179,11 @@ public final class CCBClientRegistrations {
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG.get()).factory(AirtightReactorKettleStructuralCogVisual::new).skipVanillaRender(cog -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_CHAMBER.get()).factory(BreezeChamberVisual::new).skipVanillaRender(chamber -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_COOLER.get()).factory(BreezeCoolerVisual::new).skipVanillaRender(cooler -> true).apply();
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.END_INCINERATION_BLOWER.get()).factory(SingleAxisRotatingVisual.of(CCBPartialModels.END_INCINERATION_BLOWER_CORE)).skipVanillaRender(blower -> true).apply();
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.END_INCINERATION_BLOWER_STRUCTURAL.get()).factory(SingleAxisRotatingVisual.of(CCBPartialModels.SHAFT_HALF_DOWN)).skipVanillaRender(structure -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.END_SCULK_SILENCER.get()).factory(EndSculkSilencerVisual::new).skipVanillaRender(silencer -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_INJECTION_CHAMBER.get()).factory(GasInjectionChamberVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_PACKAGER.get()).factory(GasPackagerVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_UNPACKAGER.get()).factory(GasUnpackagerVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_REPACKAGER.get()).factory(GasRepackagerVisual::new).neverSkipVanillaRender().apply();
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.LASER_RECEIVER.get()).factory((context, blockEntity, partialTick) -> new OrientedRotatingVisual<>(context, blockEntity, partialTick, Direction.SOUTH, blockEntity.getOutputDirection(), Models.partial(AllPartialModels.SHAFT_HALF))).skipVanillaRender(receiver -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.PORTABLE_GAS_INTERFACE.get()).factory(PortableGasInterfaceVisual::new).skipVanillaRender(gasInterface -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.TESLA_TURBINE.get()).factory(TeslaTurbineVisual::new).skipVanillaRender(turbine -> true).apply();
     }

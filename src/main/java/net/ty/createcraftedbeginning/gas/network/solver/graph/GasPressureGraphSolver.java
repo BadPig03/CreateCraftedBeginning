@@ -103,6 +103,14 @@ public final class GasPressureGraphSolver {
             graph.captureStaticState();
         }
 
+        private static double warmStartPressurePa(double[] initialPressures, int nodeIndex) {
+            if (nodeIndex < 0 || nodeIndex >= initialPressures.length) {
+                return -1;
+            }
+
+            return initialPressures[nodeIndex];
+        }
+
         public GasPressureGraphSolution solve(List<GasNetworkPressureEndpoint> endpoints, GasTransportFlowBudget transportBudget) {
             return solve(endpoints, transportBudget, true);
         }
@@ -113,14 +121,6 @@ public final class GasPressureGraphSolver {
 
         public GasPressureGraphSolution solveHypothetical(List<GasNetworkPressureEndpoint> endpoints, GasTransportFlowBudget transportBudget) {
             return solve(endpoints, transportBudget, false, false, true);
-        }
-
-        private static double warmStartPressurePa(double[] initialPressures, int nodeIndex) {
-            if (nodeIndex < 0 || nodeIndex >= initialPressures.length) {
-                return -1;
-            }
-
-            return initialPressures[nodeIndex];
         }
 
         private GasPressureGraphSolution solve(List<GasNetworkPressureEndpoint> endpoints, GasTransportFlowBudget transportBudget, boolean updateWarmStart, boolean collectFacePressures, boolean hypothetical) {

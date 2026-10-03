@@ -23,6 +23,14 @@ public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbin
         super(context);
     }
 
+    private static SuperByteBuffer rotateToAxis(SuperByteBuffer buffer, Axis axis) {
+        switch (axis) {
+            case Z -> buffer.rotateCentered(Mth.HALF_PI, Axis.X);
+            case X -> buffer.rotateCentered(-Mth.HALF_PI, Axis.Z);
+        }
+        return buffer;
+    }
+
     @Override
     protected void renderSafe(TeslaTurbineBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         super.renderSafe(blockEntity, partialTicks, poseStack, buffer, light, overlay);
@@ -48,14 +56,6 @@ public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbin
     @Override
     protected SuperByteBuffer getRotatedModel(TeslaTurbineBlockEntity blockEntity, BlockState blockState) {
         return CachedBuffers.partial(AllPartialModels.SHAFT, blockState);
-    }
-
-    private static SuperByteBuffer rotateToAxis(SuperByteBuffer buffer, Axis axis) {
-        switch (axis) {
-            case Z -> buffer.rotateCentered(Mth.HALF_PI, Axis.X);
-            case X -> buffer.rotateCentered(-Mth.HALF_PI, Axis.Z);
-        }
-        return buffer;
     }
 
 }

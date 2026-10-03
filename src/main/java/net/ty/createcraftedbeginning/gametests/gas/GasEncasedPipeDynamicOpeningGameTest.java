@@ -172,6 +172,7 @@ public final class GasEncasedPipeDynamicOpeningGameTest {
 
             assertForwardFlow(helper, encasedWest, encasedEast, "airtight encased pipe restored");
             assertForwardFlow(helper, downstreamWest, downstreamEast, "downstream airtight pipe restored");
+
             helper.assertValueEqual(encasedEast.flowRate(), downstreamWest.flowRate(), "restored flow across the encased/downstream pipe connection");
             helper.assertValueEqual(encasedTransport.getThroughputFlowRate(), encasedWest.flowRate(), "restored airtight encased pipe throughput");
             helper.assertValueEqual(downstreamTransport.getThroughputFlowRate(), downstreamWest.flowRate(), "restored downstream airtight pipe throughput");

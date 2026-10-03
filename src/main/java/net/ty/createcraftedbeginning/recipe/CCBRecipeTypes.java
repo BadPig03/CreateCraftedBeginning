@@ -63,6 +63,12 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
         type = Registers.TYPE_REGISTER.register(recipeName, () -> RecipeType.simple(id));
     }
 
+    @Internal
+    public static void register(IEventBus modEventBus) {
+        Registers.SERIALIZER_REGISTER.register(modEventBus);
+        Registers.TYPE_REGISTER.register(modEventBus);
+    }
+
     @Override
     public ResourceLocation getId() {
         return id;
@@ -83,12 +89,6 @@ public enum CCBRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
     @Override
     public String getSerializedName() {
         return id.toString();
-    }
-
-    @Internal
-    public static void register(IEventBus modEventBus) {
-        Registers.SERIALIZER_REGISTER.register(modEventBus);
-        Registers.TYPE_REGISTER.register(modEventBus);
     }
 
     private static class Registers {

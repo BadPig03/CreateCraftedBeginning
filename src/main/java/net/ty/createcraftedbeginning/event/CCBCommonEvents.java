@@ -5,7 +5,6 @@ import com.simibubi.create.foundation.item.ItemHelper;
 import net.createmod.catnip.data.Pair;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.Unit;
@@ -27,6 +26,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.Airt
 import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerRecipeLookup;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillMenu;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.DrillMiningDirection;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity;
@@ -128,7 +128,7 @@ public class CCBCommonEvents {
             builder.set(CCBDataComponents.AIRTIGHT_UPGRADABLE_INVENTORY, ItemHelper.containerContentsFromHandler(new InventoryHandler(AirtightHandheldDrillMenu.MAX_SLOTS)));
             builder.set(CCBDataComponents.DRILL_MINING_TEMPLATE, AirtightHandheldDrillMiningTemplates.CUBOID);
             builder.set(CCBDataComponents.DRILL_MINING_SIZE, new BlockPos(1, 1, 1));
-            builder.set(CCBDataComponents.DRILL_MINING_DIRECTION, Direction.NORTH);
+            builder.set(CCBDataComponents.DRILL_MINING_DIRECTION, DrillMiningDirection.NORTH);
             builder.set(CCBDataComponents.DRILL_MINING_RELATIVE_POSITION, new BlockPos(0, 0, 0));
         });
         event.modify(CCBItems.GAS_CANISTER, builder -> builder.set(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, GasStack.EMPTY));

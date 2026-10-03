@@ -3,13 +3,19 @@ package net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill;
 import com.simibubi.create.content.logistics.filter.FilterItemStack;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.Item;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FlowingFluid;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidState;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HandheldDrillContainerProtectionButton;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HandheldDrillFilterButton;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.LiquidReplacementUpgrade;
@@ -27,12 +33,13 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, Set<BlockPos> totalPos, Set<BlockPos> protectedPos, Set<BlockPos> unbreakablePos, Set<BlockPos> liquidPos, Set<BlockPos> instantDestructionPos, Set<BlockPos> destructionPos, Set<BlockPos> breakSpeedPos, float baseHardness, float totalBreakHardness) {
-    static AirtightHandheldDrillMiningContext of(ItemStack drill, BlockPos basePos, Level level) {
-        return of(drill, basePos, level, level.getBlockState(basePos));
+    static AirtightHandheldDrillMiningContext of(ItemStack drill, BlockPos basePos, Level level, Player player) {
+        return of(drill, basePos, level, level.getBlockState(basePos), player);
     }
 
-    static AirtightHandheldDrillMiningContext of(ItemStack drill, BlockPos basePos, Level level, BlockState baseState) {
-        Set<BlockPos> totalPos = AirtightHandheldDrillSettings.getMiningTemplate(drill).getTemplate().getTargetPositions(drill, basePos, level, baseState);
+    static AirtightHandheldDrillMiningContext of(ItemStack drill, BlockPos basePos, Level level, BlockState baseState, Player player) {
+        Direction miningDirection = AirtightHandheldDrillSettings.getMiningDirection(drill).resolve(player.getLookAngle());
+        Set<BlockPos> totalPos = AirtightHandheldDrillSettings.getMiningTemplate(drill).getTemplate().getTargetPositions(drill, basePos, level, baseState, miningDirection);
         Set<BlockPos> protectedPos = new LinkedHashSet<>();
         Set<BlockPos> unbreakablePos = new LinkedHashSet<>();
         Set<BlockPos> liquidPos = new LinkedHashSet<>();
@@ -40,7 +47,7 @@ record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, Set<Blo
         Set<BlockPos> destructionPos = new LinkedHashSet<>();
         Set<BlockPos> breakSpeedPos = new LinkedHashSet<>();
         FilterItemStack filter = getFilter(drill);
-        Map<Item, Boolean> filterMatches = filter == null ? null : new HashMap<>();
+        Map<BlockState, Boolean> filterMatches = filter == null ? null : new HashMap<>();
         boolean shouldBreakContainers = HandheldDrillContainerProtectionButton.INSTANCE.canApply(drill);
         boolean liquidReplacement = LiquidReplacementUpgrade.INSTANCE.canApply(drill);
         float baseHardness = 0;
@@ -92,15 +99,7 @@ record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, Set<Blo
         return new AirtightHandheldDrillMiningContext(level, basePos, immutableView(totalPos), immutableView(protectedPos), immutableView(unbreakablePos), immutableView(liquidPos), immutableView(instantDestructionPos), immutableView(destructionPos), immutableView(breakSpeedPos), baseHardness, totalBreakHardness);
     }
 
-    boolean isValidBaseTarget() {
-        return destructionPos.contains(basePos);
-    }
-
-    boolean isEmpty() {
-        return destructionPos.isEmpty();
-    }
-
-    private static @Nullable FilterItemStack getFilter(ItemStack drill) {
+    static @Nullable FilterItemStack getFilter(ItemStack drill) {
         if (!HandheldDrillFilterButton.INSTANCE.canApply(drill)) {
             return null;
         }
@@ -115,19 +114,39 @@ record AirtightHandheldDrillMiningContext(Level level, BlockPos basePos, Set<Blo
             return null;
         }
 
-        return FilterItemStack.of(filterStack);
+        return FilterItemStack.of(filterStack.copy());
     }
 
-    private static boolean isProtected(Level level, BlockPos blockPos, BlockState blockState, @Nullable FilterItemStack filter, @Nullable Map<Item, Boolean> filterMatches, boolean shouldBreakContainers) {
-        boolean matchesFilter = false;
-        if (filter != null && filterMatches != null) {
-            Item blockItem = blockState.getBlock().asItem();
-            matchesFilter = filterMatches.computeIfAbsent(blockItem, filterItem -> filter.test(level, new ItemStack(filterItem)));
-        }
+    static boolean isProtected(Level level, BlockPos blockPos, BlockState blockState, @Nullable FilterItemStack filter, @Nullable Map<BlockState, Boolean> filterMatches, boolean shouldBreakContainers) {
+        boolean matchesFilter = filter != null && filterMatches != null && filterMatches.computeIfAbsent(blockState, state -> {
+            if (!(state.getBlock() instanceof LiquidBlock) && filter.test(level, new ItemStack(state.getBlock().asItem()))) {
+                return true;
+            }
+
+            FluidState fluidState = state.getFluidState();
+            if (fluidState.isEmpty()) {
+                return false;
+            }
+
+            Fluid fluid = fluidState.getType();
+            if (fluid instanceof FlowingFluid flowingFluid) {
+                fluid = flowingFluid.getSource();
+            }
+
+            return filter.test(level, new FluidStack(fluid, FluidType.BUCKET_VOLUME));
+        });
         return matchesFilter || !shouldBreakContainers && level.getCapability(ItemHandler.BLOCK, blockPos, null) != null;
     }
 
     private static @UnmodifiableView Set<BlockPos> immutableView(Set<BlockPos> positions) {
         return Collections.unmodifiableSet(positions);
+    }
+
+    boolean isValidBaseTarget() {
+        return destructionPos.contains(basePos);
+    }
+
+    boolean isEmpty() {
+        return destructionPos.isEmpty();
     }
 }

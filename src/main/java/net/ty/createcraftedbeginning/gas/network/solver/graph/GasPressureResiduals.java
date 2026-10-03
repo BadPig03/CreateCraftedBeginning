@@ -29,6 +29,10 @@ public final class GasPressureResiduals {
         edges = graph.edges;
     }
 
+    private static double linearizedFlowScale(EdgeFlow linearized, double fromPressurePa, double toPressurePa) {
+        return Math.abs(linearized.constantFlowRate()) + linearized.fromPressureConductance() * Math.abs(fromPressurePa) + linearized.toPressureConductance() * Math.abs(toPressurePa);
+    }
+
     @Internal
     public double nonlinearResidualNorm(EdgeFlow[] flows) {
         double[] residuals = clearResiduals();
@@ -39,7 +43,7 @@ public final class GasPressureResiduals {
         }
         double norm = 0;
         for (int nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++) {
-            if (!(!nodes.get(nodeIndex).fixed)) {
+            if (nodes.get(nodeIndex).fixed) {
                 continue;
             }
 
@@ -139,10 +143,6 @@ public final class GasPressureResiduals {
             maxFlowScale = Math.max(maxFlowScale, flowScale);
         }
         return Math.max(FLOW_RESIDUAL_ABSOLUTE_TOLERANCE, maxFlowScale * FLOW_RESIDUAL_RELATIVE_TOLERANCE);
-    }
-
-    private static double linearizedFlowScale(EdgeFlow linearized, double fromPressurePa, double toPressurePa) {
-        return Math.abs(linearized.constantFlowRate()) + linearized.fromPressureConductance() * Math.abs(fromPressurePa) + linearized.toPressureConductance() * Math.abs(toPressurePa);
     }
 
     private double[] clearResiduals() {

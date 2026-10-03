@@ -59,82 +59,6 @@ public class BalloonItem extends PackageItem {
         BalloonStyles.REGULAR_BALLOONS.add(this);
     }
 
-    @Override
-    public String getDescriptionId() {
-        if (rare) {
-            return "item." + CCBAPI.MOD_ID + ".rare_balloon";
-        }
-
-        return "item." + CCBAPI.MOD_ID + ".balloon";
-    }
-
-    @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, context, tooltip, flag);
-        GasStack gas = getGas(stack);
-        if (gas.isEmpty()) {
-            return;
-        }
-
-        tooltip.add(CCBLang.gasName(gas.getGasType()).add(CCBLang.text(" ").add(GasUnitFormat.amount(gas.getAmount()))).style(ChatFormatting.GRAY).component());
-    }
-
-    @Override
-    public InteractionResult useOn(UseOnContext context) {
-        Player player = context.getPlayer();
-        Level level = context.getLevel();
-        if (player != null && player.isShiftKeyDown()) {
-            return open(level, player, context.getHand()).getResult();
-        }
-
-        ItemStack balloon = context.getItemInHand();
-        Vec3 clickPoint = context.getClickLocation();
-        float scale = BalloonWorldPhysics.of(balloon, level, BlockPos.containing(clickPoint)).linearScale();
-        float height = getHeight(balloon) * scale;
-        float radius = getWidth(balloon) * scale / 2;
-        Vec3 point = placementPoint(context, height, radius);
-        float finalScale = BalloonWorldPhysics.of(balloon, level, BlockPos.containing(point)).linearScale();
-        if (scale != finalScale) {
-            height = getHeight(balloon) * finalScale;
-            radius = getWidth(balloon) * finalScale / 2;
-            point = placementPoint(context, height, radius);
-        }
-
-        AABB scanBox = new AABB(point, point).inflate(radius, 0, radius).expandTowards(0, height, 0);
-        if (!level.getEntities(AllEntityTypes.PACKAGE.get(), scanBox, entity -> true).isEmpty()) {
-            return InteractionResult.PASS;
-        }
-
-        PackageEntity entity = new PackageEntity(level, point.x, point.y, point.z);
-        entity.setBox(balloon.copy());
-        level.addFreshEntity(entity);
-        awardRelease(player, level, balloon);
-        balloon.shrink(1);
-        return InteractionResult.SUCCESS;
-    }
-
-    @Override
-    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int ticks) {
-        ItemStack released = stack.copy();
-        int duration = getUseDuration(stack, entity) - ticks;
-        super.releaseUsing(stack, level, entity, ticks);
-        if (!(entity instanceof Player player) || duration < 0 || getPackageVelocity(duration) < MIN_RELEASE_VELOCITY) {
-            return;
-        }
-
-        awardRelease(player, level, released);
-    }
-
-    @Override
-    public InteractionResultHolder<ItemStack> open(Level level, Player player, InteractionHand hand) {
-        ItemStack heldStack = player.getItemInHand(hand);
-        if (isBalloon(heldStack)) {
-            return InteractionResultHolder.fail(heldStack);
-        }
-
-        return super.open(level, player, hand);
-    }
-
     public static boolean containsGas(ItemStack stack) {
         return !getGas(stack).isEmpty();
     }
@@ -215,5 +139,81 @@ public class BalloonItem extends PackageItem {
         }
 
         return point;
+    }
+
+    @Override
+    public String getDescriptionId() {
+        if (rare) {
+            return "item." + CCBAPI.MOD_ID + ".rare_balloon";
+        }
+
+        return "item." + CCBAPI.MOD_ID + ".balloon";
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, context, tooltip, flag);
+        GasStack gas = getGas(stack);
+        if (gas.isEmpty()) {
+            return;
+        }
+
+        tooltip.add(CCBLang.gasName(gas.getGasType()).add(CCBLang.text(" ").add(GasUnitFormat.amount(gas.getAmount()))).style(ChatFormatting.GRAY).component());
+    }
+
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        Player player = context.getPlayer();
+        Level level = context.getLevel();
+        if (player != null && player.isShiftKeyDown()) {
+            return open(level, player, context.getHand()).getResult();
+        }
+
+        ItemStack balloon = context.getItemInHand();
+        Vec3 clickPoint = context.getClickLocation();
+        float scale = BalloonWorldPhysics.of(balloon, level, BlockPos.containing(clickPoint)).linearScale();
+        float height = getHeight(balloon) * scale;
+        float radius = getWidth(balloon) * scale / 2;
+        Vec3 point = placementPoint(context, height, radius);
+        float finalScale = BalloonWorldPhysics.of(balloon, level, BlockPos.containing(point)).linearScale();
+        if (scale != finalScale) {
+            height = getHeight(balloon) * finalScale;
+            radius = getWidth(balloon) * finalScale / 2;
+            point = placementPoint(context, height, radius);
+        }
+
+        AABB scanBox = new AABB(point, point).inflate(radius, 0, radius).expandTowards(0, height, 0);
+        if (!level.getEntities(AllEntityTypes.PACKAGE.get(), scanBox, entity -> true).isEmpty()) {
+            return InteractionResult.PASS;
+        }
+
+        PackageEntity entity = new PackageEntity(level, point.x, point.y, point.z);
+        entity.setBox(balloon.copy());
+        level.addFreshEntity(entity);
+        awardRelease(player, level, balloon);
+        balloon.shrink(1);
+        return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int ticks) {
+        ItemStack released = stack.copy();
+        int duration = getUseDuration(stack, entity) - ticks;
+        super.releaseUsing(stack, level, entity, ticks);
+        if (!(entity instanceof Player player) || duration < 0 || getPackageVelocity(duration) < MIN_RELEASE_VELOCITY) {
+            return;
+        }
+
+        awardRelease(player, level, released);
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> open(Level level, Player player, InteractionHand hand) {
+        ItemStack heldStack = player.getItemInHand(hand);
+        if (isBalloon(heldStack)) {
+            return InteractionResultHolder.fail(heldStack);
+        }
+
+        return super.open(level, player, hand);
     }
 }

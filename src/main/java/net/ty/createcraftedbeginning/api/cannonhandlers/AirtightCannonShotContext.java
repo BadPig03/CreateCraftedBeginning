@@ -45,11 +45,11 @@ public record AirtightCannonShotContext(Entity projectile, @Nullable Entity owne
         return petOwner != null && (petOwner == owner || owner.isAlliedTo(petOwner) || petOwner.isAlliedTo(owner));
     }
 
-    public boolean isFriendlyTarget(Entity target) {
-        return isFriendlyTarget(owner, target);
-    }
-
     public static boolean isProtectedTarget(@Nullable Entity owner, Entity target) {
         return owner != null && (target == owner || isFriendlyTarget(owner, target));
+    }
+
+    public boolean isFriendlyTarget(Entity target) {
+        return isFriendlyTarget(owner, target);
     }
 }

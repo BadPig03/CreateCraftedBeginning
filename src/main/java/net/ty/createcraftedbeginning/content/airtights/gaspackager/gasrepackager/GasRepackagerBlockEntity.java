@@ -31,6 +31,10 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
         controller = new GasRepackagerController(this);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.GAS_REPACKAGER.get(), (repackager, context) -> repackager.inventory);
+    }
+
     @Override
     public boolean unwrapBox(ItemStack box, boolean simulate) {
         return PackageItem.isPackage(box) && super.unwrapBox(box, simulate);
@@ -39,10 +43,6 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
     @Override
     protected void attemptToRepackage(IItemHandler targetInv) {
         controller.attemptToRepackage(targetInv);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.GAS_REPACKAGER.get(), (repackager, context) -> repackager.inventory);
     }
 
     void attemptVanillaItemRepackage(IItemHandler targetInv) {

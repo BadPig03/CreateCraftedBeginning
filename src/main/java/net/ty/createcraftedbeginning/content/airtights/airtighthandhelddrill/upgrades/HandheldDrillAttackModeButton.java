@@ -23,7 +23,7 @@ public enum HandheldDrillAttackModeButton implements AirtightUpgrade {
     INSTANCE;
 
     private static final ResourceLocation ID = CCBAPI.asResource("handheld_drill_attack_mode");
-    private static final Couple<Integer> OFFSET = Couple.create(94, 114);
+    private static final Couple<Integer> OFFSET = Couple.create(112, 114);
 
     @Override
     public List<Component> getComponents(Player player, ItemStack item) {

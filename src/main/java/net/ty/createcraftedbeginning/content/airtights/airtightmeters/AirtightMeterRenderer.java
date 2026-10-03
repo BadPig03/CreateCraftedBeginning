@@ -24,19 +24,6 @@ public class AirtightMeterRenderer<T extends AbstractAirtightMeterBlockEntity> e
         super(context);
     }
 
-    @Override
-    protected void renderSafe(T blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        BlockState state = blockEntity.getBlockState();
-        float angle = blockEntity.getNeedleAngle(partialTicks) * Mth.DEG_TO_RAD;
-        for (Direction direction : Iterate.horizontalDirections) {
-            if (!AbstractAirtightMeterBlock.isDisplayFace(state, direction)) {
-                continue;
-            }
-
-            renderNeedle(direction, angle, state, poseStack, buffer, light, overlay);
-        }
-    }
-
     private static void renderNeedle(Direction face, float angle, BlockState state, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         SuperByteBuffer needle = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_METER_NEEDLE, state);
 
@@ -59,5 +46,18 @@ public class AirtightMeterRenderer<T extends AbstractAirtightMeterBlockEntity> e
             case WEST -> 90;
             default -> throw new IllegalArgumentException("Airtight meter needle face must be horizontal; got " + face + '.');
         };
+    }
+
+    @Override
+    protected void renderSafe(T blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        BlockState state = blockEntity.getBlockState();
+        float angle = blockEntity.getNeedleAngle(partialTicks) * Mth.DEG_TO_RAD;
+        for (Direction direction : Iterate.horizontalDirections) {
+            if (!AbstractAirtightMeterBlock.isDisplayFace(state, direction)) {
+                continue;
+            }
+
+            renderNeedle(direction, angle, state, poseStack, buffer, light, overlay);
+        }
     }
 }

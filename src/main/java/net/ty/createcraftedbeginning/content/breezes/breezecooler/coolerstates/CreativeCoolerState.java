@@ -21,6 +21,14 @@ public class CreativeCoolerState extends BaseCoolerState {
         creativeType = coolantType;
     }
 
+    @Contract(pure = true)
+    public static CoolantType getNextCoolantType(CoolantType coolantType) {
+        return switch (coolantType) {
+            case NORMAL -> CoolantType.NONE;
+            case NONE -> CoolantType.NORMAL;
+        };
+    }
+
     @Override
     public FrostLevel getFrostLevel() {
         return switch (creativeType) {
@@ -37,13 +45,5 @@ public class CreativeCoolerState extends BaseCoolerState {
     @Override
     public boolean onSnowballImpact(BreezeCoolerBlockEntity cooler) {
         return false;
-    }
-
-    @Contract(pure = true)
-    public static CoolantType getNextCoolantType(CoolantType coolantType) {
-        return switch (coolantType) {
-            case NORMAL -> CoolantType.NONE;
-            case NONE -> CoolantType.NORMAL;
-        };
     }
 }

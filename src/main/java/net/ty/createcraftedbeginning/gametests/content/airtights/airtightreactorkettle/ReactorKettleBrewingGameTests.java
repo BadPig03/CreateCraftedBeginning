@@ -6,6 +6,7 @@ import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.content.kinetics.mixer.MixingRecipe;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
+import com.simibubi.create.foundation.item.SmartInventory;
 import net.createmod.catnip.config.ConfigBase.ConfigBool;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -26,6 +27,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -199,9 +201,13 @@ public final class ReactorKettleBrewingGameTests {
                         temperature[0] = 3;
                         mixing.set(stage < 4);
                         brewing.set(stage != 3 && stage != 5);
-                        kettle.getInputInventory().setStackInSlot(0, new ItemStack(Items.NETHER_WART));
-                        kettle.getInputInventory().setStackInSlot(1, new ItemStack(Items.SUGAR));
-                        kettle.getInputFluidTank().getCapability().fill(new FluidStack(Fluids.WATER, 1000), FluidAction.EXECUTE);
+                        SmartInventory inputInventory = kettle.getInputInventory();
+                        SmartInventory outputInventory = kettle.getOutputInventory();
+                        IFluidHandler inputFluids = kettle.getInputFluidTank().getCapability();
+                        IFluidHandler outputFluids = kettle.getOutputFluidTank().getCapability();
+                        inputInventory.setStackInSlot(0, new ItemStack(Items.NETHER_WART));
+                        inputInventory.setStackInSlot(1, new ItemStack(Items.SUGAR));
+                        inputFluids.fill(new FluidStack(Fluids.WATER, 1000), FluidAction.EXECUTE);
                         AirtightReactorKettleController controller = new AirtightReactorKettleController(kettle, new AirtightReactorKettleAnimationState(kettle));
                         controller.updateReactorKettle();
                         for (int tick = 0; tick < 22; tick++) {
@@ -209,14 +215,14 @@ public final class ReactorKettleBrewingGameTests {
                         }
                         boolean brewed = stage == 2 || stage == 4;
                         boolean crafted = stage == 3 || stage == 5;
-                        FluidStack outputFluid = kettle.getOutputFluidTank().getCapability().getFluidInTank(0);
+                        FluidStack outputFluid = outputFluids.getFluidInTank(0);
                         if (brewed) {
                             FluidStack expected = PotionFluidHandler.getFluidFromPotion(new PotionContents(Potions.AWKWARD), BottleType.REGULAR, 1000);
                             helper.assertTrue(FluidStack.isSameFluidSameComponents(outputFluid, expected), "Wrong brewing output: " + scenario);
                             helper.assertValueEqual(outputFluid.getAmount(), 1000, "brewing output amount: " + scenario);
-                            helper.assertTrue(kettle.getOutputInventory().isEmpty(), "Brewing unexpectedly produced items: " + scenario);
-                            helper.assertTrue(kettle.getInputInventory().getStackInSlot(0).isEmpty(), "Brewing did not consume nether wart: " + scenario);
-                            helper.assertTrue(ItemStack.matches(kettle.getInputInventory().getStackInSlot(1), new ItemStack(Items.SUGAR)), "Brewing consumed unrelated sugar: " + scenario);
+                            helper.assertTrue(outputInventory.isEmpty(), "Brewing unexpectedly produced items: " + scenario);
+                            helper.assertTrue(inputInventory.getStackInSlot(0).isEmpty(), "Brewing did not consume nether wart: " + scenario);
+                            helper.assertTrue(ItemStack.matches(inputInventory.getStackInSlot(1), new ItemStack(Items.SUGAR)), "Brewing consumed unrelated sugar: " + scenario);
                         }
                         else {
                             ItemStack expected = switch (stage) {
@@ -224,15 +230,15 @@ public final class ReactorKettleBrewingGameTests {
                                 case 1 -> new ItemStack(Items.DIAMOND);
                                 default -> new ItemStack(Items.GOLD_INGOT);
                             };
-                            helper.assertTrue(ItemStack.matches(kettle.getOutputInventory().getStackInSlot(0), expected), "Recipe priority or zero-duration processing changed: " + scenario);
+                            helper.assertTrue(ItemStack.matches(outputInventory.getStackInSlot(0), expected), "Recipe priority or zero-duration processing changed: " + scenario);
                             helper.assertTrue(outputFluid.isEmpty(), "Item recipe unexpectedly produced fluid: " + scenario);
-                            helper.assertTrue(kettle.getInputInventory().isEmpty(), "Selected recipe did not consume its inputs: " + scenario);
+                            helper.assertTrue(inputInventory.isEmpty(), "Selected recipe did not consume its inputs: " + scenario);
                         }
-                        helper.assertValueEqual(kettle.getInputFluidTank().getCapability().getFluidInTank(0).getAmount(), crafted ? 1000 : 0, "remaining input fluid: " + scenario);
-                        kettle.getInputInventory().setStackInSlot(1, ItemStack.EMPTY);
-                        kettle.getInputFluidTank().getCapability().drain(1000, FluidAction.EXECUTE);
-                        kettle.getOutputInventory().setStackInSlot(0, ItemStack.EMPTY);
-                        kettle.getOutputFluidTank().getCapability().drain(1000, FluidAction.EXECUTE);
+                        helper.assertValueEqual(inputFluids.getFluidInTank(0).getAmount(), crafted ? 1000 : 0, "remaining input fluid: " + scenario);
+                        inputInventory.setStackInSlot(1, ItemStack.EMPTY);
+                        inputFluids.drain(1000, FluidAction.EXECUTE);
+                        outputInventory.setStackInSlot(0, ItemStack.EMPTY);
+                        outputFluids.drain(1000, FluidAction.EXECUTE);
                     }
                 }
             }

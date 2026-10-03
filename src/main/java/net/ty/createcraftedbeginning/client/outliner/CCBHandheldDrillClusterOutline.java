@@ -64,6 +64,34 @@ public class CCBHandheldDrillClusterOutline extends Outline {
         anchoredToSubLevel = level != null && !cluster.isEmpty() && SubLevelBridge.resolve(level, Vec3.atCenterOf(cluster.anchor)).inSubLevel();
     }
 
+    protected static Vec3 axisVector(Axis axis) {
+        return switch (axis) {
+            case X -> new Vec3(1, 0, 0);
+            case Y -> new Vec3(0, 1, 0);
+            case Z -> new Vec3(0, 0, 1);
+        };
+    }
+
+    protected static Vec3 normalizeOrFallback(Vec3 vector, Vec3 fallback) {
+        double lengthSqr = vector.lengthSqr();
+        if (lengthSqr <= EPSILON) {
+            return fallback;
+        }
+
+        return vector.scale(Mth.invSqrt(lengthSqr));
+    }
+
+    protected static Vector3f setPosition(Vector3f target, Vec3 position) {
+        return target.set((float) position.x, (float) position.y, (float) position.z);
+    }
+
+    protected static Matrix4f createLinearTransformMatrix(CoordinateTransform transform, Vec3 localOrigin, Vec3 worldOrigin) {
+        Vec3 axisX = transform.transformPosition(localOrigin.add(1, 0, 0)).subtract(worldOrigin);
+        Vec3 axisY = transform.transformPosition(localOrigin.add(0, 1, 0)).subtract(worldOrigin);
+        Vec3 axisZ = transform.transformPosition(localOrigin.add(0, 0, 1)).subtract(worldOrigin);
+        return new Matrix4f((float) axisX.x, (float) axisX.y, (float) axisX.z, 0, (float) axisY.x, (float) axisY.y, (float) axisY.z, 0, (float) axisZ.x, (float) axisZ.y, (float) axisZ.z, 0, 0, 0, 0, 1);
+    }
+
     @Override
     public void render(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, float partialTicks) {
         params.loadColor(colorTemp);
@@ -92,34 +120,6 @@ public class CCBHandheldDrillClusterOutline extends Outline {
     public CCBHandheldDrillClusterOutline disableLineNormals() {
         disableLineNormals = true;
         return this;
-    }
-
-    protected static Vec3 axisVector(Axis axis) {
-        return switch (axis) {
-            case X -> new Vec3(1, 0, 0);
-            case Y -> new Vec3(0, 1, 0);
-            case Z -> new Vec3(0, 0, 1);
-        };
-    }
-
-    protected static Vec3 normalizeOrFallback(Vec3 vector, Vec3 fallback) {
-        double lengthSqr = vector.lengthSqr();
-        if (lengthSqr <= EPSILON) {
-            return fallback;
-        }
-
-        return vector.scale(Mth.invSqrt(lengthSqr));
-    }
-
-    protected static Vector3f setPosition(Vector3f target, Vec3 position) {
-        return target.set((float) position.x, (float) position.y, (float) position.z);
-    }
-
-    protected static Matrix4f createLinearTransformMatrix(CoordinateTransform transform, Vec3 localOrigin, Vec3 worldOrigin) {
-        Vec3 axisX = transform.transformPosition(localOrigin.add(1, 0, 0)).subtract(worldOrigin);
-        Vec3 axisY = transform.transformPosition(localOrigin.add(0, 1, 0)).subtract(worldOrigin);
-        Vec3 axisZ = transform.transformPosition(localOrigin.add(0, 0, 1)).subtract(worldOrigin);
-        return new Matrix4f((float) axisX.x, (float) axisX.y, (float) axisX.z, 0, (float) axisY.x, (float) axisY.y, (float) axisY.z, 0, (float) axisZ.x, (float) axisZ.y, (float) axisZ.z, 0, 0, 0, 0, 1);
     }
 
     protected void renderFaces(PoseStack poseStack, SuperRenderTypeBuffer buffer, Vec3 camera, Vector4f color, int lightmap) {

@@ -33,6 +33,21 @@ public final class GasPackagerRequestProcessor {
         this.handler = handler;
     }
 
+    private static void addGasDeduction(List<Deduction> deductions, ItemStack token, int amount) {
+        for (int deductionIndex = 0; deductionIndex < deductions.size(); deductionIndex++) {
+            Deduction existing = deductions.get(deductionIndex);
+            if (!ItemStack.isSameItemSameComponents(existing.token(), token)) {
+                continue;
+            }
+
+            int mergedAmount = (int) Mth.clamp((long) existing.amount() + amount, 0L, BigItemStack.INF);
+            deductions.set(deductionIndex, new Deduction(existing.token(), mergedAmount));
+            return;
+        }
+
+        deductions.add(new Deduction(token.copyWithCount(1), amount));
+    }
+
     @Internal
     public @Nullable Result process(long maxAmount) {
         while (!queuedRequests.isEmpty() && !GasPackagerRequestPlanner.isValidGasRequest(queuedRequests.getFirst())) {
@@ -56,21 +71,6 @@ public final class GasPackagerRequestProcessor {
         }
 
         return new Result(packedBalloon, commitResult.deductions());
-    }
-
-    private static void addGasDeduction(List<Deduction> deductions, ItemStack token, int amount) {
-        for (int deductionIndex = 0; deductionIndex < deductions.size(); deductionIndex++) {
-            Deduction existing = deductions.get(deductionIndex);
-            if (!ItemStack.isSameItemSameComponents(existing.token(), token)) {
-                continue;
-            }
-
-            int mergedAmount = (int) Mth.clamp((long) existing.amount() + amount, 0L, BigItemStack.INF);
-            deductions.set(deductionIndex, new Deduction(existing.token(), mergedAmount));
-            return;
-        }
-
-        deductions.add(new Deduction(token.copyWithCount(1), amount));
     }
 
     private boolean propagatePackageCounter(PackagingRequest completed, int nextPackageIndex) {

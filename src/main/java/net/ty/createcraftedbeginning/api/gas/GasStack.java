@@ -139,6 +139,31 @@ public final class GasStack implements MutableDataComponentHolder {
         components = new PatchedDataComponentMap(DataComponentMap.EMPTY);
     }
 
+    public static GasStack parseOptional(Provider lookupProvider, CompoundTag compoundTag) {
+        if (compoundTag.isEmpty()) {
+            return EMPTY;
+        }
+
+        return parse(lookupProvider, compoundTag).orElse(EMPTY);
+    }
+
+    public static Optional<GasStack> parse(Provider lookupProvider, Tag tag) {
+        return CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CCBAPI.LOGGER.error("Failed to deserialize GasStack: {}", error));
+    }
+
+    public static boolean matches(GasStack first, GasStack second) {
+        return first == second || first.getAmount() == second.getAmount() && isSameGasSameComponents(first, second);
+    }
+
+    public static boolean isSameGasSameComponents(GasStack first, GasStack second) {
+        return first.is(second.getGasType()) && (first.isEmpty() && second.isEmpty() || Objects.equals(first.components, second.components));
+    }
+
+    @SuppressWarnings("unused")
+    public static boolean isSameGas(GasStack first, GasStack second) {
+        return first.is(second.getGasHolder());
+    }
+
     @Override
     public PatchedDataComponentMap getComponents() {
         if (isEmpty()) {
@@ -217,31 +242,6 @@ public final class GasStack implements MutableDataComponentHolder {
     @Override
     public String toString() {
         return String.valueOf(getAmount()) + ' ' + getGasType();
-    }
-
-    public static GasStack parseOptional(Provider lookupProvider, CompoundTag compoundTag) {
-        if (compoundTag.isEmpty()) {
-            return EMPTY;
-        }
-
-        return parse(lookupProvider, compoundTag).orElse(EMPTY);
-    }
-
-    public static Optional<GasStack> parse(Provider lookupProvider, Tag tag) {
-        return CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial(error -> CCBAPI.LOGGER.error("Failed to deserialize GasStack: {}", error));
-    }
-
-    public static boolean matches(GasStack first, GasStack second) {
-        return first == second || first.getAmount() == second.getAmount() && isSameGasSameComponents(first, second);
-    }
-
-    public static boolean isSameGasSameComponents(GasStack first, GasStack second) {
-        return first.is(second.getGasType()) && (first.isEmpty() && second.isEmpty() || Objects.equals(first.components, second.components));
-    }
-
-    @SuppressWarnings("unused")
-    public static boolean isSameGas(GasStack first, GasStack second) {
-        return first.is(second.getGasHolder());
     }
 
     public Holder<Gas> getGasHolder() {
@@ -375,7 +375,7 @@ public final class GasStack implements MutableDataComponentHolder {
     }
 
     public Component getHoverName() {
-        return Component.translatable(getGasType().getTranslationKey());
+        return getGasType().getName(this);
     }
 
     public String getTranslationKey() {
@@ -383,6 +383,6 @@ public final class GasStack implements MutableDataComponentHolder {
     }
 
     public int getHint() {
-        return getGasType().getTint();
+        return getGasType().getTint(this);
     }
 }

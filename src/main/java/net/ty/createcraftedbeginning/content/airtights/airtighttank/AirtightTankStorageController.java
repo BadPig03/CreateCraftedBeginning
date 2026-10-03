@@ -19,6 +19,15 @@ final class AirtightTankStorageController {
         this.owner = owner;
     }
 
+    private static GasTankLimits limitsForBlocks(GasTank tank, int blockCount) {
+        if (blockCount < 0) {
+            throw new IllegalArgumentException("Airtight tank block count must be non-negative; got " + blockCount + '.');
+        }
+
+        long volume = Math.multiplyExact(blockCount, AirtightTankBlockEntity.getVolumePerBlock());
+        return new GasTankLimits(volume, tank.getMaxPressurePa());
+    }
+
     void resizeToBlocks(int blockCount) {
         GasTank tank = owner.getTankInventory();
         tank.tryReconfigure(limitsForBlocks(tank, blockCount)).requireAccepted();
@@ -89,14 +98,5 @@ final class AirtightTankStorageController {
         }
 
         state.shrink(amount);
-    }
-
-    private static GasTankLimits limitsForBlocks(GasTank tank, int blockCount) {
-        if (blockCount < 0) {
-            throw new IllegalArgumentException("Airtight tank block count must be non-negative; got " + blockCount + '.');
-        }
-
-        long volume = Math.multiplyExact(blockCount, AirtightTankBlockEntity.getVolumePerBlock());
-        return new GasTankLimits(volume, tank.getMaxPressurePa());
     }
 }

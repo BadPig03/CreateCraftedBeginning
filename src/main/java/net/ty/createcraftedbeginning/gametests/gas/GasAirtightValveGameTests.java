@@ -539,10 +539,6 @@ public final class GasAirtightValveGameTests {
             motor.generatedSpeed.setValue(0);
         }
 
-        private static boolean sameSign(float first, float second) {
-            return first > 0 == second > 0;
-        }
-
         private boolean calibrate() {
             if (!calibrationStarted) {
                 motor.generatedSpeed.setValue(TEST_MOTOR_SPEED);
@@ -556,7 +552,7 @@ public final class GasAirtightValveGameTests {
                 return false;
             }
 
-            motorToValveSign = sameSign(motorSpeed, valveSpeed) ? 1 : -1;
+            motorToValveSign = motorSpeed > 0 == valveSpeed > 0 ? 1 : -1;
             return true;
         }
 

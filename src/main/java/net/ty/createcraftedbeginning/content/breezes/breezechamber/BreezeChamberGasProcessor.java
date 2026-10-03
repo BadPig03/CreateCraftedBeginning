@@ -51,6 +51,18 @@ final class BreezeChamberGasProcessor {
         planner = new BreezeChamberConversionPlanner(chamber);
     }
 
+    private static boolean isControllerActive(ChamberGasTank chamberTank) {
+        return chamberTank instanceof AirtightTankBlockEntity tankController && tankController.getCore().isActive();
+    }
+
+    private static ChargerType chargerTypeFor(WindLevel windLevel) {
+        return switch (windLevel) {
+            case GALE -> ChargerType.NORMAL;
+            case ILL -> ChargerType.BAD;
+            case CALM -> ChargerType.NONE;
+        };
+    }
+
     boolean isControllerActive() {
         ChamberGasTank chamberTank = getTank();
         return chamberTank != null && isControllerActive(chamberTank);
@@ -199,18 +211,6 @@ final class BreezeChamberGasProcessor {
     void discardProcessingProgress() {
         resetPendingProcessing();
         processingCredit = 0;
-    }
-
-    private static boolean isControllerActive(ChamberGasTank chamberTank) {
-        return chamberTank instanceof AirtightTankBlockEntity tankController && tankController.getCore().isActive();
-    }
-
-    private static ChargerType chargerTypeFor(WindLevel windLevel) {
-        return switch (windLevel) {
-            case GALE -> ChargerType.NORMAL;
-            case ILL -> ChargerType.BAD;
-            case CALM -> ChargerType.NONE;
-        };
     }
 
     private void resetPendingProcessing() {

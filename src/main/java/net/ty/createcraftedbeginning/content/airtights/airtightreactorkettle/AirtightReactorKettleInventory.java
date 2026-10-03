@@ -21,26 +21,6 @@ public class AirtightReactorKettleInventory extends SmartInventory {
         this.blockEntity = blockEntity;
     }
 
-    @Override
-    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-        if (!isInsertionAllowed(this, slot, stack)) {
-            return stack;
-        }
-
-        return super.insertItem(slot, stack, simulate);
-    }
-
-    @Override
-    public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        ItemStack extractedStack = super.extractItem(slot, amount, simulate);
-        if (simulate || extractedStack.isEmpty()) {
-            return extractedStack;
-        }
-
-        blockEntity.notifyContentsChanged();
-        return extractedStack;
-    }
-
     static IItemHandlerModifiable createSimulation(int slots) {
         return new ItemStackHandler(slots) {
             @Override
@@ -74,5 +54,25 @@ public class AirtightReactorKettleInventory extends SmartInventory {
             firstFreeSlot = candidateSlot;
         }
         return !inventory.getStackInSlot(slot).isEmpty() || firstFreeSlot == slot;
+    }
+
+    @Override
+    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+        if (!isInsertionAllowed(this, slot, stack)) {
+            return stack;
+        }
+
+        return super.insertItem(slot, stack, simulate);
+    }
+
+    @Override
+    public ItemStack extractItem(int slot, int amount, boolean simulate) {
+        ItemStack extractedStack = super.extractItem(slot, amount, simulate);
+        if (simulate || extractedStack.isEmpty()) {
+            return extractedStack;
+        }
+
+        blockEntity.notifyContentsChanged();
+        return extractedStack;
     }
 }

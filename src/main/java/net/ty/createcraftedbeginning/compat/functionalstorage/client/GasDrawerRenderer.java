@@ -41,27 +41,6 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
     public GasDrawerRenderer(Context ignoredContext) {
     }
 
-    @Override
-    public void render(GasDrawerBlockEntity drawer, float partialTick, PoseStack poseStack, MultiBufferSource buffers, int packedLight, int packedOverlay) {
-        Level level = drawer.getLevel();
-        if (level == null) {
-            return;
-        }
-
-        poseStack.pushPose();
-        applyDrawerOrientation(drawer, poseStack);
-        Direction drawerFacing = drawer.getFacingDirection();
-        packedLight = LevelRenderer.getLightColor(level, drawer.getBlockPos().relative(drawerFacing));
-        renderSlots(drawer, poseStack, buffers, packedLight, packedOverlay);
-        renderUpgrades(drawer, poseStack, buffers, packedLight, packedOverlay);
-        poseStack.popPose();
-    }
-
-    @Override
-    public int getViewDistance() {
-        return FunctionalStorageClientConfig.DRAWER_RENDER_RANGE;
-    }
-
     public static void renderItemGas(PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, GasStack stack, DrawerOptions options, AABB bounds, boolean compact, boolean creative) {
         if (stack.isEmpty()) {
             return;
@@ -266,5 +245,26 @@ public final class GasDrawerRenderer implements BlockEntityRenderer<GasDrawerBlo
         }
 
         poseStack.mulPose(MathUtils.createTransformMatrix(new Vector3f(-1, 1, 0), new Vector3f(0, 0, 180), 1));
+    }
+
+    @Override
+    public void render(GasDrawerBlockEntity drawer, float partialTick, PoseStack poseStack, MultiBufferSource buffers, int packedLight, int packedOverlay) {
+        Level level = drawer.getLevel();
+        if (level == null) {
+            return;
+        }
+
+        poseStack.pushPose();
+        applyDrawerOrientation(drawer, poseStack);
+        Direction drawerFacing = drawer.getFacingDirection();
+        packedLight = LevelRenderer.getLightColor(level, drawer.getBlockPos().relative(drawerFacing));
+        renderSlots(drawer, poseStack, buffers, packedLight, packedOverlay);
+        renderUpgrades(drawer, poseStack, buffers, packedLight, packedOverlay);
+        poseStack.popPose();
+    }
+
+    @Override
+    public int getViewDistance() {
+        return FunctionalStorageClientConfig.DRAWER_RENDER_RANGE;
     }
 }

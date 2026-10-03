@@ -39,6 +39,16 @@ enum SpectralUpgrade implements TickingAirtightUpgrade {
     private static final int EFFECT_DURATION = 60;
     private static final int REFRESH_THRESHOLD = 20;
 
+    private static List<LivingEntity> getNearbyEntities(Player player) {
+        BlockPos origin = player.getOnPos();
+        AABB scanBounds = new AABB(origin).inflate(RADIUS);
+        return player.level().getEntitiesOfClass(LivingEntity.class, scanBounds, target -> isValidTarget(origin, target));
+    }
+
+    private static boolean isValidTarget(BlockPos origin, LivingEntity target) {
+        return !(target instanceof Player) && target.isAlive() && !target.isRemoved() && origin.closerToCenterThan(target.position(), RADIUS);
+    }
+
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
         return List.of(CCBLang.translateDirect("gui.gas_consumption.supply_require_only"));
@@ -123,15 +133,5 @@ enum SpectralUpgrade implements TickingAirtightUpgrade {
         }
 
         applyEffect(player);
-    }
-
-    private static List<LivingEntity> getNearbyEntities(Player player) {
-        BlockPos origin = player.getOnPos();
-        AABB scanBounds = new AABB(origin).inflate(RADIUS);
-        return player.level().getEntitiesOfClass(LivingEntity.class, scanBounds, target -> isValidTarget(origin, target));
-    }
-
-    private static boolean isValidTarget(BlockPos origin, LivingEntity target) {
-        return !(target instanceof Player) && target.isAlive() && !target.isRemoved() && origin.closerToCenterThan(target.position(), RADIUS);
     }
 }

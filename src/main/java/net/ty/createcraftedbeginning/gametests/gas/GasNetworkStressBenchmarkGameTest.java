@@ -35,6 +35,7 @@ import net.ty.createcraftedbeginning.gas.network.solver.GasSolverProfiler.Networ
 import net.ty.createcraftedbeginning.gas.storage.GasTank;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -79,7 +80,9 @@ public final class GasNetworkStressBenchmarkGameTest {
         private final List<ChunkPos> forced = new ArrayList<>();
         private final List<AirtightRegulatorPumpBlockEntity> regulators = new ArrayList<>();
         private final List<AirtightTankBlockEntity> finiteTanks = new ArrayList<>();
+        @Nullable
         private CreativeAirtightTankBlockEntity source;
+        @Nullable
         private Capture capture;
         private int scenario = -1;
         private int ticks;
@@ -90,6 +93,18 @@ public final class GasNetworkStressBenchmarkGameTest {
             this.helper = helper;
             level = helper.getLevel();
             origin = helper.absolutePos(new BlockPos(0, 1, 0)).offset(0, 0, 4096);
+        }
+
+        private static BlockState axis(Axis axis) {
+            return CCBBlocks.AIRTIGHT_PIPE_BLOCK.getDefaultState().setValue(RotatedPillarBlock.AXIS, axis);
+        }
+
+        private static BlockState encased(Direction... faces) {
+            BlockState state = CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK.getDefaultState();
+            for (Direction face : faces) {
+                state = state.setValue(PipeBlock.PROPERTY_BY_DIRECTION.get(face), true);
+            }
+            return state;
         }
 
         private void next() {
@@ -128,6 +143,10 @@ public final class GasNetworkStressBenchmarkGameTest {
                 return;
             }
 
+            if (capture == null) {
+                throw new NullPointerException("Expected an active gas solver capture for benchmark scenario '" + LABELS[scenario] + "'.");
+            }
+
             GasNetworkSimulator.simulateTick(level, firstPipe);
             ticks++;
             if (ticks == GasNetworkBenchmarkSupport.WARMUP_TICKS) {
@@ -139,7 +158,7 @@ public final class GasNetworkStressBenchmarkGameTest {
                 for (AirtightRegulatorPumpBlockEntity regulator : regulators) {
                     GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, regulator.getBlockPos());
                     if (behaviour == null) {
-                        continue;
+                        throw new NullPointerException("Expected regulator transport behaviour at " + regulator.getBlockPos() + '.');
                     }
 
                     long throughput = behaviour.getThroughputFlowRate();
@@ -247,18 +266,6 @@ public final class GasNetworkStressBenchmarkGameTest {
             tank.getTankInventory().setFixedPressurePa(pressure);
             tank.getTankInventory().setContainedGas(new GasStack(CCBGases.NATURAL_AIR.get(), 1));
             return tank;
-        }
-
-        private static BlockState axis(Axis axis) {
-            return CCBBlocks.AIRTIGHT_PIPE_BLOCK.getDefaultState().setValue(RotatedPillarBlock.AXIS, axis);
-        }
-
-        private static BlockState encased(Direction... faces) {
-            BlockState state = CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK.getDefaultState();
-            for (Direction face : faces) {
-                state = state.setValue(PipeBlock.PROPERTY_BY_DIRECTION.get(face), true);
-            }
-            return state;
         }
 
         private void pipe(BlockPos pos, BlockState state) {

@@ -70,16 +70,16 @@ public enum CCBPackets implements PacketTypeProvider {
         type = new PacketType<>(new Type<>(CCBAPI.asResource(name)), clazz, codec);
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T extends CustomPacketPayload> Type<T> getType() {
-        return (Type<T>) type.type();
-    }
-
     public static void register() {
         CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 7);
         Arrays.stream(values()).map(packet -> packet.type).forEach(packetRegistry::registerPacket);
         packetRegistry.registerAllPackets();
         GasReleaseHandlers.registerOutlineSender(GasAreaOutlinePacket::send);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends CustomPacketPayload> Type<T> getType() {
+        return (Type<T>) type.type();
     }
 }

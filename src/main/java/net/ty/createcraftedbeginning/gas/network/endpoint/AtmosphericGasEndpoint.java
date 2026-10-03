@@ -53,6 +53,12 @@ public final class AtmosphericGasEndpoint extends GasConnectionEndpoint {
         releaseState = new GasReleaseState();
     }
 
+    public static AtmosphericGasEndpoint read(CompoundTag endpointTag, Provider provider, BlockFace location) {
+        AtmosphericGasEndpoint endpoint = new AtmosphericGasEndpoint(location);
+        endpoint.releaseState = GasReleaseState.read(endpointTag, provider);
+        return endpoint;
+    }
+
     @Override
     public void bind(Level level, BlockEntity networkBlockEntity) {
         this.level = level;
@@ -61,12 +67,6 @@ public final class AtmosphericGasEndpoint extends GasConnectionEndpoint {
     @Override
     public ICapabilityProvider<GasHandler> getGasHandlerProvider() {
         return gasHandlerProvider;
-    }
-
-    public static AtmosphericGasEndpoint read(CompoundTag endpointTag, Provider provider, BlockFace location) {
-        AtmosphericGasEndpoint endpoint = new AtmosphericGasEndpoint(location);
-        endpoint.releaseState = GasReleaseState.read(endpointTag, provider);
-        return endpoint;
     }
 
     public AtmosphereState getAtmosphereState() {

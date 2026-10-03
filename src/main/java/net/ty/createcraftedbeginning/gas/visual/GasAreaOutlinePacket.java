@@ -21,6 +21,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public record GasAreaOutlinePacket(BlockPos effectPos, float inflation, int color) implements ClientboundPacketPayload {
     public static final StreamCodec<ByteBuf, GasAreaOutlinePacket> STREAM_CODEC = StreamCodec.composite(BlockPos.STREAM_CODEC, GasAreaOutlinePacket::effectPos, ByteBufCodecs.FLOAT, GasAreaOutlinePacket::inflation, ByteBufCodecs.VAR_INT, GasAreaOutlinePacket::color, GasAreaOutlinePacket::new);
 
+    public static void send(ServerLevel level, BlockPos effectPos, float inflation, int color) {
+        CatnipServices.NETWORK.sendToClientsAround(level, effectPos, 64, new GasAreaOutlinePacket(effectPos, inflation, color));
+    }
+
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
@@ -30,9 +34,5 @@ public record GasAreaOutlinePacket(BlockPos effectPos, float inflation, int colo
     @Override
     public PacketTypeProvider getTypeProvider() {
         return CCBPackets.GAS_AREA_OUTLINE;
-    }
-
-    public static void send(ServerLevel level, BlockPos effectPos, float inflation, int color) {
-        CatnipServices.NETWORK.sendToClientsAround(level, effectPos, 64, new GasAreaOutlinePacket(effectPos, inflation, color));
     }
 }

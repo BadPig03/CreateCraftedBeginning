@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.gametests.content.breezes.breezechamber;
 
+import net.createmod.catnip.config.ConfigBase.ConfigInt;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -9,6 +10,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberConversionPlanner;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberConversionPlanner.GasConversionPlan;
@@ -35,19 +37,27 @@ public final class BreezeChamberConversionGameTests {
         BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, CCBBlocks.BREEZE_CHAMBER_BLOCK.getDefaultState());
         BreezeChamberBlockEntity chamber = helper.getBlockEntity(pos);
-        if (chamber == null) {
-            throw new NullPointerException("Expected a breeze chamber at " + pos + '.');
-        }
-
         BreezeChamberConversionPlanner planner = new BreezeChamberConversionPlanner(chamber);
         GasTank output = chamber.getTankBehaviourInternal().getPrimaryHandler();
         long ambientPressure = AtmosphereStateResolver.resolvePressurePa(helper.getLevel(), helper.absolutePos(pos));
         long ambientAmount = GasPressure.amount(output.getVolume(), ambientPressure);
         int[] fillPercentages = {0, 25, 50, 75, 100};
-        int[] expectedRates = {2500, 1875, 1250, 625, 0};
-        for (int index = 0; index < fillPercentages.length; index++) {
-            output.tryReplaceContents(new GasStack(CCBGases.ENERGIZED_NATURAL_AIR.get(), ambientAmount * fillPercentages[index] / 100)).requireAccepted();
-            helper.assertValueEqual(planner.getProcessingAmount(1), expectedRates[index], "Conversion budget at output backpressure");
+        int[] processingRates = {5120, 2500};
+        int[][] expectedRates = {{5120, 3840, 2560, 1280, 0}, {2500, 1875, 1250, 625, 0}};
+        ConfigInt processingRate = CCBConfig.server().machines.breezeChamber.maxProcessingPerSecond;
+        int previousProcessingRate = processingRate.get();
+        try {
+            for (int rateIndex = 0; rateIndex < processingRates.length; rateIndex++) {
+                int configuredRate = processingRates[rateIndex];
+                processingRate.set(configuredRate);
+                for (int index = 0; index < fillPercentages.length; index++) {
+                    output.tryReplaceContents(new GasStack(CCBGases.ENERGIZED_NATURAL_AIR.get(), ambientAmount * fillPercentages[index] / 100)).requireAccepted();
+                    helper.assertValueEqual(planner.getProcessingAmount(1), expectedRates[rateIndex][index], "Conversion budget at " + fillPercentages[index] + "% output backpressure with " + configuredRate + " GU/s limit");
+                }
+            }
+        }
+        finally {
+            processingRate.set(previousProcessingRate);
         }
         helper.succeed();
     }

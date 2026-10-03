@@ -18,6 +18,10 @@ public class HorizontalAirtightTankBlockEntity extends AirtightTankBlockEntity {
         super(type, pos, state);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
+    }
+
     @Override
     public Axis getMainConnectionAxis() {
         BlockState tankState = getBlockState();
@@ -26,9 +30,5 @@ public class HorizontalAirtightTankBlockEntity extends AirtightTankBlockEntity {
         }
 
         return tankState.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), (tank, ignoredDirection) -> tank.getCapability());
     }
 }

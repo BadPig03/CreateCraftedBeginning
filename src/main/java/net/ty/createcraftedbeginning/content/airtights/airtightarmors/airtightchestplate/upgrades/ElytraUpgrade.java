@@ -24,14 +24,12 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.container.Can
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.gas.interaction.GasInteractionFeedback;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -41,9 +39,116 @@ public enum ElytraUpgrade implements AirtightUpgrade {
     private static final ResourceLocation ID = CCBAPI.asResource("elytra");
     private static final Couple<Integer> OFFSET = Couple.create(36, 31);
     private static final int BOOST_COOLDOWN_TICKS = 40;
-    private static final int BOOST_PULSE_TICKS = 10;
-    private static final Map<UUID, BoostPulse> CLIENT_BOOST_PULSES = new HashMap<>();
-    private static final Map<UUID, BoostPulse> SERVER_BOOST_PULSES = new HashMap<>();
+    private static final double BOOST_FORWARD_IMPULSE = 0.1;
+    private static final double BOOST_TARGET_SPEED = 1.5;
+    private static final double BOOST_ALIGNMENT_FACTOR = 0.8;
+
+    public static boolean shouldInterceptBoostInput(Player player) {
+        if (!player.isFallFlying() || !player.getMainHandItem().isEmpty()) {
+            return false;
+        }
+
+        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
+        return chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE) && INSTANCE.isEnabled(chestplate);
+    }
+
+    public static boolean canRequestBoost(Player player) {
+        if (!shouldInterceptBoostInput(player)) {
+            return false;
+        }
+
+        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
+        return !player.getCooldowns().isOnCooldown(chestplate.getItem());
+    }
+
+    public static boolean applyClientSpeedBoost(Player player) {
+        if (!player.level().isClientSide || !canRequestBoost(player)) {
+            return false;
+        }
+
+        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
+        Optional<AffordableFuel> boostFuel = findBoostFuel(player, chestplate);
+        if (boostFuel.isEmpty()) {
+            return false;
+        }
+
+        AffordableFuel selectedFuel = boostFuel.get();
+        float boostMultiplier = AirtightArmorsHandlers.resolveForEquipment(selectedFuel.gasType()).getMultiplierForBoostingElytra();
+        Vec3 nextMovement = calculateBoostMovement(player.getDeltaMovement(), player.getLookAngle(), boostMultiplier);
+        if (nextMovement == null) {
+            return false;
+        }
+
+        player.setDeltaMovement(nextMovement);
+        player.hasImpulse = true;
+        player.getCooldowns().addCooldown(chestplate.getItem(), BOOST_COOLDOWN_TICKS);
+        return true;
+    }
+
+    public static void tryApplySpeedBoost(Player player) {
+        if (player.level().isClientSide || !canRequestBoost(player)) {
+            return;
+        }
+
+        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
+        Optional<AffordableFuel> boostFuel = findBoostFuel(player, chestplate);
+        if (boostFuel.isEmpty()) {
+            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas");
+            return;
+        }
+
+        AffordableFuel selectedFuel = boostFuel.get();
+        float boostMultiplier = AirtightArmorsHandlers.resolveForEquipment(selectedFuel.gasType()).getMultiplierForBoostingElytra();
+        Vec3 nextMovement = calculateBoostMovement(player.getDeltaMovement(), player.getLookAngle(), boostMultiplier);
+        if (nextMovement == null) {
+            return;
+        }
+
+        if (!CanisterContainerConsumers.interactContainer(player, selectedFuel, () -> true, false)) {
+            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", selectedFuel.gasContent().getHoverName());
+            return;
+        }
+
+        player.setDeltaMovement(nextMovement);
+        player.hasImpulse = true;
+        player.getCooldowns().addCooldown(chestplate.getItem(), BOOST_COOLDOWN_TICKS);
+    }
+
+    private static @Nullable Vec3 calculateBoostMovement(Vec3 currentMovement, Vec3 lookDirection, float boostMultiplier) {
+        if (!GasConsumptionMath.isFinite(boostMultiplier) || boostMultiplier <= 0) {
+            return null;
+        }
+
+        double directionLengthSqr = lookDirection.lengthSqr();
+        if (!Double.isFinite(directionLengthSqr) || directionLengthSqr <= 1.0E-12) {
+            return null;
+        }
+
+        Vec3 forward = lookDirection.scale(1.0 / Math.sqrt(directionLengthSqr));
+        double forwardSpeed = currentMovement.dot(forward);
+        Vec3 lateralMovement = currentMovement.subtract(forward.scale(forwardSpeed));
+        double alignment = Math.min(BOOST_ALIGNMENT_FACTOR * boostMultiplier, 1);
+        double forwardImpulse = (BOOST_FORWARD_IMPULSE + BOOST_ALIGNMENT_FACTOR * Math.max(0, BOOST_TARGET_SPEED - forwardSpeed)) * boostMultiplier;
+        Vec3 nextMovement = currentMovement.subtract(lateralMovement.scale(alignment)).add(forward.scale(forwardImpulse));
+        if (!Double.isFinite(nextMovement.x) || !Double.isFinite(nextMovement.y) || !Double.isFinite(nextMovement.z)) {
+            return null;
+        }
+
+        return nextMovement;
+    }
+
+    private static Optional<AffordableFuel> findBoostFuel(Player player, ItemStack chestplate) {
+        int baseGasCost = INSTANCE.getGasConsumptionPerSecond(player, chestplate);
+        return CanisterContainerConsumers.findAffordableFuel(player, context -> {
+            AirtightArmorsHandler armorHandler = AirtightArmorsHandlers.resolveForEquipment(context.gasType());
+            float boostMultiplier = armorHandler.getMultiplierForBoostingElytra();
+            if (!GasConsumptionMath.isFinite(boostMultiplier) || boostMultiplier <= 0) {
+                return -1;
+            }
+
+            return baseGasCost * armorHandler.getConsumptionMultiplier(EquipmentSlot.CHEST);
+        });
+    }
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
@@ -119,184 +224,7 @@ public enum ElytraUpgrade implements AirtightUpgrade {
         return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && AirtightUpgrade.super.isActive(player, item);
     }
 
-    public static boolean shouldInterceptBoostInput(Player player) {
-        if (!player.isFallFlying() || !player.getMainHandItem().isEmpty()) {
-            return false;
-        }
-
-        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-        return hasEnabledUpgrade(chestplate);
-    }
-
-    public static boolean canRequestBoost(Player player) {
-        if (!shouldInterceptBoostInput(player) || hasActiveBoostPulse(player)) {
-            return false;
-        }
-
-        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-        return isBoostReady(player, chestplate);
-    }
-
-    public static boolean tryStartClientBoostPulse(Player player) {
-        if (!player.level().isClientSide || !canRequestBoost(player)) {
-            return false;
-        }
-
-        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-        Optional<AffordableFuel> boostFuel = findBoostFuel(player, chestplate);
-        if (boostFuel.isEmpty()) {
-            return false;
-        }
-
-        AffordableFuel selectedFuel = boostFuel.get();
-        float boostMultiplier = AirtightArmorsHandlers.resolveForEquipment(selectedFuel.gasType()).getMultiplierForBoostingElytra();
-        return startBoostPulse(player, boostMultiplier);
-    }
-
-    public static void tryStartServerBoostPulse(Player player) {
-        if (player.level().isClientSide || !canRequestBoost(player)) {
-            return;
-        }
-
-        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-        Optional<AffordableFuel> boostFuel = findBoostFuel(player, chestplate);
-        if (boostFuel.isEmpty()) {
-            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas");
-            return;
-        }
-
-        AffordableFuel selectedFuel = boostFuel.get();
-        float boostMultiplier = AirtightArmorsHandlers.resolveForEquipment(selectedFuel.gasType()).getMultiplierForBoostingElytra();
-        if (!GasConsumptionMath.isFinite(boostMultiplier) || boostMultiplier <= 0) {
-            return;
-        }
-
-        if (!CanisterContainerConsumers.interactContainer(player, selectedFuel, () -> true, false)) {
-            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", selectedFuel.gasContent().getHoverName());
-            return;
-        }
-
-        if (!startBoostPulse(player, boostMultiplier)) {
-            return;
-        }
-
-        player.getCooldowns().addCooldown(chestplate.getItem(), BOOST_COOLDOWN_TICKS);
-    }
-
-    public static boolean tickBoostPulse(Player player) {
-        Map<UUID, BoostPulse> boostPulses = getBoostPulses(player);
-        UUID playerId = player.getUUID();
-        BoostPulse pulse = boostPulses.get(playerId);
-        if (pulse == null) {
-            return false;
-        }
-
-        if (!canContinueBoostPulse(player)) {
-            boostPulses.remove(playerId);
-            return false;
-        }
-
-        long gameTime = player.level().getGameTime();
-        if (pulse.lastAppliedGameTime() == gameTime) {
-            return false;
-        }
-
-        Vec3 currentMovement = player.getDeltaMovement();
-        Vec3 nextMovement = applyPulseStep(currentMovement, player.getLookAngle(), pulse.boostMultiplier());
-        player.setDeltaMovement(nextMovement);
-        player.hasImpulse = true;
-        int ticksRemaining = pulse.ticksRemaining() - 1;
-        if (ticksRemaining <= 0) {
-            boostPulses.remove(playerId);
-            return true;
-        }
-
-        boostPulses.put(playerId, new BoostPulse(pulse.boostMultiplier(), ticksRemaining, gameTime));
-        return true;
-    }
-
-    public static void clearBoostPulse(Player player) {
-        getBoostPulses(player).remove(player.getUUID());
-    }
-
-    public static void clearClientBoostPulses() {
-        CLIENT_BOOST_PULSES.clear();
-    }
-
-    public static Vec3 applyPulseStep(Vec3 currentMovement, Vec3 lookDirection, float boostMultiplier) {
-        if (!Float.isFinite(boostMultiplier) || boostMultiplier <= 0) {
-            return currentMovement;
-        }
-
-        double directionLengthSqr = lookDirection.lengthSqr();
-        if (!Double.isFinite(directionLengthSqr) || directionLengthSqr <= 1.0E-12) {
-            return currentMovement;
-        }
-
-        double impulse = 1.0 / BOOST_PULSE_TICKS * boostMultiplier;
-        if (!Double.isFinite(impulse)) {
-            return currentMovement;
-        }
-
-        Vec3 normalizedLook = lookDirection.scale(1.0 / Math.sqrt(directionLengthSqr));
-        Vec3 nextMovement = currentMovement.add(normalizedLook.scale(impulse));
-        if (!Double.isFinite(nextMovement.x) || !Double.isFinite(nextMovement.y) || !Double.isFinite(nextMovement.z)) {
-            return currentMovement;
-        }
-
-        return nextMovement;
-    }
-
     public boolean canFly(Player player, ItemStack item) {
         return item.is(CCBItems.AIRTIGHT_CHESTPLATE) && isEnabled(item) && !CanisterContainerSuppliers.getFirstAvailableGasContent(player).isEmpty();
     }
-
-    private static boolean hasEnabledUpgrade(ItemStack chestplate) {
-        return chestplate.is(CCBItems.AIRTIGHT_CHESTPLATE) && INSTANCE.isEnabled(chestplate);
-    }
-
-    private static boolean isBoostReady(Player player, ItemStack chestplate) {
-        return hasEnabledUpgrade(chestplate) && !player.getCooldowns().isOnCooldown(chestplate.getItem());
-    }
-
-    private static Optional<AffordableFuel> findBoostFuel(Player player, ItemStack chestplate) {
-        int baseGasCost = INSTANCE.getGasConsumptionPerSecond(player, chestplate);
-        return CanisterContainerConsumers.findAffordableFuel(player, context -> {
-            AirtightArmorsHandler armorHandler = AirtightArmorsHandlers.resolveForEquipment(context.gasType());
-            float boostMultiplier = armorHandler.getMultiplierForBoostingElytra();
-            if (!GasConsumptionMath.isFinite(boostMultiplier) || boostMultiplier <= 0) {
-                return -1;
-            }
-
-            return baseGasCost * armorHandler.getConsumptionMultiplier(EquipmentSlot.CHEST);
-        });
-    }
-
-    private static Map<UUID, BoostPulse> getBoostPulses(Player player) {
-        if (player.level().isClientSide) {
-            return CLIENT_BOOST_PULSES;
-        }
-
-        return SERVER_BOOST_PULSES;
-    }
-
-    private static boolean hasActiveBoostPulse(Player player) {
-        return getBoostPulses(player).containsKey(player.getUUID());
-    }
-
-    private static boolean canContinueBoostPulse(Player player) {
-        ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-        return player.isFallFlying() && hasEnabledUpgrade(chestplate);
-    }
-
-    private static boolean startBoostPulse(Player player, float boostMultiplier) {
-        if (!GasConsumptionMath.isFinite(boostMultiplier) || boostMultiplier <= 0 || hasActiveBoostPulse(player)) {
-            return false;
-        }
-
-        getBoostPulses(player).put(player.getUUID(), new BoostPulse(boostMultiplier, BOOST_PULSE_TICKS, Long.MIN_VALUE));
-        return tickBoostPulse(player);
-    }
-
-    private record BoostPulse(float boostMultiplier, int ticksRemaining, long lastAppliedGameTime) {}
 }

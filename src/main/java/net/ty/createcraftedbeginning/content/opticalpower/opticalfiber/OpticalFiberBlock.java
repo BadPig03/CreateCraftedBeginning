@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.opticalpower.opticalfiber;
 
 import com.mojang.serialization.MapCodec;
+import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -15,55 +16,64 @@ import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerConsumer;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetworkManager;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerSource;
-import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class OpticalFiberBlock extends PipeBlock {
+public class OpticalFiberBlock extends PipeBlock implements IWrenchable {
     private static final float FIBER_APOTHEM = 0.125F;
     private static final int FULL_LIGHT_LEVEL = 15;
-    private static final int CONNECTION_BITS = Iterate.directions.length;
-    private final Map<Integer, VoxelShape> deviceShapes = new ConcurrentHashMap<>();
+
+    private final OpticalFiberShapes shapes = new OpticalFiberShapes();
 
     public OpticalFiberBlock(Properties properties) {
         super(FIBER_APOTHEM, properties);
         registerDefaultState(defaultBlockState().setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false).setValue(UP, false).setValue(DOWN, false));
         for (BlockState state : getStateDefinition().getPossibleStates()) {
             int shapeIndex = getAABBIndex(state);
-            int connections = 0;
-            Direction firstDirection = Direction.DOWN;
-            boolean sameAxis = true;
-            for (Direction direction : Iterate.directions) {
-                if (!state.getValue(PROPERTY_BY_DIRECTION.get(direction))) {
-                    continue;
-                }
-
-                if (connections == 0) {
-                    firstDirection = direction;
-                }
-                sameAxis &= direction.getAxis() == firstDirection.getAxis();
-                connections++;
-            }
-
-            if (connections == 1) {
-                shapeByIndex[shapeIndex] = CCBShapes.OPTICAL_FIBER_END.get(firstDirection);
-                continue;
-            }
-            if (connections == 2 && sameAxis) {
-                continue;
-            }
-
-            shapeByIndex[shapeIndex] = Shapes.or(shapeByIndex[shapeIndex], CCBShapes.OPTICAL_FIBER_JUNCTION);
+            shapeByIndex[shapeIndex] = OpticalFiberShapes.createBaseShape(state, shapeByIndex[shapeIndex]);
         }
+    }
+
+    public static boolean isConnected(BlockState state, Direction direction) {
+        return state.getBlock() instanceof OpticalFiberBlock && state.getValue(PROPERTY_BY_DIRECTION.get(direction));
+    }
+
+    @SuppressWarnings("ConstantValue")
+    public static int getDeviceConnections(BlockGetter level, BlockPos pos, BlockState state) {
+        int ports = 0;
+        for (Direction direction : Iterate.directions) {
+            if (!isConnected(state, direction)) {
+                continue;
+            }
+
+            BlockPos neighborPos = pos.relative(direction);
+            if (level instanceof Level world && !world.isLoaded(neighborPos)) {
+                continue;
+            }
+
+            BlockState neighborState = level.getBlockState(neighborPos);
+            if (neighborState == null || neighborState.getBlock() instanceof OpticalFiberBlock || !canConnectTo(level, neighborPos, neighborState, direction.getOpposite())) {
+                continue;
+            }
+
+            ports |= 1 << direction.get3DDataValue();
+        }
+        return ports;
+    }
+
+    public static boolean canConnectTo(BlockGetter level, BlockPos pos, BlockState state, Direction sideOnNeighbor) {
+        Block block = state.getBlock();
+        if (block instanceof OpticalPowerConsumer consumer) {
+            return consumer.canConnectOpticalPower(state, sideOnNeighbor);
+        }
+
+        return block instanceof OpticalFiberBlock || block instanceof OpticalPowerSource || state.getLightEmission(level, pos) >= FULL_LIGHT_LEVEL && state.isCollisionShapeFullBlock(level, pos);
     }
 
     @Override
@@ -119,61 +129,11 @@ public class OpticalFiberBlock extends PipeBlock {
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         int ports = getDeviceConnections(level, pos, state);
         int shapeIndex = getAABBIndex(state);
-        if (ports == 0) {
-            return shapeByIndex[shapeIndex];
-        }
-
-        int key = shapeIndex | ports << CONNECTION_BITS;
-        return deviceShapes.computeIfAbsent(key, ignored -> {
-            VoxelShape shape = shapeByIndex[shapeIndex];
-            for (Direction direction : Iterate.directions) {
-                if ((ports & 1 << direction.get3DDataValue()) == 0) {
-                    continue;
-                }
-
-                shape = Shapes.or(shape, CCBShapes.OPTICAL_FIBER_DEVICE_PORT.get(direction));
-            }
-            return shape;
-        });
+        return shapes.getShape(shapeByIndex[shapeIndex], shapeIndex, ports);
     }
 
     @Override
     protected MapCodec<? extends PipeBlock> codec() {
         return simpleCodec(OpticalFiberBlock::new);
-    }
-
-    public static boolean isConnected(BlockState state, Direction direction) {
-        return state.getBlock() instanceof OpticalFiberBlock && state.getValue(PROPERTY_BY_DIRECTION.get(direction));
-    }
-
-    @SuppressWarnings("ConstantValue")
-    public static int getDeviceConnections(BlockGetter level, BlockPos pos, BlockState state) {
-        int ports = 0;
-        for (Direction direction : Iterate.directions) {
-            if (!isConnected(state, direction)) {
-                continue;
-            }
-
-            BlockPos neighborPos = pos.relative(direction);
-            if (level instanceof Level world && !world.isLoaded(neighborPos)) {
-                continue;
-            }
-
-            BlockState neighborState = level.getBlockState(neighborPos);
-            if (neighborState == null || neighborState.getBlock() instanceof OpticalFiberBlock || !canConnectTo(level, neighborPos, neighborState, direction.getOpposite())) {
-                continue;
-            }
-
-            ports |= 1 << direction.get3DDataValue();
-        }
-        return ports;
-    }
-
-    public static boolean canConnectTo(BlockGetter level, BlockPos pos, BlockState state, Direction sideOnNeighbor) {
-        if (state.getBlock() instanceof OpticalPowerConsumer consumer) {
-            return consumer.canConnectOpticalPower(state, sideOnNeighbor);
-        }
-
-        return state.getBlock() instanceof OpticalFiberBlock || state.getBlock() instanceof OpticalPowerSource || state.getLightEmission(level, pos) >= FULL_LIGHT_LEVEL && state.isCollisionShapeFullBlock(level, pos);
     }
 }

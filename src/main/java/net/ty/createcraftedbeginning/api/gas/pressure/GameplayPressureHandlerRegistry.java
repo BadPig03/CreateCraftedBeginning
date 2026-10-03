@@ -22,6 +22,14 @@ public final class GameplayPressureHandlerRegistry<H> {
         return new GameplayPressureHandlerRegistry<>();
     }
 
+    private static void requireKnownProfile(GameplayPressureProfile profile) {
+        if (GameplayPressureProfiles.orderedProfiles().contains(profile)) {
+            return;
+        }
+
+        throw new IllegalArgumentException("Gameplay pressure profile '" + profile.id() + "' with minimum pressure " + profile.minimumPressurePa() + " Pa is not registered.");
+    }
+
     @Nullable
     public H get(Gas gasType, long sourcePressurePa) {
         return get(gasType, GameplayPressureProfiles.resolve(sourcePressurePa));
@@ -58,14 +66,6 @@ public final class GameplayPressureHandlerRegistry<H> {
         }
 
         handlers.computeIfAbsent(profile, ignored -> new IdentityHashMap<>()).put(gasType, handler);
-    }
-
-    private static void requireKnownProfile(GameplayPressureProfile profile) {
-        if (GameplayPressureProfiles.orderedProfiles().contains(profile)) {
-            return;
-        }
-
-        throw new IllegalArgumentException("Gameplay pressure profile '" + profile.id() + "' with minimum pressure " + profile.minimumPressurePa() + " Pa is not registered.");
     }
 
     @Nullable

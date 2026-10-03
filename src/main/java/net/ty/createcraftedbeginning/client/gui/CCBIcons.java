@@ -39,13 +39,16 @@ public class CCBIcons extends AllIcons {
     public static final CCBIcons I_OUTLINE_DISPLAY = next();
     public static final CCBIcons I_CONTAINER_PROTECTION = next();
     public static final CCBIcons I_ATTACK_MODE = next();
-    public static final CCBIcons I_SILK_TOUCH = next();
+    public static final CCBIcons I_HARVEST_OPTIMIZATION = next();
     public static final CCBIcons I_MAGNET = next();
     public static final CCBIcons I_EXPERIENCE_CONVERSION = next();
     public static final CCBIcons I_LIQUID_REPLACEMENT = next();
-    public static final CCBIcons I_SMOKING = newRow();
-    public static final CCBIcons I_BLASTING = next();
-    public static final CCBIcons I_IGNITION = next();
+    public static final CCBIcons I_AEROGEL_PROTECTION = next();
+
+    static {
+        ccbY++;
+    }
+
     public static final CCBIcons I_1X1 = newRow();
     public static final CCBIcons I_3X3 = next();
     public static final CCBIcons I_5X5 = next();
@@ -80,41 +83,6 @@ public class CCBIcons extends AllIcons {
         iconY = y * 16;
     }
 
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void bind() {
-        RenderSystem.setShaderTexture(0, CCB_ICON_ATLAS);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public void render(GuiGraphics graphics, int x, int y) {
-        graphics.blit(CCB_ICON_ATLAS, x, y, 0, iconX, iconY, 16, 16, CCB_ICON_ATLAS_SIZE, CCB_ICON_ATLAS_SIZE);
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void render(PoseStack poseStack, MultiBufferSource buffer, int color) {
-        VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.text(CCB_ICON_ATLAS));
-        Matrix4f poseMatrix = poseStack.last().pose();
-        Color tint = new Color(color);
-
-        Vec3 bottomLeft = new Vec3(0, 0, 0);
-        Vec3 topLeft = new Vec3(0, 1, 0);
-        Vec3 topRight = new Vec3(1, 1, 0);
-        Vec3 bottomRight = new Vec3(1, 0, 0);
-
-        float u1 = iconX * 1.0F / CCB_ICON_ATLAS_SIZE;
-        float u2 = (iconX + 16) * 1.0F / CCB_ICON_ATLAS_SIZE;
-        float v1 = iconY * 1.0F / CCB_ICON_ATLAS_SIZE;
-        float v2 = (iconY + 16) * 1.0F / CCB_ICON_ATLAS_SIZE;
-
-        vertex(vertexConsumer, poseMatrix, bottomLeft, tint, u1, v1, LightTexture.FULL_BRIGHT);
-        vertex(vertexConsumer, poseMatrix, topLeft, tint, u1, v2, LightTexture.FULL_BRIGHT);
-        vertex(vertexConsumer, poseMatrix, topRight, tint, u2, v2, LightTexture.FULL_BRIGHT);
-        vertex(vertexConsumer, poseMatrix, bottomRight, tint, u2, v1, LightTexture.FULL_BRIGHT);
-    }
-
     public static CCBIcons get(AirtightUpgradeIcon upgradeIcon) {
         return switch (upgradeIcon) {
             case MAGNET -> I_MAGNET;
@@ -122,9 +90,10 @@ public class CCBIcons extends AllIcons {
             case ATTACK_MODE -> I_ATTACK_MODE;
             case FILTER -> I_FILTER;
             case OUTLINE_DISPLAY -> I_OUTLINE_DISPLAY;
-            case SILK_TOUCH -> I_SILK_TOUCH;
+            case HARVEST_OPTIMIZATION -> I_HARVEST_OPTIMIZATION;
             case LIQUID_REPLACEMENT -> I_LIQUID_REPLACEMENT;
             case CONTAINER_PROTECTION -> I_CONTAINER_PROTECTION;
+            case AEROGEL_PROTECTION -> I_AEROGEL_PROTECTION;
             case EFFECTS_PROTECTION -> I_EFFECTS_PROTECTION;
             case RESISTANCE -> I_RESISTANCE;
             case GOGGLES -> I_GOGGLES;
@@ -162,5 +131,40 @@ public class CCBIcons extends AllIcons {
     @OnlyIn(Dist.CLIENT)
     private static void vertex(VertexConsumer vertexConsumer, Matrix4f poseMatrix, Vec3 vertexPosition, Color tint, float u, float v, int packedLight) {
         vertexConsumer.addVertex(poseMatrix, (float) vertexPosition.x, (float) vertexPosition.y, (float) vertexPosition.z).setColor(tint.getRed(), tint.getGreen(), tint.getBlue(), 255).setUv(u, v).setLight(packedLight);
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void bind() {
+        RenderSystem.setShaderTexture(0, CCB_ICON_ATLAS);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    @Override
+    public void render(GuiGraphics graphics, int x, int y) {
+        graphics.blit(CCB_ICON_ATLAS, x, y, 0, iconX, iconY, 16, 16, CCB_ICON_ATLAS_SIZE, CCB_ICON_ATLAS_SIZE);
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void render(PoseStack poseStack, MultiBufferSource buffer, int color) {
+        VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.text(CCB_ICON_ATLAS));
+        Matrix4f poseMatrix = poseStack.last().pose();
+        Color tint = new Color(color);
+
+        Vec3 bottomLeft = new Vec3(0, 0, 0);
+        Vec3 topLeft = new Vec3(0, 1, 0);
+        Vec3 topRight = new Vec3(1, 1, 0);
+        Vec3 bottomRight = new Vec3(1, 0, 0);
+
+        float u1 = iconX * 1.0F / CCB_ICON_ATLAS_SIZE;
+        float u2 = (iconX + 16) * 1.0F / CCB_ICON_ATLAS_SIZE;
+        float v1 = iconY * 1.0F / CCB_ICON_ATLAS_SIZE;
+        float v2 = (iconY + 16) * 1.0F / CCB_ICON_ATLAS_SIZE;
+
+        vertex(vertexConsumer, poseMatrix, bottomLeft, tint, u1, v1, LightTexture.FULL_BRIGHT);
+        vertex(vertexConsumer, poseMatrix, topLeft, tint, u1, v2, LightTexture.FULL_BRIGHT);
+        vertex(vertexConsumer, poseMatrix, topRight, tint, u2, v2, LightTexture.FULL_BRIGHT);
+        vertex(vertexConsumer, poseMatrix, bottomRight, tint, u2, v1, LightTexture.FULL_BRIGHT);
     }
 }

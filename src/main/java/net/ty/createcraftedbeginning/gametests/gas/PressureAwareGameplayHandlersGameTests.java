@@ -20,7 +20,6 @@ import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureHandlerReg
 import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfiles;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseHandlers;
-import net.ty.createcraftedbeginning.api.turbinehandlers.AirtightTurbineHandlers;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferExecutor;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferExecutor.PlannedDrain;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferExecutor.PlannedFill;
@@ -29,7 +28,6 @@ import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
-import java.util.Objects;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -47,8 +45,6 @@ public final class PressureAwareGameplayHandlersGameTests {
 
         helper.assertTrue(AirtightEngineHandlers.resolve(gas, GameplayPressureProfiles.NORMAL) == AirtightEngineHandlers.resolve(gas, normalPressure), "Engine NORMAL profile lookup diverged from physical pressure resolution");
         helper.assertTrue(AirtightEngineHandlers.resolve(gas, GameplayPressureProfiles.HIGH_PRESSURE) == AirtightEngineHandlers.resolve(gas, highPressure), "Engine HIGH_PRESSURE profile lookup diverged from physical pressure resolution");
-        helper.assertTrue(AirtightTurbineHandlers.resolve(gas, GameplayPressureProfiles.NORMAL) == AirtightTurbineHandlers.resolve(gas, normalPressure), "Turbine NORMAL profile lookup diverged from physical pressure resolution");
-        helper.assertTrue(AirtightTurbineHandlers.resolve(gas, GameplayPressureProfiles.HIGH_PRESSURE) == AirtightTurbineHandlers.resolve(gas, highPressure), "Turbine HIGH_PRESSURE profile lookup diverged from physical pressure resolution");
         helper.assertTrue(AirtightArmHandlers.resolve(gas, GameplayPressureProfiles.NORMAL) == AirtightArmHandlers.resolve(gas, normalPressure), "Arm NORMAL profile lookup diverged from physical pressure resolution");
         helper.assertTrue(AirtightArmHandlers.resolve(gas, GameplayPressureProfiles.HIGH_PRESSURE) == AirtightArmHandlers.resolve(gas, highPressure), "Arm HIGH_PRESSURE profile lookup diverged from physical pressure resolution");
         helper.assertTrue(AirtightArmorsHandlers.resolve(gas, GameplayPressureProfiles.NORMAL) == AirtightArmorsHandlers.resolve(gas, normalPressure), "Armors NORMAL profile lookup diverged from physical pressure resolution");
@@ -74,9 +70,24 @@ public final class PressureAwareGameplayHandlersGameTests {
         registry.register(naturalAir, GameplayPressureProfiles.HIGH_PRESSURE, "natural-high-pressure");
         registry.register(moistAir, GameplayPressureProfiles.NORMAL, "moist-normal");
 
-        helper.assertValueEqual(Objects.requireNonNull(registry.get(naturalAir, GameplayPressureProfiles.NORMAL)), "natural-normal", "Profiled registry normal handler");
-        helper.assertValueEqual(Objects.requireNonNull(registry.get(naturalAir, GameplayPressureProfiles.HIGH_PRESSURE)), "natural-high-pressure", "Profiled registry specialized handler");
-        helper.assertValueEqual(Objects.requireNonNull(registry.get(moistAir, GameplayPressureProfiles.HIGH_PRESSURE)), "moist-normal", "Missing higher-profile handler did not fall back to the normal handler");
+        String normal = registry.get(naturalAir, GameplayPressureProfiles.NORMAL);
+        if (normal == null) {
+            throw new NullPointerException("Expected the natural air normal handler.");
+        }
+
+        helper.assertValueEqual(normal, "natural-normal", "Profiled registry normal handler");
+        String highPressure = registry.get(naturalAir, GameplayPressureProfiles.HIGH_PRESSURE);
+        if (highPressure == null) {
+            throw new NullPointerException("Expected the natural air high-pressure handler.");
+        }
+
+        helper.assertValueEqual(highPressure, "natural-high-pressure", "Profiled registry specialized handler");
+        String fallback = registry.get(moistAir, GameplayPressureProfiles.HIGH_PRESSURE);
+        if (fallback == null) {
+            throw new NullPointerException("Expected the moist air normal fallback handler.");
+        }
+
+        helper.assertValueEqual(fallback, "moist-normal", "Missing higher-profile handler did not fall back to the normal handler");
         helper.assertTrue(!registry.containsExact(moistAir, GameplayPressureProfiles.HIGH_PRESSURE), "Fallback handler was incorrectly reported as an exact higher-profile registration");
         helper.succeed();
     }

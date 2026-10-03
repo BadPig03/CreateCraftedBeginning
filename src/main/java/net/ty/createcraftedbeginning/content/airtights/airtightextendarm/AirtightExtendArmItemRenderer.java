@@ -35,6 +35,11 @@ final class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRendere
     private AirtightExtendArmItemRenderer() {
     }
 
+    @SubscribeEvent
+    private static void register(RegisterClientExtensionsEvent event) {
+        event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_EXTEND_ARM.asItem(), new AirtightExtendArmItemRenderer()), CCBItems.AIRTIGHT_EXTEND_ARM.asItem());
+    }
+
     @Override
     protected void render(ItemStack arm, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         AirtightExtendArmRenderHandler renderHandler = AirtightExtendArmRenderHandler.INSTANCE;
@@ -70,10 +75,5 @@ final class AirtightExtendArmItemRenderer extends CustomRenderedItemModelRendere
         TransformStack.of(poseStack).translate(0, 0.0625, 0).rotateZDegrees(cogAngle).translateBack(0, 0.0625, 0);
         renderer.renderSolid(COGS.get(), light);
         poseStack.popPose();
-    }
-
-    @SubscribeEvent
-    private static void register(RegisterClientExtensionsEvent event) {
-        event.registerItem(SimpleCustomRenderer.create(CCBItems.AIRTIGHT_EXTEND_ARM.asItem(), new AirtightExtendArmItemRenderer()), CCBItems.AIRTIGHT_EXTEND_ARM.asItem());
     }
 }

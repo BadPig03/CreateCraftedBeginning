@@ -40,6 +40,10 @@ public class GasCanisterItem extends Item implements GasFilter {
         this.blockItem = blockItem;
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerItem(CanisterCapabilities.ITEM, (canister, ignoredContext) -> new GasCanisterContainerContents(canister), CCBItems.GAS_CANISTER);
+    }
+
     @Override
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
         return oldStack.getItem() != newStack.getItem();
@@ -89,6 +93,7 @@ public class GasCanisterItem extends Item implements GasFilter {
         }
         else {
             tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(storedGas).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+            tooltip.addAll(storedGas.getGasType().getTooltip(storedGas));
             tooltip.add(CCBLang.translate("gui.gas_canister.max_amount").add(GasUnitFormat.amount(storedGas.getAmount()).style(ChatFormatting.GOLD).text(ChatFormatting.GRAY, " / ").add(GasUnitFormat.amount(maxAmount).style(ChatFormatting.DARK_GRAY))).style(ChatFormatting.GRAY).component());
         }
         long pressurePa = canisterContents.getTankPressurePa(0);
@@ -123,10 +128,6 @@ public class GasCanisterItem extends Item implements GasFilter {
         }
 
         return candidateGas -> !candidateGas.isEmpty() && GasStack.isSameGasSameComponents(filterGas, candidateGas);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerItem(CanisterCapabilities.ITEM, (canister, ignoredContext) -> new GasCanisterContainerContents(canister), CCBItems.GAS_CANISTER);
     }
 
     public static class GasCanisterBlockItem extends BlockItem {

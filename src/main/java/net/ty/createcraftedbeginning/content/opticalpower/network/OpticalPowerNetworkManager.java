@@ -12,6 +12,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetwork.RefreshResult;
+import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -36,9 +38,9 @@ public final class OpticalPowerNetworkManager {
         }
 
         LevelCache cache = getCache(serverLevel);
-        CachedNetwork network = cache.networkByNode.get(consumerPos.asLong());
+        CachedNetwork network = cache.networkByConsumer.get(consumerPos.asLong());
         if (network != null && network.valid) {
-            applyAllocation(serverLevel, consumerPos, network.network.getAllocatedPowerPoints(consumerPos));
+            applyAllocation(serverLevel, consumerPos, network.network.getAllocatedPowerLp(consumerPos));
             return;
         }
 
@@ -51,7 +53,7 @@ public final class OpticalPowerNetworkManager {
         }
 
         LevelCache cache = getCache(serverLevel);
-        CachedNetwork network = cache.networkByNode.get(consumerPos.asLong());
+        CachedNetwork network = cache.networkByConsumer.get(consumerPos.asLong());
         if (network != null && network.valid) {
             return;
         }
@@ -70,9 +72,9 @@ public final class OpticalPowerNetworkManager {
         }
 
         ObjectOpenHashSet<CachedNetwork> affected = new ObjectOpenHashSet<>();
-        CachedNetwork nodeNetwork = cache.networkByNode.get(pos.asLong());
-        if (nodeNetwork != null) {
-            affected.add(nodeNetwork);
+        Set<CachedNetwork> nodeNetworks = cache.networksByNode.get(pos.asLong());
+        if (nodeNetworks != null) {
+            affected.addAll(nodeNetworks);
         }
 
         Set<CachedNetwork> dependencyNetworks = cache.networkBySourceDependency.get(pos.asLong());
@@ -81,7 +83,7 @@ public final class OpticalPowerNetworkManager {
         }
 
         for (CachedNetwork network : affected) {
-            cache.invalidate(network);
+            cache.invalidate(serverLevel, network);
         }
     }
 
@@ -106,6 +108,11 @@ public final class OpticalPowerNetworkManager {
             return;
         }
 
+        List<CachedNetwork> changedNetworks = List.copyOf(cache.networksWithChangedAccessibility);
+        cache.networksWithChangedAccessibility.clear();
+        for (CachedNetwork network : changedNetworks) {
+            cache.invalidate(level, network);
+        }
         cache.refreshConfiguredLimits(level);
         cache.refreshDynamicNetworks(level);
         cache.rebuildDirtyNetworks(level);
@@ -119,12 +126,42 @@ public final class OpticalPowerNetworkManager {
         LEVELS.clear();
     }
 
+    @Internal
+    public static @Nullable OpticalPowerNetwork findCachedNetwork(ServerLevel level, BlockPos consumerPos) {
+        LevelCache cache = LEVELS.get(level);
+        if (cache == null) {
+            return null;
+        }
+
+        CachedNetwork cached = cache.networkByConsumer.get(consumerPos.asLong());
+        if (cached == null || !cached.valid) {
+            return null;
+        }
+
+        return cached.network;
+    }
+
+    static void queueChunkAccessibilityChange(ServerLevel level, ChunkPos chunkPos) {
+        LevelCache cache = LEVELS.get(level);
+        if (cache == null) {
+            return;
+        }
+
+        cache.networksWithChangedAccessibility.addAll(findChunkNeighborhoodNetworks(cache, chunkPos));
+    }
+
     private static void invalidateChunkNeighborhood(ServerLevel level, ChunkPos chunkPos) {
         LevelCache cache = LEVELS.get(level);
         if (cache == null) {
             return;
         }
 
+        for (CachedNetwork network : findChunkNeighborhoodNetworks(cache, chunkPos)) {
+            cache.invalidate(level, network);
+        }
+    }
+
+    private static ObjectOpenHashSet<CachedNetwork> findChunkNeighborhoodNetworks(LevelCache cache, ChunkPos chunkPos) {
         ObjectOpenHashSet<CachedNetwork> affected = new ObjectOpenHashSet<>();
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
@@ -138,28 +175,28 @@ public final class OpticalPowerNetworkManager {
             }
         }
 
-        for (CachedNetwork network : affected) {
-            cache.invalidate(network);
-        }
+        return affected;
     }
 
     private static LevelCache getCache(ServerLevel level) {
         return LEVELS.computeIfAbsent(level, ignored -> new LevelCache());
     }
 
-    private static void applyAllocation(ServerLevel level, BlockPos consumerPos, int powerPoints) {
+    private static void applyAllocation(ServerLevel level, BlockPos consumerPos, int powerLp) {
         if (!level.isLoaded(consumerPos) || !(level.getBlockEntity(consumerPos) instanceof OpticalPowerConsumerBlockEntity consumer)) {
             return;
         }
 
-        consumer.applyOpticalPowerAllocation(powerPoints);
+        consumer.applyOpticalPowerAllocation(powerLp);
     }
 
     private static final class LevelCache {
-        private final Long2ObjectOpenHashMap<CachedNetwork> networkByNode = new Long2ObjectOpenHashMap<>();
+        private final Long2ObjectOpenHashMap<CachedNetwork> networkByConsumer = new Long2ObjectOpenHashMap<>();
+        private final Long2ObjectOpenHashMap<ObjectOpenHashSet<CachedNetwork>> networksByNode = new Long2ObjectOpenHashMap<>();
         private final Long2ObjectOpenHashMap<ObjectOpenHashSet<CachedNetwork>> networkBySourceDependency = new Long2ObjectOpenHashMap<>();
         private final Long2ObjectOpenHashMap<ObjectOpenHashSet<CachedNetwork>> networkByChunk = new Long2ObjectOpenHashMap<>();
         private final LongOpenHashSet dirtyConsumers = new LongOpenHashSet();
+        private final ObjectOpenHashSet<CachedNetwork> networksWithChangedAccessibility = new ObjectOpenHashSet<>();
         private final List<ObjectOpenHashSet<CachedNetwork>> dynamicBuckets = createDynamicBuckets();
         private int nextDynamicBucket;
         private int observedNetworkPowerLimit = -1;
@@ -172,22 +209,27 @@ public final class OpticalPowerNetworkManager {
             return buckets;
         }
 
-        private static void pushAllocations(ServerLevel level, CachedNetwork cached) {
+        private void pushAllocations(ServerLevel level, CachedNetwork cached) {
             List<BlockPos> consumers = cached.network.getConsumers();
             for (int i = 0; i < consumers.size(); i++) {
-                applyAllocation(level, consumers.get(i), cached.network.getAllocatedPowerPoints(i));
+                BlockPos consumer = consumers.get(i);
+                if (networkByConsumer.get(consumer.asLong()) != cached) {
+                    continue;
+                }
+
+                applyAllocation(level, consumer, cached.network.getAllocatedPowerLp(i));
             }
         }
 
         private void refreshConfiguredLimits(ServerLevel level) {
-            int configuredLimit = OpticalPowerNetwork.getMaxNetworkPowerPoints();
+            int configuredLimit = OpticalPowerNetwork.getMaxNetworkPowerLp();
             if (configuredLimit == observedNetworkPowerLimit) {
                 return;
             }
 
             observedNetworkPowerLimit = configuredLimit;
             ObjectOpenHashSet<CachedNetwork> uniqueNetworks = new ObjectOpenHashSet<>();
-            for (CachedNetwork cached : networkByNode.values()) {
+            for (CachedNetwork cached : networkByConsumer.values()) {
                 if (!cached.valid) {
                     continue;
                 }
@@ -195,7 +237,6 @@ public final class OpticalPowerNetworkManager {
                 uniqueNetworks.add(cached);
             }
             for (CachedNetwork cached : uniqueNetworks) {
-                cached.network.refreshConfiguredLimits();
                 pushAllocations(level, cached);
             }
         }
@@ -216,7 +257,7 @@ public final class OpticalPowerNetworkManager {
 
                 RefreshResult result = cached.network.refreshDynamicSources(level);
                 if (result == RefreshResult.STALE) {
-                    invalidate(cached);
+                    invalidate(level, cached);
                     continue;
                 }
 
@@ -240,9 +281,9 @@ public final class OpticalPowerNetworkManager {
                     continue;
                 }
 
-                CachedNetwork existing = networkByNode.get(consumerLong);
+                CachedNetwork existing = networkByConsumer.get(consumerLong);
                 if (existing != null && existing.valid) {
-                    applyAllocation(level, consumerPos, existing.network.getAllocatedPowerPoints(consumerPos));
+                    applyAllocation(level, consumerPos, existing.network.getAllocatedPowerLp(consumerPos));
                     continue;
                 }
 
@@ -255,36 +296,20 @@ public final class OpticalPowerNetworkManager {
         }
 
         private void cache(CachedNetwork cached) {
-            ObjectOpenHashSet<CachedNetwork> overlaps = new ObjectOpenHashSet<>();
-            for (BlockPos node : cached.network.getNodes()) {
-                CachedNetwork previous = networkByNode.get(node.asLong());
-                if (previous == null || !previous.valid || previous == cached) {
+            for (BlockPos consumer : cached.network.getConsumers()) {
+                long consumerKey = consumer.asLong();
+                CachedNetwork previous = networkByConsumer.get(consumerKey);
+                if (previous != null && previous.valid) {
                     continue;
                 }
 
-                overlaps.add(previous);
-            }
-            for (BlockPos dependency : cached.network.getSourceDependencies()) {
-                Set<CachedNetwork> previous = networkBySourceDependency.get(dependency.asLong());
-                if (previous == null) {
-                    continue;
-                }
-
-                for (CachedNetwork network : previous) {
-                    if (!network.valid || network == cached) {
-                        continue;
-                    }
-
-                    overlaps.add(network);
-                }
-            }
-            for (CachedNetwork overlap : overlaps) {
-                invalidate(overlap);
+                networkByConsumer.put(consumerKey, cached);
+                dirtyConsumers.remove(consumerKey);
             }
 
             LongOpenHashSet chunks = new LongOpenHashSet();
             for (BlockPos node : cached.network.getNodes()) {
-                networkByNode.put(node.asLong(), cached);
+                networksByNode.computeIfAbsent(node.asLong(), ignored -> new ObjectOpenHashSet<>()).add(cached);
                 chunks.add(ChunkPos.asLong(node.getX() >> 4, node.getZ() >> 4));
             }
             for (BlockPos dependency : cached.network.getSourceDependencies()) {
@@ -294,9 +319,6 @@ public final class OpticalPowerNetworkManager {
             for (long chunkKey : chunks) {
                 networkByChunk.computeIfAbsent(chunkKey, ignored -> new ObjectOpenHashSet<>()).add(cached);
                 cached.chunkKeys.add(chunkKey);
-            }
-            for (BlockPos consumer : cached.network.getConsumers()) {
-                dirtyConsumers.remove(consumer.asLong());
             }
             if (!cached.network.hasDynamicSources()) {
                 return;
@@ -308,23 +330,36 @@ public final class OpticalPowerNetworkManager {
             dynamicBuckets.get(bucket).add(cached);
         }
 
-        private void invalidate(CachedNetwork cached) {
+        private void invalidate(ServerLevel level, CachedNetwork cached) {
             if (!cached.valid) {
                 return;
             }
 
             cached.valid = false;
             for (BlockPos consumer : cached.network.getConsumers()) {
-                dirtyConsumers.add(consumer.asLong());
+                long consumerKey = consumer.asLong();
+                if (networkByConsumer.get(consumerKey) != cached) {
+                    continue;
+                }
+
+                networkByConsumer.remove(consumerKey);
+                applyAllocation(level, consumer, 0);
+                dirtyConsumers.add(consumerKey);
             }
 
             for (BlockPos node : cached.network.getNodes()) {
                 long nodeKey = node.asLong();
-                if (networkByNode.get(nodeKey) != cached) {
+                ObjectOpenHashSet<CachedNetwork> networks = networksByNode.get(nodeKey);
+                if (networks == null) {
                     continue;
                 }
 
-                networkByNode.remove(nodeKey);
+                networks.remove(cached);
+                if (!networks.isEmpty()) {
+                    continue;
+                }
+
+                networksByNode.remove(nodeKey);
             }
             for (BlockPos dependency : cached.network.getSourceDependencies()) {
                 ObjectOpenHashSet<CachedNetwork> networks = networkBySourceDependency.get(dependency.asLong());

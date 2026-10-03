@@ -35,6 +35,24 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
         registerDefaultState(defaultBlockState().setValue(TOP, true).setValue(BOTTOM, true));
     }
 
+    public static void updateTankState(Level level, BlockPos tankPos) {
+        if (level.isClientSide || !(level.getBlockState(tankPos).getBlock() instanceof AirtightTankBlock tankBlock)) {
+            return;
+        }
+
+        AirtightTankBlockEntity tank = tankBlock.getBlockEntity(level, tankPos);
+        if (tank == null) {
+            return;
+        }
+
+        AirtightTankBlockEntity controller = tank.getControllerBE();
+        if (controller == null) {
+            return;
+        }
+
+        controller.updateTankState();
+    }
+
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean moved) {
         if (oldState.getBlock() == state.getBlock() || moved) {
@@ -93,23 +111,5 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
     @Override
     public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return true;
-    }
-
-    public static void updateTankState(Level level, BlockPos tankPos) {
-        if (level.isClientSide || !(level.getBlockState(tankPos).getBlock() instanceof AirtightTankBlock tankBlock)) {
-            return;
-        }
-
-        AirtightTankBlockEntity tank = tankBlock.getBlockEntity(level, tankPos);
-        if (tank == null) {
-            return;
-        }
-
-        AirtightTankBlockEntity controller = tank.getControllerBE();
-        if (controller == null) {
-            return;
-        }
-
-        controller.updateTankState();
     }
 }

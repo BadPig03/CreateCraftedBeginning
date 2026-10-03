@@ -19,6 +19,10 @@ final class AirtightPumpPerformanceController {
         this.pump = pump;
     }
 
+    private static boolean isSideAccessible(BlockState state, Direction direction) {
+        return state.getBlock() instanceof AirtightPumpBlock && state.getValue(AirtightPumpBlock.FACING).getAxis() == direction.getAxis();
+    }
+
     boolean allowsGasTransport(BlockState state, Direction direction) {
         return isPumpRunning() && isSideAccessible(state, direction) && direction == getPumpInletDirection();
     }
@@ -55,10 +59,6 @@ final class AirtightPumpPerformanceController {
 
     Direction getPumpOutletDirection() {
         return getFront();
-    }
-
-    private static boolean isSideAccessible(BlockState state, Direction direction) {
-        return state.getBlock() instanceof AirtightPumpBlock && state.getValue(AirtightPumpBlock.FACING).getAxis() == direction.getAxis();
     }
 
     private boolean isPumpRunning() {

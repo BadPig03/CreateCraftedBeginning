@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IGI",
+    "CAC",
+    "IEI"
+  ],
+  "key": {
+    "I": {
+      "tag": "c:plates/iron"
+    },
+    "G": {
+      "tag": "c:glass_blocks"
+    },
+    "C": {
+      "tag": "c:plates/copper"
+    },
+    "A": {
+      "tag": "c:plates/amethyst_crystal"
+    },
+    "E": {
+      "item": "create:electron_tube"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:laser_emitter"
+  }
+}

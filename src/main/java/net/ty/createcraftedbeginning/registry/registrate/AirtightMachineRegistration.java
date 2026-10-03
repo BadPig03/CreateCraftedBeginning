@@ -4,7 +4,6 @@ import com.simibubi.create.AllTags.AllBlockTags;
 import com.simibubi.create.content.processing.AssemblyOperatorBlockItem;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.CreateRegistrate;
-import com.simibubi.create.foundation.data.ModelGen;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -16,10 +15,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
-import net.ty.createcraftedbeginning.config.CCBStress;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlock;
@@ -53,11 +50,6 @@ public final class AirtightMachineRegistration {
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> airtightFractionationTower() {
         return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), AssetLookup.standardModel(context, provider))).onRegister(CreateRegistrate.connectedTextures(AirtightFractionationTowerCTBehaviour::new)).tag(AllBlockTags.NON_MOVABLE.tag).loot((loot, block) -> loot.dropOther(block, CCBBlocks.AIRTIGHT_TANK_BLOCK.get()));
-    }
-
-    @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> pneumaticEngine() {
-        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), AssetLookup.partialBaseModel(context, provider))).item().transform(ModelGen.customItemModel("pneumatic_engine", "item"));
     }
 
     @Contract(pure = true)
@@ -216,11 +208,6 @@ public final class AirtightMachineRegistration {
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> boilerSteamOutletProperties() {
         return builder -> builder.initialProperties(CCBSharedProperties::copperMetal).tag(BlockTags.MINEABLE_WITH_PICKAXE).properties(BlockBehaviour.Properties::noOcclusion).tag(CCBBlockTags.AIRTIGHT_COMPONENTS.tag);
-    }
-
-    @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> pneumaticEngineProperties() {
-        return builder -> builder.initialProperties(CCBSharedProperties::copperMetal).tag(BlockTags.MINEABLE_WITH_PICKAXE).transform(CCBStress.setCapacity(6)).properties(properties -> properties.mapColor(MapColor.COLOR_ORANGE).noOcclusion());
     }
 
     @Contract(pure = true)

@@ -50,6 +50,18 @@ public class GasTank implements GasStorageHandler, GasPressureCompartment {
         this.validator = validator;
     }
 
+    private static GasStack readGas(Provider provider, CompoundTag compoundTag) {
+        if (!compoundTag.contains(COMPOUND_KEY_GAS)) {
+            return GasStack.EMPTY;
+        }
+
+        return GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS));
+    }
+
+    private static long getExcessAmount(GasTankLimits candidateLimits, GasStack contents) {
+        return Math.max(0, contents.getAmount() - candidateLimits.maxAmount());
+    }
+
     @Override
     public PredictedTransferLimits predictTransferLimits(GasStack gasType, long storedAmount) {
         if (gasType.isEmpty() || !gas.isEmpty() && !GasStack.isSameGasSameComponents(gas, gasType)) {
@@ -281,18 +293,6 @@ public class GasTank implements GasStorageHandler, GasPressureCompartment {
     }
 
     protected void onStateChanged() {
-    }
-
-    private static GasStack readGas(Provider provider, CompoundTag compoundTag) {
-        if (!compoundTag.contains(COMPOUND_KEY_GAS)) {
-            return GasStack.EMPTY;
-        }
-
-        return GasStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_GAS));
-    }
-
-    private static long getExcessAmount(GasTankLimits candidateLimits, GasStack contents) {
-        return Math.max(0, contents.getAmount() - candidateLimits.maxAmount());
     }
 
     private GasTankMutationResult applyCandidate(GasTankLimits candidateLimits, GasStack contents, boolean notifyChange) {

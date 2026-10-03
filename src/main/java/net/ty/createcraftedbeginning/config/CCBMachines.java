@@ -23,7 +23,6 @@ public final class CCBMachines extends ConfigBase {
     public final GasPackager gasPackager = nested(0, GasPackager::new, "Gas Packager");
     public final TeslaTurbine teslaTurbine = nested(0, TeslaTurbine::new, "Tesla Turbine");
     public final AirtightAssemblyDriver airtightAssemblyDriver = nested(0, AirtightAssemblyDriver::new, "Airtight Assembly Driver");
-    public final EndIncinerationBlower endIncinerationBlower = nested(0, EndIncinerationBlower::new, "End Incineration Blower");
     public final EndSculkSilencer endSculkSilencer = nested(0, EndSculkSilencer::new, "End Sculk Silencer");
 
     @Override
@@ -144,8 +143,8 @@ public final class CCBMachines extends ConfigBase {
     @ParametersAreNonnullByDefault
     @MethodsReturnNonnullByDefault
     public static final class BreezeChamber extends ConfigBase {
-        public final ConfigInt gasVolume = i(10, 1, "gas_volume", "[Unit: kL]", "Physical gas volume of the Breeze Chamber tank. Gas amount at a given pressure scales with this volume.");
-        public final ConfigInt maxProcessingPerSecond = i(2500, 1, "max_processing_per_second", "[Unit: GU/s]", "Maximum gas processing rate of a Breeze Chamber. Actual processing also depends on the available wind charge and operating pressure.");
+        public final ConfigInt gasVolume = i(40, 1, "gas_volume", "[Unit: kL]", "Physical gas volume of the Breeze Chamber tank. Gas amount at a given pressure scales with this volume.");
+        public final ConfigInt maxProcessingPerSecond = i(5120, 1, "max_processing_per_second", "[Unit: GU/s]", "Maximum gas processing rate of a Breeze Chamber. Actual processing also depends on the available wind charge and operating pressure.");
         public final ConfigInt maxWindChargeTicks = i(72000, 20, "max_wind_charge_ticks", "[Unit: ticks; 20 ticks = 1 second at 20 TPS]", "Maximum stored duration of positive or negative wind charge in a Breeze Chamber.");
 
         @Override
@@ -216,19 +215,6 @@ public final class CCBMachines extends ConfigBase {
         @Override
         public String getName() {
             return "airtight_assembly_driver";
-        }
-    }
-
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
-    public static final class EndIncinerationBlower extends ConfigBase {
-        public final ConfigBool ignitionAffectsPlayers = b(true, "ignition_affects_players", "Allow the End Incineration Blower ignition mode to affect players.");
-        public final ConfigFloat ignitionDamagePerPulse = f(2, 0, "ignition_damage_per_pulse", "[Unit: damage points]", "Direct damage per ignition pulse to living entities other than Snow Golems. A value of 0 disables this direct damage but does not disable ignition.");
-        public final ConfigFloat maxRadius = f(3.5F, 0.5F, 7, "max_radius", "[Unit: blocks]", "Maximum radius of the End Incineration Blower cubic working area. Increasing the radius increases scanning overhead.");
-
-        @Override
-        public String getName() {
-            return "end_incineration_blower";
         }
     }
 

@@ -33,6 +33,37 @@ public class ForgingPressRecipe extends StandardGasProcessingRecipe<RecipeInput>
         super(CCBRecipeTypes.FORGING_PRESS, params);
     }
 
+    public static boolean canConvertSmithingRecipe(Recipe<?> source) {
+        return SmithingRecipeBridge.getIngredients(source) != null;
+    }
+
+    public static RecipeHolder<ForgingPressRecipe> convertToForgingPressRecipe(RecipeHolder<?> sourceHolder) {
+        Builder<ForgingPressRecipe> builder = new Builder<>(ForgingPressRecipe::new, sourceHolder.id());
+        Recipe<?> sourceRecipe = sourceHolder.value();
+        Ingredients smithingIngredients = SmithingRecipeBridge.getIngredients(sourceRecipe);
+        if (sourceRecipe instanceof SmithingRecipe smithingRecipe && smithingIngredients != null) {
+            ForgingPressRecipe forgingRecipe = builder.require(smithingIngredients.base()).require(smithingIngredients.template()).require(smithingIngredients.addition()).build().setSmithingRecipe(smithingRecipe);
+            return new RecipeHolder<>(sourceHolder.id(), forgingRecipe);
+        }
+
+        return new RecipeHolder<>(sourceHolder.id(), builder.build());
+    }
+
+    public static RecipeHolder<ForgingPressRecipe> convertPressingToForgingPressRecipe(RecipeHolder<?> sourceHolder) {
+        Builder<ForgingPressRecipe> builder = new Builder<>(ForgingPressRecipe::new, sourceHolder.id());
+        if (!(sourceHolder.value() instanceof PressingRecipe pressingRecipe)) {
+            return new RecipeHolder<>(sourceHolder.id(), builder.build());
+        }
+
+        builder.withItemIngredients(pressingRecipe.getIngredients());
+        pressingRecipe.getRollableResults().forEach(builder::output);
+        return new RecipeHolder<>(sourceHolder.id(), builder.build());
+    }
+
+    private static boolean hasIngredient(NonNullList<Ingredient> ingredients, int index) {
+        return index >= 0 && index < ingredients.size() && !ingredients.get(index).isEmpty();
+    }
+
     @Override
     protected int getMaxInputCount() {
         return 3;
@@ -95,39 +126,8 @@ public class ForgingPressRecipe extends StandardGasProcessingRecipe<RecipeInput>
         return ForgingPressCraftPlanner.planFluidConsumption(getFluidIngredients(), fluidHandler, new int[fluidHandler.getTanks()], 1) && GasConsumptionPlanner.plan(getGasRequirements(), gasHandler).isPresent();
     }
 
-    public static boolean canConvertSmithingRecipe(Recipe<?> source) {
-        return SmithingRecipeBridge.getIngredients(source) != null;
-    }
-
-    public static RecipeHolder<ForgingPressRecipe> convertToForgingPressRecipe(RecipeHolder<?> sourceHolder) {
-        Builder<ForgingPressRecipe> builder = new Builder<>(ForgingPressRecipe::new, sourceHolder.id());
-        Recipe<?> sourceRecipe = sourceHolder.value();
-        Ingredients smithingIngredients = SmithingRecipeBridge.getIngredients(sourceRecipe);
-        if (sourceRecipe instanceof SmithingRecipe smithingRecipe && smithingIngredients != null) {
-            ForgingPressRecipe forgingRecipe = builder.require(smithingIngredients.base()).require(smithingIngredients.template()).require(smithingIngredients.addition()).build().setSmithingRecipe(smithingRecipe);
-            return new RecipeHolder<>(sourceHolder.id(), forgingRecipe);
-        }
-
-        return new RecipeHolder<>(sourceHolder.id(), builder.build());
-    }
-
-    public static RecipeHolder<ForgingPressRecipe> convertPressingToForgingPressRecipe(RecipeHolder<?> sourceHolder) {
-        Builder<ForgingPressRecipe> builder = new Builder<>(ForgingPressRecipe::new, sourceHolder.id());
-        if (!(sourceHolder.value() instanceof PressingRecipe pressingRecipe)) {
-            return new RecipeHolder<>(sourceHolder.id(), builder.build());
-        }
-
-        builder.withItemIngredients(pressingRecipe.getIngredients());
-        pressingRecipe.getRollableResults().forEach(builder::output);
-        return new RecipeHolder<>(sourceHolder.id(), builder.build());
-    }
-
     public @Nullable SmithingRecipe getSmithingRecipe() {
         return smithingRecipe;
-    }
-
-    private static boolean hasIngredient(NonNullList<Ingredient> ingredients, int index) {
-        return index >= 0 && index < ingredients.size() && !ingredients.get(index).isEmpty();
     }
 
     private ForgingPressRecipe setSmithingRecipe(@Nullable SmithingRecipe recipe) {

@@ -52,6 +52,10 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         display = new AirtightHatchDisplay(this);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_HATCH.get(), (hatch, context) -> hatch.tankBehaviour.getCapability());
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         tankBehaviour = SmartGasTankBehaviour.single(this, 0, 0).forbidExtraction().forbidInsertion();
@@ -133,10 +137,6 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
         }
 
         return blockState.getValue(AirtightHatchBlock.CANISTER_TYPE) == CanisterType.CREATIVE;
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_HATCH.get(), (hatch, context) -> hatch.tankBehaviour.getCapability());
     }
 
     public ItemStack createCanisterItemStack() {

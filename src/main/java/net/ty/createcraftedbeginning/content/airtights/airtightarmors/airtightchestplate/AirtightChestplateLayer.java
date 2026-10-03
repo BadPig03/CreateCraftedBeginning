@@ -35,6 +35,28 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
         super(renderer);
     }
 
+    public static void registerOnAll(EntityRenderDispatcher dispatcher) {
+        for (EntityRenderer<? extends Player> renderer : dispatcher.getSkinMap().values()) {
+            registerOn(renderer);
+        }
+    }
+
+    private static void registerOn(EntityRenderer<?> renderer) {
+        if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer)) {
+            return;
+        }
+
+        registerOnLiving(livingRenderer);
+    }
+
+    private static <T extends LivingEntity, M extends EntityModel<T>> void registerOnLiving(LivingEntityRenderer<T, M> renderer) {
+        if (!(renderer.getModel() instanceof HumanoidModel<?>)) {
+            return;
+        }
+
+        renderer.addLayer(new AirtightChestplateLayer<>(renderer));
+    }
+
     @Override
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int light, LivingEntity entity, float yaw, float pitch, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!(getParentModel() instanceof HumanoidModel<?> model) || !(entity instanceof Player player) || player.getPose() == Pose.SLEEPING) {
@@ -67,27 +89,5 @@ public class AirtightChestplateLayer<T extends LivingEntity, M extends EntityMod
         }
 
         poseStack.popPose();
-    }
-
-    public static void registerOnAll(EntityRenderDispatcher dispatcher) {
-        for (EntityRenderer<? extends Player> renderer : dispatcher.getSkinMap().values()) {
-            registerOn(renderer);
-        }
-    }
-
-    private static void registerOn(EntityRenderer<?> renderer) {
-        if (!(renderer instanceof LivingEntityRenderer<?, ?> livingRenderer)) {
-            return;
-        }
-
-        registerOnLiving(livingRenderer);
-    }
-
-    private static <T extends LivingEntity, M extends EntityModel<T>> void registerOnLiving(LivingEntityRenderer<T, M> renderer) {
-        if (!(renderer.getModel() instanceof HumanoidModel<?>)) {
-            return;
-        }
-
-        renderer.addLayer(new AirtightChestplateLayer<>(renderer));
     }
 }

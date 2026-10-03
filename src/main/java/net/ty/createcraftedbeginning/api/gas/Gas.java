@@ -9,6 +9,7 @@ import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
@@ -21,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -37,6 +39,7 @@ public class Gas {
     private final ResourceLocation texture;
     private final int tint;
     private final int alpha;
+    private final boolean usableInEquipment;
     private final Set<TagKey<Gas>> tags;
 
     @Nullable
@@ -46,12 +49,8 @@ public class Gas {
         texture = builder.getTexture();
         tint = builder.getTint();
         alpha = builder.getAlpha();
+        usableInEquipment = builder.isUsableInEquipment();
         tags = builder.getTags() != null ? Set.copyOf(builder.getTags()) : Collections.emptySet();
-    }
-
-    @Override
-    public String toString() {
-        return GasRegistries.GAS_REGISTRY.wrapAsHolder(this).getRegisteredName();
     }
 
     @SuppressWarnings("unused")
@@ -88,6 +87,11 @@ public class Gas {
         return GasRegistries.GAS_REGISTRY.getOptional(location).orElse(EMPTY_GAS_HOLDER.value());
     }
 
+    @Override
+    public String toString() {
+        return GasRegistries.GAS_REGISTRY.wrapAsHolder(this).getRegisteredName();
+    }
+
     public String getTranslationKey() {
         if (translationKey != null) {
             return translationKey;
@@ -116,6 +120,14 @@ public class Gas {
         return tags.contains(tag);
     }
 
+    /**
+     * Returns whether airtight tools, weapons and armor may use this gas as a supply.
+     * This registration-time property does not restrict storage, transport, machine recipes or release effects.
+     */
+    public boolean isUsableInEquipment() {
+        return usableInEquipment;
+    }
+
     public Holder<Gas> getHolder() {
         return builtInRegistryHolder;
     }
@@ -130,6 +142,22 @@ public class Gas {
 
     public int getTint() {
         return ARGB32.color(alpha, tint);
+    }
+
+    public int getTint(GasStack stack) {
+        return getTint();
+    }
+
+    public Component getName(GasStack stack) {
+        return Component.translatable(getTranslationKey());
+    }
+
+    /**
+     * Returns localized, read-only information about this stack, excluding its name and stored amount.
+     * The default implementation has no additional information. Implementations must not modify the stack.
+     */
+    public List<Component> getTooltip(GasStack stack) {
+        return List.of();
     }
 
     public Set<TagKey<Gas>> getTags() {

@@ -44,6 +44,10 @@ public class GasCanisterPackItem extends Item implements MenuProvider, GasFilter
         super(properties);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerItem(CanisterCapabilities.ITEM, (itemStack, context) -> new GasCanisterPackContainerContents(itemStack), CCBItems.GAS_CANISTER_PACK);
+    }
+
     @Override
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
         return oldStack.getItem() != newStack.getItem();
@@ -94,6 +98,7 @@ public class GasCanisterPackItem extends Item implements MenuProvider, GasFilter
             tooltip.add(CCBLang.translate("gui.gas_canister_pack.number", tankIndex + 1).style(ChatFormatting.GRAY).component());
             if (!gasContent.isEmpty()) {
                 tooltip.add(CCBLang.translate("gui.gas_canister.content").add(CCBLang.gasName(gasContent).style(ChatFormatting.GOLD)).style(ChatFormatting.GRAY).component());
+                tooltip.addAll(gasContent.getGasType().getTooltip(gasContent));
             }
 
             if (isCreative) {
@@ -159,9 +164,5 @@ public class GasCanisterPackItem extends Item implements MenuProvider, GasFilter
         }
 
         return candidateGas -> !candidateGas.isEmpty() && acceptedGases.contains(candidateGas);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerItem(CanisterCapabilities.ITEM, (itemStack, context) -> new GasCanisterPackContainerContents(itemStack), CCBItems.GAS_CANISTER_PACK);
     }
 }

@@ -24,6 +24,15 @@ final class ResidueOutletTooltip {
         this.inventory = inventory;
     }
 
+    private static void addItemTooltip(List<Component> tooltip, ItemStack item) {
+        CCBLang.text("").add(Component.translatable(item.getDescriptionId()).withStyle(ChatFormatting.GRAY)).add(CCBLang.text(" x" + item.getCount()).style(ChatFormatting.GREEN)).forGoggles(tooltip, 1);
+    }
+
+    private static void addFluidTooltip(List<Component> tooltip, FluidStack fluid) {
+        LangBuilder unitLabel = CCBLang.translate("gui.unit.milli_buckets");
+        CCBLang.fluidName(fluid).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(fluid.getAmount()).add(unitLabel).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
+    }
+
     boolean addToGoggleTooltip(List<Component> tooltip) {
         ItemStack storedItem = inventory.getStackInSlot(0);
         FluidStack storedFluid = outlet.getStoredFluid();
@@ -41,14 +50,5 @@ final class ResidueOutletTooltip {
             addFluidTooltip(tooltip, storedFluid);
         }
         return true;
-    }
-
-    private static void addItemTooltip(List<Component> tooltip, ItemStack item) {
-        CCBLang.text("").add(Component.translatable(item.getDescriptionId()).withStyle(ChatFormatting.GRAY)).add(CCBLang.text(" x" + item.getCount()).style(ChatFormatting.GREEN)).forGoggles(tooltip, 1);
-    }
-
-    private static void addFluidTooltip(List<Component> tooltip, FluidStack fluid) {
-        LangBuilder unitLabel = CCBLang.translate("gui.unit.milli_buckets");
-        CCBLang.fluidName(fluid).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(CCBLang.number(fluid.getAmount()).add(unitLabel).style(ChatFormatting.BLUE)).forGoggles(tooltip, 1);
     }
 }

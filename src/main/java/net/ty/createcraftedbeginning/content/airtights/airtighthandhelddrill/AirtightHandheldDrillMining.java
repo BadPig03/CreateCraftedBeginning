@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -13,6 +14,9 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.Unbreakable;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -21,9 +25,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.ExperienceConversionUpgrade;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HarvestOptimizationUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.LiquidReplacementUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.MagnetUpgrade;
-import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.SilkTouchUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
 import net.ty.createcraftedbeginning.gas.interaction.GasInteractionFeedback;
@@ -50,15 +54,24 @@ final class AirtightHandheldDrillMining {
     static ItemStack createDrillUsedTool(ItemStack drill, ServerLevel level) {
         ItemStack usedTool = new ItemStack(Items.NETHERITE_PICKAXE);
         usedTool.set(DataComponents.ENCHANTMENTS, drill.getTagEnchantments());
-        if (SilkTouchUpgrade.INSTANCE.canApply(drill)) {
-            usedTool.enchant(level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.SILK_TOUCH), 1);
+        usedTool.set(DataComponents.UNBREAKABLE, new Unbreakable(false));
+        if (!HarvestOptimizationUpgrade.INSTANCE.isInstalled(drill)) {
+            return usedTool;
         }
+
+        boolean silkTouch = HarvestOptimizationUpgrade.INSTANCE.canApply(drill);
+        Holder<Enchantment> miningEnchantment = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(silkTouch ? Enchantments.SILK_TOUCH : Enchantments.FORTUNE);
+        int enchantmentLevel = silkTouch ? 1 : HarvestOptimizationUpgrade.FORTUNE_LEVEL;
+        EnchantmentHelper.updateEnchantments(usedTool, enchantments -> {
+            enchantments.removeIf(enchantment -> enchantment.is(Enchantments.SILK_TOUCH) || enchantment.is(Enchantments.FORTUNE));
+            enchantments.set(miningEnchantment, enchantmentLevel);
+        });
         return usedTool;
     }
 
     static float calculateFinalBreakSpeed(float breakSpeed, Player player, ItemStack drill, BlockPos basePos) {
         Level level = player.level();
-        AirtightHandheldDrillMiningContext context = AirtightHandheldDrillMiningContext.of(drill, basePos, level);
+        AirtightHandheldDrillMiningContext context = AirtightHandheldDrillMiningContext.of(drill, basePos, level, player);
         if (!context.isValidBaseTarget()) {
             return -2;
         }
@@ -89,7 +102,7 @@ final class AirtightHandheldDrillMining {
             CCBAdvancements.EVEN_HARDER_THAN_OBSIDIAN.awardTo(player);
         }
 
-        AirtightHandheldDrillMiningContext context = AirtightHandheldDrillMiningContext.of(drill, basePos, level, baseState);
+        AirtightHandheldDrillMiningContext context = AirtightHandheldDrillMiningContext.of(drill, basePos, level, baseState, player);
         if (context.isEmpty() || !context.isValidBaseTarget()) {
             return;
         }
@@ -101,11 +114,11 @@ final class AirtightHandheldDrillMining {
         }
 
         AffordableFuel selectedFuel = affordableFuel.get();
-        if (isInstantBreakable(baseState, basePos, level) && context.destructionPos().stream().anyMatch(pos -> !isInstantBreakable(pos, level))) {
+        if (baseState.getDestroySpeed(level, basePos) == 0 && context.destructionPos().stream().anyMatch(pos -> !isInstantBreakable(pos, level))) {
             return;
         }
 
-        boolean silkTouch = SilkTouchUpgrade.INSTANCE.canApply(drill);
+        boolean silkTouch = HarvestOptimizationUpgrade.INSTANCE.canApply(drill);
         boolean magnet = MagnetUpgrade.INSTANCE.canApply(drill);
         boolean experienceConversion = ExperienceConversionUpgrade.INSTANCE.canApply(drill);
         boolean liquidReplacement = LiquidReplacementUpgrade.INSTANCE.canApply(drill);
@@ -129,7 +142,9 @@ final class AirtightHandheldDrillMining {
             successfulBreakCount++;
         }
 
-        long gasConsumption = GasConsumptionMath.roundUp(AirtightHandheldDrillFuel.calculateRawGasConsumption(successfulBlockConsumption, selectedFuel.gasType(), selectedFuel.sourcePressurePa()));
+        HandheldDrillAerogelProtection.apply(serverPlayer, drill, context.totalPos());
+
+        long gasConsumption = GasConsumptionMath.roundUp(AirtightHandheldDrillFuel.calculateRawGasConsumption(successfulBlockConsumption, selectedFuel.gasType()));
         if (!CanisterContainerConsumers.interactContainer(player, new AffordableFuel(selectedFuel.gasContent(), selectedFuel.sourcePressurePa(), gasConsumption), () -> true, false)) {
             GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", selectedFuel.gasContent().getHoverName());
         }
@@ -156,10 +171,6 @@ final class AirtightHandheldDrillMining {
         return level.getBlockState(basePos).getDestroySpeed(level, basePos) == 0;
     }
 
-    private static boolean isInstantBreakable(BlockState state, BlockPos pos, Level level) {
-        return state.getDestroySpeed(level, pos) == 0;
-    }
-
     private static float calculateMiningHardnessMultiplier(AirtightHandheldDrillMiningContext context) {
         Set<BlockPos> breakSpeedPos = context.breakSpeedPos();
         if (breakSpeedPos.isEmpty()) {
@@ -181,9 +192,8 @@ final class AirtightHandheldDrillMining {
             return 1;
         }
 
-        double logarithmicSize = Math.log10(blockCount + 9);
-        float sizeFactor = (float) (Mth.square(logarithmicSize) * logarithmicSize);
-        return Mth.clamp(1 / sizeFactor, 0.01F, 1);
+        float logarithmicSize = (float) Math.log10(blockCount + 9);
+        return Mth.clamp(1 / logarithmicSize, 0.01F, 1);
     }
 
     private static boolean destroyAdditionalBlockAsPlayer(ServerPlayer player, BlockPos pos) {

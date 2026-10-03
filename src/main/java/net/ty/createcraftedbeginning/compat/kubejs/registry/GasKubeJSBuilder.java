@@ -51,6 +51,12 @@ public class GasKubeJSBuilder extends BuilderBase<Gas> {
     }
 
     @SuppressWarnings("unused")
+    public GasKubeJSBuilder usableInEquipment(boolean usableInEquipment) {
+        builder.usableInEquipment(usableInEquipment);
+        return this;
+    }
+
+    @SuppressWarnings("unused")
     public GasKubeJSBuilder alpha(int alpha) {
         builder.alpha(alpha);
         return this;

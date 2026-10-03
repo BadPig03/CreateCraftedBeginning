@@ -95,6 +95,33 @@ public final class GasFilters {
             gases = normalize(gases, respectData);
         }
 
+        private static List<GasStack> normalize(List<GasStack> inputGases, boolean respectData) {
+            if (inputGases.isEmpty()) {
+                return List.of();
+            }
+
+            Set<GasStack> seenGases = respectData ? GasStackLinkedSet.createTypeAndComponentsSet() : GasStackLinkedSet.createTypeSet();
+            List<GasStack> normalizedGases = new ArrayList<>(Math.min(inputGases.size(), MAX_ENTRIES));
+            for (GasStack candidateGas : inputGases) {
+                if (candidateGas == null || candidateGas.isEmpty()) {
+                    continue;
+                }
+
+                GasStack normalizedGas = candidateGas.copyWithAmount(1);
+                if (!seenGases.add(normalizedGas)) {
+                    continue;
+                }
+
+                normalizedGases.add(normalizedGas);
+                if (normalizedGases.size() != MAX_ENTRIES) {
+                    continue;
+                }
+
+                break;
+            }
+            return List.copyOf(normalizedGases);
+        }
+
         @Override
         public @Unmodifiable List<GasStack> gases() {
             return gases.stream().map(GasStack::copy).toList();
@@ -124,33 +151,6 @@ public final class GasFilters {
             Set<GasStack> configuredGases = respectData ? GasStackLinkedSet.createTypeAndComponentsSet() : GasStackLinkedSet.createTypeSet();
             configuredGases.addAll(gases);
             return gasStack -> !gasStack.isEmpty() && blacklist != configuredGases.contains(gasStack);
-        }
-
-        private static List<GasStack> normalize(List<GasStack> inputGases, boolean respectData) {
-            if (inputGases.isEmpty()) {
-                return List.of();
-            }
-
-            Set<GasStack> seenGases = respectData ? GasStackLinkedSet.createTypeAndComponentsSet() : GasStackLinkedSet.createTypeSet();
-            List<GasStack> normalizedGases = new ArrayList<>(Math.min(inputGases.size(), MAX_ENTRIES));
-            for (GasStack candidateGas : inputGases) {
-                if (candidateGas == null || candidateGas.isEmpty()) {
-                    continue;
-                }
-
-                GasStack normalizedGas = candidateGas.copyWithAmount(1);
-                if (!seenGases.add(normalizedGas)) {
-                    continue;
-                }
-
-                normalizedGases.add(normalizedGas);
-                if (normalizedGases.size() != MAX_ENTRIES) {
-                    continue;
-                }
-
-                break;
-            }
-            return List.copyOf(normalizedGases);
         }
     }
 }

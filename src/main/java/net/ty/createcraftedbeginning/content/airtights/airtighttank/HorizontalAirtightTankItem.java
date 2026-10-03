@@ -26,6 +26,32 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
         super(block, properties);
     }
 
+    @Nullable
+    private static Axis getHorizontalAxis(BlockState state) {
+        if (!state.hasProperty(HorizontalAirtightTankBlock.HORIZONTAL_AXIS)) {
+            return null;
+        }
+
+        Axis horizontalAxis = state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
+        if (!horizontalAxis.isHorizontal()) {
+            return null;
+        }
+
+        return horizontalAxis;
+    }
+
+    private static int coordinate(BlockPos pos, Axis axis) {
+        return axis.choose(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    private static BlockPos offsetLayer(BlockPos origin, Axis axis, int uOffset, int vOffset) {
+        return switch (axis) {
+            case X -> origin.offset(0, uOffset, vOffset);
+            case Z -> origin.offset(uOffset, vOffset, 0);
+            default -> throw new IllegalArgumentException("Horizontal airtight tank layer axis must be X or Z; got " + axis + '.');
+        };
+    }
+
     @Override
     void tryMultiPlace(BlockPlaceContext context) {
         Player player = context.getPlayer();
@@ -89,32 +115,6 @@ public class HorizontalAirtightTankItem extends AirtightTankItem {
         }
 
         placeTankLayer(context, level, layerStartPos, clickedFace, tankAxis, width);
-    }
-
-    @Nullable
-    private static Axis getHorizontalAxis(BlockState state) {
-        if (!state.hasProperty(HorizontalAirtightTankBlock.HORIZONTAL_AXIS)) {
-            return null;
-        }
-
-        Axis horizontalAxis = state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS);
-        if (!horizontalAxis.isHorizontal()) {
-            return null;
-        }
-
-        return horizontalAxis;
-    }
-
-    private static int coordinate(BlockPos pos, Axis axis) {
-        return axis.choose(pos.getX(), pos.getY(), pos.getZ());
-    }
-
-    private static BlockPos offsetLayer(BlockPos origin, Axis axis, int uOffset, int vOffset) {
-        return switch (axis) {
-            case X -> origin.offset(0, uOffset, vOffset);
-            case Z -> origin.offset(uOffset, vOffset, 0);
-            default -> throw new IllegalArgumentException("Horizontal airtight tank layer axis must be X or Z; got " + axis + '.');
-        };
     }
 
     private int countTanksToPlace(Level level, BlockPos startPos, Axis tankAxis, int width) {

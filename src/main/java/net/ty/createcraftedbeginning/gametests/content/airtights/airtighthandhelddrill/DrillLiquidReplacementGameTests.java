@@ -30,6 +30,7 @@ import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.config.CCBEquipment.AirtightHandheldDrill;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.DrillMiningDirection;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.ExperienceConversionUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.LiquidReplacementUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.MagnetUpgrade;
@@ -189,7 +190,7 @@ public final class DrillLiquidReplacementGameTests {
         ItemStack drill = new ItemStack(CCBItems.AIRTIGHT_HANDHELD_DRILL.get());
         drill.set(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, List.of(new AirtightUpgradeStatus(LiquidReplacementUpgrade.INSTANCE.getID(), enabled, true)));
         drill.set(CCBDataComponents.DRILL_MINING_SIZE, new BlockPos(1, 1, 1));
-        drill.set(CCBDataComponents.DRILL_MINING_DIRECTION, Direction.SOUTH);
+        drill.set(CCBDataComponents.DRILL_MINING_DIRECTION, DrillMiningDirection.SOUTH);
         player.setItemInHand(InteractionHand.MAIN_HAND, drill);
         ItemStack canister = new ItemStack(CCBItems.GAS_CANISTER.get());
         GasCanisterContainer container = canister.getCapability(CanisterCapabilities.ITEM);
@@ -224,7 +225,7 @@ public final class DrillLiquidReplacementGameTests {
         ItemStack drill = new ItemStack(CCBItems.AIRTIGHT_HANDHELD_DRILL.get());
         drill.set(CCBDataComponents.AIRTIGHT_UPGRADE_STATUS, List.of(new AirtightUpgradeStatus(LiquidReplacementUpgrade.INSTANCE.getID(), enabled, installed)));
         drill.set(CCBDataComponents.DRILL_MINING_SIZE, new BlockPos(area ? 3 : 1, 1, 1));
-        drill.set(CCBDataComponents.DRILL_MINING_DIRECTION, Direction.SOUTH);
+        drill.set(CCBDataComponents.DRILL_MINING_DIRECTION, DrillMiningDirection.SOUTH);
         player.setItemInHand(InteractionHand.MAIN_HAND, drill);
         ItemStack canisterStack = new ItemStack(CCBItems.GAS_CANISTER.get());
         GasCanisterContainer canister = canisterStack.getCapability(CanisterCapabilities.ITEM);

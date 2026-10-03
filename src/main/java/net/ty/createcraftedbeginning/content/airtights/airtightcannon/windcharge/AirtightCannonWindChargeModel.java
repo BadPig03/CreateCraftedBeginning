@@ -41,15 +41,6 @@ class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWindCharge
         core = bone.getChild(NAME_CORE);
     }
 
-    @Override
-    public void setupAnim(AbstractWindCharge entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-    }
-
-    @Override
-    public ModelPart root() {
-        return bone;
-    }
-
     @SuppressWarnings("ConstantExpression")
     static LayerDefinition createLayerDefinition(CannonModelType modelType) {
         MeshDefinition mesh = new MeshDefinition();
@@ -71,6 +62,15 @@ class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWindCharge
         }
         bone.addOrReplaceChild(NAME_CORE, CubeListBuilder.create().texOffs(0, 0).addBox(-2, -2, -2, 4, 4, 4, new CubeDeformation(0)), PartPose.offset(0, 0, 0));
         return LayerDefinition.create(mesh, 64, 32);
+    }
+
+    @Override
+    public void setupAnim(AbstractWindCharge entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+    }
+
+    @Override
+    public ModelPart root() {
+        return bone;
     }
 
     void setupAnimation(CannonAnimationType animationType, float rotationSpeed, float ageInTicks) {

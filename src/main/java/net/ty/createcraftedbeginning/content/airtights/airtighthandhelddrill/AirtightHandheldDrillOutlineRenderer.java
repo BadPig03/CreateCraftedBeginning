@@ -71,12 +71,12 @@ public final class AirtightHandheldDrillOutlineRenderer {
             return;
         }
 
-        renderOutline(level, drill, blockHit.getBlockPos());
+        renderOutline(level, drill, blockHit.getBlockPos(), player);
     }
 
-    private static void renderOutline(Level level, ItemStack drill, BlockPos basePos) {
+    private static void renderOutline(Level level, ItemStack drill, BlockPos basePos, LocalPlayer player) {
         Outliner outliner = Outliner.getInstance();
-        AirtightHandheldDrillMiningContext miningContext = AirtightHandheldDrillMiningContext.of(drill, basePos, level);
+        AirtightHandheldDrillMiningContext miningContext = AirtightHandheldDrillMiningContext.of(drill, basePos, level, player);
         Set<BlockPos> targetPositions = miningContext.totalPos();
         boolean hasHighlightedOutline = showHighlightedCluster(outliner, level, PROTECTED_KEY, miningContext.protectedPos(), COLOR_ORANGE);
         hasHighlightedOutline |= showHighlightedCluster(outliner, level, INSTANT_KEY, miningContext.instantDestructionPos(), COLOR_GREEN);

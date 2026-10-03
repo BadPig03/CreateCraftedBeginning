@@ -74,7 +74,7 @@ public final class RegisterAirtightHandlersEvent extends Event implements IModBu
         AirtightThermoregulatorHandlers.register(block, handler);
     }
 
-    public void registerTurbine(ResourceLocation gas, GameplayPressureProfile profile, float maxLevel) {
-        AirtightTurbineHandlers.register(gas, profile, maxLevel);
+    public void registerTurbine(ResourceLocation gas, float baseLevel, float maxLevel) {
+        AirtightTurbineHandlers.register(gas, baseLevel, maxLevel);
     }
 }

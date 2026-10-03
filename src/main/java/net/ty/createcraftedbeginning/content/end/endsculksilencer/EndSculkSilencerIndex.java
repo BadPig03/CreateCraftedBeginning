@@ -16,6 +16,20 @@ final class EndSculkSilencerIndex {
     private final Map<ResourceLocation, Map<BlockPos, EndSculkSilencerInstance>> instancesByDimension = new HashMap<>();
     private final Map<ResourceLocation, Long2IntOpenHashMap> coveredChunksByDimension = new HashMap<>();
 
+    private static void decrementCoverage(Long2IntOpenHashMap coverageCounts, long chunkKey) {
+        int coverageCount = coverageCounts.get(chunkKey);
+        if (coverageCount <= 0) {
+            return;
+        }
+
+        if (coverageCount == 1) {
+            coverageCounts.remove(chunkKey);
+            return;
+        }
+
+        coverageCounts.put(chunkKey, coverageCount - 1);
+    }
+
     synchronized boolean hasCoverage(ResourceLocation dimension) {
         Long2IntOpenHashMap coverageCounts = coveredChunksByDimension.get(dimension);
         return coverageCounts != null && !coverageCounts.isEmpty();
@@ -90,20 +104,6 @@ final class EndSculkSilencerIndex {
     synchronized void clear() {
         instancesByDimension.clear();
         coveredChunksByDimension.clear();
-    }
-
-    private static void decrementCoverage(Long2IntOpenHashMap coverageCounts, long chunkKey) {
-        int coverageCount = coverageCounts.get(chunkKey);
-        if (coverageCount <= 0) {
-            return;
-        }
-
-        if (coverageCount == 1) {
-            coverageCounts.remove(chunkKey);
-            return;
-        }
-
-        coverageCounts.put(chunkKey, coverageCount - 1);
     }
 
     private void index(EndSculkSilencerInstance instance) {

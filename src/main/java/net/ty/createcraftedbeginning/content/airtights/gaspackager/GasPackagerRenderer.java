@@ -33,6 +33,30 @@ public class GasPackagerRenderer extends SmartBlockEntityRenderer<GasPackagerBlo
         super(context);
     }
 
+    static PartialModel getTrayModel(BlockState state) {
+        if (!(state.getBlock() instanceof GasPackagerBlock)) {
+            return CCBPartialModels.GAS_PACKAGER_TRAY_DEFRAG;
+        }
+
+        return CCBPartialModels.GAS_PACKAGER_TRAY_REGULAR;
+    }
+
+    static PartialModel getHatchModel(GasPackagerBlockEntity packager) {
+        if (!isHatchOpen(packager)) {
+            return CCBPartialModels.GAS_PACKAGER_HATCH_CLOSED;
+        }
+
+        return CCBPartialModels.GAS_PACKAGER_HATCH_OPEN;
+    }
+
+    private static boolean isHatchOpen(GasPackagerBlockEntity packager) {
+        if (packager.animationInward) {
+            return packager.animationTicks > 1 && packager.animationTicks < PackagerBlockEntity.CYCLE - 5;
+        }
+
+        return packager.animationTicks > 5 && packager.animationTicks < PackagerBlockEntity.CYCLE - 1;
+    }
+
     @Override
     protected void renderSafe(GasPackagerBlockEntity packager, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         super.renderSafe(packager, partialTicks, poseStack, buffer, light, overlay);
@@ -60,29 +84,5 @@ public class GasPackagerRenderer extends SmartBlockEntityRenderer<GasPackagerBlo
         BalloonRenderHelper.applyBottomAnchoredFixedItemScale(poseStack, balloonScale);
         Minecraft.getInstance().getItemRenderer().renderStatic(null, renderedBox, ItemDisplayContext.FIXED, false, poseStack, buffer, level, light, overlay, 0);
         poseStack.popPose();
-    }
-
-    static PartialModel getTrayModel(BlockState state) {
-        if (!(state.getBlock() instanceof GasPackagerBlock)) {
-            return CCBPartialModels.GAS_PACKAGER_TRAY_DEFRAG;
-        }
-
-        return CCBPartialModels.GAS_PACKAGER_TRAY_REGULAR;
-    }
-
-    static PartialModel getHatchModel(GasPackagerBlockEntity packager) {
-        if (!isHatchOpen(packager)) {
-            return CCBPartialModels.GAS_PACKAGER_HATCH_CLOSED;
-        }
-
-        return CCBPartialModels.GAS_PACKAGER_HATCH_OPEN;
-    }
-
-    private static boolean isHatchOpen(GasPackagerBlockEntity packager) {
-        if (packager.animationInward) {
-            return packager.animationTicks > 1 && packager.animationTicks < PackagerBlockEntity.CYCLE - 5;
-        }
-
-        return packager.animationTicks > 5 && packager.animationTicks < PackagerBlockEntity.CYCLE - 1;
     }
 }

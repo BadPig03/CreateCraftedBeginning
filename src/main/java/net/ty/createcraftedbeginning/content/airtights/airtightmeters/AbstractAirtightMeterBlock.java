@@ -23,6 +23,16 @@ public abstract class AbstractAirtightMeterBlock<T extends AbstractAirtightMeter
         super(properties);
     }
 
+    public static boolean isDisplayFace(BlockState state, Direction face) {
+        Axis pipeAxis = state.getValue(AXIS);
+        Axis faceAxis = face.getAxis();
+        return switch (pipeAxis) {
+            case Y -> faceAxis != Axis.Y;
+            case Z -> faceAxis == Axis.X;
+            default -> faceAxis == Axis.Z;
+        };
+    }
+
     @Override
     public boolean hasAnalogOutputSignal(BlockState state) {
         return true;
@@ -41,15 +51,5 @@ public abstract class AbstractAirtightMeterBlock<T extends AbstractAirtightMeter
     @Override
     public boolean canConnectOnFace(BlockPos currentPos, BlockState currentState, Direction localFace) {
         return currentState.getValue(AXIS) == localFace.getAxis();
-    }
-
-    public static boolean isDisplayFace(BlockState state, Direction face) {
-        Axis pipeAxis = state.getValue(AXIS);
-        Axis faceAxis = face.getAxis();
-        return switch (pipeAxis) {
-            case Y -> faceAxis != Axis.Y;
-            case Z -> faceAxis == Axis.X;
-            default -> faceAxis == Axis.Z;
-        };
     }
 }

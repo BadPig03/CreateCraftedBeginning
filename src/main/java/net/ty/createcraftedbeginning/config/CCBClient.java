@@ -34,7 +34,6 @@ public final class CCBClient extends ConfigBase {
     @MethodsReturnNonnullByDefault
     public static final class Outlines extends ConfigBase {
         public final ConfigBool showAirtightEncasedPipeSides = b(true, "show_airtight_encased_pipe_sides", "Show the open and closed sides of Airtight Encased Pipes while holding a Wrench and wearing Engineer's Goggles.");
-        public final ConfigBool showEndIncinerationBlowerRange = b(true, "show_end_incineration_blower_range", "Show the End Incineration Blower's working range when its range display is enabled and the player is wearing Engineer's Goggles.");
         public final ConfigBool showEndSculkSilencerChunks = b(true, "show_end_sculk_silencer_chunks", "Show the chunk columns affected by the End Sculk Silencer when its range display is enabled and the player is wearing Engineer's Goggles.");
         public final ConfigBool showGasReleaseAreas = b(true, "show_gas_release_areas", "Show gas release area outlines while wearing Engineer's Goggles.");
 
@@ -48,7 +47,6 @@ public final class CCBClient extends ConfigBase {
     @MethodsReturnNonnullByDefault
     public static final class Particles extends ConfigBase {
         public final ConfigBool showChestplateJetpackParticles = b(true, "show_chestplate_jetpack_particles", "Show jetpack particles while flying with an Airtight Chestplate.");
-        public final ConfigBool showEndIncinerationBlowerParticles = b(true, "show_end_incineration_blower_particles", "Show particles produced by the End Incineration Blower.");
 
         @Override
         public String getName() {

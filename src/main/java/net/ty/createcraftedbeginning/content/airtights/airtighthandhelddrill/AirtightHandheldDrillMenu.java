@@ -13,6 +13,8 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.SlotItemHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HandheldDrillAerogelProtectionButton;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.LiquidReplacementUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradableMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgrade;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -38,6 +40,11 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
 
     AirtightHandheldDrillMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder, InteractionHand sourceHand) {
         super(type, id, inv, contentHolder, sourceHand);
+    }
+
+    @Override
+    public boolean canToggleUpgrade(AirtightUpgrade upgrade) {
+        return (upgrade != HandheldDrillAerogelProtectionButton.INSTANCE || getStatus(LiquidReplacementUpgrade.INSTANCE).isInstalled()) && super.canToggleUpgrade(upgrade);
     }
 
     @Override

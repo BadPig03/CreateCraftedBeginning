@@ -104,12 +104,12 @@ public final class AirtightFractionationTowerBlockEntity extends SmartBlockEntit
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        serialization.write(compoundTag);
+        serialization.write(compoundTag, provider);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        serialization.read(compoundTag, clientPacket);
+        serialization.read(compoundTag, provider, clientPacket);
         super.read(compoundTag, provider, clientPacket);
     }
 

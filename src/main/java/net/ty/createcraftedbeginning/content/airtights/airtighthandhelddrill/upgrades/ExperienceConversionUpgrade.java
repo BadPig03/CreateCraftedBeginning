@@ -24,7 +24,7 @@ import java.util.List;
 public enum ExperienceConversionUpgrade implements AirtightUpgrade {
     INSTANCE;
 
-    public static final float BASE_GAS_MULTIPLIER = 3;
+    public static final float BASE_GAS_MULTIPLIER = 2;
 
     private static final ResourceLocation ID = CCBAPI.asResource("experience_conversion");
     private static final Couple<Integer> OFFSET = Couple.create(159, 78);

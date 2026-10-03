@@ -23,6 +23,14 @@ public final class GasInjectionChamberOperationState {
     private boolean executionAttempted;
     private @Nullable GasInjectionRecipe recipe;
 
+    private static float sanitizePressureSpeedMultiplier(float multiplier) {
+        if (Float.isFinite(multiplier) && multiplier >= 1.0F) {
+            return multiplier;
+        }
+
+        return 1;
+    }
+
     @Internal
     public void startProcessing(OperationType type, float pressureSpeedMultiplier, @Nullable GasInjectionRecipe recipe) {
         processingCycle++;
@@ -93,14 +101,6 @@ public final class GasInjectionChamberOperationState {
         pressureSpeedMultiplier = 1;
         executionAttempted = false;
         recipe = null;
-    }
-
-    private static float sanitizePressureSpeedMultiplier(float multiplier) {
-        if (Float.isFinite(multiplier) && multiplier >= 1.0F) {
-            return multiplier;
-        }
-
-        return 1;
     }
 
     @Internal

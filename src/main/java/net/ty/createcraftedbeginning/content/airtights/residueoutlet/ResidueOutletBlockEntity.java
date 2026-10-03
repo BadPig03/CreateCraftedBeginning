@@ -46,6 +46,11 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
         setLazyTickRate(LAZY_TICK_RATE);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.fluidTankBehaviour.getCapability());
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.inventory.getExtractionCapability());
+    }
+
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltipLines, boolean isPlayerSneaking) {
         return tooltip.addToGoggleTooltip(tooltipLines);
@@ -93,11 +98,6 @@ public class ResidueOutletBlockEntity extends SmartBlockEntity implements IHaveG
     @Override
     public @Nullable ResidueInsertionPlan createResidueInsertionPlan(FluidStack fluidStack, ItemStack itemStack, int maxAmount) {
         return insertionPlanner.create(fluidStack, itemStack, maxAmount);
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.fluidTankBehaviour.getCapability());
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.RESIDUE_OUTLET.get(), (outlet, context) -> outlet.inventory.getExtractionCapability());
     }
 
     public int insertResidueFluid(FluidStack fluidStack, FluidAction action) {

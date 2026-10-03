@@ -28,13 +28,6 @@ class AirtightAssemblyDriverTooltipBuilder {
         this.driverCore = driverCore;
     }
 
-    void addToGoggleTooltip(List<Component> tooltip) {
-        AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
-        addStatusLine(levelCalculator.getCurrentLevel(), tooltip);
-        addProgressBars(levelCalculator.getLevels(), tooltip);
-        addDetailedInfo(tooltip);
-    }
-
     private static void addStatusLine(int currentLevel, List<Component> tooltip) {
         MutableComponent levelText = createLevelText(currentLevel);
         CCBLang.translate("gui.airtight_assembly_driver.status", levelText.withStyle(ChatFormatting.GREEN)).forGoggles(tooltip);
@@ -131,6 +124,13 @@ class AirtightAssemblyDriverTooltipBuilder {
         MutableComponent engineText = engineCount == 1 ? CCBLang.translate("gui.airtight_assembly_driver.via_one_engine").style(ChatFormatting.DARK_GRAY).component() : CCBLang.translate("gui.airtight_assembly_driver.via_engines", engineCount).style(ChatFormatting.DARK_GRAY).component();
         stressText.append(engineText);
         CCBLang.builder().add(stressText).forGoggles(tooltip, 1);
+    }
+
+    void addToGoggleTooltip(List<Component> tooltip) {
+        AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
+        addStatusLine(levelCalculator.getCurrentLevel(), tooltip);
+        addProgressBars(levelCalculator.getLevels(), tooltip);
+        addDetailedInfo(tooltip);
     }
 
     private void addDetailedInfo(List<Component> tooltip) {

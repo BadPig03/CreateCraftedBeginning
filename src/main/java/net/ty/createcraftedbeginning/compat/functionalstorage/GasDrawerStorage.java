@@ -24,6 +24,15 @@ public final class GasDrawerStorage implements INBTSerializable<CompoundTag> {
         this.handler = handler;
     }
 
+    public static GasStack readStoredGas(CompoundTag storageTag, int slot, Provider provider) {
+        CompoundTag tankTag = storageTag.getCompound(Integer.toString(slot));
+        if (!tankTag.contains(COMPOUND_KEY_GAS)) {
+            return GasStack.EMPTY;
+        }
+
+        return GasStack.parseOptional(provider, tankTag.getCompound(COMPOUND_KEY_GAS));
+    }
+
     @Override
     public CompoundTag serializeNBT(Provider provider) {
         CompoundTag storageTag = new CompoundTag();
@@ -73,14 +82,5 @@ public final class GasDrawerStorage implements INBTSerializable<CompoundTag> {
         finally {
             handler.endTransaction(false);
         }
-    }
-
-    public static GasStack readStoredGas(CompoundTag storageTag, int slot, Provider provider) {
-        CompoundTag tankTag = storageTag.getCompound(Integer.toString(slot));
-        if (!tankTag.contains(COMPOUND_KEY_GAS)) {
-            return GasStack.EMPTY;
-        }
-
-        return GasStack.parseOptional(provider, tankTag.getCompound(COMPOUND_KEY_GAS));
     }
 }

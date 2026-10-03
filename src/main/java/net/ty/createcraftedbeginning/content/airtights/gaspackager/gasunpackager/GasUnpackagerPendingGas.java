@@ -23,6 +23,14 @@ final class GasUnpackagerPendingGas {
 
     private GasStack pendingGas = GasStack.EMPTY;
 
+    private static ItemStack copyBalloon(ItemStack stack) {
+        if (!BalloonItem.isBalloon(stack)) {
+            return ItemStack.EMPTY;
+        }
+
+        return stack.copyWithCount(1);
+    }
+
     boolean isEmpty() {
         return pendingGas.isEmpty();
     }
@@ -82,14 +90,6 @@ final class GasUnpackagerPendingGas {
 
     void clear() {
         pendingGas = GasStack.EMPTY;
-    }
-
-    private static ItemStack copyBalloon(ItemStack stack) {
-        if (!BalloonItem.isBalloon(stack)) {
-            return ItemStack.EMPTY;
-        }
-
-        return stack.copyWithCount(1);
     }
 
     record InsertionResult(ItemStack returnedBalloon, boolean inventoryChanged, long transferredAmount) {

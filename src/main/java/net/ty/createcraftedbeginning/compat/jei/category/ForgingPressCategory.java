@@ -51,6 +51,60 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
         super(info);
     }
 
+    private static int getInputX(int inputIndex) {
+        return 42 - inputIndex * 19;
+    }
+
+    private static int getOutputX(int size) {
+        if (size == 1) {
+            return 144;
+        }
+
+        return 134;
+    }
+
+    private static Optional<IRecipeSlotDrawable> findSlot(List<IRecipeSlotDrawable> slots, String name) {
+        return slots.stream().filter(slot -> slot.getSlotName().filter(name::equals).isPresent()).findFirst();
+    }
+
+    private static List<ItemStack> getSmithingLookupOutputs(ForgingPressRecipe recipe, SmithingRecipe smithingRecipe, Level level) {
+        NonNullList<Ingredient> ingredients = recipe.getIngredients();
+        if (ingredients.size() <= ADDITION_INDEX) {
+            return List.of();
+        }
+
+        List<ItemStack> templates = Arrays.asList(ingredients.get(TEMPLATE_INDEX).getItems());
+        if (templates.isEmpty()) {
+            templates = List.of(ItemStack.EMPTY);
+        }
+
+        List<ItemStack> bases = Arrays.asList(ingredients.get(BASE_INDEX).getItems());
+        if (bases.isEmpty()) {
+            bases = List.of(ItemStack.EMPTY);
+        }
+
+        ItemStack[] additions = ingredients.get(ADDITION_INDEX).getItems();
+        ItemStack addition = additions.length == 0 ? ItemStack.EMPTY : additions[0];
+        List<ItemStack> outputs = new ArrayList<>();
+        for (ItemStack template : templates) {
+            for (ItemStack base : bases) {
+                SmithingRecipeInput smithingInput = new SmithingRecipeInput(template.copyWithCount(1), base.copyWithCount(1), addition.copyWithCount(1));
+                ItemStack smithingResult = smithingRecipe.assemble(smithingInput, level.registryAccess());
+                if (smithingResult.isEmpty()) {
+                    continue;
+                }
+
+                ItemStack lookupResult = smithingResult.copyWithCount(1);
+                if (outputs.stream().anyMatch(existing -> ItemStack.isSameItemSameComponents(existing, lookupResult))) {
+                    continue;
+                }
+
+                outputs.add(lookupResult);
+            }
+        }
+        return outputs;
+    }
+
     @Override
     protected void onDisplayedIngredientsUpdate(ForgingPressRecipe recipe, List<IRecipeSlotDrawable> recipeSlots, IFocusGroup focuses) {
         SmithingRecipe smithingRecipe = recipe.getSmithingRecipe();
@@ -175,59 +229,5 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
         for (ProcessingOutput output : results) {
             builder.addSlot(RecipeIngredientRole.OUTPUT, getOutputX(results.size()), 82).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(addStochasticTooltip(output));
         }
-    }
-
-    private static int getInputX(int inputIndex) {
-        return 42 - inputIndex * 19;
-    }
-
-    private static int getOutputX(int size) {
-        if (size == 1) {
-            return 144;
-        }
-
-        return 134;
-    }
-
-    private static Optional<IRecipeSlotDrawable> findSlot(List<IRecipeSlotDrawable> slots, String name) {
-        return slots.stream().filter(slot -> slot.getSlotName().filter(name::equals).isPresent()).findFirst();
-    }
-
-    private static List<ItemStack> getSmithingLookupOutputs(ForgingPressRecipe recipe, SmithingRecipe smithingRecipe, Level level) {
-        NonNullList<Ingredient> ingredients = recipe.getIngredients();
-        if (ingredients.size() <= ADDITION_INDEX) {
-            return List.of();
-        }
-
-        List<ItemStack> templates = Arrays.asList(ingredients.get(TEMPLATE_INDEX).getItems());
-        if (templates.isEmpty()) {
-            templates = List.of(ItemStack.EMPTY);
-        }
-
-        List<ItemStack> bases = Arrays.asList(ingredients.get(BASE_INDEX).getItems());
-        if (bases.isEmpty()) {
-            bases = List.of(ItemStack.EMPTY);
-        }
-
-        ItemStack[] additions = ingredients.get(ADDITION_INDEX).getItems();
-        ItemStack addition = additions.length == 0 ? ItemStack.EMPTY : additions[0];
-        List<ItemStack> outputs = new ArrayList<>();
-        for (ItemStack template : templates) {
-            for (ItemStack base : bases) {
-                SmithingRecipeInput smithingInput = new SmithingRecipeInput(template.copyWithCount(1), base.copyWithCount(1), addition.copyWithCount(1));
-                ItemStack smithingResult = smithingRecipe.assemble(smithingInput, level.registryAccess());
-                if (smithingResult.isEmpty()) {
-                    continue;
-                }
-
-                ItemStack lookupResult = smithingResult.copyWithCount(1);
-                if (outputs.stream().anyMatch(existing -> ItemStack.isSameItemSameComponents(existing, lookupResult))) {
-                    continue;
-                }
-
-                outputs.add(lookupResult);
-            }
-        }
-        return outputs;
     }
 }

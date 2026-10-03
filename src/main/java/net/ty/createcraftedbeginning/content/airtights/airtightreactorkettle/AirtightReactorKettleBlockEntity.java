@@ -115,6 +115,21 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         serialization = new AirtightReactorKettleSerialization(this, controller);
     }
 
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (kettle, direction) -> kettle.itemPortCapability);
+        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (kettle, direction) -> kettle.fluidPortCapability);
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (kettle, direction) -> kettle.gasPortCapability);
+    }
+
+    @Internal
+    public static int getFluidCapacity() {
+        return Math.max(1, CCBConfig.server().machines.airtightReactorKettle.fluidCapacityPerTank.get()) * FluidType.BUCKET_VOLUME;
+    }
+
+    static long getGasCapacity() {
+        return Math.max(1, CCBConfig.server().machines.airtightReactorKettle.gasVolumePerTank.get()) * GasUnits.LITERS_PER_KILOLITER;
+    }
+
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.BUNDLE_OF_JOY);
@@ -242,19 +257,8 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         return commitCraft(createCraftPlan(itemAmounts, fluidAmounts, gasPlan, outputItems, outputFluids, outputGases));
     }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (kettle, direction) -> kettle.itemPortCapability);
-        event.registerBlockEntity(FluidHandler.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (kettle, direction) -> kettle.fluidPortCapability);
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE.get(), (kettle, direction) -> kettle.gasPortCapability);
-    }
-
     public void startProcessInPonderLevel() {
         controller.startProcessInPonderLevel();
-    }
-
-    @Internal
-    public static int getFluidCapacity() {
-        return Math.max(1, CCBConfig.server().machines.airtightReactorKettle.fluidCapacityPerTank.get()) * FluidType.BUCKET_VOLUME;
     }
 
     @Internal
@@ -320,10 +324,6 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         syncRecipeFilterReplicas();
         setChanged();
         sendData();
-    }
-
-    static long getGasCapacity() {
-        return Math.max(1, CCBConfig.server().machines.airtightReactorKettle.gasVolumePerTank.get()) * GasUnits.LITERS_PER_KILOLITER;
     }
 
     boolean acceptOutputs(List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {

@@ -27,6 +27,14 @@ public final class CrateUnpackingHandler<B extends CratesBlockEntity> implements
         this.discarding = discarding;
     }
 
+    public static <B extends CratesBlockEntity> CrateUnpackingHandler<B> standard(Class<B> blockEntityClass) {
+        return new CrateUnpackingHandler<>(blockEntityClass, false);
+    }
+
+    public static <B extends CratesBlockEntity> CrateUnpackingHandler<B> discarding(Class<B> blockEntityClass) {
+        return new CrateUnpackingHandler<>(blockEntityClass, true);
+    }
+
     @Override
     public boolean unpack(Level level, BlockPos pos, BlockState state, Direction side, List<ItemStack> items, @Nullable PackageOrderWithCrafts orderContext, boolean simulate) {
         BlockEntity blockEntity = level.getBlockEntity(pos);
@@ -48,13 +56,5 @@ public final class CrateUnpackingHandler<B extends CratesBlockEntity> implements
 
             return true;
         });
-    }
-
-    public static <B extends CratesBlockEntity> CrateUnpackingHandler<B> standard(Class<B> blockEntityClass) {
-        return new CrateUnpackingHandler<>(blockEntityClass, false);
-    }
-
-    public static <B extends CratesBlockEntity> CrateUnpackingHandler<B> discarding(Class<B> blockEntityClass) {
-        return new CrateUnpackingHandler<>(blockEntityClass, true);
     }
 }

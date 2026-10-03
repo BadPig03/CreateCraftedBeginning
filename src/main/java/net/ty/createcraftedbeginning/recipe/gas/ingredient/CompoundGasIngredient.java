@@ -26,6 +26,34 @@ public final class CompoundGasIngredient extends GasIngredient {
         this.children = List.copyOf(children);
     }
 
+    public static GasIngredient of(GasIngredient @NotNull ... children) {
+        if (children.length == 0) {
+            return empty();
+        }
+
+        if (children.length == 1) {
+            return children[0];
+        }
+
+        return new CompoundGasIngredient(List.of(children));
+    }
+
+    public static GasIngredient of(List<GasIngredient> children) {
+        if (children.isEmpty()) {
+            return empty();
+        }
+
+        if (children.size() == 1) {
+            return children.getFirst();
+        }
+
+        return new CompoundGasIngredient(children);
+    }
+
+    public static GasIngredient of(Stream<GasIngredient> stream) {
+        return of(stream.toList());
+    }
+
     @Override
     public boolean test(GasStack stack) {
         return children.stream().anyMatch(child -> child.test(stack));
@@ -54,34 +82,6 @@ public final class CompoundGasIngredient extends GasIngredient {
     @Override
     public Stream<GasStack> generateStacks() {
         return children.stream().flatMap(GasIngredient::generateStacks);
-    }
-
-    public static GasIngredient of(GasIngredient @NotNull ... children) {
-        if (children.length == 0) {
-            return empty();
-        }
-
-        if (children.length == 1) {
-            return children[0];
-        }
-
-        return new CompoundGasIngredient(List.of(children));
-    }
-
-    public static GasIngredient of(List<GasIngredient> children) {
-        if (children.isEmpty()) {
-            return empty();
-        }
-
-        if (children.size() == 1) {
-            return children.getFirst();
-        }
-
-        return new CompoundGasIngredient(children);
-    }
-
-    public static GasIngredient of(Stream<GasIngredient> stream) {
-        return of(stream.toList());
     }
 
     public List<GasIngredient> children() {

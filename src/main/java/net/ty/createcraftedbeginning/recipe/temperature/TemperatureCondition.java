@@ -33,13 +33,13 @@ public enum TemperatureCondition implements StringRepresentable {
         this.function = function;
     }
 
+    public static TemperatureCondition getConditionByTemperature(float temperature) {
+        return Arrays.stream(values()).filter(condition -> condition.test(temperature)).findFirst().orElse(NONE);
+    }
+
     @Override
     public String getSerializedName() {
         return Lang.asId(name());
-    }
-
-    public static TemperatureCondition getConditionByTemperature(float temperature) {
-        return Arrays.stream(values()).filter(condition -> condition.test(temperature)).findFirst().orElse(NONE);
     }
 
     public String getTranslationKey() {

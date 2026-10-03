@@ -2,11 +2,9 @@ package net.ty.createcraftedbeginning.content.airtights.gasfilter;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
 import net.ty.createcraftedbeginning.api.canister.GasCanisterContainer;
-import net.ty.createcraftedbeginning.api.gas.Gas;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonItem;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -27,10 +25,9 @@ public final class VirtualGasItems {
             return ItemStack.EMPTY;
         }
 
-        Gas gasType = gasContent.getGasType();
         ItemStack virtualItem = new ItemStack(CCBItems.GAS_VIRTUAL_ITEM.asItem());
-        virtualItem.set(DataComponents.ITEM_NAME, Component.translatable(gasType.getTranslationKey()));
-        virtualItem.set(CCBDataComponents.GAS_VIRTUAL_ITEM_COLOR, gasType.getTint());
+        virtualItem.set(DataComponents.ITEM_NAME, gasContent.getHoverName());
+        virtualItem.set(CCBDataComponents.GAS_VIRTUAL_ITEM_COLOR, gasContent.getHint());
         virtualItem.set(CCBDataComponents.GAS_VIRTUAL_ITEM_TYPE, gasContent.copyWithAmount(1));
         return virtualItem;
     }

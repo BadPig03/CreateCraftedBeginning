@@ -40,11 +40,6 @@ public record GasReleaseRequest(GasStack gas, BlockPos sourcePos, BlockPos effec
         }
     }
 
-    @Override
-    public GasStack gas() {
-        return gas.copy();
-    }
-
     public static GasReleaseRequest directional(GasStack gas, BlockPos sourcePos, Direction direction, GasReleaseCause cause) {
         return directional(gas, sourcePos, direction, cause, OptionalLong.empty());
     }
@@ -67,5 +62,10 @@ public record GasReleaseRequest(GasStack gas, BlockPos sourcePos, BlockPos effec
 
     private static GasReleaseRequest radial(GasStack gas, BlockPos sourcePos, GasReleaseCause cause, OptionalLong sourcePressurePa) {
         return new GasReleaseRequest(gas, sourcePos, sourcePos, Optional.empty(), cause, GasReleaseMode.RADIAL, sourcePressurePa);
+    }
+
+    @Override
+    public GasStack gas() {
+        return gas.copy();
     }
 }

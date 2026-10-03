@@ -94,9 +94,11 @@ public final class GasEncasedPipeConversionGameTests {
             FlowState westFlow = transport.getFlowState(Direction.WEST);
             FlowState eastFlow = transport.getFlowState(Direction.EAST);
             assertPositiveForwardFlow(helper, westFlow, eastFlow, "replaced airtight encased pipe");
-            if (westFlow != null) {
-                helper.assertValueEqual(transport.getThroughputFlowRate(), westFlow.flowRate(), "replaced airtight encased pipe throughput");
+            if (westFlow == null) {
+                throw new NullPointerException("Expected westFlow flow after the network established forward flow.");
             }
+
+            helper.assertValueEqual(transport.getThroughputFlowRate(), westFlow.flowRate(), "replaced airtight encased pipe throughput");
             helper.assertTrue(transport.getFlowState(Direction.NORTH) == null, "Replacement produced ghost north flow");
             helper.assertTrue(transport.getFlowState(Direction.SOUTH) == null, "Replacement produced ghost south flow");
             helper.assertTrue(transport.getFlowState(Direction.UP) == null, "Replacement produced ghost up flow");

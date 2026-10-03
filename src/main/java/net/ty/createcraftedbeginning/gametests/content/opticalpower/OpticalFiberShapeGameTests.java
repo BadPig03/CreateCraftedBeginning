@@ -75,7 +75,7 @@ public final class OpticalFiberShapeGameTests {
                 String name = part.getAsJsonObject("apply").get("model").getAsString();
                 VoxelShape shape = models.get(name);
                 if (shape == null) {
-                    throw new NullPointerException("Missing optical fiber model shape: " + name);
+                    throw new NullPointerException("Missing optical fiber model shape '" + name + "'.");
                 }
 
                 selected.add(name.substring("createcraftedbeginning:block/optical_fiber/".length()));
@@ -83,9 +83,11 @@ public final class OpticalFiberShapeGameTests {
             }
             List<Direction> connections = new ArrayList<>();
             for (Direction direction : Iterate.directions) {
-                if (state.getValue(OpticalFiberBlock.PROPERTY_BY_DIRECTION.get(direction))) {
-                    connections.add(direction);
+                if (!state.getValue(OpticalFiberBlock.PROPERTY_BY_DIRECTION.get(direction))) {
+                    continue;
                 }
+
+                connections.add(direction);
             }
             if (connections.size() == 1) {
                 helper.assertTrue(selected.equals(List.of("end/" + connections.getFirst().getSerializedName())), "Fiber endpoint did not select its metal end: " + state);
@@ -179,6 +181,7 @@ public final class OpticalFiberShapeGameTests {
             }
             return false;
         }
+
         if (condition.has("AND")) {
             for (JsonElement child : condition.getAsJsonArray("AND")) {
                 if (!matches(child.getAsJsonObject(), state)) {
@@ -187,6 +190,7 @@ public final class OpticalFiberShapeGameTests {
             }
             return true;
         }
+
         for (Direction direction : Iterate.directions) {
             String name = direction.getSerializedName();
             if (condition.has(name) && condition.get(name).getAsBoolean() != state.getValue(OpticalFiberBlock.PROPERTY_BY_DIRECTION.get(direction))) {

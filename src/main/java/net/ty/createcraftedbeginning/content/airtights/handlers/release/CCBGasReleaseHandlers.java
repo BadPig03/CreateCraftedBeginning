@@ -14,6 +14,7 @@ import net.ty.createcraftedbeginning.content.airtights.handlers.release.natural.
 import net.ty.createcraftedbeginning.content.airtights.handlers.release.natural.HighPressureEnergizedNaturalAirEffectHandler;
 import net.ty.createcraftedbeginning.content.airtights.handlers.release.natural.HighPressureNaturalAirEffectHandler;
 import net.ty.createcraftedbeginning.content.airtights.handlers.release.natural.NaturalAirEffectHandler;
+import net.ty.createcraftedbeginning.content.airtights.handlers.release.potion.PotionGasEffectHandler;
 import net.ty.createcraftedbeginning.content.airtights.handlers.release.sculk.HighPressureSculkAirEffectHandler;
 import net.ty.createcraftedbeginning.content.airtights.handlers.release.sculk.SculkAirEffectHandler;
 import net.ty.createcraftedbeginning.content.airtights.handlers.release.spore.HighPressureSporeAirEffectHandler;
@@ -32,6 +33,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CCBGasReleaseHandlers {
     public static void register() {
+        GasReleaseHandlers.register(CCBGases.POTION_GAS.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, new PotionGasEffectHandler());
         GasReleaseHandlers.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, new NaturalAirEffectHandler());
         GasReleaseHandlers.register(CCBGases.NATURAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, new HighPressureNaturalAirEffectHandler());
         GasReleaseHandlers.register(CCBGases.ENERGIZED_NATURAL_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, new EnergizedNaturalAirEffectHandler());

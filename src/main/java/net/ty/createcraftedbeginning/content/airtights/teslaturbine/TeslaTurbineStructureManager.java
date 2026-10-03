@@ -40,6 +40,52 @@ class TeslaTurbineStructureManager {
         this.turbine = turbine;
     }
 
+    private static boolean isStructureValid(BlockPos turbinePos, Axis axis, Level level) {
+        for (int u = -1; u <= 1; u++) {
+            for (int v = -1; v <= 1; v++) {
+                if (u == 0 && v == 0) {
+                    continue;
+                }
+
+                BlockPos structuralPos = TeslaTurbineGeometry.calculateStructurePos(turbinePos, axis, u, v);
+                BlockState structuralState = level.getBlockState(structuralPos);
+                if (structuralState.getBlock() instanceof TeslaTurbineStructuralBlock && structuralState.getValue(TeslaTurbineStructuralBlock.AXIS) == axis && structuralState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION) == TeslaTurbineStructuralPosition.fromOffset(u, v) && TeslaTurbineStructuralBlock.getMaster(structuralPos, structuralState).equals(turbinePos)) {
+                    continue;
+                }
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static int countNozzles(List<NozzlePort> ports, BlockPos turbinePos, Axis axis, Level level) {
+        int nozzleCount = 0;
+        for (NozzlePort port : ports) {
+            BlockPos nozzlePos = port.getWorldPosition(turbinePos, axis);
+            BlockState nozzleState = level.getBlockState(nozzlePos);
+            if (!(nozzleState.getBlock() instanceof TeslaTurbineNozzleBlock)) {
+                continue;
+            }
+
+            Direction inwardDirection = nozzleState.getValue(TeslaTurbineNozzleBlock.FACING).getOpposite();
+            BlockPos structuralPos = nozzlePos.relative(inwardDirection);
+            BlockState structuralState = level.getBlockState(structuralPos);
+            if (!(structuralState.getBlock() instanceof TeslaTurbineStructuralBlock)) {
+                continue;
+            }
+
+            BlockPos masterPos = TeslaTurbineStructuralBlock.getMaster(structuralPos, structuralState);
+            if (!masterPos.equals(turbinePos)) {
+                continue;
+            }
+
+            nozzleCount++;
+        }
+        return nozzleCount;
+    }
+
     void tick() {
         if (!evaluate()) {
             return;
@@ -109,52 +155,6 @@ class TeslaTurbineStructureManager {
         structureValid = compoundTag.getBoolean(COMPOUND_KEY_VALID);
         previousClockwiseNozzles = attachedClockwiseNozzles;
         previousCounterClockwiseNozzles = attachedCounterClockwiseNozzles;
-    }
-
-    private static boolean isStructureValid(BlockPos turbinePos, Axis axis, Level level) {
-        for (int u = -1; u <= 1; u++) {
-            for (int v = -1; v <= 1; v++) {
-                if (u == 0 && v == 0) {
-                    continue;
-                }
-
-                BlockPos structuralPos = TeslaTurbineGeometry.calculateStructurePos(turbinePos, axis, u, v);
-                BlockState structuralState = level.getBlockState(structuralPos);
-                if (structuralState.getBlock() instanceof TeslaTurbineStructuralBlock && structuralState.getValue(TeslaTurbineStructuralBlock.AXIS) == axis && structuralState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION) == TeslaTurbineStructuralPosition.fromOffset(u, v) && TeslaTurbineStructuralBlock.getMaster(structuralPos, structuralState).equals(turbinePos)) {
-                    continue;
-                }
-
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static int countNozzles(List<NozzlePort> ports, BlockPos turbinePos, Axis axis, Level level) {
-        int nozzleCount = 0;
-        for (NozzlePort port : ports) {
-            BlockPos nozzlePos = port.getWorldPosition(turbinePos, axis);
-            BlockState nozzleState = level.getBlockState(nozzlePos);
-            if (!(nozzleState.getBlock() instanceof TeslaTurbineNozzleBlock)) {
-                continue;
-            }
-
-            Direction inwardDirection = nozzleState.getValue(TeslaTurbineNozzleBlock.FACING).getOpposite();
-            BlockPos structuralPos = nozzlePos.relative(inwardDirection);
-            BlockState structuralState = level.getBlockState(structuralPos);
-            if (!(structuralState.getBlock() instanceof TeslaTurbineStructuralBlock)) {
-                continue;
-            }
-
-            BlockPos masterPos = TeslaTurbineStructuralBlock.getMaster(structuralPos, structuralState);
-            if (!masterPos.equals(turbinePos)) {
-                continue;
-            }
-
-            nozzleCount++;
-        }
-        return nozzleCount;
     }
 
     private boolean evaluate() {

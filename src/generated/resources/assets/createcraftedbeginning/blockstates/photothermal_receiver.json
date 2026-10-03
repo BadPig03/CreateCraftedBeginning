@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "createcraftedbeginning:block/photothermal_receiver/block"
+    }
+  }
+}

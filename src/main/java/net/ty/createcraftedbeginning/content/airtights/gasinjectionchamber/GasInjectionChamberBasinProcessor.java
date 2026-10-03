@@ -37,6 +37,32 @@ public final class GasInjectionChamberBasinProcessor {
         planner = new GasInjectionChamberBasinPlanner(chamber);
     }
 
+    private static boolean consumeBasinItems(IItemHandler items, List<ItemDrain> drainPlan) {
+        for (ItemDrain itemDrain : drainPlan) {
+            ItemStack executedDrain = items.extractItem(itemDrain.slot(), itemDrain.count(), false);
+            if (executedDrain.getCount() == itemDrain.count() && ItemStack.isSameItemSameComponents(executedDrain, itemDrain.expectedStack())) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean consumeBasinFluids(IFluidHandler fluids, List<FluidStack> drainPlan) {
+        for (FluidStack drainRequest : drainPlan) {
+            FluidStack executedDrain = fluids.drain(drainRequest, FluidAction.EXECUTE);
+            if (executedDrain.getAmount() == drainRequest.getAmount() && FluidStack.isSameFluidSameComponents(executedDrain, drainRequest)) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
     @Internal
     public boolean executeCurrentState() {
         Level level = chamber.getLevel();
@@ -97,32 +123,6 @@ public final class GasInjectionChamberBasinProcessor {
         operation.startProcessing(BASIN_RECIPE, GasRecipePressureSpeed.multiplier(plan.gasPlan()), plan.recipe());
         chamber.setChanged();
         chamber.notifyUpdate();
-    }
-
-    private static boolean consumeBasinItems(IItemHandler items, List<ItemDrain> drainPlan) {
-        for (ItemDrain itemDrain : drainPlan) {
-            ItemStack executedDrain = items.extractItem(itemDrain.slot(), itemDrain.count(), false);
-            if (executedDrain.getCount() == itemDrain.count() && ItemStack.isSameItemSameComponents(executedDrain, itemDrain.expectedStack())) {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private static boolean consumeBasinFluids(IFluidHandler fluids, List<FluidStack> drainPlan) {
-        for (FluidStack drainRequest : drainPlan) {
-            FluidStack executedDrain = fluids.drain(drainRequest, FluidAction.EXECUTE);
-            if (executedDrain.getAmount() == drainRequest.getAmount() && FluidStack.isSameFluidSameComponents(executedDrain, drainRequest)) {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
     }
 
     private Optional<BasinBlockEntity> getBasin() {

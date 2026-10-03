@@ -40,16 +40,6 @@ public final class EndRegistration {
     }
 
     @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> endIncinerationBlower() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/end_incineration_blower/block"))).build())).item().properties(properties -> properties.rarity(Rarity.UNCOMMON)).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
-    }
-
-    @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> endIncinerationBlowerStructural() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/end_incineration_blower/structural"))).build())).lang("End Incineration Blower");
-    }
-
-    @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> endSculkSilencer() {
         return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/end_sculk_silencer/block"))).build())).item().properties(properties -> properties.rarity(Rarity.UNCOMMON)).tag(AllItemTags.CONTRAPTION_CONTROLLED.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
     }

@@ -37,6 +37,19 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
         pack = menu.player.getMainHandItem();
     }
 
+    private static void drawGasCanister(GuiGraphics graphics, ItemStack canister, int x, int y) {
+        if (CanisterContainerSuppliers.isValidGasCanister(canister)) {
+            CANISTER.render(graphics, x, y);
+            return;
+        }
+
+        if (!CanisterContainerSuppliers.isValidCreativeGasCanister(canister)) {
+            return;
+        }
+
+        CREATIVE_CANISTER.render(graphics, x, y);
+    }
+
     @Override
     protected void init() {
         setWindowSize(Math.max(BACKGROUND.getWidth(), PLAYER_INVENTORY.getWidth()), BACKGROUND.getHeight() + 4 + PLAYER_INVENTORY.getHeight());
@@ -78,19 +91,6 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
         Component packName = pack.getHoverName();
         graphics.drawString(font, packName, leftPos + (BACKGROUND.getWidth() - 8) / 2 - font.width(packName) / 2, topPos + 4, 0xFFFFFF, false);
         GuiGameElement.of(pack).scale(4).at(leftPos + BACKGROUND.getWidth() + 11, topPos + BACKGROUND.getHeight() - 48, -200).render(graphics);
-    }
-
-    private static void drawGasCanister(GuiGraphics graphics, ItemStack canister, int x, int y) {
-        if (CanisterContainerSuppliers.isValidGasCanister(canister)) {
-            CANISTER.render(graphics, x, y);
-            return;
-        }
-
-        if (!CanisterContainerSuppliers.isValidCreativeGasCanister(canister)) {
-            return;
-        }
-
-        CREATIVE_CANISTER.render(graphics, x, y);
     }
 
     private void initButtons() {

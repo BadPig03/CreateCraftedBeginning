@@ -34,6 +34,19 @@ import java.util.function.Function;
 public class DefaultCannonHandler implements AirtightCannonHandler, AirtightCannonVisualHandler {
     public static final DefaultCannonHandler INSTANCE = new DefaultCannonHandler();
 
+    private static ExplosionDamageCalculator createDamageCalculator(AirtightCannonShotContext context) {
+        return new SimpleExplosionDamageCalculator(true, false, Optional.of(context.knockbackMultiplier()), BuiltInRegistries.BLOCK.getTag(BlockTags.BLOCKS_WIND_CHARGE_EXPLOSIONS).map(Function.identity())) {
+            @Override
+            public float getKnockbackMultiplier(Entity entity) {
+                if (context.isFriendlyTarget(entity)) {
+                    return 0;
+                }
+
+                return super.getKnockbackMultiplier(entity);
+            }
+        };
+    }
+
     @Override
     public ItemStack getRenderIcon(Level level) {
         return new ItemStack(Items.WIND_CHARGE);
@@ -77,18 +90,5 @@ public class DefaultCannonHandler implements AirtightCannonHandler, AirtightCann
 
     @Override
     public void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-    }
-
-    private static ExplosionDamageCalculator createDamageCalculator(AirtightCannonShotContext context) {
-        return new SimpleExplosionDamageCalculator(true, false, Optional.of(context.knockbackMultiplier()), BuiltInRegistries.BLOCK.getTag(BlockTags.BLOCKS_WIND_CHARGE_EXPLOSIONS).map(Function.identity())) {
-            @Override
-            public float getKnockbackMultiplier(Entity entity) {
-                if (context.isFriendlyTarget(entity)) {
-                    return 0;
-                }
-
-                return super.getKnockbackMultiplier(entity);
-            }
-        };
     }
 }

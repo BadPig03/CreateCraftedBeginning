@@ -46,10 +46,6 @@ public final class CanisterContainerConsumers {
         return interactContainer(player, fuel.gasType(), fuel.amount(), executeSupplier, simulate);
     }
 
-    /**
-     * Pools gas by type, independent of pressure. Cost functions must use the equipment baseline;
-     * the sampled source pressure in the context is metadata, not a restriction on contributing tanks.
-     */
     public static Optional<AffordableFuel> findAffordableFuel(Player player, ToDoubleFunction<GasUsageContext> rawCostFunction) {
         Set<Gas> checkedGases = Collections.newSetFromMap(new IdentityHashMap<>());
         for (GasCanisterContainer container : CanisterContainerSuppliers.getAllSuppliers(player)) {
@@ -61,7 +57,7 @@ public final class CanisterContainerConsumers {
 
                 long sourcePressurePa = container.getTankPressurePa(tankIndex);
                 Gas gasType = storedGas.getGasType();
-                if (!checkedGases.add(gasType)) {
+                if (!gasType.isUsableInEquipment() || !checkedGases.add(gasType)) {
                     continue;
                 }
 
@@ -75,7 +71,7 @@ public final class CanisterContainerConsumers {
     }
 
     public static Optional<AffordableFuel> findAffordableFuel(Player player, Gas selectedGas, ToDoubleFunction<GasUsageContext> rawCostFunction) {
-        if (selectedGas.isEmpty()) {
+        if (selectedGas.isEmpty() || !selectedGas.isUsableInEquipment()) {
             return Optional.empty();
         }
 
@@ -94,6 +90,10 @@ public final class CanisterContainerConsumers {
     }
 
     private static boolean interactContainer(Player player, Gas gasType, long amount, Supplier<Boolean> executeSupplier, boolean simulate) {
+        if (!gasType.isUsableInEquipment()) {
+            return false;
+        }
+
         if (player.isCreative() || gasType.isEmpty() || amount <= 0) {
             return true;
         }

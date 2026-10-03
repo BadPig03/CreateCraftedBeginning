@@ -23,10 +23,6 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightCannonHandlerEvent implements KubeEvent {
-    public void add(ResourceLocation location, ResourceLocation profileId, IconCannonHandler icon, ParticlesCannonHandler particles, ExplodeCannonHandler explode, ResourceLocation texture, float speed, float consumption, TextCannonHandler text) {
-        AirtightCannonHandlers.register(location, GameplayPressureProfiles.require(profileId), createHandler(icon, particles, explode, texture, speed, consumption, text));
-    }
-
     private static AirtightCannonHandler createHandler(IconCannonHandler icon, ParticlesCannonHandler particles, ExplodeCannonHandler explode, ResourceLocation texture, float speed, float consumption, TextCannonHandler text) {
         return new DefaultCannonHandler() {
             @Override
@@ -64,6 +60,10 @@ public class AirtightCannonHandlerEvent implements KubeEvent {
                 text.apply(cannon, context, tooltip, flag);
             }
         };
+    }
+
+    public void add(ResourceLocation location, ResourceLocation profileId, IconCannonHandler icon, ParticlesCannonHandler particles, ExplodeCannonHandler explode, ResourceLocation texture, float speed, float consumption, TextCannonHandler text) {
+        AirtightCannonHandlers.register(location, GameplayPressureProfiles.require(profileId), createHandler(icon, particles, explode, texture, speed, consumption, text));
     }
 
     @FunctionalInterface

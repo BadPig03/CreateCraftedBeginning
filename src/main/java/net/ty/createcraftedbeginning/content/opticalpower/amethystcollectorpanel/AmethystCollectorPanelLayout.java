@@ -24,6 +24,7 @@ record AmethystCollectorPanelLayout(int x, int z, int width, int depth) {
         if (!geometry.isActive(pos) || rectangle == null) {
             return SINGLE;
         }
+
         return new AmethystCollectorPanelLayout(pos.getX() - rectangle.minX(), pos.getZ() - rectangle.minZ(), rectangle.width(), rectangle.depth());
     }
 
@@ -50,6 +51,7 @@ record AmethystCollectorPanelLayout(int x, int z, int width, int depth) {
                 if ((cornerX == 0 ? !west : !east) || (cornerZ == 0 ? !north : !south)) {
                     continue;
                 }
+
                 parts.add(new Part(cornerX, 5, cornerZ, cornerX + 3, 8, cornerZ + 3));
                 int footX = cornerX == 0 ? 0 : 14;
                 int footZ = cornerZ == 0 ? 0 : 14;

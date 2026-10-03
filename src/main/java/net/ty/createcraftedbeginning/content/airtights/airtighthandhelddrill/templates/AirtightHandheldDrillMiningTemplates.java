@@ -33,6 +33,12 @@ public enum AirtightHandheldDrillMiningTemplates implements StringRepresentable 
         this.template = template;
     }
 
+    private static List<Component> generateOptions() {
+        String prefix = "gui.airtight_handheld_drill.template";
+        String[] keys = Arrays.stream(values()).map(AirtightHandheldDrillMiningTemplates::getSerializedName).toArray(String[]::new);
+        return CCBLang.translatedOptions(prefix, keys);
+    }
+
     @Override
     public String getSerializedName() {
         return Lang.asId(name());
@@ -70,11 +76,5 @@ public enum AirtightHandheldDrillMiningTemplates implements StringRepresentable 
                 default -> CCBLang.translateDirect("gui.airtight_handheld_drill.relative_position.length");
             };
         };
-    }
-
-    private static List<Component> generateOptions() {
-        String prefix = "gui.airtight_handheld_drill.template";
-        String[] keys = Arrays.stream(values()).map(AirtightHandheldDrillMiningTemplates::getSerializedName).toArray(String[]::new);
-        return CCBLang.translatedOptions(prefix, keys);
     }
 }

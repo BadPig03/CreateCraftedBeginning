@@ -35,6 +35,10 @@ public abstract class AbstractAirtightMeterBlockEntity extends AbstractAirtightP
         needleAngle = LerpedFloat.linear().startWithValue(initialNeedleAngle);
     }
 
+    protected static int calculateComparatorSignal(float progress) {
+        return Mth.clamp(Math.round(Mth.clamp(progress, 0, 1) * MAX_COMPARATOR_SIGNAL), 0, MAX_COMPARATOR_SIGNAL);
+    }
+
     @Override
     protected GasTransportBehaviour createTransportBehaviour() {
         return new AirtightMeterTransportBehaviour(this);
@@ -63,10 +67,6 @@ public abstract class AbstractAirtightMeterBlockEntity extends AbstractAirtightP
     }
 
     public abstract int getComparatorOutput();
-
-    protected static int calculateComparatorSignal(float progress) {
-        return Mth.clamp(Math.round(Mth.clamp(progress, 0, 1) * MAX_COMPARATOR_SIGNAL), 0, MAX_COMPARATOR_SIGNAL);
-    }
 
     protected abstract float getNeedleTargetAngle();
 

@@ -22,6 +22,10 @@ public final class BrimstoneFluidType extends SolidRenderedPlaceableFluidType {
         super(properties, stillTexture, flowingTexture, new Color(fogColor, false).asVectorF(), fogDistance);
     }
 
+    public static FluidTypeFactory create(int fogColor, Supplier<Float> fogDistance) {
+        return (properties, stillTexture, flowingTexture) -> new BrimstoneFluidType(properties, stillTexture, flowingTexture, fogColor, fogDistance);
+    }
+
     @Override
     public boolean move(FluidState state, LivingEntity entity, Vec3 movementVector, double gravity) {
         entity.setDeltaMovement(entity.getDeltaMovement().multiply(0.25, 0.75, 0.25));
@@ -33,9 +37,5 @@ public final class BrimstoneFluidType extends SolidRenderedPlaceableFluidType {
         Vec3 movement = entity.getDeltaMovement();
         double verticalSpeed = movement.y + (movement.y < 0.06 ? ITEM_VERTICAL_ACCELERATION : 0);
         entity.setDeltaMovement(movement.x * 0.8, verticalSpeed, movement.z * 0.8);
-    }
-
-    public static FluidTypeFactory create(int fogColor, Supplier<Float> fogDistance) {
-        return (properties, stillTexture, flowingTexture) -> new BrimstoneFluidType(properties, stillTexture, flowingTexture, fogColor, fogDistance);
     }
 }

@@ -23,6 +23,27 @@ final class BreezeCoolerSerialization {
     private static final String IS_CREATIVE = "isCreative";
     private static final String REMAINING_TIME = "RemainingTime";
 
+    private static BaseCoolerState readState(CompoundTag compoundTag) {
+        CompoundTag stateData = compoundTag.getCompound(STATE_DATA);
+        CoolantType coolantType = CoolantType.fromTag(compoundTag, STATE_TYPE, CoolantType.NONE);
+        boolean isCreative = NbtValues.getBooleanOrDefault(stateData, IS_CREATIVE, false);
+        int remainingTime = Mth.clamp(NbtValues.getIntOrDefault(stateData, REMAINING_TIME, 0), 0, BreezeCoolerBlockEntity.getMaxCoolantCapacity());
+        if (isCreative && coolantType != CoolantType.NONE) {
+            return new CreativeCoolerState(coolantType);
+        }
+
+        return switch (coolantType) {
+            case NORMAL -> {
+                if (remainingTime > 0) {
+                    yield new ChilledCoolerState(remainingTime, false);
+                }
+
+                yield new InactiveCoolerState();
+            }
+            case NONE -> new InactiveCoolerState();
+        };
+    }
+
     void write(BreezeCoolerBlockEntity cooler, CompoundTag compoundTag) {
         BaseCoolerState coolerState = cooler.getCurrentState();
         CompoundTag stateData = new CompoundTag();
@@ -45,26 +66,5 @@ final class BreezeCoolerSerialization {
         }
 
         cooler.setTrainHatFromSerialization(compoundTag.getBoolean(TRAIN_HAT));
-    }
-
-    private static BaseCoolerState readState(CompoundTag compoundTag) {
-        CompoundTag stateData = compoundTag.getCompound(STATE_DATA);
-        CoolantType coolantType = CoolantType.fromTag(compoundTag, STATE_TYPE, CoolantType.NONE);
-        boolean isCreative = NbtValues.getBooleanOrDefault(stateData, IS_CREATIVE, false);
-        int remainingTime = Mth.clamp(NbtValues.getIntOrDefault(stateData, REMAINING_TIME, 0), 0, BreezeCoolerBlockEntity.getMaxCoolantCapacity());
-        if (isCreative && coolantType != CoolantType.NONE) {
-            return new CreativeCoolerState(coolantType);
-        }
-
-        return switch (coolantType) {
-            case NORMAL -> {
-                if (remainingTime > 0) {
-                    yield new ChilledCoolerState(remainingTime, false);
-                }
-
-                yield new InactiveCoolerState();
-            }
-            case NONE -> new InactiveCoolerState();
-        };
     }
 }

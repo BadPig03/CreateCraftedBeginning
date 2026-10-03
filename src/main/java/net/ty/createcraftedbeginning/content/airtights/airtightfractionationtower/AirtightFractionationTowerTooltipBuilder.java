@@ -36,39 +36,6 @@ final class AirtightFractionationTowerTooltipBuilder {
         this.tower = tower;
     }
 
-    boolean addToGoggleTooltip(List<Component> tooltip) {
-        BlockPos origin = tower.getOrigin();
-        if (origin == null || tower.isRemoved()) {
-            return false;
-        }
-
-        int layer = tower.getBlockPos().getY() - origin.getY() + 1;
-        CCBLang.translate("gui.airtight_fractionation_tower").add(CCBLang.translate("gui.airtight_fractionation_tower.layer", layer).style(ChatFormatting.GRAY)).forGoggles(tooltip);
-        if (addStoredInfo(tooltip)) {
-            tooltip.add(CommonComponents.EMPTY);
-        }
-
-        AirtightFractionationTowerBlockEntity controller = tower.findTowerController();
-        if (controller == null) {
-            CCBLang.translate("gui.airtight_fractionation_tower.controller_unavailable").style(ChatFormatting.GRAY).forGoggles(tooltip);
-            return true;
-        }
-
-        addProgressInfo(controller.getCrafting(), tooltip);
-        AirtightFractionationTowerStructureManager structureManager = controller.getStructureManager();
-        TemperatureCondition condition = TemperatureCondition.getConditionByTemperature(structureManager.getTemperature());
-        String modeKey = switch (structureManager.getProcessingMode()) {
-            case NONE -> "none";
-            case FRACTIONATION -> "fractionation";
-            case CONDENSATION -> "condensation";
-        };
-        CCBLang.translate("gui.airtight_fractionation_tower.mode").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.translate("gui.airtight_fractionation_tower.mode." + modeKey).color(condition.getColor()).forGoggles(tooltip, 1);
-        CCBLang.translate("gui.airtight_fractionation_tower.temperature_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.translate(condition.getTranslationKey()).color(condition.getColor()).forGoggles(tooltip, 1);
-        return true;
-    }
-
     private static void addProgressInfo(AirtightFractionationTowerCrafting crafting, List<Component> tooltip) {
         int duration = crafting.getDuration();
         if (duration <= 0) {
@@ -107,6 +74,39 @@ final class AirtightFractionationTowerTooltipBuilder {
 
         CCBLang.translate("gui.airtight_fractionation_tower.progress").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.builder().add(bar).forGoggles(tooltip, 1);
+    }
+
+    boolean addToGoggleTooltip(List<Component> tooltip) {
+        BlockPos origin = tower.getOrigin();
+        if (origin == null || tower.isRemoved()) {
+            return false;
+        }
+
+        int layer = tower.getBlockPos().getY() - origin.getY() + 1;
+        CCBLang.translate("gui.airtight_fractionation_tower").add(CCBLang.translate("gui.airtight_fractionation_tower.layer", layer).style(ChatFormatting.GRAY)).forGoggles(tooltip);
+        if (addStoredInfo(tooltip)) {
+            tooltip.add(CommonComponents.EMPTY);
+        }
+
+        AirtightFractionationTowerBlockEntity controller = tower.findTowerController();
+        if (controller == null) {
+            CCBLang.translate("gui.airtight_fractionation_tower.controller_unavailable").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            return true;
+        }
+
+        addProgressInfo(controller.getCrafting(), tooltip);
+        AirtightFractionationTowerStructureManager structureManager = controller.getStructureManager();
+        TemperatureCondition condition = TemperatureCondition.getConditionByTemperature(structureManager.getTemperature());
+        String modeKey = switch (structureManager.getProcessingMode()) {
+            case NONE -> "none";
+            case FRACTIONATION -> "fractionation";
+            case CONDENSATION -> "condensation";
+        };
+        CCBLang.translate("gui.airtight_fractionation_tower.mode").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        CCBLang.translate("gui.airtight_fractionation_tower.mode." + modeKey).color(condition.getColor()).forGoggles(tooltip, 1);
+        CCBLang.translate("gui.airtight_fractionation_tower.temperature_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        CCBLang.translate(condition.getTranslationKey()).color(condition.getColor()).forGoggles(tooltip, 1);
+        return true;
     }
 
     private boolean addStoredInfo(List<Component> tooltip) {

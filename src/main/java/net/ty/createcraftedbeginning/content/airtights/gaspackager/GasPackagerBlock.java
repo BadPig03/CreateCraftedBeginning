@@ -32,6 +32,34 @@ public class GasPackagerBlock extends PackagerBlock {
         super(properties);
     }
 
+    private static void handleInteraction(ItemStack stack, Level level, BlockPos pos, Player player, InteractionHand hand, PackagerBlockEntity blockEntity) {
+        if (blockEntity.animationTicks > 0) {
+            return;
+        }
+
+        if (!blockEntity.heldBox.isEmpty()) {
+            if (!level.isClientSide()) {
+                player.getInventory().placeItemBackInInventory(blockEntity.heldBox.copy());
+                AllSoundEvents.playItemPickup(player);
+                blockEntity.heldBox = ItemStack.EMPTY;
+                blockEntity.notifyUpdate();
+            }
+            return;
+        }
+
+        if (!BalloonItem.isBalloon(stack) || level.isClientSide() || !blockEntity.unwrapBox(stack.copyWithCount(1), false)) {
+            return;
+        }
+
+        stack.shrink(1);
+        AllSoundEvents.DEPOT_PLOP.playOnServer(level, pos);
+        if (!stack.isEmpty()) {
+            return;
+        }
+
+        player.setItemInHand(hand, ItemStack.EMPTY);
+    }
+
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
@@ -69,33 +97,5 @@ public class GasPackagerBlock extends PackagerBlock {
     @Override
     public BlockEntityType<? extends PackagerBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.GAS_PACKAGER.get();
-    }
-
-    private static void handleInteraction(ItemStack stack, Level level, BlockPos pos, Player player, InteractionHand hand, PackagerBlockEntity blockEntity) {
-        if (blockEntity.animationTicks > 0) {
-            return;
-        }
-
-        if (!blockEntity.heldBox.isEmpty()) {
-            if (!level.isClientSide()) {
-                player.getInventory().placeItemBackInInventory(blockEntity.heldBox.copy());
-                AllSoundEvents.playItemPickup(player);
-                blockEntity.heldBox = ItemStack.EMPTY;
-                blockEntity.notifyUpdate();
-            }
-            return;
-        }
-
-        if (!BalloonItem.isBalloon(stack) || level.isClientSide() || !blockEntity.unwrapBox(stack.copyWithCount(1), false)) {
-            return;
-        }
-
-        stack.shrink(1);
-        AllSoundEvents.DEPOT_PLOP.playOnServer(level, pos);
-        if (!stack.isEmpty()) {
-            return;
-        }
-
-        player.setItemInHand(hand, ItemStack.EMPTY);
     }
 }

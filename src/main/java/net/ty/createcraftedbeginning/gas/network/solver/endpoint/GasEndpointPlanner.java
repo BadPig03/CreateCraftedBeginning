@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.gas.network.solver.endpoint;
 
-import com.simibubi.create.api.packager.InventoryIdentifier;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -29,6 +28,7 @@ import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPress
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.Recovery;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.TransferAccess;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.TransferLimits;
+import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferExecutor;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -54,34 +54,6 @@ public final class GasEndpointPlanner {
 
     public static GasEndpointPlanner prepare(Level level, Snapshot topology) {
         return prepare(GasEndpointDiscovery.discover(level, topology));
-    }
-
-    public List<GasStack> gasGroups() {
-        return gasGroups;
-    }
-
-    public @Unmodifiable List<GasNetworkPressureEndpoint> planPressureEndpoints(Level level, GasStack gas) {
-        List<GasNetworkPressureEndpoint> endpoints = new ArrayList<>();
-        for (StorageEndpointGroup endpoint : storageEndpoints) {
-            GasNetworkPressureEndpoint pressureEndpoint = endpoint.createPressureEndpoint(level, gas);
-            if (pressureEndpoint == null) {
-                continue;
-            }
-
-            endpoints.add(pressureEndpoint);
-        }
-        for (PressureBoundaryEndpointGroup endpoint : pressureBoundaries) {
-            endpoint.appendPressureEndpoints(level, gas, endpoints);
-        }
-        for (AtmosphericAccess atmosphericAccess : atmosphericAccesses) {
-            GasNetworkPressureEndpoint pressureEndpoint = createAtmosphericPressureEndpoint(atmosphericAccess, gas);
-            if (pressureEndpoint == null) {
-                continue;
-            }
-
-            endpoints.add(pressureEndpoint);
-        }
-        return List.copyOf(endpoints);
     }
 
     @Internal
@@ -137,7 +109,7 @@ public final class GasEndpointPlanner {
         for (PressureBoundaryAccess access : accesses) {
             PressureBoundaryEndpointGroup matchingEndpoint = null;
             for (PressureBoundaryEndpointGroup endpoint : endpoints) {
-                if (!endpoint.matches(access)) {
+                if (endpoint.handler != access.handler()) {
                     continue;
                 }
 
@@ -150,7 +122,7 @@ public final class GasEndpointPlanner {
                 continue;
             }
 
-            matchingEndpoint.add(access);
+            matchingEndpoint.accesses.add(access);
         }
 
         for (PressureBoundaryEndpointGroup endpoint : endpoints) {
@@ -183,6 +155,34 @@ public final class GasEndpointPlanner {
             fillHandler = boundary.handler();
         }
         return new GasNetworkPressureEndpoint(new TransferAccess(drainHandler, fillHandler, drainFaces, fillFaces), new PressureState(GasPressureLimits.clampToHardLimit(boundary.atmosphereState().pressurePa()), true, 0, Long.MAX_VALUE, GasPressureLimits.HARD_PRESSURE_PA, Long.MAX_VALUE), new TransferLimits(drainLimit, fillLimit), Recovery.DISCARD);
+    }
+
+    public List<GasStack> gasGroups() {
+        return gasGroups;
+    }
+
+    public @Unmodifiable List<GasNetworkPressureEndpoint> planPressureEndpoints(Level level, GasStack gas) {
+        List<GasNetworkPressureEndpoint> endpoints = new ArrayList<>();
+        for (StorageEndpointGroup endpoint : storageEndpoints) {
+            GasNetworkPressureEndpoint pressureEndpoint = endpoint.createPressureEndpoint(level, gas);
+            if (pressureEndpoint == null) {
+                continue;
+            }
+
+            endpoints.add(pressureEndpoint);
+        }
+        for (PressureBoundaryEndpointGroup endpoint : pressureBoundaries) {
+            endpoint.appendPressureEndpoints(level, gas, endpoints);
+        }
+        for (AtmosphericAccess atmosphericAccess : atmosphericAccesses) {
+            GasNetworkPressureEndpoint pressureEndpoint = createAtmosphericPressureEndpoint(atmosphericAccess, gas);
+            if (pressureEndpoint == null) {
+                continue;
+            }
+
+            endpoints.add(pressureEndpoint);
+        }
+        return List.copyOf(endpoints);
     }
 
     private @Unmodifiable List<GasStack> collectGasGroups() {
@@ -334,15 +334,10 @@ public final class GasEndpointPlanner {
 
     private static final class PressureBoundaryEndpointGroup {
         private final List<PressureBoundaryAccess> accesses = new ArrayList<>();
-        private final GasPressureBoundary representativeHandler;
-        private BlockFace representativeInventoryFace;
-        @Nullable
-        private InventoryIdentifier representativeIdentifier;
+        private final GasPressureBoundary handler;
 
         private PressureBoundaryEndpointGroup(PressureBoundaryAccess firstAccess) {
-            representativeHandler = firstAccess.handler();
-            representativeInventoryFace = firstAccess.inventoryFace();
-            representativeIdentifier = firstAccess.identifier();
+            handler = firstAccess.handler();
             accesses.add(firstAccess);
         }
 
@@ -354,24 +349,6 @@ public final class GasEndpointPlanner {
             return GasFlowResistance.fromFactor(resistanceFactor);
         }
 
-        private static boolean identifiesSameInventory(@Nullable InventoryIdentifier firstIdentifier, BlockFace firstFace, @Nullable InventoryIdentifier secondIdentifier, BlockFace secondFace) {
-            return firstIdentifier != null && firstIdentifier == secondIdentifier || firstIdentifier != null && firstIdentifier.contains(secondFace) || secondIdentifier != null && secondIdentifier.contains(firstFace);
-        }
-
-        private boolean matches(PressureBoundaryAccess access) {
-            return representativeHandler == access.handler() || representativeInventoryFace.getPos().equals(access.inventoryFace().getPos()) || identifiesSameInventory(representativeIdentifier, representativeInventoryFace, access.identifier(), access.inventoryFace());
-        }
-
-        private void add(PressureBoundaryAccess access) {
-            accesses.add(access);
-            if (representativeIdentifier != null || access.identifier() == null) {
-                return;
-            }
-
-            representativeIdentifier = access.identifier();
-            representativeInventoryFace = access.inventoryFace();
-        }
-
         private void sortAccesses() {
             accesses.sort((first, second) -> GasNetworkTopology.compareBlockFaces(first.pipeFace(), second.pipeFace()));
         }
@@ -381,19 +358,13 @@ public final class GasEndpointPlanner {
         }
 
         private GasStack currentGas() {
-            for (PressureBoundaryAccess access : accesses) {
-                GasStack gas = access.handler().getGasInTank(0);
-                if (gas.isEmpty()) {
-                    continue;
-                }
-
-                return gas;
-            }
-            return accesses.getFirst().handler().getGasInTank(0);
+            return handler.getGasInTank(0);
         }
 
         private void appendPressureEndpoints(Level level, GasStack gas, List<GasNetworkPressureEndpoint> endpoints) {
-            List<PressureBoundaryAccess> usableAccesses = new ArrayList<>();
+            List<BlockFace> usableFaces = new ArrayList<>();
+            GasPipeConnection recoveryConnection = null;
+            BlockPos recoveryPipePos = null;
             for (PressureBoundaryAccess access : accesses) {
                 BlockFace pipeFace = access.pipeFace();
                 GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pipeFace.getPos());
@@ -402,53 +373,33 @@ public final class GasEndpointPlanner {
                     continue;
                 }
 
-                usableAccesses.add(access);
-            }
-            if (usableAccesses.isEmpty()) {
-                return;
-            }
-
-            List<BlockFace> usableFaces = new ArrayList<>(usableAccesses.size());
-            PressureBoundaryAccess bestDrainAccess = null;
-            GasPipeConnection bestDrainConnection = null;
-            long bestDrain = 0;
-            PressureBoundaryAccess bestFillAccess = null;
-            long bestFill = 0;
-            for (PressureBoundaryAccess access : usableAccesses) {
-                BlockFace pipeFace = access.pipeFace();
-                GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pipeFace.getPos());
-                GasPipeConnection connection = behaviour == null ? null : behaviour.getConnection(pipeFace.getFace());
                 usableFaces.add(pipeFace);
-
-                long drain = access.simulateDrainAmount(gas);
-                if (drain > bestDrain) {
-                    bestDrain = drain;
-                    bestDrainAccess = access;
-                    bestDrainConnection = connection;
-                }
-
-                long fill = access.simulateFillAmount(gas);
-                if (fill <= bestFill) {
+                if (recoveryConnection != null) {
                     continue;
                 }
 
-                bestFill = fill;
-                bestFillAccess = access;
+                recoveryConnection = connection;
+                recoveryPipePos = pipeFace.getPos();
             }
-
-            List<BlockFace> faces = List.copyOf(usableFaces);
-            if (bestDrainAccess != null && bestDrain > 0) {
-                long drainPressurePa = GasPressureLimits.clampToHardLimit(bestDrainAccess.handler().getDrainPressurePa(0, gas));
-                long drainResistanceUnits = additionalBoundaryResistanceUnits(bestDrainAccess.handler().getDrainFlowResistanceFactor(0, gas));
-                endpoints.add(new GasNetworkPressureEndpoint(new TransferAccess(bestDrainAccess.handler(), null, faces, List.of()), new PressureState(drainPressurePa, true, 0, Long.MAX_VALUE, GasPressureLimits.HARD_PRESSURE_PA, Long.MAX_VALUE), new TransferLimits(bestDrain, 0), new FlowResistance(drainResistanceUnits, 0), new Recovery(List.of(), bestDrainConnection, bestDrainAccess.pipeFace().getPos(), false)));
-            }
-            if (bestFillAccess == null || bestFill <= 0) {
+            if (usableFaces.isEmpty()) {
                 return;
             }
 
-            long fillPressurePa = GasPressureLimits.clampToHardLimit(bestFillAccess.handler().getFillPressurePa(0, gas));
-            long fillResistanceUnits = additionalBoundaryResistanceUnits(bestFillAccess.handler().getFillFlowResistanceFactor(0, gas));
-            endpoints.add(new GasNetworkPressureEndpoint(new TransferAccess(null, bestFillAccess.handler(), List.of(), faces), new PressureState(fillPressurePa, true, 0, Long.MAX_VALUE, GasPressureLimits.HARD_PRESSURE_PA, Long.MAX_VALUE), new TransferLimits(0, bestFill), new FlowResistance(0, fillResistanceUnits), Recovery.NONE));
+            List<BlockFace> faces = List.copyOf(usableFaces);
+            long drainLimit = GasTransferExecutor.simulateDrainAmount(handler, gas, Long.MAX_VALUE);
+            long fillLimit = GasTransferExecutor.simulateFillAmount(handler, gas, Long.MAX_VALUE, GasPressureLimits.HARD_PRESSURE_PA);
+            if (drainLimit > 0) {
+                long drainPressurePa = GasPressureLimits.clampToHardLimit(handler.getDrainPressurePa(0, gas));
+                long drainResistanceUnits = additionalBoundaryResistanceUnits(handler.getDrainFlowResistanceFactor(0, gas));
+                endpoints.add(new GasNetworkPressureEndpoint(new TransferAccess(handler, null, faces, List.of()), new PressureState(drainPressurePa, true, 0, Long.MAX_VALUE, GasPressureLimits.HARD_PRESSURE_PA, Long.MAX_VALUE), new TransferLimits(drainLimit, 0), new FlowResistance(drainResistanceUnits, 0), new Recovery(List.of(), recoveryConnection, recoveryPipePos, false)));
+            }
+            if (fillLimit <= 0) {
+                return;
+            }
+
+            long fillPressurePa = GasPressureLimits.clampToHardLimit(handler.getFillPressurePa(0, gas));
+            long fillResistanceUnits = additionalBoundaryResistanceUnits(handler.getFillFlowResistanceFactor(0, gas));
+            endpoints.add(new GasNetworkPressureEndpoint(new TransferAccess(null, handler, List.of(), faces), new PressureState(fillPressurePa, true, 0, Long.MAX_VALUE, GasPressureLimits.HARD_PRESSURE_PA, Long.MAX_VALUE), new TransferLimits(0, fillLimit), new FlowResistance(0, fillResistanceUnits), Recovery.NONE));
         }
     }
 }

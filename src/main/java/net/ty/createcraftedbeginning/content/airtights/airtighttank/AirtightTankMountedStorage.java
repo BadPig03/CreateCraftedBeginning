@@ -44,6 +44,11 @@ public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler
         wrapped.onChange = () -> dirty = true;
     }
 
+    @Contract("_ -> new")
+    static AirtightTankMountedStorage fromTank(AirtightTankBlockEntity tank) {
+        return new AirtightTankMountedStorage(tank.getTankInventory().snapshot());
+    }
+
     @Override
     public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity blockEntity) {
         if (!(blockEntity instanceof AirtightTankBlockEntity tank) || !tank.isController()) {
@@ -70,11 +75,6 @@ public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler
         }
 
         tank.getTankInventory().tryApplyState(getState()).requireAccepted();
-    }
-
-    @Contract("_ -> new")
-    static AirtightTankMountedStorage fromTank(AirtightTankBlockEntity tank) {
-        return new AirtightTankMountedStorage(tank.getTankInventory().snapshot());
     }
 
     private long getVolume() {

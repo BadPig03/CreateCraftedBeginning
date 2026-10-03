@@ -9,6 +9,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
@@ -25,6 +27,7 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
     private static final int LAZY_TICK_RATE = 20;
+    private static final int GENERATION_BAR_SEGMENTS = 20;
 
     private final BoilerSteamOutletController controller;
     private final SteamOutletGasHandler exposedGasHandler;
@@ -34,6 +37,16 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
         controller = new BoilerSteamOutletController(this);
         exposedGasHandler = new SteamOutletGasHandler(this);
         setLazyTickRate(LAZY_TICK_RATE);
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.BOILER_STEAM_OUTLET.get(), (outlet, direction) -> {
+            if (direction != BoilerSteamOutletBlock.getFacing(outlet.getBlockState())) {
+                return null;
+            }
+
+            return outlet.exposedGasHandler;
+        });
     }
 
     @Override
@@ -75,21 +88,25 @@ public class BoilerSteamOutletBlockEntity extends SmartBlockEntity implements IH
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         CCBLang.translate("gui.boiler_steam_outlet.header").forGoggles(tooltip);
-        CCBLang.translate("gui.boiler_steam_outlet.steam_generation").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(controller.getSteamGenerationRate()).space().translate("gui.unit.gas_units_per_second").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
-        CCBLang.translate("gui.boiler_steam_outlet.steam_output").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(controller.getSteamOutputRate()).space().translate("gui.unit.gas_units_per_second").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
-        return true;
-    }
-
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.BOILER_STEAM_OUTLET.get(), (outlet, direction) -> {
-            if (direction != BoilerSteamOutletBlock.getFacing(outlet.getBlockState())) {
-                return null;
+        int filledSegments = Mth.ceil(controller.getSteamGenerationRatio() * GENERATION_BAR_SEGMENTS);
+        MutableComponent bar = Component.empty();
+        for (int segment = 1; segment <= GENERATION_BAR_SEGMENTS; segment++) {
+            ChatFormatting color;
+            if (segment > filledSegments) {
+                color = ChatFormatting.DARK_RED;
             }
+            else if (segment == filledSegments) {
+                color = ChatFormatting.GREEN;
+            }
+            else {
+                color = ChatFormatting.DARK_GREEN;
+            }
+            bar.append(Component.literal("|").withStyle(color));
+        }
 
-            return outlet.exposedGasHandler;
-        });
+        CCBLang.translate("gui.boiler_steam_outlet.steam_generation").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        CCBLang.builder().add(bar).forGoggles(tooltip, 1);
+        return true;
     }
 
     void recordExtraction(GasStack drained, GasAction action) {

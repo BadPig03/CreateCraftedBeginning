@@ -43,6 +43,16 @@ public class SmartGasTankBehaviour extends AbstractSmartGasTankBehaviour {
         capability = new InternalGasHandler(handlers, enforceVariety);
     }
 
+    @Contract("_, _ -> new")
+    public static SmartGasTankBehaviour single(SmartBlockEntity blockEntity, long volume) {
+        return new SmartGasTankBehaviour(TYPE, blockEntity, 1, volume, false);
+    }
+
+    @Contract("_, _, _ -> new")
+    public static SmartGasTankBehaviour single(SmartBlockEntity blockEntity, long volume, long maxPressurePa) {
+        return new SmartGasTankBehaviour(TYPE, blockEntity, 1, volume, maxPressurePa, false);
+    }
+
     @Override
     public BehaviourType<?> getType() {
         return super.getType();
@@ -71,16 +81,6 @@ public class SmartGasTankBehaviour extends AbstractSmartGasTankBehaviour {
         }
 
         super.sendDataLazily();
-    }
-
-    @Contract("_, _ -> new")
-    public static SmartGasTankBehaviour single(SmartBlockEntity blockEntity, long volume) {
-        return new SmartGasTankBehaviour(TYPE, blockEntity, 1, volume, false);
-    }
-
-    @Contract("_, _, _ -> new")
-    public static SmartGasTankBehaviour single(SmartBlockEntity blockEntity, long volume, long maxPressurePa) {
-        return new SmartGasTankBehaviour(TYPE, blockEntity, 1, volume, maxPressurePa, false);
     }
 
     public SmartGasTankBehaviour whenTankUpdates(Runnable tankUpdateCallback) {

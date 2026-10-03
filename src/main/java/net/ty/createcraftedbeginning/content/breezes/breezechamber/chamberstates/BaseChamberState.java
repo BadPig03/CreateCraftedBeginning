@@ -32,30 +32,6 @@ public abstract class BaseChamberState {
         this.isCreative = isCreative;
     }
 
-    public int getRemainingTime() {
-        return remainingTime;
-    }
-
-    public boolean isCreative() {
-        return isCreative;
-    }
-
-    public void save(CompoundTag compoundTag) {
-        compoundTag.putInt(COMPOUND_KEY_REMAINING_TIME, remainingTime);
-        compoundTag.putBoolean(COMPOUND_KEY_IS_CREATIVE, isCreative);
-    }
-
-    public void tick(BreezeChamberBlockEntity chamber) {
-    }
-
-    public abstract WindLevel getWindLevel();
-
-    public abstract ChargerType getChargerType();
-
-    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData chargingData, boolean forceOverflow, boolean simulate) {
-        return insertWindCharge(chamber, stack, chargingData, forceOverflow, simulate);
-    }
-
     private static void awardFeedingAdvancements(BreezeChamberBlockEntity chamber, ItemStack stack, int chargingTime) {
         Level level = chamber.getLevel();
         if (level == null || level.isClientSide) {
@@ -102,6 +78,30 @@ public abstract class BaseChamberState {
 
         int effectiveThreshold = BreezeChamberBlockEntity.getMaxEffectiveThreshold();
         return remainingTime < 0 || remainingTime >= effectiveThreshold || updatedTime < effectiveThreshold;
+    }
+
+    public int getRemainingTime() {
+        return remainingTime;
+    }
+
+    public boolean isCreative() {
+        return isCreative;
+    }
+
+    public void save(CompoundTag compoundTag) {
+        compoundTag.putInt(COMPOUND_KEY_REMAINING_TIME, remainingTime);
+        compoundTag.putBoolean(COMPOUND_KEY_IS_CREATIVE, isCreative);
+    }
+
+    public void tick(BreezeChamberBlockEntity chamber) {
+    }
+
+    public abstract WindLevel getWindLevel();
+
+    public abstract ChargerType getChargerType();
+
+    public InteractionResult onItemInsert(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData chargingData, boolean forceOverflow, boolean simulate) {
+        return insertWindCharge(chamber, stack, chargingData, forceOverflow, simulate);
     }
 
     private InteractionResult insertWindCharge(BreezeChamberBlockEntity chamber, ItemStack stack, WindChargingData chargingData, boolean forceOverflow, boolean simulate) {

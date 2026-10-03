@@ -38,8 +38,6 @@ public class CCBAdvancements implements DataProvider {
 
     public static final CCBAdvancement END_FIELD = create("end_field", builder -> builder.icon(CCBItems.END_ALLOY).title("End Field").description("Obtain a brand-new ductile alloy").whenIconCollected().after(ROOT));
     public static final CCBAdvancement THE_INTEGRATED_INDUSTRY_AGE = create("the_integrated_industry_age", builder -> builder.icon(CCBBlocks.END_CASING_BLOCK).title("The Integrated Industry Age").description("Use End Alloy on Crying Obsidian to create an expandable casing for your machines").after(END_FIELD));
-    public static final CCBAdvancement HOT_HOT_HOT = create("hot_hot_hot", builder -> builder.icon(CCBBlocks.END_INCINERATION_BLOWER_BLOCK).title("Hot, Hot, Hot!").description("Attach an End Incineration Blower to an End Casing, then burn any old thing").after(THE_INTEGRATED_INDUSTRY_AGE));
-    public static final CCBAdvancement WARM_HEARTED = create("warm_hearted", builder -> builder.icon(Blocks.SNOW_BLOCK).title("Warm-Hearted").description("Warm up a Snow Golem with an End Incineration Blower").special(HIDDEN_GOAL).after(HOT_HOT_HOT));
     public static final CCBAdvancement STEVES_REDEMPTION = create("steves_redemption", builder -> builder.icon(CCBBlocks.END_SCULK_SILENCER_BLOCK).title("Steve's Redemption").description("Attach an End Sculk Silencer to an End Casing, escaping the grasp of the Warden").after(THE_INTEGRATED_INDUSTRY_AGE));
 
     public static final CCBAdvancement SHINY_DUST = create("shiny_dust", builder -> builder.icon(CCBItems.POWDERED_AMETHYST).title("Shiny Dust").description("Obtain a Powdered Amethyst").whenIconCollected().after(ROOT));
@@ -61,7 +59,6 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement BRONCHI = create("bronchi", builder -> builder.icon(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK).title("Bronchi").description("Obtain an Airtight Encased Pipe to build a more flexible gas network").whenIconCollected().after(GAS_INDUSTRY_FROM_SCRATCH));
     public static final CCBAdvancement TAKE_A_DEEP_BREATH = create("take_a_deep_breath", builder -> builder.icon(CCBBlocks.AIRTIGHT_PUMP_BLOCK).title("Take a Deep Breath").description("Place and power an Airtight Pump or Airtight Regulator Pump to create a pressure difference in your gas network").after(BRONCHI));
     public static final CCBAdvancement YOU_SHALL_NOT_PASS = create("you_shall_not_pass", builder -> builder.icon(CCBBlocks.AIRTIGHT_CHECK_VALVE_BLOCK).title("You Shall Not Pass!").description("Obtain an Airtight Check Valve").whenIconCollected().after(TAKE_A_DEEP_BREATH));
-    public static final CCBAdvancement GAS_FILTRATION = create("gas_filtration", builder -> builder.icon(CCBBlocks.SMART_AIRTIGHT_PIPE_BLOCK).title("Gas Filtration").description("Obtain a Smart Airtight Pipe").whenIconCollected().after(YOU_SHALL_NOT_PASS));
     public static final CCBAdvancement VISUAL_MONITORING = create("visual_monitoring", builder -> builder.icon(CCBItems.AIRTIGHT_METER).title("Visual Monitoring").description("Install an Airtight Meter on a gas tank, or observe a reading change on a Flowmeter or Manometer connected to your gas network").after(YOU_SHALL_NOT_PASS));
     public static final CCBAdvancement ALVEOLI = create("alveoli", builder -> builder.icon(CCBBlocks.GAS_PACKAGER_BLOCK).title("Alveoli").description("Use a Gas Packager to package gas from storage").after(VISUAL_MONITORING));
     public static final CCBAdvancement A_GUIDE_TO_OTHERWORLDLY_LOGISTICS = create("a_guide_to_otherworldly_logistics", builder -> builder.icon(CCBBlocks.GAS_UNPACKAGER_BLOCK).title("A Guide to Otherworldly Logistics").description("Use a Gas Unpackager to unpack a balloon containing gas from another dimension").after(ALVEOLI));
@@ -75,7 +72,7 @@ public class CCBAdvancements implements DataProvider {
     public static final CCBAdvancement DEBRIS_CRAFT = create("debris_craft", builder -> builder.icon(CCBItems.TESLA_TURBINE_ROTOR).title("Debris Craft").description("Assemble a Tesla Turbine Rotor").whenIconCollected().after(REASSIGNMENT_PROTOCOL));
     public static final CCBAdvancement GENIUS_ENGINEER = create("genius_engineer", builder -> builder.icon(CCBBlocks.TESLA_TURBINE_BLOCK).title("Genius Engineer").description("Generate power with a Tesla Turbine; remember to check the direction of gas flow").after(DEBRIS_CRAFT));
     public static final CCBAdvancement TESLA_TURBINE_EASY_AS_PIE = create("tesla_turbine_easy_as_pie", builder -> builder.icon(CCBBlocks.TESLA_TURBINE_BLOCK).title("Tesla Turbine? Easy as Pie!").description("Fill more than one type of gas into a Tesla Turbine and make it explode\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(GENIUS_ENGINEER));
-    public static final CCBAdvancement BAD_APPLE = create("bad_apple", builder -> builder.icon(Items.PUFFERFISH).title("Bad Apple").description("Feed improper food to a Breeze Chamber\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(REASSIGNMENT_PROTOCOL));
+    public static final CCBAdvancement BAD_APPLE = create("bad_apple", builder -> builder.icon(Items.PUFFERFISH).title("Bad Apple!!").description("Feed improper food to a Breeze Chamber\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(REASSIGNMENT_PROTOCOL));
     public static final CCBAdvancement IS_THIS_EVEN_SCIENTIFIC = create("is_this_even_scientific", builder -> builder.icon(Items.MILK_BUCKET).title("Is This Even Scientific?").description("Use Milk to clear the Ill state of a Breeze Chamber - is this even scientific?\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(BAD_APPLE));
     public static final CCBAdvancement A_MURDER = create("a_murder", builder -> builder.icon(Items.LAVA_BUCKET).title("A Murder").description("Pump lava or an even hotter fluid into a Breeze Cooler\n§7(Hidden Advancement)").special(HIDDEN_GOAL).after(LIVING_FREEZER));
 
@@ -119,6 +116,15 @@ public class CCBAdvancements implements DataProvider {
         this.registries = registries;
     }
 
+    public static void provideLang(BiConsumer<String, String> consumer) {
+        CCBAdvancement.all().forEach(advancement -> advancement.provideLang(consumer));
+    }
+
+    @Contract("_, _ -> new")
+    private static CCBAdvancement create(String id, UnaryOperator<Builder> operator) {
+        return new CCBAdvancement(id, operator);
+    }
+
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
         return registries.thenCompose(provider -> {
@@ -132,14 +138,5 @@ public class CCBAdvancements implements DataProvider {
     @Override
     public String getName() {
         return "Create: Crafted Beginning's Advancements";
-    }
-
-    public static void provideLang(BiConsumer<String, String> consumer) {
-        CCBAdvancement.all().forEach(advancement -> advancement.provideLang(consumer));
-    }
-
-    @Contract("_, _ -> new")
-    private static CCBAdvancement create(String id, UnaryOperator<Builder> operator) {
-        return new CCBAdvancement(id, operator);
     }
 }

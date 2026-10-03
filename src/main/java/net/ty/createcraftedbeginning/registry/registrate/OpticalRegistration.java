@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.registry.registrate;
 
+import com.simibubi.create.api.boiler.BoilerHeater;
+import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.data.ModelGen;
@@ -12,12 +14,12 @@ import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.client.model.generators.BlockModelProvider;
 import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder;
 import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder.PartBuilder;
 import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder.PartBuilder.ConditionGroup;
-import net.ty.createcraftedbeginning.config.CCBStress;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
 import net.ty.createcraftedbeginning.foundation.block.CCBSharedProperties;
 import org.jetbrains.annotations.Contract;
@@ -33,7 +35,7 @@ public final class OpticalRegistration {
 
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> opticalFiber() {
-        return builder -> builder.properties(Block.Properties::dynamicShape).blockstate((context, provider) -> {
+        return builder -> builder.properties(Properties::dynamicShape).blockstate((context, provider) -> {
             BlockModelProvider models = provider.models();
             MultiPartBlockStateBuilder multipart = provider.getMultipartBuilder(context.getEntry());
             PartBuilder junction = multipart.part().modelFile(models.getExistingFile(provider.modLoc("block/optical_fiber/junction"))).addModel().useOr();
@@ -86,7 +88,7 @@ public final class OpticalRegistration {
 
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> amethystCollectorPanel() {
-        return builder -> builder.properties(Block.Properties::dynamicShape).blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), AssetLookup.partialBaseModel(context, provider))).item().transform(ModelGen.customItemModel("amethyst_collector_panel", "item"));
+        return builder -> builder.properties(Properties::dynamicShape).blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), AssetLookup.partialBaseModel(context, provider))).item().transform(ModelGen.customItemModel("amethyst_collector_panel", "item"));
     }
 
     @Contract(pure = true)
@@ -95,8 +97,8 @@ public final class OpticalRegistration {
     }
 
     @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> laserReceiver() {
-        return builder -> builder.blockstate((context, provider) -> provider.directionalBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/laser_receiver/block")))).item().transform(ModelGen.customItemModel("laser_receiver", "item"));
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> photothermalReceiver() {
+        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/photothermal_receiver/block")))).item().transform(ModelGen.customItemModel("photothermal_receiver", "item"));
     }
 
     @Contract(pure = true)
@@ -110,8 +112,12 @@ public final class OpticalRegistration {
     }
 
     @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> laserReceiverProperties() {
-        return builder -> builder.initialProperties(CCBSharedProperties::stone).tag(BlockTags.MINEABLE_WITH_PICKAXE).transform(CCBStress.setCapacity(128)).properties(properties -> properties.mapColor(MapColor.COLOR_PURPLE).noOcclusion());
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> photothermalReceiverProperties() {
+        return builder -> builder.initialProperties(CCBSharedProperties::stone).tag(BlockTags.MINEABLE_WITH_PICKAXE).onRegister(block -> BoilerHeater.REGISTRY.register(block, BoilerHeater.BLAZE_BURNER)).properties(properties -> properties.mapColor(MapColor.COLOR_PURPLE).noOcclusion().lightLevel(state -> switch (state.getValue(BlazeBurnerBlock.HEAT_LEVEL)) {
+            case KINDLED -> 8;
+            case SEETHING -> 12;
+            default -> 0;
+        }));
     }
 
     @Contract(pure = true)

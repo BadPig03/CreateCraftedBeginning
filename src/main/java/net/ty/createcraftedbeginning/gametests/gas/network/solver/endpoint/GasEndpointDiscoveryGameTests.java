@@ -60,7 +60,7 @@ public final class GasEndpointDiscoveryGameTests {
         source.tryReplaceContents(gas.copyWithAmount(20)).requireAccepted();
         GasHandler handler = endpoint.access().fillHandler();
         if (handler == null) {
-            return;
+            throw new NullPointerException("High-pressure-only endpoint did not retain its fill handler.");
         }
 
         PooledTransferExecutionResult result = GasTransferExecutor.executePooledTransfer(gas, List.of(new PlannedDrain(source, 10)), List.of(new PlannedFill(handler, 10, highPressure)));
@@ -83,7 +83,7 @@ public final class GasEndpointDiscoveryGameTests {
         BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, CCBBlocks.AIRTIGHT_PIPE_BLOCK.get().defaultBlockState().setValue(RotatedPillarBlock.AXIS, Axis.X));
         BlockFace face = new BlockFace(helper.absolutePos(pos), Direction.EAST);
-        return GasEndpointPlanner.prepare(new DiscoveredEndpoints(List.of(), List.of(new PressureBoundaryAccess(face, face.getOpposite(), boundary, null)), List.of()));
+        return GasEndpointPlanner.prepare(new DiscoveredEndpoints(List.of(), List.of(new PressureBoundaryAccess(face, boundary)), List.of()));
     }
 
     private static final class HighPressureBoundary implements GasPressureBoundary {

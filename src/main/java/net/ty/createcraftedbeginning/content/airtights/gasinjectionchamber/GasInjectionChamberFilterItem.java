@@ -26,14 +26,6 @@ public class GasInjectionChamberFilterItem extends Item {
         super(properties);
     }
 
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
-        super.appendHoverText(stack, context, tooltips, flag);
-        Optional<ResourceLocation> fanProcessingTypeId = getFanProcessingTypeId(stack);
-        tooltips.add(CCBLang.translateDirect("gui.gas_injection_chamber_filter.processing_type", fanProcessingTypeId.map(typeId -> getFanProcessingTypeName(typeId).copy().withStyle(ChatFormatting.AQUA)).orElseGet(() -> Component.translatable("fan_processing_type.empty").withStyle(ChatFormatting.GRAY))).withStyle(ChatFormatting.GRAY));
-    }
-
     public static boolean isFilter(ItemStack stack) {
         return stack.is(CCBItems.GAS_INJECTION_CHAMBER_FILTER.get());
     }
@@ -74,5 +66,13 @@ public class GasInjectionChamberFilterItem extends Item {
 
     static Component getFanProcessingTypeName(ResourceLocation typeId) {
         return Component.translatableWithFallback("fan_processing_type." + typeId.getNamespace() + '.' + typeId.getPath().replace('/', '.'), typeId.toString());
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
+        super.appendHoverText(stack, context, tooltips, flag);
+        Optional<ResourceLocation> fanProcessingTypeId = getFanProcessingTypeId(stack);
+        tooltips.add(CCBLang.translateDirect("gui.gas_injection_chamber_filter.processing_type", fanProcessingTypeId.map(typeId -> getFanProcessingTypeName(typeId).copy().withStyle(ChatFormatting.AQUA)).orElseGet(() -> Component.translatable("fan_processing_type.empty").withStyle(ChatFormatting.GRAY))).withStyle(ChatFormatting.GRAY));
     }
 }

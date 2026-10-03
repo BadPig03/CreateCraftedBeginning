@@ -39,6 +39,11 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
         super(type, id, inventory, extraData);
     }
 
+    @Contract("_, _, _ -> new")
+    static GasFactoryGaugeSetGasMenu create(int id, Inventory inventory, GasFactoryGaugeBehaviour behaviour) {
+        return new GasFactoryGaugeSetGasMenu(CCBMenuTypes.GAS_FACTORY_GAUGE_SET_GAS_MENU.get(), id, inventory, behaviour);
+    }
+
     @Override
     protected ItemStackHandler createGhostInventory() {
         return new ItemStackHandler(1);
@@ -87,10 +92,5 @@ public class GasFactoryGaugeSetGasMenu extends GhostItemMenu<GasFactoryGaugeBeha
 
         behaviour.setFilter(gasTokens.getFirst());
         player.level().playSound(null, behaviour.getPos(), SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 0.25F, 0.1F);
-    }
-
-    @Contract("_, _, _ -> new")
-    static GasFactoryGaugeSetGasMenu create(int id, Inventory inventory, GasFactoryGaugeBehaviour behaviour) {
-        return new GasFactoryGaugeSetGasMenu(CCBMenuTypes.GAS_FACTORY_GAUGE_SET_GAS_MENU.get(), id, inventory, behaviour);
     }
 }

@@ -11,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.VirtualGasItems;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasRequestFormat;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
@@ -58,9 +59,10 @@ public final class GasRequestTooltips {
             return List.of();
         }
 
-        List<Component> tooltipLines = new ArrayList<>();
+        GasStack gas = VirtualGasItems.readGasSample(virtualItem);
+        List<Component> tooltipLines = new ArrayList<>(gas.getGasType().getTooltip(gas));
         if (Minecraft.getInstance().options.advancedItemTooltips) {
-            String gasId = VirtualGasItems.readGasSample(virtualItem).getGasType().getResourceLocation().toString();
+            String gasId = gas.getGasType().getResourceLocation().toString();
             tooltipLines.add(CCBLang.text(gasId).style(ChatFormatting.DARK_GRAY).component());
         }
         tooltipLines.add(CCBLang.text(CCBAPI.NAME).style(ChatFormatting.BLUE).style(ChatFormatting.ITALIC).component());

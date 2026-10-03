@@ -39,6 +39,19 @@ public final class GasConsumptionPlan {
         return new GasConsumptionPlan(tankCount, List.of());
     }
 
+    private static void rollback(List<ExecutedDrain> executedDrains) {
+        for (int index = executedDrains.size() - 1; index >= 0; index--) {
+            ExecutedDrain executedDrain = executedDrains.get(index);
+            GasStack drainedGas = executedDrain.gas();
+            long restoredAmount = executedDrain.compartment().restoreDrainedGas(drainedGas, GasAction.EXECUTE);
+            if (restoredAmount == drainedGas.getAmount()) {
+                continue;
+            }
+
+            throw new IllegalStateException("Failed to roll back gas consumption drain " + index + ": expected " + drainedGas.getAmount() + " GU, restored " + restoredAmount + " GU.");
+        }
+    }
+
     public boolean isEmpty() {
         return drains.isEmpty();
     }
@@ -87,19 +100,6 @@ public final class GasConsumptionPlan {
             return false;
         }
         return true;
-    }
-
-    private static void rollback(List<ExecutedDrain> executedDrains) {
-        for (int index = executedDrains.size() - 1; index >= 0; index--) {
-            ExecutedDrain executedDrain = executedDrains.get(index);
-            GasStack drainedGas = executedDrain.gas();
-            long restoredAmount = executedDrain.compartment().restoreDrainedGas(drainedGas, GasAction.EXECUTE);
-            if (restoredAmount == drainedGas.getAmount()) {
-                continue;
-            }
-
-            throw new IllegalStateException("Failed to roll back gas consumption drain " + index + ": expected " + drainedGas.getAmount() + " GU, restored " + restoredAmount + " GU.");
-        }
     }
 
     static final class TankDrain {

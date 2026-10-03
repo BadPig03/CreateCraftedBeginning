@@ -107,7 +107,16 @@ public final class MountedGasStorageGameTests {
         manager.handleSync(new MountedStorageSyncPacket(entity.getId(), Map.of(), Map.of()), entity);
         helper.assertTrue(gasManager.ccb$getGasStorage().storages.get(TANK_POS) == original, "Create reset replaced existing gas storage");
         tank.getTankInventory().tryReplaceContents(new GasStack(CCBGases.NATURAL_AIR.get(), 700)).requireAccepted();
-        MountedGasStorage replacement = MountedGasStorageType.REGISTRY.get(tank.getBlockState().getBlock()).mount(helper.getLevel(), tank.getBlockState(), tank.getBlockPos(), tank);
+        MountedGasStorageType<?> storageType = MountedGasStorageType.REGISTRY.get(tank.getBlockState().getBlock());
+        if (storageType == null) {
+            throw new NullPointerException("Expected a mounted gas storage type for the airtight tank at " + TANK_POS + '.');
+        }
+
+        MountedGasStorage replacement = storageType.mount(level, tank.getBlockState(), tank.getBlockPos(), tank);
+        if (replacement == null) {
+            throw new NullPointerException("Expected replacement mounted gas storage for the airtight tank at " + TANK_POS + '.');
+        }
+
         tank.getTankInventory().tryReplaceContents(new GasStack(CCBGases.NATURAL_AIR.get(), 100)).requireAccepted();
         gasManager.ccb$handleGasStorageSync(new MountedGasStorageSyncPacket(entity.getId(), Map.of(), Map.of(), Map.of(TANK_POS, replacement)), entity);
         helper.assertValueEqual(tank.getTankInventory().getGasStack().getAmount(), 700L, "Gas afterSync callback amount");
@@ -126,6 +135,10 @@ public final class MountedGasStorageGameTests {
         manager.initialize();
         MountedGasStorageWrapper gases = ((MountedGasStorageAccess) manager).ccb$getGasStorage();
         SyncedMountedStorage storage = (SyncedMountedStorage) gases.storages.get(TANK_POS);
+        if (storage == null) {
+            throw new NullPointerException("Expected synchronized mounted gas storage at " + TANK_POS + '.');
+        }
+
         ControlledContraptionEntity entity = new ControlledContraptionEntity(AllEntityTypes.CONTROLLED_CONTRAPTION.get(), helper.getLevel());
         gases.drain(10, GasAction.EXECUTE);
         helper.assertTrue(storage.isDirty(), "Changed gas was not marked dirty");

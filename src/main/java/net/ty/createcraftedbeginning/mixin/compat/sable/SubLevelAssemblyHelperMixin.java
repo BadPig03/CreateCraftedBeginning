@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.ty.createcraftedbeginning.compat.sable.AssemblyTransformAccess;
+import net.ty.createcraftedbeginning.compat.sable.OpticalFiberAssemblyCompat;
 import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlockEntity;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -36,5 +37,11 @@ public abstract class SubLevelAssemblyHelperMixin {
         }
 
         AirVentBlockEntity.transformLouverNbt(tag, ((AssemblyTransformAccess) transform)::ccb$transform);
+    }
+
+    @Inject(method = "moveBlocks", at = @At("TAIL"), require = 1)
+    private static void ccb$moveBlocks(ServerLevel level, @Coerce Object transform, Iterable<BlockPos> positions, CallbackInfo callback) {
+        AssemblyTransformAccess access = (AssemblyTransformAccess) transform;
+        OpticalFiberAssemblyCompat.refreshAfterMove(level, access.ccb$getResultingLevel(), positions, access::ccb$transform);
     }
 }

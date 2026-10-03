@@ -62,6 +62,22 @@ public final class AirtightForgingPressController {
         observedRecipeCacheVersion = AirtightForgingPressRecipeLookup.getRecipeCacheVersion();
     }
 
+    private static float sanitizePressureSpeedMultiplier(float multiplier) {
+        if (Float.isFinite(multiplier) && multiplier >= 1.0F) {
+            return multiplier;
+        }
+
+        return 1;
+    }
+
+    private static float sanitizeOperationSpeed(float speed) {
+        if (!Float.isFinite(speed) || speed <= 0) {
+            return 0;
+        }
+
+        return Mth.clamp(speed, 1, 16);
+    }
+
     @Internal
     public void tick() {
         Level level = press.getLevel();
@@ -385,22 +401,6 @@ public final class AirtightForgingPressController {
         pressureSpeedMultiplier = 1;
         operationSpeed = 0;
         clearRecipes();
-    }
-
-    private static float sanitizePressureSpeedMultiplier(float multiplier) {
-        if (Float.isFinite(multiplier) && multiplier >= 1.0F) {
-            return multiplier;
-        }
-
-        return 1;
-    }
-
-    private static float sanitizeOperationSpeed(float speed) {
-        if (!Float.isFinite(speed) || speed <= 0) {
-            return 0;
-        }
-
-        return Mth.clamp(speed, 1, 16);
     }
 
     private void clearRecipes() {

@@ -25,11 +25,6 @@ public class ZombificationImmunityEffect extends MobEffect {
         super(category, color);
     }
 
-    @Override
-    public void onEffectStarted(LivingEntity livingEntity, int amplifier) {
-        setZombificationImmunity(livingEntity, true);
-    }
-
     @SubscribeEvent
     static void onEffectExpired(Expired event) {
         if (!isZombificationImmunity(event.getEffectInstance())) {
@@ -63,5 +58,10 @@ public class ZombificationImmunityEffect extends MobEffect {
         }
 
         hoglin.setImmuneToZombification(isImmune);
+    }
+
+    @Override
+    public void onEffectStarted(LivingEntity livingEntity, int amplifier) {
+        setZombificationImmunity(livingEntity, true);
     }
 }

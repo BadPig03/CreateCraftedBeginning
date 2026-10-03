@@ -7,6 +7,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ColorRGBA;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ColoredFallingBlock;
+import net.minecraft.world.level.block.HalfTransparentBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.WallBlock;
@@ -54,17 +55,15 @@ import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlock;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
-import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerBlock;
-import net.ty.createcraftedbeginning.content.end.endincinerationblower.EndIncinerationBlowerStructuralBlock;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerBlock;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerMovementBehaviour;
 import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerStructuralBlock;
-import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlock;
-import net.ty.createcraftedbeginning.content.opticalpower.laserreceiver.LaserReceiverBlock;
-import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelBlock;
-import net.ty.createcraftedbeginning.content.pneumaticengine.PneumaticEngineBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverBlock;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
+import net.ty.createcraftedbeginning.registry.registrate.AerogelRegistration;
 import net.ty.createcraftedbeginning.registry.registrate.AirtightBlockProperties;
 import net.ty.createcraftedbeginning.registry.registrate.AirtightMachineRegistration;
 import net.ty.createcraftedbeginning.registry.registrate.BreezeRegistration;
@@ -149,7 +148,7 @@ public class CCBBlocks {
     public static final BlockEntry<OpticalFiberBlock> OPTICAL_FIBER_BLOCK = CCB_REGISTRATE.block("optical_fiber", OpticalFiberBlock::new).transform(OpticalRegistration.opticalFiber()).transform(OpticalRegistration.opticalComponentProperties()).register();
     public static final BlockEntry<AmethystCollectorPanelBlock> AMETHYST_COLLECTOR_PANEL_BLOCK = CCB_REGISTRATE.block("amethyst_collector_panel", AmethystCollectorPanelBlock::new).transform(OpticalRegistration.amethystCollectorPanel()).transform(OpticalRegistration.opticalComponentProperties()).register();
     public static final BlockEntry<LaserEmitterBlock> LASER_EMITTER_BLOCK = CCB_REGISTRATE.block("laser_emitter", LaserEmitterBlock::new).transform(OpticalRegistration.laserEmitter()).transform(OpticalRegistration.opticalComponentProperties()).register();
-    public static final BlockEntry<LaserReceiverBlock> LASER_RECEIVER_BLOCK = CCB_REGISTRATE.block("laser_receiver", LaserReceiverBlock::new).transform(OpticalRegistration.laserReceiver()).transform(OpticalRegistration.laserReceiverProperties()).register();
+    public static final BlockEntry<PhotothermalReceiverBlock> PHOTOTHERMAL_RECEIVER_BLOCK = CCB_REGISTRATE.block("photothermal_receiver", PhotothermalReceiverBlock::new).transform(OpticalRegistration.photothermalReceiver()).transform(OpticalRegistration.photothermalReceiverProperties()).register();
 
     static {
         CCBCreativeSectionTracker.set(CCB_REGISTRATE, CCBCreativeTabSection.ENDS);
@@ -158,14 +157,14 @@ public class CCBBlocks {
     public static final BlockEntry<Block> END_ALLOY_BLOCK = CCB_REGISTRATE.block("end_alloy_block", Block::new).transform(EndRegistration.endAlloyBlock()).transform(EndRegistration.endAlloyBlockProperties()).register();
 
     public static final BlockEntry<EndCasingBlock> END_CASING_BLOCK = CCB_REGISTRATE.block("end_casing", EndCasingBlock::new).transform(EndRegistration.endCasing()).transform(EndRegistration.endCasingProperties()).register();
-    public static final BlockEntry<EndIncinerationBlowerBlock> END_INCINERATION_BLOWER_BLOCK = CCB_REGISTRATE.block("end_incineration_blower", EndIncinerationBlowerBlock::new).transform(EndRegistration.endIncinerationBlower()).transform(EndRegistration.endComponentWithImpactProperties(4)).register();
-    public static final BlockEntry<EndIncinerationBlowerStructuralBlock> END_INCINERATION_BLOWER_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("end_incineration_blower_structural", EndIncinerationBlowerStructuralBlock::new).transform(EndRegistration.endIncinerationBlowerStructural()).transform(EndRegistration.endComponentWithImpactProperties(0)).register();
     public static final BlockEntry<EndSculkSilencerBlock> END_SCULK_SILENCER_BLOCK = CCB_REGISTRATE.block("end_sculk_silencer", EndSculkSilencerBlock::new).transform(EndRegistration.endSculkSilencer()).transform(EndRegistration.endComponentWithImpactProperties(4)).onRegister(MovementBehaviour.movementBehaviour(new EndSculkSilencerMovementBehaviour())).register();
     public static final BlockEntry<EndSculkSilencerStructuralBlock> END_SCULK_SILENCER_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("end_sculk_silencer_structural", EndSculkSilencerStructuralBlock::new).transform(EndRegistration.endSculkSilencerStructural()).transform(EndRegistration.endComponentWithImpactProperties(0)).register();
 
     static {
         CCBCreativeSectionTracker.set(CCB_REGISTRATE, CCBCreativeTabSection.DECORATIONS);
     }
+
+    public static final BlockEntry<HalfTransparentBlock> AEROGEL_BLOCK = CCB_REGISTRATE.block("aerogel_block", HalfTransparentBlock::new).transform(AerogelRegistration.aerogelBlock()).register();
 
     public static final BlockEntry<AndesiteCrateBlock> ANDESITE_CRATE_BLOCK = CCB_REGISTRATE.block("andesite_crate", AndesiteCrateBlock::new).transform(CrateRegistration.crate("andesite")).transform(CrateRegistration.andesiteCrateProperties()).register();
     public static final BlockEntry<BrassCrateBlock> BRASS_CRATE_BLOCK = CCB_REGISTRATE.block("brass_crate", BrassCrateBlock::new).transform(CrateRegistration.crate("brass")).transform(CrateRegistration.brassCrateProperties()).register();
@@ -252,8 +251,6 @@ public class CCBBlocks {
     static {
         CCBCreativeSectionTracker.set(CCB_REGISTRATE, CCBCreativeTabSection.CANISTERS);
     }
-
-    public static final BlockEntry<PneumaticEngineBlock> PNEUMATIC_ENGINE_BLOCK = CCB_REGISTRATE.block("pneumatic_engine", PneumaticEngineBlock::new).transform(AirtightMachineRegistration.pneumaticEngine()).transform(AirtightMachineRegistration.pneumaticEngineProperties()).register();
 
     public static void register() {
     }

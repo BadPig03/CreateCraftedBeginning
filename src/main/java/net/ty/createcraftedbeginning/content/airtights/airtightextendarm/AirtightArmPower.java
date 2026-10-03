@@ -57,7 +57,10 @@ final class AirtightArmPower {
             return;
         }
 
-        Optional<AffordableFuel> affordableFuel = findAffordableFuel(player);
+        Optional<AffordableFuel> affordableFuel = CanisterContainerConsumers.findAffordableFuel(player, getSelectedGasType(player), context -> {
+            AirtightArmHandler armHandler = AirtightArmHandlers.resolveForEquipment(context.gasType());
+            return CCBConfig.server().equipment.airtightExtendArm.gasPerPoweredAction.get() * armHandler.getGasConsumptionMultiplier();
+        });
         if (affordableFuel.isEmpty()) {
             removeArmModifiers(player);
             return;
@@ -82,10 +85,6 @@ final class AirtightArmPower {
 
     static PowerUseResult tryUseAttackPower(Player player, Entity targetEntity) {
         return tryUsePower(player, () -> player.canInteractWithEntity(targetEntity, 0), () -> AirtightArmAttributes.requiresPoweredAttack(player, targetEntity));
-    }
-
-    private static Optional<AffordableFuel> findAffordableFuel(Player player) {
-        return CanisterContainerConsumers.findAffordableFuel(player, getSelectedGasType(player), context -> getRawGasConsumption(AirtightArmHandlers.resolveForEquipment(context.gasType())));
     }
 
     private static PowerUseResult tryUsePower(Player player, BooleanSupplier canReachWithCurrentPower, BooleanSupplier requiresCurrentPower) {
@@ -134,10 +133,6 @@ final class AirtightArmPower {
         return CanisterContainerClients.getStoredGasType(player);
     }
 
-    private static double getRawGasConsumption(AirtightArmHandler armHandler) {
-        return CCBConfig.server().equipment.airtightExtendArm.gasPerPoweredAction.get() * armHandler.getGasConsumptionMultiplier();
-    }
-
     private static void removeArmModifiers(Player player) {
         ACTIVE_FUELS.remove(player);
 
@@ -154,14 +149,6 @@ final class AirtightArmPower {
     record PowerUseResult(PowerUseOutcome outcome, GasStack attemptedGas) {
         PowerUseResult {
             attemptedGas = attemptedGas.copy();
-        }
-
-        boolean allowed() {
-            return outcome == PowerUseOutcome.PASS || outcome == PowerUseOutcome.CONSUMED;
-        }
-
-        boolean shouldWarn() {
-            return outcome == PowerUseOutcome.INSUFFICIENT_GAS;
         }
 
         private static PowerUseResult pass() {
@@ -186,6 +173,14 @@ final class AirtightArmPower {
 
         private static PowerUseResult outOfRange() {
             return new PowerUseResult(PowerUseOutcome.OUT_OF_RANGE, GasStack.EMPTY);
+        }
+
+        boolean allowed() {
+            return outcome == PowerUseOutcome.PASS || outcome == PowerUseOutcome.CONSUMED;
+        }
+
+        boolean shouldWarn() {
+            return outcome == PowerUseOutcome.INSUFFICIENT_GAS;
         }
     }
 
