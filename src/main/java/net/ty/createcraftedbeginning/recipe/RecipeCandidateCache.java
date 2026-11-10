@@ -23,9 +23,10 @@ public final class RecipeCandidateCache {
     private RecipeCandidateCache() {
     }
 
+    @SuppressWarnings("FunctionalExpressionCanBeFolded")
     public static List<RecipeHolder<?>> get(Object scope, RecipeManager manager, Predicate<RecipeHolder<? extends Recipe<?>>> conditions) {
         CacheKey key = new CacheKey(scope, CCBRecipeReloads.getGeneration(manager));
-        return CACHED_SEARCHES.asMap().computeIfAbsent(key, ignored -> manager.getRecipes().stream().filter(conditions).toList());
+        return CACHED_SEARCHES.asMap().computeIfAbsent(key, ignored -> manager.getRecipes().stream().filter(conditions::test).toList());
     }
 
     private record CacheKey(Object scope, Generation generation) {}
