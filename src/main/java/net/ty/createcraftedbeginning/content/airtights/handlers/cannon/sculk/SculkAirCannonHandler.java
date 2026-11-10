@@ -75,7 +75,7 @@ public class SculkAirCannonHandler implements AirtightCannonHandler, AirtightCan
     }
 
     @Override
-    public float getGasConsumptionMultiplier() {
+    public double getGasConsumptionMultiplier() {
         return 1;
     }
 

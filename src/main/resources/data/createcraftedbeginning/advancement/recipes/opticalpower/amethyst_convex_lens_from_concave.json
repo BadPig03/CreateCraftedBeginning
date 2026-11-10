@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_concave_lens": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:amethyst_concave_lens"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "createcraftedbeginning:crafting/opticalpower/amethyst_convex_lens_from_concave"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_concave_lens",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "createcraftedbeginning:crafting/opticalpower/amethyst_convex_lens_from_concave"
+    ]
+  }
+}

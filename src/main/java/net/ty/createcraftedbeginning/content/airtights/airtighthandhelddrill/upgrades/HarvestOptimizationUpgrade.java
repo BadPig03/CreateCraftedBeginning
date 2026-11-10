@@ -31,7 +31,7 @@ public enum HarvestOptimizationUpgrade implements AirtightUpgrade {
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
-        float multiplier = CCBConfig.server().equipment.airtightHandheldDrill.harvestOptimizationGasMultiplier.getF();
+        double multiplier = CCBConfig.server().equipment.airtightHandheldDrill.harvestOptimizationGasMultiplier.get();
         return List.of(CCBLang.translateDirect("gui.gas_consumption.multiplier", multiplier));
     }
 

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "OAO",
+    "AMA",
+    "OAO"
+  ],
+  "key": {
+    "O": {
+      "tag": "c:plates/gold"
+    },
+    "M": {
+      "item": "createcraftedbeginning:mirror"
+    },
+    "A": {
+      "tag": "c:plates/amethyst_crystal"
+    }
+  },
+  "result": {
+    "id": "createcraftedbeginning:amethyst_mirror",
+    "count": 4
+  }
+}

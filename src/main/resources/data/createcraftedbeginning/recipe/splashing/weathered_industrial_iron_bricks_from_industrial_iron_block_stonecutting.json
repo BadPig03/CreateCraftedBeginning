@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "create:industrial_iron_block"
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:weathered_industrial_iron_bricks"
+  }
+}

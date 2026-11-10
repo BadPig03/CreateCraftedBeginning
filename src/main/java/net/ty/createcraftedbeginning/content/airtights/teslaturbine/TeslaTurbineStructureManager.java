@@ -98,7 +98,7 @@ class TeslaTurbineStructureManager {
         BlockState turbineState = turbine.getBlockState();
         Level level = turbine.getLevel();
         int rotorCount = turbineState.getValue(TeslaTurbineBlock.ROTOR);
-        if (rotorCount == 0 || level == null || level.isClientSide) {
+        if (rotorCount == 0 || level == null || level.isClientSide || turbine.getSpeed() == 0) {
             return;
         }
 
@@ -123,12 +123,19 @@ class TeslaTurbineStructureManager {
                 level.explode(null, centerX, centerY - 0.5, centerZ, explosionStrength, true, explosionInteraction);
             }
         }
-        level.setBlockAndUpdate(turbinePos, turbineState.setValue(TeslaTurbineBlock.ROTOR, 0));
+        if (level.getBlockEntity(turbinePos) == turbine) {
+            BlockState remainingState = level.getBlockState(turbinePos);
+            level.setBlockAndUpdate(turbinePos, remainingState.setValue(TeslaTurbineBlock.ROTOR, 0));
+        }
         turbine.getAdvancementBehaviour().awardPlayer(CCBAdvancements.TESLA_TURBINE_EASY_AS_PIE);
     }
 
     boolean isActive() {
         return (attachedClockwiseNozzles > 0 || attachedCounterClockwiseNozzles > 0) && structureValid;
+    }
+
+    boolean hasMissingNozzles() {
+        return structureValid && attachedClockwiseNozzles == 0 && attachedCounterClockwiseNozzles == 0;
     }
 
     void invalidateForServerLoad() {

@@ -32,19 +32,21 @@ public class TeslaTurbineBlockItem extends BlockItem {
 
         Axis turbineAxis = turbineBlock.getAxisForPlacement(context);
         Direction clickedFace = context.getClickedFace();
+        BlockPlaceContext placementContext = context;
         if (clickedFace.getAxis() != turbineAxis) {
-            BlockPlaceContext offsetContext = BlockPlaceContext.at(context, context.getClickedPos().relative(clickedFace), clickedFace);
-            placementResult = super.place(offsetContext);
+            placementContext = BlockPlaceContext.at(context, context.getClickedPos().relative(clickedFace), clickedFace);
+            placementResult = super.place(placementContext);
         }
         if (placementResult != InteractionResult.FAIL || !context.getLevel().isClientSide()) {
             return placementResult;
         }
 
-        if (turbineAxis != null) {
-            BlockPos placementPos = context.getClickedPos();
-            Vec3 axisDeflation = Vec3.atLowerCornerOf(Direction.get(AxisDirection.POSITIVE, turbineAxis).getNormal());
+        Axis placementAxis = turbineBlock.getAxisForPlacement(placementContext);
+        if (placementAxis != null) {
+            BlockPos placementPos = placementContext.getClickedPos();
+            Vec3 axisDeflation = Vec3.atLowerCornerOf(Direction.get(AxisDirection.POSITIVE, placementAxis).getNormal());
             AABB bounds = new AABB(placementPos).inflate(1).deflate(axisDeflation.x, axisDeflation.y, axisDeflation.z);
-            ClientRenderBridge.showPlacementBounds(context, "tesla_turbine", placementPos, bounds);
+            ClientRenderBridge.showPlacementBounds(placementContext, "tesla_turbine", placementPos, bounds);
         }
         return placementResult;
     }

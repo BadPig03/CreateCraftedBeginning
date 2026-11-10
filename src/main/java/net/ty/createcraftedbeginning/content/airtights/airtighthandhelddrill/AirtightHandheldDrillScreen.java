@@ -141,7 +141,7 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
         upgradeIndicators.clear();
         buttonConfigsMap.clear();
 
-        IconButton confirmButton = new IconButton(leftPos + background.getWidth() - 31, topPos + background.getHeight() - 24, AllIcons.I_CONFIRM).withCallback(() -> menu.player.closeContainer());
+        IconButton confirmButton = new IconButton(leftPos + background.getWidth() - 31, topPos + background.getHeight() - 24, AllIcons.I_CONFIRM).withCallback(this::onClose);
         addRenderableWidget(confirmButton);
 
         disableUpgradeButton = new IconButton(leftPos + 151, topPos + 35, CCBIcons.I_FINISHED).setActive(false);
@@ -176,15 +176,15 @@ public class AirtightHandheldDrillScreen extends AirtightUpgradableScreen<Airtig
     }
 
     @Override
-    public void removed() {
+    public void onClose() {
         if (!AirtightHandheldDrillSettings.isRelativePositionValid(miningTemplate, miningSize, relativePosition)) {
             int[] defaultRelativePosition = miningTemplate.getTemplate().getDefaultRelativePosition();
             relativePosition[0] = defaultRelativePosition[0];
             relativePosition[1] = defaultRelativePosition[1];
             relativePosition[2] = defaultRelativePosition[2];
         }
-        CatnipServices.NETWORK.sendToServer(new AirtightHandheldDrillParametersPacket(miningTemplate, new BlockPos(miningSize[0], miningSize[1], miningSize[2]), miningDirection, new BlockPos(relativePosition[0], relativePosition[1], relativePosition[2])));
-        super.removed();
+        CatnipServices.NETWORK.sendToServer(new AirtightHandheldDrillParametersPacket(menu.containerId, miningTemplate, new BlockPos(miningSize[0], miningSize[1], miningSize[2]), miningDirection, new BlockPos(relativePosition[0], relativePosition[1], relativePosition[2])));
+        super.onClose();
     }
 
     private void addUpgradeButton(AirtightUpgrade upgrade) {

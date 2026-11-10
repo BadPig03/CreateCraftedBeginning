@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.gas.release;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
@@ -16,6 +17,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasReleaseService {
+    private static final int CONTINUOUS_SOUND_PERIOD_TICKS = 20;
+    private static final int CONTINUOUS_SOUND_PHASE_TICKS = 10;
     public static final long EFFECT_INTERVAL = 1000;
 
     private GasReleaseService() {
@@ -69,7 +72,8 @@ public final class GasReleaseService {
     }
 
     private static GasReleaseContext createContext(Level level, GasReleaseRequest request, GasStack gas) {
-        return new GasReleaseContext(level, gas, request.sourcePos(), request.effectPos(), request.direction(), request.cause(), request.mode(), request.sourcePressurePa(), AtmosphereStateResolver.resolve(level, request.effectPos()).pressurePa());
+        BlockPos effectPos = request.effectPos();
+        return new GasReleaseContext(level, gas, request.sourcePos(), effectPos, request.direction(), request.cause(), request.mode(), request.sourcePressurePa(), AtmosphereStateResolver.resolve(level, effectPos).pressurePa());
     }
 
     private static void applyFeedback(GasReleaseContext context, GasReleaseHandler releaseHandler, GasReleaseFeedback feedback, boolean continuous) {
@@ -78,7 +82,7 @@ public final class GasReleaseService {
             GasReleaseHandlers.showOutline(level, context.effectPos(), feedback.outlineInflation(), context.gas().getHint());
         }
 
-        if (continuous && level.getGameTime() % 20 != 10) {
+        if (continuous && level.getGameTime() % CONTINUOUS_SOUND_PERIOD_TICKS != CONTINUOUS_SOUND_PHASE_TICKS) {
             return;
         }
 

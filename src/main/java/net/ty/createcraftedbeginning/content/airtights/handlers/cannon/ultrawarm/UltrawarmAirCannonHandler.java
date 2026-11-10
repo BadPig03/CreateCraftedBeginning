@@ -87,8 +87,8 @@ public class UltrawarmAirCannonHandler implements AirtightCannonHandler, Airtigh
     }
 
     @Override
-    public float getGasConsumptionMultiplier() {
-        return 0.8F;
+    public double getGasConsumptionMultiplier() {
+        return 0.8;
     }
 
     @Override

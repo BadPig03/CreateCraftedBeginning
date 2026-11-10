@@ -6,6 +6,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameRules.BooleanValue;
 import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlare;
+import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareEffect;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -20,5 +21,10 @@ public class AnchorFlareItem extends Item implements WeatherFlare {
     public void setWeather(ServerLevel level, double ignoredRatio) {
         BooleanValue weatherCycleRule = level.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE);
         weatherCycleRule.set(!weatherCycleRule.get(), level.getServer());
+    }
+
+    @Override
+    public WeatherFlareEffect getWeatherEffect() {
+        return WeatherFlareEffect.TOGGLE_CYCLE;
     }
 }

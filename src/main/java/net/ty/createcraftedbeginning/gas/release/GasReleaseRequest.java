@@ -19,16 +19,22 @@ public record GasReleaseRequest(GasStack gas, BlockPos sourcePos, BlockPos effec
         gas = gas.copy();
         sourcePos = sourcePos.immutable();
         effectPos = effectPos.immutable();
-        if (sourcePressurePa.isPresent() && sourcePressurePa.getAsLong() < GasPressure.VACUUM_PA) {
-            throw new IllegalArgumentException("Gas release source pressure must be non-negative; got " + sourcePressurePa.getAsLong() + " Pa.");
+        if (sourcePressurePa.isPresent()) {
+            long pressurePa = sourcePressurePa.getAsLong();
+            if (pressurePa < GasPressure.VACUUM_PA) {
+                throw new IllegalArgumentException("Gas release source pressure must be non-negative; got " + pressurePa + " Pa.");
+            }
         }
 
         if (mode == GasReleaseMode.DIRECTIONAL && direction.isEmpty()) {
             throw new IllegalArgumentException("Directional gas release requires a direction.");
         }
 
-        if (mode == GasReleaseMode.DIRECTIONAL && !effectPos.equals(sourcePos.relative(direction.orElseThrow()))) {
-            throw new IllegalArgumentException("Directional gas release effect position must match its source and direction; got source=" + sourcePos + ", direction=" + direction.orElseThrow() + ", effect=" + effectPos + '.');
+        if (mode == GasReleaseMode.DIRECTIONAL) {
+            Direction releaseDirection = direction.orElseThrow();
+            if (!effectPos.equals(sourcePos.relative(releaseDirection))) {
+                throw new IllegalArgumentException("Directional gas release effect position must match its source and direction; got source=" + sourcePos + ", direction=" + releaseDirection + ", effect=" + effectPos + '.');
+            }
         }
 
         if (mode == GasReleaseMode.RADIAL && direction.isPresent()) {

@@ -7,7 +7,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.client.render.CCBSpriteShifts;
@@ -25,7 +24,7 @@ public class AirtightPipeCTBehaviour extends Base {
         }
 
         CTSpriteShiftEntry casingShift = CCBSpriteShifts.AIRTIGHT_PIPE_CASING;
-        if (sprite != null && sprite != casingShift.getOriginal() || direction.getAxis() == state.getValue(AirtightPipeBlock.AXIS)) {
+        if (sprite != null && sprite != casingShift.getOriginal() || AirtightPipeConnections.isOpen(state, direction)) {
             return null;
         }
 
@@ -46,45 +45,4 @@ public class AirtightPipeCTBehaviour extends Base {
         return AirtightCasingCTHelper.connects(state, other, pos, otherPos, face);
     }
 
-    @Override
-    protected Direction getUpDirection(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction face) {
-        Axis axis = state.getValue(AirtightPipeBlock.AXIS);
-        switch (axis) {
-            case Y -> {
-                return super.getUpDirection(level, pos, state, face);
-            }
-            case X -> {
-                if (face == Direction.DOWN) {
-                    return Direction.WEST;
-                }
-
-                return Direction.EAST;
-            }
-            default -> {
-                if (face == Direction.DOWN) {
-                    return Direction.SOUTH;
-                }
-
-                return Direction.NORTH;
-            }
-        }
-    }
-
-    @Override
-    protected Direction getRightDirection(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction face) {
-        Axis axis = state.getValue(AirtightPipeBlock.AXIS);
-        return switch (axis) {
-            case Y -> super.getRightDirection(level, pos, state, face);
-            case X -> switch (face) {
-                case UP -> Direction.NORTH;
-                case DOWN -> Direction.SOUTH;
-                default -> Direction.UP;
-            };
-            default -> switch (face) {
-                case UP -> Direction.WEST;
-                case DOWN -> Direction.EAST;
-                default -> Direction.UP;
-            };
-        };
-    }
 }

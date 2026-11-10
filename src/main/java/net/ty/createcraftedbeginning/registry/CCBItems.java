@@ -112,15 +112,16 @@ public class CCBItems {
 
     public static final ItemEntry<Item> POWDERED_AMETHYST = CCB_REGISTRATE.item("powdered_amethyst", Item::new).transform(CCBItemPropertiesTransformer.tags(CCBItemTags.DUSTS.tag, CCBItemTags.DUSTS_AMETHYST.tag)).register();
     public static final ItemEntry<Item> AMETHYST_CRYSTAL_SHEET = CCB_REGISTRATE.item("amethyst_crystal_sheet", Item::new).transform(CCBItemPropertiesTransformer.tags(CCBItemTags.PLATES_AMETHYST_CRYSTAL.tag)).register();
+    public static final ItemEntry<Item> MIRROR = CCB_REGISTRATE.item("mirror", Item::new).register();
 
     static {
         CCBCreativeSectionTracker.set(CCB_REGISTRATE, CCBCreativeTabSection.ENDS);
     }
 
-    public static final ItemEntry<Item> CHORUS_FLOWER_POWDER = CCB_REGISTRATE.item("chorus_flower_powder", Item::new).transform(CCBItemPropertiesTransformer.tags(CCBItemTags.DUSTS.tag, CCBItemTags.DUSTS_CHORUS_FLOWER.tag)).register();
-
     public static final ItemEntry<Item> END_ALLOY = CCB_REGISTRATE.item("end_alloy", Item::new).transform(CCBItemPropertiesTransformer.uncommonMaterial(CCBItemTags.INGOTS_END_ALLOY.tag)).register();
     public static final ItemEntry<Item> END_ALLOY_SHEET = CCB_REGISTRATE.item("end_alloy_sheet", Item::new).transform(CCBItemPropertiesTransformer.uncommonMaterial(CCBItemTags.PLATES_END_ALLOY.tag)).register();
+
+    public static final ItemEntry<Item> CHORUS_FLOWER_POWDER = CCB_REGISTRATE.item("chorus_flower_powder", Item::new).transform(CCBItemPropertiesTransformer.tags(CCBItemTags.DUSTS.tag, CCBItemTags.DUSTS_CHORUS_FLOWER.tag)).register();
 
     static {
         CCBCreativeSectionTracker.set(CCB_REGISTRATE, CCBCreativeTabSection.DECORATIONS);
@@ -190,7 +191,7 @@ public class CCBItems {
 
     public static void register() {
         CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.AIRTIGHTS, AIRTIGHT_SHEET);
-        CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.OPTICAL_POWER, POWDERED_AMETHYST, AMETHYST_CRYSTAL_SHEET);
-        CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.ENDS, END_ALLOY, END_ALLOY_SHEET);
+        CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.OPTICAL_POWER, POWDERED_AMETHYST);
+        CCBCreativeTabs.registerSectionInit(CCBCreativeTabSection.ENDS, END_ALLOY);
     }
 }

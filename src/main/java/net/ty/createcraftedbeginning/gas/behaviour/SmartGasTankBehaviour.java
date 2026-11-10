@@ -7,6 +7,7 @@ import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
+import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
 import net.ty.createcraftedbeginning.gas.storage.GasTankState;
 import net.ty.createcraftedbeginning.gas.storage.SmartGasTank;
 import net.ty.createcraftedbeginning.gas.transfer.GasPressureFillService;
@@ -143,11 +144,13 @@ public class SmartGasTankBehaviour extends AbstractSmartGasTankBehaviour {
         for (int tankIndex = 0; tankIndex < tanks.length; tankIndex++) {
             SmartGasTank tank = tanks[tankIndex].tank;
             GasTankState replacementState = replacementStates[statesOffset + tankIndex];
-            if (tank.canContain(replacementState.limits(), replacementState.contents())) {
+            GasTankLimits limits = replacementState.limits();
+            GasStack contents = replacementState.contents();
+            if (tank.canContain(limits, contents)) {
                 continue;
             }
 
-            throw new IllegalArgumentException("Gas tank snapshot state at tank index " + tankIndex + " cannot be contained: volume=" + replacementState.limits().volumeLiters() + " L, maximumPressure=" + replacementState.limits().maxPressurePa() + " Pa, amount=" + replacementState.contents().getAmount() + " GU.");
+            throw new IllegalArgumentException("Gas tank snapshot state at tank index " + tankIndex + " cannot be contained: volume=" + limits.volumeLiters() + " L, maximumPressure=" + limits.maxPressurePa() + " Pa, amount=" + contents.getAmount() + " GU.");
         }
     }
 

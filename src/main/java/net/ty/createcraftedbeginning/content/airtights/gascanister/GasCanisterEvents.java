@@ -5,10 +5,12 @@ import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
+import net.neoforged.neoforge.event.level.LevelEvent.Unload;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.canister.GasCanisterContainer;
@@ -55,7 +57,18 @@ final class GasCanisterEvents {
 
     @SubscribeEvent
     private static void onPlayerLoggedOut(PlayerLoggedOutEvent event) {
-        LAST_OVERLAY_STATES.remove(event.getEntity());
+        Player player = event.getEntity();
+        LAST_OVERLAY_STATES.remove(player);
+        CanisterContainerSuppliers.invalidateCache(player);
+    }
+
+    @SubscribeEvent
+    private static void onLevelUnload(Unload event) {
+        if (!(event.getLevel() instanceof Level level)) {
+            return;
+        }
+
+        CanisterContainerSuppliers.invalidateCaches(level);
     }
 
     private static OverlaySelection findFirstAvailable(List<GasCanisterContainer> containers) {

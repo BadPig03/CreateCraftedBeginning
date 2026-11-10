@@ -27,7 +27,7 @@ final class GasInjectionChamberSerialization {
 
     void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         filter.writeInstalledFilter(compoundTag, provider);
-        if (clientPacket) {
+        if (clientPacket || chamber.isVirtual()) {
             compoundTag.putFloat(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, operation.getProcessingTicks());
             compoundTag.putFloat(GasInjectionChamberOperationState.COMPOUND_KEY_PRESSURE_SPEED_MULTIPLIER, operation.getPressureSpeedMultiplier());
             compoundTag.putInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_CYCLE, operation.getProcessingCycle());
@@ -37,18 +37,19 @@ final class GasInjectionChamberSerialization {
     }
 
     void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        if (clientPacket && compoundTag.contains(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS)) {
+        boolean virtual = chamber.isVirtual();
+        if ((clientPacket || virtual) && compoundTag.contains(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS)) {
             float processingTicks = NbtValues.getFloatOrDefault(compoundTag, GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, operation.getProcessingTicks());
             float pressureSpeedMultiplier = NbtValues.getFloatOrDefault(compoundTag, GasInjectionChamberOperationState.COMPOUND_KEY_PRESSURE_SPEED_MULTIPLIER, 1.0F);
             int processingCycle = NbtValues.getIntOrDefault(compoundTag, GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_CYCLE, operation.getProcessingCycle());
-            operation.synchronizeProcessingState(processingTicks, pressureSpeedMultiplier, processingCycle);
+            operation.loadProcessingState(processingTicks, pressureSpeedMultiplier, processingCycle, clientPacket && !virtual);
         }
 
         filter.readInstalledFilter(compoundTag, provider);
         if (clientPacket) {
             filter.setClientLocked(compoundTag.getBoolean(GasInjectionChamberFilterState.COMPOUND_KEY_FILTER_LOCKED));
         }
-        else {
+        else if (!virtual) {
             operation.clearTransientOperation();
             chamber.scheduleBasinCheck();
         }

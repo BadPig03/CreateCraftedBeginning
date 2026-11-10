@@ -102,12 +102,11 @@ class AirtightAssemblyDriverTooltipBuilder {
     }
 
     private static void addOutletInfo(int outletCount, List<Component> tooltip) {
-        tooltip.add(CommonComponents.EMPTY);
         if (outletCount == 0) {
-            CCBLang.translate("gui.airtight_assembly_driver.via_no_outlet").style(ChatFormatting.GRAY).forGoggles(tooltip);
             return;
         }
 
+        tooltip.add(CommonComponents.EMPTY);
         if (outletCount == 1) {
             CCBLang.translate("gui.airtight_assembly_driver.via_one_outlet").style(ChatFormatting.GRAY).forGoggles(tooltip);
             return;
@@ -131,6 +130,16 @@ class AirtightAssemblyDriverTooltipBuilder {
         addStatusLine(levelCalculator.getCurrentLevel(), tooltip);
         addProgressBars(levelCalculator.getLevels(), tooltip);
         addDetailedInfo(tooltip);
+    }
+
+    boolean addToTooltip(List<Component> tooltip) {
+        if (driverCore.getStructureManager().getAttachedOutlets() > 0) {
+            return false;
+        }
+
+        CCBLang.translate("gui.airtight_assembly_driver.failure").style(ChatFormatting.GOLD).forGoggles(tooltip);
+        CCBLang.addToGoggles(tooltip, "gui.airtight_assembly_driver.failure.no_outlet");
+        return true;
     }
 
     private void addDetailedInfo(List<Component> tooltip) {

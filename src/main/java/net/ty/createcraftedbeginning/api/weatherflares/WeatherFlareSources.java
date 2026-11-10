@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.api.weatherflares;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Unmodifiable;
@@ -32,8 +33,9 @@ public final class WeatherFlareSources {
             flares.add(offHandItem);
         }
 
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack item = player.getInventory().getItem(i);
+        Inventory inventory = player.getInventory();
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack item = inventory.getItem(i);
             if (!WeatherFlareQueries.isValidFlare(item) || offHandItem == item) {
                 continue;
             }
@@ -55,8 +57,9 @@ public final class WeatherFlareSources {
             return offHandItem;
         }
 
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack item = player.getInventory().getItem(i);
+        Inventory inventory = player.getInventory();
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack item = inventory.getItem(i);
             if (item == offHandItem || !WeatherFlareQueries.isValidFlare(item)) {
                 continue;
             }

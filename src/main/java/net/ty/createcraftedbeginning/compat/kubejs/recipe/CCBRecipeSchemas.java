@@ -30,7 +30,7 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public final class CCBRecipeSchemas {
     private static final int DEFAULT_PROCESSING_TIME = 200;
-    private static final RecipeKey<List<GasRecipeRequirement>> GAS_INPUTS = CCBRecipeComponents.GAS_INPUT.instance().asList().withBounds(IntBounds.OPTIONAL).inputKey("gas_ingredients").optional(List.of()).functionNames("gasInputs");
+    static final RecipeKey<List<GasRecipeRequirement>> GAS_INPUTS = CCBRecipeComponents.GAS_INPUT.instance().asList().withBounds(IntBounds.OPTIONAL).inputKey("gas_ingredients").optional(List.of()).functionNames("gasInputs");
     static final RecipeKey<List<FractionationTowerOutput>> LAYER_OUTPUTS = CCBRecipeComponents.LAYER_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("layer_outputs").optional(List.of()).alwaysWrite().functionNames("layerOutputs");
     private static final RecipeKey<List<Ingredient>> ITEM_INPUTS = IngredientComponent.INGREDIENT.instance().asList().inputKey("ingredients");
     private static final RecipeKey<List<ProcessingOutput>> ITEM_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().outputKey("results");
@@ -43,7 +43,7 @@ public final class CCBRecipeSchemas {
     private static final RecipeKey<TemperatureMatching> TEMPERATURE_MATCHING = CCBRecipeComponents.TEMPERATURE_MATCHING.otherKey("temperature_matching").optional(TemperatureMatching.EXACT);
     private static final RecipeKey<List<Ingredient>> EMPTY_INPUTS = IngredientComponent.INGREDIENT.instance().asList().withBounds(IntBounds.OPTIONAL).inputKey("ingredients").optional(List.of()).alwaysWrite().noFunctions();
     private static final RecipeKey<List<ProcessingOutput>> OPTIONAL_ITEM_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite();
-    private static final RecipeKey<List<Either<FluidStack, ProcessingOutput>>> OPTIONAL_OUTPUTS = FluidStackComponent.FLUID_STACK.instance().or(CCBRecipeComponents.ITEM_OUTPUT.instance()).asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite();
+    static final RecipeKey<List<Either<FluidStack, ProcessingOutput>>> OPTIONAL_OUTPUTS = FluidStackComponent.FLUID_STACK.instance().or(CCBRecipeComponents.ITEM_OUTPUT.instance()).asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite();
     private static final RecipeKey<List<GasStack>> GAS_OUTPUTS = CCBRecipeComponents.GAS_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("gas_results").optional(List.of()).functionNames("gasOutputs");
     private static final RecipeKey<Integer> COOLING_DURATION = NumberComponent.intRange(1, Integer.MAX_VALUE).otherKey("processing_time").functionNames("processingTime");
     private static final RecipeKey<Integer> OPTIONAL_DURATION = NumberComponent.intRange(0, Integer.MAX_VALUE).otherKey("processing_time").optional(0).functionNames("processingTime");
@@ -52,6 +52,7 @@ public final class CCBRecipeSchemas {
     private static final RecipeKey<Integer> PRIORITY = NumberComponent.intRange(Integer.MIN_VALUE, Integer.MAX_VALUE).otherKey("priority").optional(0);
     private static final KubeRecipeFactory MACHINE = new KubeRecipeFactory(CCBAPI.asResource("machine"), MachineKubeRecipe.class, MachineKubeRecipe::new);
     private static final KubeRecipeFactory FRACTIONATION = new KubeRecipeFactory(CCBAPI.asResource("fractionation"), FractionationTowerKubeRecipe.class, FractionationTowerKubeRecipe::new);
+    private static final KubeRecipeFactory RESIDUE = new KubeRecipeFactory(CCBAPI.asResource("residue"), ResidueKubeRecipe.class, ResidueKubeRecipe::new);
 
     private CCBRecipeSchemas() {
     }
@@ -65,7 +66,7 @@ public final class CCBRecipeSchemas {
         registry.register(CCBRecipeTypes.COOLING.getId(), new RecipeSchema(INPUTS, COOLING_DURATION, EMPTY_OUTPUTS).factory(MACHINE).constructor(INPUTS, COOLING_DURATION));
         registry.register(CCBRecipeTypes.DISSIPATION.getId(), new RecipeSchema(GAS_OUTPUTS, GAS_INPUTS, EMPTY_INPUTS, EMPTY_OUTPUTS).factory(MACHINE).constructor(GAS_OUTPUTS, GAS_INPUTS));
         registry.register(CCBRecipeTypes.ENERGIZATION.getId(), new RecipeSchema(GAS_OUTPUTS, GAS_INPUTS, EMPTY_INPUTS, EMPTY_OUTPUTS).factory(MACHINE).constructor(GAS_OUTPUTS, GAS_INPUTS));
-        registry.register(CCBRecipeTypes.RESIDUE_GENERATION.getId(), new RecipeSchema(OPTIONAL_OUTPUTS, GAS_INPUTS, EMPTY_INPUTS).factory(MACHINE).constructor(OPTIONAL_OUTPUTS, GAS_INPUTS));
+        registry.register(CCBRecipeTypes.RESIDUE_GENERATION.getId(), new RecipeSchema(OPTIONAL_OUTPUTS, GAS_INPUTS, EMPTY_INPUTS).factory(RESIDUE).constructor(ResidueKubeRecipe.mappingConstructor()));
         registry.register(CCBRecipeTypes.REACTOR_KETTLE.getId(), new RecipeSchema(OPTIONAL_OUTPUTS, INPUTS, GAS_INPUTS, GAS_OUTPUTS, OPTIONAL_DURATION, TEMPERATURE, TEMPERATURE_MATCHING).factory(MACHINE).constructor(OPTIONAL_OUTPUTS, INPUTS));
         registry.register(CCBRecipeTypes.WIND_CHARGING.getId(), new RecipeSchema(OPTIONAL_ITEM_OUTPUTS, ITEM_INPUTS, WIND_CHARGE_DURATION, WIND_CHARGE_ACTION, PRIORITY).factory(MACHINE).constructor(OPTIONAL_ITEM_OUTPUTS, ITEM_INPUTS));
         registry.register(CCBRecipeTypes.FRACTIONATION_TOWER.getId(), new RecipeSchema(INPUTS, EMPTY_OUTPUTS, GAS_INPUTS, LAYER_OUTPUTS, DURATION, TEMPERATURE, TEMPERATURE_MATCHING).factory(FRACTIONATION).constructor(INPUTS));

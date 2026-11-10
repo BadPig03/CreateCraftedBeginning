@@ -80,7 +80,8 @@ public class CCBSoundEvents {
     }
 
     public static void playItemPickup(Player player) {
-        player.level().playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2F, 1 + player.level().random.nextFloat());
+        Level level = player.level();
+        level.playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2F, 1 + level.random.nextFloat());
     }
 
     public static void prepare() {

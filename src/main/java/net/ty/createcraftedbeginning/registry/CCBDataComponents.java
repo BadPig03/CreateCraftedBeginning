@@ -19,6 +19,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.tem
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeStatus;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilters.GasFilterData;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateContents;
+import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkBinding;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -52,6 +53,8 @@ public class CCBDataComponents {
     public static final DataComponentType<Integer> GAS_VIRTUAL_ITEM_COLOR = register("gas_virtual_item_color", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
     public static final DataComponentType<GasStack> GAS_VIRTUAL_ITEM_TYPE = register("gas_virtual_item_type", builder -> builder.persistent(GasStack.OPTIONAL_CODEC).networkSynchronized(GasStack.OPTIONAL_STREAM_CODEC));
     public static final DataComponentType<GasFilterData> GAS_FILTER_DATA = register("gas_filter_data", builder -> builder.persistent(GasFilterData.CODEC).networkSynchronized(GasFilterData.STREAM_CODEC));
+
+    public static final DataComponentType<LoadingNetworkBinding> LOADING_NETWORK = register("loading_network", builder -> builder.persistent(LoadingNetworkBinding.CODEC));
 
     public static void register(IEventBus eventBus) {
         COMPONENTS.register(eventBus);

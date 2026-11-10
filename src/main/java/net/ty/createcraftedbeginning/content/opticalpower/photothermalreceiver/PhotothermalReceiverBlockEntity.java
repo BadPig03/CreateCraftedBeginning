@@ -40,30 +40,27 @@ public final class PhotothermalReceiverBlockEntity extends SmartBlockEntity impl
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        controller.write(compoundTag, clientPacket);
+        PhotothermalReceiverSerialization.write(compoundTag, clientPacket, controller);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        controller.read(compoundTag, clientPacket);
+        PhotothermalReceiverSerialization.read(compoundTag, clientPacket, controller);
     }
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        return PhotothermalReceiverTooltip.addToGoggleTooltip(tooltip, controller);
+        PhotothermalReceiverTooltip.addToGoggleTooltip(tooltip, controller.getOfferedFluxLm(), controller.getHeatLevel(), controller.getHeatProgress());
+        return true;
     }
 
     @Override
-    public AABB getRenderBoundingBox() {
+    protected AABB createRenderBoundingBox() {
         return PhotothermalReceiverPort.getLaserShape().bounds().move(worldPosition).inflate(RENDER_BOUNDS_PADDING);
     }
 
-    public void receiveLaser(BlockPos emitterPos, PhotothermalReceiverPort port, int powerLp) {
-        controller.receiveLaser(emitterPos, port, powerLp);
-    }
-
-    public boolean isPortIlluminated(PhotothermalReceiverPort port) {
+    boolean isPortIlluminated(PhotothermalReceiverPort port) {
         return controller.isPortIlluminated(port);
     }
 }

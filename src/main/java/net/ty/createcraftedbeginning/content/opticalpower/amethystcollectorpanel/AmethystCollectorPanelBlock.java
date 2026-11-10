@@ -1,9 +1,12 @@
 package net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel;
 
+import com.simibubi.create.content.equipment.wrench.IWrenchable;
+import com.simibubi.create.foundation.block.IBE;
 import net.createmod.catnip.placement.IPlacementHelper;
 import net.createmod.catnip.placement.PlacementHelpers;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -12,15 +15,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetworkManager;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerSource;
-import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
+import net.ty.createcraftedbeginning.platform.SkyLightCollisionContext;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -29,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSource, EntityBlock {
+public class AmethystCollectorPanelBlock extends Block implements IBE<AmethystCollectorPanelBlockEntity>, OpticalPowerSource, IWrenchable {
     static final int MAX_SIDE = 5;
     static final int MAX_AREA = MAX_SIDE * MAX_SIDE;
     private static final int PLACEMENT_HELPER_ID = PlacementHelpers.register(new AmethystCollectorPanelPlacementHelper());
@@ -54,9 +56,18 @@ public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSo
         }
     }
 
+    private static VoxelShape shapeForLayout(AmethystCollectorPanelLayout layout) {
+        return SHAPES.computeIfAbsent(layout, AmethystCollectorPanelLayout::shape);
+    }
+
     @Override
-    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new AmethystCollectorPanelBlockEntity(CCBBlockEntities.AMETHYST_COLLECTOR_PANEL.get(), pos, state);
+    public Class<AmethystCollectorPanelBlockEntity> getBlockEntityClass() {
+        return AmethystCollectorPanelBlockEntity.class;
+    }
+
+    @Override
+    public BlockEntityType<? extends AmethystCollectorPanelBlockEntity> getBlockEntityType() {
+        return CCBBlockEntities.AMETHYST_COLLECTOR_PANEL.get();
     }
 
     @Override
@@ -70,15 +81,21 @@ public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSo
     }
 
     @Override
-    public Source getOpticalPowerSource(Level level, BlockPos pos, BlockState state) {
-        AmethystCollectorPanelGeometry geometry = AmethystCollectorPanelGeometry.findGeometry(level, pos);
-        AmethystCollectorPanelRectangle rectangle = geometry.activeRectangle();
-        int powerLp = geometry.topologyValid() && rectangle != null ? AmethystCollectorPanelPower.calculateOutput(level, rectangle).powerLp() : 0;
-        return new Source(geometry.anchor(), powerLp, geometry.dependencies(), geometry.powerDependencies(), true, geometry.topologyValid());
+    public boolean canConnectOpticalPower(BlockState state, Direction side) {
+        return side.getAxis().isHorizontal();
     }
 
     @Override
-    public int getCurrentOpticalPowerLp(Level level, BlockPos pos, BlockState state, Source discoveredSource) {
+    public Source resolveOpticalPowerSource(Level level, BlockPos pos, BlockState state) {
+        AmethystCollectorPanelGeometry geometry = AmethystCollectorPanelGeometry.scanGeometry(level, pos);
+        AmethystCollectorPanelRectangle rectangle = geometry.activeRectangle();
+        boolean topologyValid = geometry.topologyValid();
+        double fluxLm = topologyValid && rectangle != null ? AmethystCollectorPanelPower.calculateOutput(level, rectangle).fluxLm() : 0;
+        return new Source(geometry.anchor(), fluxLm, geometry.dependencies(), geometry.powerDependencies(), true, topologyValid);
+    }
+
+    @Override
+    public double getCurrentOpticalFluxLm(Level level, BlockPos pos, BlockState state, Source discoveredSource) {
         if (!discoveredSource.topologyValid()) {
             return 0;
         }
@@ -88,7 +105,7 @@ public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSo
             return 0;
         }
 
-        return AmethystCollectorPanelPower.calculateOutput(level, rectangle).powerLp();
+        return AmethystCollectorPanelPower.calculateOutput(level, rectangle).fluxLm();
     }
 
     @Override
@@ -103,7 +120,7 @@ public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSo
             return;
         }
 
-        OpticalPowerNetworkManager.invalidateAmethystCollectorPanelChange(level, pos);
+        OpticalPowerNetworkManager.invalidateAround(level, pos);
     }
 
     @Override
@@ -112,18 +129,32 @@ public class AmethystCollectorPanelBlock extends Block implements OpticalPowerSo
             refreshModels(level, pos);
         }
         if (!level.isClientSide && !state.is(newState.getBlock())) {
-            OpticalPowerNetworkManager.invalidateAmethystCollectorPanelChange(level, pos);
+            OpticalPowerNetworkManager.invalidateAround(level, pos);
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }
 
     @Override
+    protected boolean propagatesSkylightDown(BlockState state, BlockGetter level, BlockPos pos) {
+        return state.getFluidState().isEmpty();
+    }
+
+    @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        AmethystCollectorPanelLayout layout = AmethystCollectorPanelLayout.at(level, pos);
-        if (layout.equals(AmethystCollectorPanelLayout.SINGLE)) {
-            return CCBShapes.AMETHYST_COLLECTOR_PANEL_SHAPE;
+        AmethystCollectorPanelGeometry geometry = AmethystCollectorPanelGeometry.scanGeometry(level, pos);
+        VoxelShape shape = shapeForLayout(AmethystCollectorPanelLayout.at(geometry, pos));
+        if (!(context instanceof SkyLightCollisionContext skyLight) || !skyLight.isQueryFor(level) || !geometry.topologyValid()) {
+            return shape;
         }
 
-        return SHAPES.computeIfAbsent(layout, AmethystCollectorPanelLayout::shape);
+        for (BlockPos dependency : geometry.dependencies()) {
+            BlockState dependencyState = level.getBlockState(dependency);
+            if (!dependencyState.is(this) || dependencyState.canOcclude()) {
+                continue;
+            }
+
+            skyLight.cacheShape(level, dependency, shapeForLayout(AmethystCollectorPanelLayout.at(geometry, dependency)));
+        }
+        return shape;
     }
 }

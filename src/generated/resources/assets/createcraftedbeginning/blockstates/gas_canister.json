@@ -1,7 +1,7 @@
 {
   "variants": {
     "": {
-      "model": "createcraftedbeginning:block/gas_canister"
+      "model": "createcraftedbeginning:block/gas_canisters/normal"
     }
   }
 }

@@ -6,6 +6,7 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -28,19 +29,20 @@ public final class CoolingRecipeLookup {
                 continue;
             }
 
-            if (usesFluid && !recipe.getFluidIngredient().ingredient().test(fluidStack)) {
-                continue;
-            }
-
-            if (!usesFluid && !recipe.getIngredient().test(itemStack)) {
-                continue;
-            }
-
             if (!usesFluid) {
+                if (!recipe.getIngredient().test(itemStack)) {
+                    continue;
+                }
+
                 return new CoolingData(recipe.getProcessingDuration(), 1);
             }
 
-            return new CoolingData(recipe.getProcessingDuration(), recipe.getFluidIngredient().amount());
+            SizedFluidIngredient ingredient = recipe.getFluidIngredient();
+            if (!ingredient.ingredient().test(fluidStack)) {
+                continue;
+            }
+
+            return new CoolingData(recipe.getProcessingDuration(), ingredient.amount());
         }
 
         return new CoolingData(0, 0);

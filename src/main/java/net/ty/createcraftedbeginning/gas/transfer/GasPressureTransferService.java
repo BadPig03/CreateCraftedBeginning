@@ -18,8 +18,12 @@ public final class GasPressureTransferService {
     }
 
     public static GasPressureTransferResult transferPassive(GasPressureTransferEndpoint source, GasPressureTransferEndpoint target, long maxAmount, GasAction action) {
+        return transferPassive(source, target, maxAmount, EquilibriumPolicy.STRICT, action);
+    }
+
+    public static GasPressureTransferResult transferPassive(GasPressureTransferEndpoint source, GasPressureTransferEndpoint target, long maxAmount, EquilibriumPolicy policy, GasAction action) {
         long requestedAmount = Math.max(0, maxAmount);
-        TransferPlan plan = planPassive(source, target, requestedAmount);
+        TransferPlan plan = planPassive(source, target, requestedAmount, policy);
         if (plan.transferableAmount <= 0 || !action.execute()) {
             return new GasPressureTransferResult(requestedAmount, plan.transferableAmount, 0, 0, 0, GasStack.EMPTY, false);
         }
@@ -50,7 +54,7 @@ public final class GasPressureTransferService {
         return new GasPressureTransferResult(requestedAmount, plan.transferableAmount, drainedAmount, filledAmount, restoredAmount, GasStack.EMPTY, true);
     }
 
-    private static TransferPlan planPassive(GasPressureTransferEndpoint source, GasPressureTransferEndpoint target, long requestedAmount) {
+    private static TransferPlan planPassive(GasPressureTransferEndpoint source, GasPressureTransferEndpoint target, long requestedAmount, EquilibriumPolicy policy) {
         if (requestedAmount <= 0 || source.identifiesSameCompartment(target) || !source.supportsExactDrainRecovery()) {
             return TransferPlan.EMPTY;
         }
@@ -86,24 +90,38 @@ public final class GasPressureTransferService {
             long safeFill = GasPressureTransferMath.maxFillAmount(target.getStoredAmount(), target.getMaxAmount(), target.getVolume(), targetPressurePa, targetPressureCeilingPa, target.getMaxPressurePa());
             pressureLimitedAmount = Math.min(pressureLimitedAmount, safeFill);
         }
-        if (pressureLimitedAmount <= 0) {
-            return TransferPlan.EMPTY;
-        }
-
         long simulatedDrain = source.simulateDrainAmount(gas, pressureLimitedAmount);
         long candidateAmount = Math.min(pressureLimitedAmount, simulatedDrain);
-        if (candidateAmount <= 0) {
-            return TransferPlan.EMPTY;
-        }
-
         long sourcePressureForFill = GasPressure.floor(sourcePressurePa);
         long simulatedFill = target.simulateFillAmount(gas, candidateAmount, sourcePressureForFill);
         long transferableAmount = Math.min(candidateAmount, simulatedFill);
-        if (transferableAmount <= 0) {
+        if (transferableAmount > 0) {
+            return new TransferPlan(gas, transferableAmount, sourcePressureForFill, targetPressureCeilingPa);
+        }
+
+        if (policy != EquilibriumPolicy.BOUNDED_FINAL_UNIT || sourceModel != PressureModel.VARIABLE || targetModel != PressureModel.VARIABLE) {
             return TransferPlan.EMPTY;
         }
 
-        return new TransferPlan(gas, transferableAmount, sourcePressureForFill, targetPressureCeilingPa);
+        long sourceVolume = source.getVolume();
+        long targetVolume = target.getVolume();
+        long sourceAmount = source.getStoredAmount();
+        long targetAmount = target.getStoredAmount();
+        if (sourceVolume <= 0 || targetVolume <= 0 || sourceAmount <= 0 || targetAmount >= target.getMaxAmount()) {
+            return TransferPlan.EMPTY;
+        }
+
+        double sourceAfter = GasPressure.pressureExact(sourceAmount - 1, sourceVolume);
+        double targetAfter = GasPressure.pressureExact(targetAmount + 1, targetVolume);
+        if (targetAfter > sourcePressurePa || targetAfter > target.getMaxPressurePa() || Math.abs(sourceAfter - targetAfter) >= sourcePressurePa - targetPressurePa) {
+            return TransferPlan.EMPTY;
+        }
+
+        if (source.simulateDrainAmount(gas, 1) != 1 || target.simulateFillAmount(gas, 1, sourcePressureForFill) != 1) {
+            return TransferPlan.EMPTY;
+        }
+
+        return new TransferPlan(gas, 1, sourcePressureForFill, sourcePressurePa);
     }
 
     private static long maxFillAmountAfterDrain(GasPressureTransferEndpoint target, TransferPlan plan, long drainedAmount) {
@@ -148,6 +166,11 @@ public final class GasPressureTransferService {
         }
 
         return Math.max(GasPressure.VACUUM_PA, totalAmount * GasPressure.REFERENCE_PRESSURE_PA / totalVolume);
+    }
+
+    public enum EquilibriumPolicy {
+        STRICT,
+        BOUNDED_FINAL_UNIT
     }
 
     private record TransferPlan(GasStack gas, long transferableAmount, long sourcePressurePa, double targetPressureCeilingPa) {

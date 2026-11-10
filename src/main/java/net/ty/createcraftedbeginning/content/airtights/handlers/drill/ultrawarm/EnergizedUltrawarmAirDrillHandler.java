@@ -13,7 +13,7 @@ public class EnergizedUltrawarmAirDrillHandler extends UltrawarmAirDrillHandler 
     }
 
     @Override
-    public float getConsumptionMultiplier() {
-        return super.getConsumptionMultiplier() * 0.75F;
+    public double getConsumptionMultiplier() {
+        return super.getConsumptionMultiplier() * 0.75;
     }
 }

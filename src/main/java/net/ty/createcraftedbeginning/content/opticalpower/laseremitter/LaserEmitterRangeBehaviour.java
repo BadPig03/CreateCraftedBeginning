@@ -9,16 +9,18 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.BlockHitResult;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.LaserBehaviour;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class LaserEmitterRangeBehaviour extends ScrollValueBehaviour {
-    private static final String COMPOUND_KEY_LASER_RANGE = "LaserRange";
+@Internal
+public final class LaserEmitterRangeBehaviour extends ScrollValueBehaviour {
+    @Internal
+    public static final String COMPOUND_KEY_LASER_RANGE = "LaserRange";
     private static final int RANGE_BOARD_INTERVAL = 8;
 
     LaserEmitterRangeBehaviour(LaserEmitterBlockEntity emitter) {

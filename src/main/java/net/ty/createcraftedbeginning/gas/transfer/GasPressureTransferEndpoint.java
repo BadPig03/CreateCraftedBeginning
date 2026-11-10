@@ -31,24 +31,27 @@ public final class GasPressureTransferEndpoint {
     }
 
     public static GasPressureTransferEndpoint storage(GasStorageHandler storage, int tank) {
-        if (tank < 0 || tank >= storage.getTanks()) {
-            throw new IndexOutOfBoundsException("Tank index must be in [0, " + storage.getTanks() + "); got " + tank + '.');
+        int tankCount = storage.getTanks();
+        if (tank < 0 || tank >= tankCount) {
+            throw new IndexOutOfBoundsException("Tank index must be in [0, " + tankCount + "); got " + tank + '.');
         }
 
         return compartment(storage.getPressureCompartment(tank));
     }
 
     public static GasPressureTransferEndpoint canister(GasCanisterContainer canister, int tank) {
-        if (tank < 0 || tank >= canister.getTanks()) {
-            throw new IndexOutOfBoundsException("Tank index must be in [0, " + canister.getTanks() + "); got " + tank + '.');
+        int tankCount = canister.getTanks();
+        if (tank < 0 || tank >= tankCount) {
+            throw new IndexOutOfBoundsException("Tank index must be in [0, " + tankCount + "); got " + tank + '.');
         }
 
         return new GasPressureTransferEndpoint(new CanisterAccess(canister, tank));
     }
 
     public static GasPressureTransferEndpoint pressureBoundary(GasPressureBoundary boundary) {
-        if (boundary.getTanks() != 1) {
-            throw new IllegalArgumentException("Pressure boundary direct-transfer endpoints must expose exactly one tank; got " + boundary.getTanks() + '.');
+        int tankCount = boundary.getTanks();
+        if (tankCount != 1) {
+            throw new IllegalArgumentException("Pressure boundary direct-transfer endpoints must expose exactly one tank; got " + tankCount + '.');
         }
 
         return new GasPressureTransferEndpoint(new BoundaryAccess(boundary));

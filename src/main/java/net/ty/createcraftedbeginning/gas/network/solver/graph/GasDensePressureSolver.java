@@ -5,7 +5,6 @@ import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.EdgeFlow;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.FlowEdge;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.PressureNode;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -13,19 +12,18 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Internal
-public final class GasDensePressureSolver {
+final class GasDensePressureSolver {
     private static final int MAX_UNKNOWN_NODES = 128;
     private static final double MIN_PIVOT = 1.0E-30;
     private final List<PressureNode> nodes;
     private final List<FlowEdge> edges;
 
-    public GasDensePressureSolver(GasPressureFlowGraph graph) {
+    GasDensePressureSolver(GasPressureFlowGraph graph) {
         nodes = graph.nodes;
         edges = graph.edges;
     }
 
-    public boolean projectPressures(EdgeFlow[] flows) {
+    boolean projectPressures(EdgeFlow[] flows) {
         int[] unknownIndices = new int[nodes.size()];
         Arrays.fill(unknownIndices, -1);
         int count = 0;

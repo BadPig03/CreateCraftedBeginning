@@ -64,12 +64,12 @@ public final class PotionGas extends Gas {
 
     @Override
     public int getTint(GasStack stack) {
-        PotionContents contents = getContents(stack);
-        if (contents.equals(PotionContents.EMPTY)) {
+        MobEffectInstance effect = findReleaseEffect(stack);
+        if (effect == null) {
             return super.getTint(stack);
         }
 
-        return ARGB32.color(ARGB32.alpha(getTint()), contents.getColor());
+        return ARGB32.color(ARGB32.alpha(getTint()), effect.getEffect().value().getColor());
     }
 
     @Override
@@ -78,7 +78,7 @@ public final class PotionGas extends Gas {
         boolean first = true;
         for (MobEffectInstance effect : getContents(stack).getAllEffects()) {
             if (!first) {
-                effects.append(Component.translatable("createcraftedbeginning.potion_gas.effect_separator"));
+                effects.append(CCBLang.translateDirect("potion_gas.effect_separator"));
             }
 
             first = false;
@@ -95,20 +95,15 @@ public final class PotionGas extends Gas {
         }
 
         if (first) {
-            return super.getName(stack);
+            effects = CCBLang.translateDirect("potion_gas.no_effect");
         }
-
-        return Component.translatable("createcraftedbeginning.potion_gas.named", super.getName(stack), effects);
+        return CCBLang.translateDirect("potion_gas.named", super.getName(stack), effects);
     }
 
     @Override
     public List<Component> getTooltip(GasStack stack) {
-        if (stack.isEmpty()) {
+        if (stack.isEmpty() || !getContents(stack).hasEffects()) {
             return List.of();
-        }
-
-        if (!getContents(stack).hasEffects()) {
-            return List.of(CCBLang.translateDirect("potion_gas.no_effect").withStyle(ChatFormatting.GRAY));
         }
 
         if (findReleaseEffect(stack) == null) {

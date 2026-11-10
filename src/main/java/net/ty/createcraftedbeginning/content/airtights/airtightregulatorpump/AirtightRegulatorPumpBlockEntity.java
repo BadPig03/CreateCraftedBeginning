@@ -19,6 +19,8 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.gas.network.GasTransportNode;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
 import net.ty.createcraftedbeginning.gas.telemetry.GasPressureTelemetryTarget;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.RegulatorConfiguration;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadoutSource;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -26,8 +28,8 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightRegulatorPumpBlockEntity extends KineticBlockEntity implements GasTransportNode, GasPressureTelemetryTarget {
-    private static final String OUTLET_SET_PRESSURE_KEY = "OutletSetPressure";
+public class AirtightRegulatorPumpBlockEntity extends KineticBlockEntity implements GasTransportNode, GasPressureTelemetryTarget, GasPipeReadoutSource {
+    private static final String COMPOUND_KEY_OUTLET_SET_PRESSURE = "OutletSetPressure";
 
     private final AirtightRegulatorPumpDisplay display;
     private AirtightRegulatorPumpPressureBehaviour pressureBehaviour;
@@ -37,6 +39,11 @@ public class AirtightRegulatorPumpBlockEntity extends KineticBlockEntity impleme
     public AirtightRegulatorPumpBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         display = new AirtightRegulatorPumpDisplay(this);
+    }
+
+    @Override
+    public RegulatorConfiguration getGasPipeReadout() {
+        return new RegulatorConfiguration(getMaxPressureRisePa(), getOutletSetPressurePa());
     }
 
     @Override
@@ -53,16 +60,22 @@ public class AirtightRegulatorPumpBlockEntity extends KineticBlockEntity impleme
     }
 
     @Override
+    public void writeSafe(CompoundTag compoundTag, Provider provider) {
+        super.writeSafe(compoundTag, provider);
+        compoundTag.putLong(COMPOUND_KEY_OUTLET_SET_PRESSURE, outletSetPressurePa);
+    }
+
+    @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.putLong(OUTLET_SET_PRESSURE_KEY, outletSetPressurePa);
+        compoundTag.putLong(COMPOUND_KEY_OUTLET_SET_PRESSURE, outletSetPressurePa);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (compoundTag.contains(OUTLET_SET_PRESSURE_KEY)) {
-            outletSetPressurePa = AirtightRegulatorPumpPressureBehaviour.normalizePressurePa(compoundTag.getLong(OUTLET_SET_PRESSURE_KEY));
+        if (compoundTag.contains(COMPOUND_KEY_OUTLET_SET_PRESSURE)) {
+            outletSetPressurePa = AirtightRegulatorPumpPressureBehaviour.normalizePressurePa(compoundTag.getLong(COMPOUND_KEY_OUTLET_SET_PRESSURE));
         }
         if (pressureBehaviour == null) {
             return;
@@ -85,10 +98,7 @@ public class AirtightRegulatorPumpBlockEntity extends KineticBlockEntity impleme
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        boolean added = display.addToGoggleTooltip(tooltip);
-        if (!added) {
-            return false;
-        }
+        display.appendGoggleTooltip(tooltip);
 
         addStressImpactStats(tooltip, calculateStressApplied());
         return true;
@@ -162,7 +172,8 @@ public class AirtightRegulatorPumpBlockEntity extends KineticBlockEntity impleme
     }
 
     private boolean hasRequiredSpeed() {
-        return getBlockState().getBlock() instanceof AirtightRegulatorPumpBlock block && Mth.abs(getSpeed()) >= block.getMinimumRequiredSpeedLevel().getSpeedValue();
+        float speed = Mth.abs(getSpeed());
+        return speed > 0 && getBlockState().getBlock() instanceof AirtightRegulatorPumpBlock block && speed >= block.getMinimumRequiredSpeedLevel().getSpeedValue();
     }
 
     private boolean isRunning() {

@@ -22,7 +22,7 @@ public final class FunctionalStorageJEICompat {
         }
 
         @Override
-        @SuppressWarnings("deprecated")
+        @SuppressWarnings("deprecation")
         public String getLegacyStringSubtypeInfo(ItemStack ingredient, UidContext context) {
             return ingredient.getOrDefault(FSAttachments.TILE, new CompoundTag()).toString();
         }

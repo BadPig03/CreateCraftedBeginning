@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
@@ -112,7 +113,8 @@ public class AirtightRegulatorPumpBlock extends KineticBlock implements IBE<Airt
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        boolean isSneaking = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
+        Player player = context.getPlayer();
+        boolean isSneaking = player != null && player.isShiftKeyDown();
         EnumSet<Direction> connectedDirections = GasPlacementHelper.getConnectableDirections(level, pos);
         Axis gasAxis = isSneaking ? context.getNearestLookingDirection().getAxis() : GasPlacementHelper.chooseAxis(context, GasPlacementHelper.getConnectableAxes(connectedDirections));
         Direction outputDirection = GasPlacementHelper.chooseOutputDirection(context, gasAxis, connectedDirections, !isSneaking);

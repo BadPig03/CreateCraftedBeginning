@@ -18,6 +18,7 @@ import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerPe
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerRequestProcessor.Result;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -76,7 +77,6 @@ final class GasPackagerController {
 
         pendingGas.stage(box);
         blockEntity.beginGasPackageInsertion(box);
-        blockEntity.emitGasPackageReceivedEvent(box);
         blockEntity.notifyGasPackageUpdate();
         return true;
     }
@@ -131,20 +131,32 @@ final class GasPackagerController {
             return;
         }
 
-        GasStack drainedGas = GasPackagerGasTransfer.drainGas(gasHandler, balloonMaxAmount);
-        if (drainedGas.isEmpty()) {
-            return;
-        }
-
         String outputAddress = blockEntity.signAddressForGasPackage();
-        ItemStack balloon = BalloonFactory.create(drainedGas, outputAddress);
-        if (balloon.isEmpty()) {
+        List<GasStack> excludedGasTypes = new ArrayList<>();
+        int tankCount = Math.max(0, gasHandler.getTanks());
+        for (int attempt = 0; attempt < tankCount; attempt++) {
+            GasStack plannedGas = GasPackagerGasTransfer.simulateGasForPackaging(gasHandler, balloonMaxAmount, excludedGasTypes);
+            if (plannedGas.isEmpty()) {
+                return;
+            }
+
+            ItemStack balloon = BalloonFactory.create(plannedGas, outputAddress);
+            if (!GasStack.matches(BalloonItem.getGas(balloon), plannedGas)) {
+                return;
+            }
+
+            GasStack drainedGas = GasPackagerGasTransfer.drainGasForPackaging(gasHandler, plannedGas, plannedGas.getAmount());
+            if (drainedGas.isEmpty()) {
+                excludedGasTypes.add(plannedGas.copyWithAmount(1));
+                continue;
+            }
+
+            BalloonItem.setGas(balloon, drainedGas);
+            blockEntity.enqueueCreatedGasBalloon(balloon);
+            blockEntity.markGasInventoryChanged();
+            blockEntity.notifyGasPackageUpdate();
             return;
         }
-
-        blockEntity.enqueueCreatedGasBalloon(balloon);
-        blockEntity.markGasInventoryChanged();
-        blockEntity.notifyGasPackageUpdate();
     }
 
     void performPendingGasInsertion() {

@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpane
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -18,10 +17,9 @@ import java.util.List;
 record AmethystCollectorPanelLayout(int x, int z, int width, int depth) {
     static final AmethystCollectorPanelLayout SINGLE = new AmethystCollectorPanelLayout(0, 0, 1, 1);
 
-    static AmethystCollectorPanelLayout at(BlockGetter level, BlockPos pos) {
-        AmethystCollectorPanelGeometry geometry = AmethystCollectorPanelGeometry.findGeometry(level, pos);
+    static AmethystCollectorPanelLayout at(AmethystCollectorPanelGeometry geometry, BlockPos pos) {
         AmethystCollectorPanelRectangle rectangle = geometry.activeRectangle();
-        if (!geometry.isActive(pos) || rectangle == null) {
+        if (!geometry.topologyValid() || rectangle == null || !rectangle.contains(pos)) {
             return SINGLE;
         }
 

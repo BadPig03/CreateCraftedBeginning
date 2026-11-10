@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageObservationSource;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,7 +21,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
+public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, GasStorageObservationSource {
     private final TeslaTurbineNozzleConnection connection;
     private final TeslaTurbineNozzleTooltip tooltip;
 
@@ -35,8 +36,19 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
     }
 
     @Override
+    public TeslaTurbineNozzleBlockEntity getGasStorageOwner() {
+        return this;
+    }
+
+    @Override
+    public boolean includeGasStorageCapabilities() {
+        return false;
+    }
+
+    @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        return this.tooltip.addToGoggleTooltip(tooltip);
+        this.tooltip.appendGoggleTooltip(tooltip);
+        return true;
     }
 
     @Override
@@ -54,6 +66,11 @@ public class TeslaTurbineNozzleBlockEntity extends SmartBlockEntity implements I
     public void onLoad() {
         super.onLoad();
         connection.scheduleValidation();
+    }
+
+    void invalidateConnection() {
+        connection.invalidate();
+        invalidateCapabilities();
     }
 
     private @Nullable GasHandler getGasCapability(@Nullable Direction accessDirection) {

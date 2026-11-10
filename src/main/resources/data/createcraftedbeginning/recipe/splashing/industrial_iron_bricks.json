@@ -1,0 +1,14 @@
+{
+  "type": "create:splashing",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:industrial_iron_bricks"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:exposed_industrial_iron_bricks",
+      "count": 1
+    }
+  ]
+}

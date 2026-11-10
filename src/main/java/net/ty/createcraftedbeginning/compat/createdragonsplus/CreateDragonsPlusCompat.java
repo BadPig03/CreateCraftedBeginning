@@ -14,12 +14,13 @@ import java.util.function.BiConsumer;
 @MethodsReturnNonnullByDefault
 public final class CreateDragonsPlusCompat {
     private static final ResourceLocation COLORING_CATEGORY = CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("coloring");
+    private static final DyeColor[] VALUES = DyeColor.values();
 
     private CreateDragonsPlusCompat() {
     }
 
     public static void register() {
-        for (DyeColor dyeColor : DyeColor.values()) {
+        for (DyeColor dyeColor : VALUES) {
             GasInjectionFilterColors.registerFanProcessingColor(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("coloring_" + dyeColor.getName()), 0xFF000000 | dyeColor.getFireworkColor());
         }
         GasInjectionFilterColors.registerFanProcessingColor(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("ending"), ARGB32.average(0xFFB700D2, 0xFFDF00F9));
@@ -28,7 +29,7 @@ public final class CreateDragonsPlusCompat {
     }
 
     public static void registerJeiFanProcessingCategories(BiConsumer<ResourceLocation, ResourceLocation> registrar) {
-        for (DyeColor dyeColor : DyeColor.values()) {
+        for (DyeColor dyeColor : VALUES) {
             registrar.accept(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("coloring_" + dyeColor.getName()), COLORING_CATEGORY);
         }
         registrar.accept(CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("ending"), CCBCompatMods.CREATE_DRAGONS_PLUS.asResource("ending"));

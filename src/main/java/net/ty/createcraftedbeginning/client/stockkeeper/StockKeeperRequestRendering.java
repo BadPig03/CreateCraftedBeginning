@@ -109,34 +109,38 @@ public final class StockKeeperRequestRendering {
     public static void renderBreeze(GuiGraphics graphics, Level level, BreezeCoolerBlockEntity breeze, boolean hasBlaze, int left, int top, int windowHeight) {
         PoseStack pose = graphics.pose();
         pose.pushPose();
+        try {
+            if (hasBlaze) {
+                pose.translate(0, -64, 0);
+            }
 
-        if (hasBlaze) {
-            pose.translate(0, -64, 0);
+            pose.translate(left - 35, top + windowHeight - 43, 0);
+            pose.mulPose(Axis.XP.rotationDegrees(-22.5F));
+            pose.mulPose(Axis.YP.rotationDegrees(-45));
+            pose.scale(48, -48, 48);
+
+            Lighting.setupForEntityInInventory();
+            try {
+                BlockState state = breeze.getBlockState();
+                BufferSource buffers = graphics.bufferSource();
+                float horizontalAngle = AngleHelper.rad(270);
+                boolean isChilled = breeze.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
+                CachedBuffers.partial(CCBPartialModels.BREEZE_COOLER_BLOCK, state).rotateCentered(horizontalAngle + Mth.PI, Direction.UP).light(LightTexture.FULL_BRIGHT).renderInto(pose, buffers.getBuffer(RenderType.cutoutMipped()));
+                PartialModel hatModel = null;
+                if (breeze.hasTrainHat()) {
+                    hatModel = CCBPartialModels.BREEZE_TRAIN_HAT;
+                }
+                else if (breeze.isStockKeeper()) {
+                    hatModel = CCBPartialModels.BREEZE_LOGISTICS_HAT;
+                }
+                BreezeCoolerRenderer.renderShared(pose, null, buffers, level, state, breeze.getFrostLevelForRender(), breeze.getHeadAnimation().getValue(AnimationTickHolder.getPartialTicks()) * 0.175F, horizontalAngle, breeze.hasGoggles(), hatModel, isChilled, isChilled ? 24 : 0, breeze.hashCode(), LightTexture.FULL_BRIGHT, null);
+            }
+            finally {
+                Lighting.setupFor3DItems();
+            }
         }
-
-        pose.translate(left - 35, top + windowHeight - 43, 0);
-        pose.mulPose(Axis.XP.rotationDegrees(-22.5F));
-        pose.mulPose(Axis.YP.rotationDegrees(-45));
-        pose.scale(48, -48, 48);
-
-        Lighting.setupForEntityInInventory();
-
-        BlockState state = breeze.getBlockState();
-        BufferSource buffers = graphics.bufferSource();
-        float horizontalAngle = AngleHelper.rad(270);
-        boolean isChilled = breeze.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
-        CachedBuffers.partial(CCBPartialModels.BREEZE_COOLER_BLOCK, state).rotateCentered(horizontalAngle + Mth.PI, Direction.UP).light(LightTexture.FULL_BRIGHT).renderInto(pose, buffers.getBuffer(RenderType.cutoutMipped()));
-        PartialModel hatModel = null;
-        if (breeze.hasTrainHat()) {
-            hatModel = CCBPartialModels.BREEZE_TRAIN_HAT;
+        finally {
+            pose.popPose();
         }
-        else if (breeze.isStockKeeper()) {
-            hatModel = CCBPartialModels.BREEZE_LOGISTICS_HAT;
-        }
-        BreezeCoolerRenderer.renderShared(pose, null, buffers, level, state, breeze.getFrostLevelForRender(), breeze.getHeadAnimation().getValue(AnimationTickHolder.getPartialTicks()) * 0.175F, horizontalAngle, breeze.hasGoggles(), hatModel, isChilled, isChilled ? 24 : 0, breeze.hashCode(), LightTexture.FULL_BRIGHT, null);
-
-        Lighting.setupFor3DItems();
-
-        pose.popPose();
     }
 }

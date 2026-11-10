@@ -30,7 +30,7 @@ public abstract class BoilerDataMixin {
 
     @SuppressWarnings("MethodMayBeStatic")
     @WrapOperation(method = "evaluate", at = @At(value = "INVOKE", target = "Lcom/tterrag/registrate/util/entry/BlockEntry;has(Lnet/minecraft/world/level/block/state/BlockState;)Z", ordinal = 0))
-    private boolean ccb$evaluate(BlockEntry<?> entry, BlockState state, Operation<Boolean> original) {
+    private boolean ccb$evaluate$hasSteamEngine(BlockEntry<?> entry, BlockState state, Operation<Boolean> original) {
         boolean originalResult = original.call(entry, state);
         if (entry != AllBlocks.STEAM_ENGINE) {
             return originalResult;
@@ -41,14 +41,14 @@ public abstract class BoilerDataMixin {
     }
 
     @Inject(method = "evaluate", at = @At("HEAD"))
-    private void ccb$evaluateHead(FluidTankBlockEntity controller, CallbackInfoReturnable<Boolean> callback) {
+    private void ccb$evaluate$head(FluidTankBlockEntity controller, CallbackInfoReturnable<Boolean> callback) {
         int previousCount = ccb$attachedSteamOutlets;
         ccb$attachedSteamOutlets = BoilerSteamOutletIntegration.scanAttachedSteamOutlets(controller);
         ccb$steamOutletCountChanged = previousCount != ccb$attachedSteamOutlets;
     }
 
     @Inject(method = "evaluate", at = @At("RETURN"), cancellable = true)
-    private void ccb$evaluateReturn(FluidTankBlockEntity controller, CallbackInfoReturnable<Boolean> callback) {
+    private void ccb$evaluate$return(FluidTankBlockEntity controller, CallbackInfoReturnable<Boolean> callback) {
         if (!BoilerSteamOutletIntegration.isVerified()) {
             ccb$attachedSteamOutlets = 0;
         }

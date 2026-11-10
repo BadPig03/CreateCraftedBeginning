@@ -19,6 +19,9 @@ public class CreativeGasCanisterContainerContents extends GasCanisterContainerCo
 
     CreativeGasCanisterContainerContents(ItemStack canister) {
         super(canister);
+        if (gas.getAmount() > getTankMaxAmount(0)) {
+            gas = GasStack.EMPTY;
+        }
     }
 
     @Override

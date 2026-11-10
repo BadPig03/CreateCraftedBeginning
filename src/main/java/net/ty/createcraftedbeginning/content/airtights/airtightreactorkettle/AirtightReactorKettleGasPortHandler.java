@@ -6,6 +6,7 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment.PressureModel;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressurePrediction;
 import net.ty.createcraftedbeginning.gas.storage.GasPressureCompartmentView;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,7 +20,7 @@ record AirtightReactorKettleGasPortHandler(GasStorageHandler input, GasStorageHa
     public GasPressureCompartment getPressureCompartment(int tank) {
         GasStorageHandler handler = getHandler(tank);
         GasPressureCompartment compartment = handler.getPressureCompartment(getLocalTank(tank));
-        return new PortPressureCompartment(compartment, tank < input.getTanks(), output);
+        return new PortPressureCompartment(compartment, tank < input.getTanks(), output, this);
     }
 
     @Override
@@ -121,11 +122,18 @@ record AirtightReactorKettleGasPortHandler(GasStorageHandler input, GasStorageHa
     private static final class PortPressureCompartment extends GasPressureCompartmentView {
         private final boolean input;
         private final GasStorageHandler output;
+        private final Object predictionGroup;
 
-        private PortPressureCompartment(GasPressureCompartment wrapped, boolean input, GasStorageHandler output) {
+        private PortPressureCompartment(GasPressureCompartment wrapped, boolean input, GasStorageHandler output, Object predictionGroup) {
             super(wrapped);
             this.input = input;
             this.output = output;
+            this.predictionGroup = predictionGroup;
+        }
+
+        @Override
+        public Object getPredictionGroup() {
+            return predictionGroup;
         }
 
         @Override
@@ -148,6 +156,31 @@ record AirtightReactorKettleGasPortHandler(GasStorageHandler input, GasStorageHa
             }
 
             return new PredictedTransferLimits(limits.drainLimit(), limits.fillLimit());
+        }
+
+        @Override
+        public @Nullable PredictedTransferLimits predictTransferLimits(GasStack gas, GasPressurePrediction prediction) {
+            if (input) {
+                for (int tank = 0; tank < output.getTanks(); tank++) {
+                    GasStack contents = prediction.getGas(output.getPressureCompartment(tank));
+                    if (contents.isEmpty() || !GasStack.isSameGasSameComponents(contents, gas)) {
+                        continue;
+                    }
+
+                    return new PredictedTransferLimits(0, 0);
+                }
+            }
+
+            PredictedTransferLimits limits = wrapped.predictTransferLimits(gas, prediction);
+            if (limits == null) {
+                return null;
+            }
+
+            if (!input) {
+                return new PredictedTransferLimits(limits.drainLimit(), 0);
+            }
+
+            return limits;
         }
 
         @Override

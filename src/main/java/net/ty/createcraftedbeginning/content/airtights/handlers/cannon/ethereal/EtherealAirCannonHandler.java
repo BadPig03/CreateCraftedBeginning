@@ -76,8 +76,8 @@ public class EtherealAirCannonHandler implements AirtightCannonHandler, Airtight
     }
 
     @Override
-    public float getGasConsumptionMultiplier() {
-        return 0.6F;
+    public double getGasConsumptionMultiplier() {
+        return 0.6;
     }
 
     @Override

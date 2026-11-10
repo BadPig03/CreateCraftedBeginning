@@ -13,7 +13,7 @@
     },
     "icon": {
       "count": 1,
-      "id": "createcraftedbeginning:end_sculk_silencer"
+      "id": "createcraftedbeginning:amethyst_sound_suppressor"
     },
     "title": {
       "translate": "advancement.createcraftedbeginning.steves_redemption"

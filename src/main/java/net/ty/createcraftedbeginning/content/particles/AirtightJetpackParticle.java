@@ -20,7 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
-public class AirtightJetpackParticle extends TextureSheetParticle {
+public final class AirtightJetpackParticle extends TextureSheetParticle {
     private final SpriteSet sprites;
 
     private AirtightJetpackParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, SpriteSet sprites) {

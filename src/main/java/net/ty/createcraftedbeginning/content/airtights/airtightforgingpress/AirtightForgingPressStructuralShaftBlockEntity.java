@@ -21,6 +21,7 @@ import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageObservationSource;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,7 +29,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlockEntity implements ThresholdSwitchObservable, GasInventoryIdentifierProvider {
+public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlockEntity implements ThresholdSwitchObservable, GasInventoryIdentifierProvider, GasStorageObservationSource {
     public AirtightForgingPressStructuralShaftBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
@@ -42,6 +43,25 @@ public class AirtightForgingPressStructuralShaftBlockEntity extends KineticBlock
     public static boolean isUpperStore(BlockState blockState) {
         AirtightForgingPressStructuralPosition structuralPosition = blockState.getValue(AirtightForgingPressStructuralShaftBlock.STRUCTURAL_POSITION);
         return structuralPosition.isUpperStore() && structuralPosition == AirtightForgingPressStructuralPosition.TOP_CENTER;
+    }
+
+    @Override
+    public @Nullable AirtightForgingPressBlockEntity getGasStorageOwner() {
+        BlockState state = getBlockState();
+        if (!isUpperStore(state)) {
+            return null;
+        }
+
+        BlockPos masterPos = AirtightForgingPressStructural.getMaster(getBlockPos(), state);
+        if (level == null || !level.isLoaded(masterPos)) {
+            return null;
+        }
+
+        if (!(level.getBlockEntity(masterPos) instanceof AirtightForgingPressBlockEntity master) || master.isRemoved()) {
+            return null;
+        }
+
+        return master;
     }
 
     @Override

@@ -88,7 +88,8 @@ public class CCBTags {
         CRATES,
         AIRTIGHT_COMPONENTS,
         GAS_SOURCES,
-        END_COMPONENTS;
+        END_COMPONENTS,
+        AMETHYST_COLLECTOR_SKY_OCCLUDERS;
 
         public final TagKey<Block> tag;
         public final boolean alwaysDataGen;

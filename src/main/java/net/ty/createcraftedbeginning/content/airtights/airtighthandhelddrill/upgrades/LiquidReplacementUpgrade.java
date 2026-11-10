@@ -31,7 +31,7 @@ public enum LiquidReplacementUpgrade implements AirtightUpgrade {
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
-        float multiplier = CCBConfig.server().equipment.airtightHandheldDrill.liquidReplacementGasMultiplier.getF();
+        double multiplier = CCBConfig.server().equipment.airtightHandheldDrill.liquidReplacementGasMultiplier.get();
         return List.of(CCBLang.translateDirect("gui.gas_consumption.multiplier", multiplier));
     }
 

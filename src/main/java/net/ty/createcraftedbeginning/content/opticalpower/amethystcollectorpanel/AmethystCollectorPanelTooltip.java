@@ -15,10 +15,13 @@ final class AmethystCollectorPanelTooltip {
     static void addToGoggleTooltip(List<Component> tooltip, AmethystCollectorPanelOutput output) {
         CCBLang.translate("gui.amethyst_collector_panel.header").forGoggles(tooltip);
         CCBLang.translate("gui.amethyst_collector_panel.power").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(output.powerLp()).translate("gui.unit.optical_power").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
+        CCBLang.number(output.fluxLm()).translate("gui.unit.luminous_flux").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
+    }
+
+    static boolean addToTooltip(List<Component> tooltip, AmethystCollectorPanelOutput output) {
         Limitation limitation = output.limitation();
         if (limitation == Limitation.NONE) {
-            return;
+            return false;
         }
 
         String reason = switch (limitation) {
@@ -29,6 +32,9 @@ final class AmethystCollectorPanelTooltip {
             case RAIN -> "gui.amethyst_collector_panel.rain";
             default -> throw new IllegalStateException("Unexpected collector output limitation: " + limitation + '.');
         };
-        CCBLang.translate(reason).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+        String title = output.fluxLm() > 0 || limitation == Limitation.RAIN ? "gui.amethyst_collector_panel.limited" : "gui.amethyst_collector_panel.failure";
+        CCBLang.translate(title).style(ChatFormatting.GOLD).forGoggles(tooltip);
+        CCBLang.addToGoggles(tooltip, reason);
+        return true;
     }
 }

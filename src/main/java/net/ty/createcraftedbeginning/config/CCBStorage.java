@@ -20,8 +20,6 @@ public final class CCBStorage extends ConfigBase {
         return "storage";
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class AndesiteCrate extends ConfigBase {
         public final ConfigInt itemCapacity = i(2048, 1, MAX_CRATE_CAPACITY, "item_capacity", "[Unit: items]", "Maximum number of individual items stored in one Andesite Crate. This is an item count, not a count of item stacks.");
 
@@ -31,8 +29,6 @@ public final class CCBStorage extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class BrassCrate extends ConfigBase {
         public final ConfigInt itemCapacity = i(4096, 1, MAX_CRATE_CAPACITY, "item_capacity", "[Unit: items]", "Maximum number of individual items stored in one Brass Crate. This is an item count, not a count of item stacks.");
 
@@ -42,8 +38,6 @@ public final class CCBStorage extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class SturdyCrate extends ConfigBase {
         public final ConfigInt itemCapacity = i(16384, 1, MAX_CRATE_CAPACITY, "item_capacity", "[Unit: items]", "Maximum number of individual items stored in one Sturdy Crate. This is an item count, not a count of item stacks.");
 
@@ -53,8 +47,6 @@ public final class CCBStorage extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class CardboardCrate extends ConfigBase {
         public final ConfigInt itemCapacity = i(64, 1, 64, "item_capacity", "[Unit: items]", "Maximum number of individual items stored in one Cardboard Crate. This is an item count, not a count of item stacks.");
 

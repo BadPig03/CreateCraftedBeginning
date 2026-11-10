@@ -34,7 +34,7 @@ public final class AtmosphereExtractionScenes {
 
         BlockPos intakePos = util.grid().at(2, 1, 3);
         BlockPos atmospherePos = intakePos.west();
-        BlockPos tankPos = util.grid().at(5, 1, 3);
+        BlockPos tankPos = intakePos.east(3);
 
         Selection pipeSelection = util.select().fromTo(intakePos, tankPos.west());
         Selection tankSelection = util.select().fromTo(tankPos, tankPos.above());
@@ -72,7 +72,8 @@ public final class AtmosphereExtractionScenes {
         scene.idle(60);
         for (int x = 0; x < 7; x++) {
             for (int z = 0; z < 7; z++) {
-                scene.world().setBlock(util.grid().at(x, 0, z), Blocks.GRASS_BLOCK.defaultBlockState(), false);
+                BlockPos groundPos = intakePos.east(x - 2).below().south(z - 3);
+                scene.world().setBlock(groundPos, Blocks.GRASS_BLOCK.defaultBlockState(), false);
             }
 
             scene.idle(3);
@@ -93,7 +94,8 @@ public final class AtmosphereExtractionScenes {
         scene.idle(53);
         for (int x = 0; x < 7; x++) {
             for (int z = 0; z < 7; z++) {
-                scene.world().setBlock(util.grid().at(x, 0, z), Blocks.NETHERRACK.defaultBlockState(), false);
+                BlockPos groundPos = intakePos.east(x - 2).below().south(z - 3);
+                scene.world().setBlock(groundPos, Blocks.NETHERRACK.defaultBlockState(), false);
             }
 
             scene.idle(3);
@@ -114,7 +116,8 @@ public final class AtmosphereExtractionScenes {
         scene.idle(53);
         for (int x = 0; x < 7; x++) {
             for (int z = 0; z < 7; z++) {
-                scene.world().setBlock(util.grid().at(x, 0, z), Blocks.END_STONE.defaultBlockState(), false);
+                BlockPos groundPos = intakePos.east(x - 2).below().south(z - 3);
+                scene.world().setBlock(groundPos, Blocks.END_STONE.defaultBlockState(), false);
             }
 
             scene.idle(3);
@@ -152,7 +155,7 @@ public final class AtmosphereExtractionScenes {
 
         BlockPos intakePos = util.grid().at(2, 1, 3);
         BlockPos atmospherePos = intakePos.west();
-        BlockPos tankPos = util.grid().at(5, 1, 3);
+        BlockPos tankPos = intakePos.east(3);
 
         Selection pipeSelection = util.select().fromTo(intakePos, tankPos.west());
         Selection tankSelection = util.select().fromTo(tankPos, tankPos.above());
@@ -192,7 +195,8 @@ public final class AtmosphereExtractionScenes {
         scene.idle(60);
         for (int x = 0; x < 7; x++) {
             for (int z = 0; z < 7; z++) {
-                scene.world().setBlock(util.grid().at(x, 0, z), Blocks.MYCELIUM.defaultBlockState(), false);
+                BlockPos groundPos = intakePos.east(x - 2).below().south(z - 3);
+                scene.world().setBlock(groundPos, Blocks.MYCELIUM.defaultBlockState(), false);
             }
 
             scene.idle(3);
@@ -213,7 +217,8 @@ public final class AtmosphereExtractionScenes {
         scene.idle(53);
         for (int x = 0; x < 7; x++) {
             for (int z = 0; z < 7; z++) {
-                scene.world().setBlock(util.grid().at(x, 0, z), Blocks.SCULK.defaultBlockState(), false);
+                BlockPos groundPos = intakePos.east(x - 2).below().south(z - 3);
+                scene.world().setBlock(groundPos, Blocks.SCULK.defaultBlockState(), false);
             }
 
             scene.idle(3);
@@ -258,7 +263,7 @@ public final class AtmosphereExtractionScenes {
 
         BlockPos intakePos = util.grid().at(2, 1, 3);
         BlockPos atmospherePos = intakePos.west();
-        BlockPos tankPos = util.grid().at(5, 1, 3);
+        BlockPos tankPos = intakePos.east(3);
 
         Selection pipeSelection = util.select().fromTo(intakePos, tankPos.west());
         Selection tankSelection = util.select().fromTo(tankPos, tankPos.above());
@@ -268,6 +273,10 @@ public final class AtmosphereExtractionScenes {
         Vec3 intakeVec = util.vector().blockSurface(intakePos, Direction.WEST);
         Vec3 atmosphereVec = util.vector().centerOf(atmospherePos);
         Vec3 tankTopVec = util.vector().topOf(tankPos.above());
+        Vec3 lowerBubbleVec = atmosphereVec.add(0, -0.35, 0);
+        Vec3 upperBubbleVec = atmosphereVec.add(0, 0.65, 0);
+        Vec3 lowerDownwardBubbleVec = atmosphereVec.add(0, 0.3, 0);
+        Vec3 upperDownwardBubbleVec = atmosphereVec.add(0, 1.3, 0);
 
         AABB atmosphereArea = new AABB(atmosphereVec, atmosphereVec);
         AABB flowArea = new AABB(atmosphereVec, atmosphereVec);
@@ -302,7 +311,7 @@ public final class AtmosphereExtractionScenes {
         scene.overlay().showText(60).text("Soul Sand creates Bubble Columns in source water").pointAt(atmosphereVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
-        scene.world().setBlock(atmospherePos.below(), Blocks.SOUL_SAND.defaultBlockState(), false);
+        scene.world().setBlock(atmospherePos.below(), Blocks.SOUL_SAND.defaultBlockState(), true);
         scene.world().setBlock(atmospherePos, Blocks.WATER.defaultBlockState(), false);
         scene.world().setBlock(atmospherePos.above(), Blocks.WATER.defaultBlockState(), false);
         scene.world().showSection(columnBottomSelection, Direction.DOWN);
@@ -310,11 +319,11 @@ public final class AtmosphereExtractionScenes {
         scene.idle(3);
         scene.world().showSection(columnTopSelection, Direction.DOWN);
 
-        scene.idle(14);
+        scene.idle(20);
         scene.world().setBlock(atmospherePos, Blocks.BUBBLE_COLUMN.defaultBlockState().setValue(BubbleColumnBlock.DRAG_DOWN, false), false);
         scene.world().setBlock(atmospherePos.above(), Blocks.BUBBLE_COLUMN.defaultBlockState().setValue(BubbleColumnBlock.DRAG_DOWN, false), false);
-        scene.effects().emitParticles(atmosphereVec.add(0, -0.35, 0), bubbles, 1, 100);
-        scene.effects().emitParticles(atmosphereVec.add(0, 0.65, 0), bubbles, 1, 100);
+        scene.effects().emitParticles(lowerBubbleVec, bubbles, 1, 100);
+        scene.effects().emitParticles(upperBubbleVec, bubbles, 1, 100);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, columnObject, atmosphereArea, 3);
 
         scene.idle(3);
@@ -337,7 +346,7 @@ public final class AtmosphereExtractionScenes {
         scene.overlay().showText(60).text("Ordinary water cannot supply gas").colored(PonderPalette.RED).pointAt(atmosphereVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
-        scene.world().setBlock(atmospherePos.below(), Blocks.SAND.defaultBlockState(), false);
+        scene.world().setBlock(atmospherePos.below(), Blocks.SAND.defaultBlockState(), true);
         scene.world().setBlock(atmospherePos, Blocks.WATER.defaultBlockState(), false);
         scene.world().setBlock(atmospherePos.above(), Blocks.WATER.defaultBlockState(), false);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, waterObject, atmosphereArea, 3);
@@ -349,11 +358,11 @@ public final class AtmosphereExtractionScenes {
         scene.overlay().showText(60).text("Instead, a Bubble Column directly beside the pipe can supply gas").colored(PonderPalette.GREEN).pointAt(intakeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
-        scene.world().setBlock(atmospherePos.below(), Blocks.SOUL_SAND.defaultBlockState(), false);
+        scene.world().setBlock(atmospherePos.below(), Blocks.SOUL_SAND.defaultBlockState(), true);
         scene.world().setBlock(atmospherePos, Blocks.BUBBLE_COLUMN.defaultBlockState().setValue(BubbleColumnBlock.DRAG_DOWN, false), false);
         scene.world().setBlock(atmospherePos.above(), Blocks.BUBBLE_COLUMN.defaultBlockState().setValue(BubbleColumnBlock.DRAG_DOWN, false), false);
-        scene.effects().emitParticles(atmosphereVec.add(0, -0.35, 0), bubbles, 1, 60);
-        scene.effects().emitParticles(atmosphereVec.add(0, 0.65, 0), bubbles, 1, 60);
+        scene.effects().emitParticles(lowerBubbleVec, bubbles, 1, 60);
+        scene.effects().emitParticles(upperBubbleVec, bubbles, 1, 60);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, flowObject, flowArea, 3);
 
         scene.idle(3);
@@ -367,11 +376,11 @@ public final class AtmosphereExtractionScenes {
         scene.overlay().showText(60).text("Downward Bubble Columns above Magma Blocks can also supply Moist Air").colored(PonderPalette.BLUE).pointAt(atmosphereVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
-        scene.world().setBlock(atmospherePos.below(), Blocks.MAGMA_BLOCK.defaultBlockState(), false);
+        scene.world().setBlock(atmospherePos.below(), Blocks.MAGMA_BLOCK.defaultBlockState(), true);
         scene.world().setBlock(atmospherePos, Blocks.BUBBLE_COLUMN.defaultBlockState().setValue(BubbleColumnBlock.DRAG_DOWN, true), false);
         scene.world().setBlock(atmospherePos.above(), Blocks.BUBBLE_COLUMN.defaultBlockState().setValue(BubbleColumnBlock.DRAG_DOWN, true), false);
-        scene.effects().emitParticles(atmosphereVec.add(0, 0.3, 0), downwardBubbles, 0.5F, 100);
-        scene.effects().emitParticles(atmosphereVec.add(0, 1.3, 0), downwardBubbles, 0.5F, 100);
+        scene.effects().emitParticles(lowerDownwardBubbleVec, downwardBubbles, 0.5F, 100);
+        scene.effects().emitParticles(upperDownwardBubbleVec, downwardBubbles, 0.5F, 100);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, columnObject, atmosphereArea.move(0, -1, 0), 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, flowObject, flowArea, 3);
 

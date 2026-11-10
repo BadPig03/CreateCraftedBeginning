@@ -47,30 +47,30 @@ public final class GasStorageRegistration {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> airtightTank() {
-        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), AssetLookup.standardModel(context, provider))).onRegister(CreateRegistrate.connectedTextures(AirtightTankCTBehaviour::new)).item(AirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/airtight_tanks/vertical")))).onRegister(CreateRegistrate.connectedTextures(AirtightTankCTBehaviour::new)).item(AirtightTankItem::new).model(AssetLookup.customBlockItemModel("airtight_tanks", "vertical")).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> horizontalAirtightTank() {
         return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.get()).forAllStates(state -> {
             int rotationY = state.getValue(HorizontalAirtightTankBlock.HORIZONTAL_AXIS) == Axis.X ? 90 : 0;
-            return ConfiguredModel.builder().modelFile(AssetLookup.standardModel(context, provider)).rotationY(rotationY).build();
-        })).onRegister(CreateRegistrate.connectedTextures(HorizontalAirtightTankCTBehaviour::new)).item(HorizontalAirtightTankItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+            return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/airtight_tanks/horizontal"))).rotationY(rotationY).build();
+        })).onRegister(CreateRegistrate.connectedTextures(HorizontalAirtightTankCTBehaviour::new)).item(HorizontalAirtightTankItem::new).model(AssetLookup.customBlockItemModel("airtight_tanks", "horizontal")).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> creativeAirtightTank() {
-        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), AssetLookup.standardModel(context, provider))).onRegister(CreateRegistrate.connectedTextures(CreativeAirtightTankCTBehaviour::new)).item(CreativeAirtightTankItem::new).properties(properties -> properties.rarity(Rarity.EPIC).fireResistant()).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/airtight_tanks/creative")))).onRegister(CreateRegistrate.connectedTextures(CreativeAirtightTankCTBehaviour::new)).item(CreativeAirtightTankItem::new).model(AssetLookup.customBlockItemModel("airtight_tanks", "creative")).properties(properties -> properties.rarity(Rarity.EPIC).fireResistant()).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> gasCanister() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/gas_canister"))).build(), BlockStateProperties.WATERLOGGED)).loot((loot, block) -> loot.add(block, LootTable.lootTable().withPool(LootPool.lootPool().when(ExplosionCondition.survivesExplosion()).setRolls(ConstantValue.exactly(1)).add(LootItem.lootTableItem(CCBItems.GAS_CANISTER.get()).apply(CopyComponentsFunction.copyComponents(Source.BLOCK_ENTITY).include(CCBDataComponents.CANISTER_CONTAINER_CONTENTS)))))).item().build();
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/gas_canisters/normal"))).build(), BlockStateProperties.WATERLOGGED)).loot((loot, block) -> loot.add(block, LootTable.lootTable().withPool(LootPool.lootPool().when(ExplosionCondition.survivesExplosion()).setRolls(ConstantValue.exactly(1)).add(LootItem.lootTableItem(CCBItems.GAS_CANISTER.get()).apply(CopyComponentsFunction.copyComponents(Source.BLOCK_ENTITY).include(CCBDataComponents.CANISTER_CONTAINER_CONTENTS))))));
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> creativeGasCanister() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/creative_gas_canister"))).build(), BlockStateProperties.WATERLOGGED)).loot((loot, block) -> loot.add(block, LootTable.lootTable().withPool(LootPool.lootPool().when(ExplosionCondition.survivesExplosion()).setRolls(ConstantValue.exactly(1)).add(LootItem.lootTableItem(CCBItems.CREATIVE_GAS_CANISTER.get()).apply(CopyComponentsFunction.copyComponents(Source.BLOCK_ENTITY).include(CCBDataComponents.CANISTER_CONTAINER_CONTENTS)))))).item().build();
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc("block/gas_canisters/creative"))).build(), BlockStateProperties.WATERLOGGED)).loot((loot, block) -> loot.add(block, LootTable.lootTable().withPool(LootPool.lootPool().when(ExplosionCondition.survivesExplosion()).setRolls(ConstantValue.exactly(1)).add(LootItem.lootTableItem(CCBItems.CREATIVE_GAS_CANISTER.get()).apply(CopyComponentsFunction.copyComponents(Source.BLOCK_ENTITY).include(CCBDataComponents.CANISTER_CONTAINER_CONTENTS))))));
     }
 
     @Contract(pure = true)
@@ -86,11 +86,6 @@ public final class GasStorageRegistration {
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> airtightTankProperties() {
         return builder -> AirtightBlockProperties.applyComponent(builder).transform(MountedGasStorageType.mountedGasStorage(CCBMountedStorage.AIRTIGHT_TANK)).onRegister(MovementBehaviour.movementBehaviour(new AirtightTankMovementBehaviour()));
-    }
-
-    @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> horizontalAirtightTankProperties() {
-        return builder -> AirtightBlockProperties.applyComponent(builder).transform(MountedGasStorageType.mountedGasStorage(CCBMountedStorage.HORIZONTAL_AIRTIGHT_TANK)).onRegister(MovementBehaviour.movementBehaviour(new AirtightTankMovementBehaviour()));
     }
 
     @Contract(pure = true)

@@ -14,6 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -79,6 +80,18 @@ public class GasPackagerBlock extends PackagerBlock {
         }
 
         return gasFacingState.setValue(POWERED, context.getLevel().hasNeighborSignal(context.getClickedPos()));
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighbor, BlockPos neighborPos, boolean moving) {
+        if (level.isClientSide()) {
+            return;
+        }
+
+        if (level.getBlockEntity(pos) instanceof GasPackagerBlockEntity packager) {
+            packager.targetChanged(neighborPos);
+        }
+        super.neighborChanged(state, level, pos, neighbor, neighborPos, moving);
     }
 
     @Override

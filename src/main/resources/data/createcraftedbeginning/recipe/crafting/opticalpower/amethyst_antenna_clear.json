@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:amethyst_antenna"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:amethyst_antenna"
+  }
+}

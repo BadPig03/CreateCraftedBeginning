@@ -6,16 +6,14 @@ import net.ty.createcraftedbeginning.gas.network.math.GasFlowMath;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.EdgeFlow;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.FlowEdge;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.PressureNode;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
 import java.util.List;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasPressureResiduals {
+final class GasPressureResiduals {
     static final double FLOW_RESIDUAL_ABSOLUTE_TOLERANCE = 1.0E-8;
     private static final double FLOW_RESIDUAL_RELATIVE_TOLERANCE = 1.0E-10;
 
@@ -23,8 +21,7 @@ public final class GasPressureResiduals {
     private final List<FlowEdge> edges;
     private double[] residualByNode = new double[0];
 
-    @Internal
-    public GasPressureResiduals(GasPressureFlowGraph graph) {
+    GasPressureResiduals(GasPressureFlowGraph graph) {
         nodes = graph.nodes;
         edges = graph.edges;
     }
@@ -33,8 +30,7 @@ public final class GasPressureResiduals {
         return Math.abs(linearized.constantFlowRate()) + linearized.fromPressureConductance() * Math.abs(fromPressurePa) + linearized.toPressureConductance() * Math.abs(toPressurePa);
     }
 
-    @Internal
-    public double nonlinearResidualNorm(EdgeFlow[] flows) {
+    double nonlinearResidualNorm(EdgeFlow[] flows) {
         double[] residuals = clearResiduals();
         for (int edgeIndex = 0; edgeIndex < edges.size(); edgeIndex++) {
             FlowEdge edge = edges.get(edgeIndex);
@@ -52,8 +48,25 @@ public final class GasPressureResiduals {
         return norm;
     }
 
-    @Internal
-    public double flowResidualTolerance(EdgeFlow[] linearizedFlows) {
+    double nonlinearResidualNorm(double[] flows) {
+        double[] residuals = clearResiduals();
+        for (int edgeIndex = 0; edgeIndex < edges.size(); edgeIndex++) {
+            FlowEdge edge = edges.get(edgeIndex);
+            residuals[edge.from] -= flows[edgeIndex];
+            residuals[edge.to] += flows[edgeIndex];
+        }
+        double norm = 0;
+        for (int nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++) {
+            if (nodes.get(nodeIndex).fixed) {
+                continue;
+            }
+
+            norm += Math.abs(residuals[nodeIndex]);
+        }
+        return norm;
+    }
+
+    double flowResidualTolerance(EdgeFlow[] linearizedFlows) {
         double maxFlowScale = 0;
         for (int edgeIndex = 0; edgeIndex < edges.size(); edgeIndex++) {
             FlowEdge edge = edges.get(edgeIndex);
@@ -68,8 +81,7 @@ public final class GasPressureResiduals {
         return Math.max(FLOW_RESIDUAL_ABSOLUTE_TOLERANCE, maxFlowScale * FLOW_RESIDUAL_RELATIVE_TOLERANCE);
     }
 
-    @Internal
-    public FlowResidual calculateUnknownResidual(EdgeFlow[] flows, boolean linearized) {
+    FlowResidual calculateUnknownResidual(EdgeFlow[] flows, boolean linearized) {
         double[] residuals = clearResiduals();
         double maxFlowRate = 0;
         for (int edgeIndex = 0; edgeIndex < edges.size(); edgeIndex++) {
@@ -92,8 +104,29 @@ public final class GasPressureResiduals {
         return new FlowResidual(maxUnknownResidual(residuals), maxFlowRate);
     }
 
-    @Internal
-    public boolean linearizedFlowsConverged(EdgeFlow[] flows) {
+    FlowResidual calculateUnknownResidual(double[] flows) {
+        double[] residuals = clearResiduals();
+        double maxFlowRate = 0;
+        for (int edgeIndex = 0; edgeIndex < edges.size(); edgeIndex++) {
+            FlowEdge edge = edges.get(edgeIndex);
+            double flowRate = flows[edgeIndex];
+            if (!Double.isFinite(flowRate)) {
+                return FlowResidual.NOT_CONVERGED;
+            }
+
+            maxFlowRate = Mth.absMax(maxFlowRate, flowRate);
+            if (Math.abs(flowRate) <= GasFlowMath.FLOW_RATE_EPSILON) {
+                continue;
+            }
+
+            residuals[edge.from] -= flowRate;
+            residuals[edge.to] += flowRate;
+        }
+
+        return new FlowResidual(maxUnknownResidual(residuals), maxFlowRate);
+    }
+
+    boolean linearizedFlowsConverged(EdgeFlow[] flows) {
         double[] residuals = clearResiduals();
         double maxFlowScale = 0;
         boolean finiteScale = true;
@@ -168,12 +201,10 @@ public final class GasPressureResiduals {
         return maxResidual;
     }
 
-    @Internal
-    public record FlowResidual(double maxResidual, double maxFlowRate) {
+    record FlowResidual(double maxResidual, double maxFlowRate) {
         private static final FlowResidual NOT_CONVERGED = new FlowResidual(Double.POSITIVE_INFINITY, 0);
 
-        @Internal
-        public boolean converged(double tolerance) {
+        boolean converged(double tolerance) {
             return Double.isFinite(maxResidual) && Double.isFinite(maxFlowRate) && Double.isFinite(tolerance) && maxResidual <= Math.max(FLOW_RESIDUAL_ABSOLUTE_TOLERANCE, tolerance);
         }
     }

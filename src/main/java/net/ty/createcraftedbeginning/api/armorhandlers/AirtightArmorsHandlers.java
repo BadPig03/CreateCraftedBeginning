@@ -63,27 +63,47 @@ public final class AirtightArmorsHandlers {
             return;
         }
 
-        if (!validateHandler(location, handler)) {
+        if (!validateHandler(location, handler, "register")) {
             return;
         }
 
         HANDLERS.register(gasType, profile, handler);
     }
 
-    private static boolean validateHandler(ResourceLocation location, AirtightArmorsHandler handler) {
+    /** Applies a validated partial change to an exact registration, retaining the previous handler on failure. */
+    public static void modify(ResourceLocation location, GameplayPressureProfile profile, AirtightArmorsHandlerPatch patch) {
+        Gas gasType = Gas.findById(location);
+        if (gasType.isEmpty()) {
+            throw new IllegalArgumentException("Gas '" + location + "' does not exist.");
+        }
+
+        AirtightArmorsHandler original = HANDLERS.findExact(gasType, profile);
+        if (original == null) {
+            throw new IllegalStateException("No airtight armor handler is registered for gas '" + location + "' and gameplay pressure profile '" + profile.id() + "'.");
+        }
+
+        AirtightArmorsHandler modified = patch.applyTo(original);
+        if (!validateHandler(location, modified, "modify")) {
+            return;
+        }
+
+        HANDLERS.replaceExact(gasType, profile, modified);
+    }
+
+    private static boolean validateHandler(ResourceLocation location, AirtightArmorsHandler handler, String operation) {
         for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
             float multiplier = handler.getConsumptionMultiplier(slot);
             if (GasConsumptionMath.isNonNegativeFinite(multiplier)) {
                 continue;
             }
 
-            CCBAPI.LOGGER.error("Failed to register airtight armor handler for gas '{}': consumption multiplier for slot '{}' must be finite and non-negative, got {}.", location, slot, multiplier);
+            CCBAPI.LOGGER.error("Failed to {} airtight armor handler for gas '{}': consumption multiplier for slot '{}' must be finite and non-negative, got {}.", operation, location, slot, multiplier);
             return false;
         }
 
         float elytraMultiplier = handler.getMultiplierForBoostingElytra();
         if (!GasConsumptionMath.isNonNegativeFinite(elytraMultiplier)) {
-            CCBAPI.LOGGER.error("Failed to register airtight armor handler for gas '{}': elytra multiplier must be finite and non-negative, got {}.", location, elytraMultiplier);
+            CCBAPI.LOGGER.error("Failed to {} airtight armor handler for gas '{}': elytra multiplier must be finite and non-negative, got {}.", operation, location, elytraMultiplier);
             return false;
         }
 

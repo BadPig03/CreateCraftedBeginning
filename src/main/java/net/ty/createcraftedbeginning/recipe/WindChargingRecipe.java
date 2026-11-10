@@ -69,6 +69,16 @@ public class WindChargingRecipe extends StandardProcessingRecipe<SingleRecipeInp
         else if (action != WindChargingAction.CHARGE && processingDuration != 0) {
             errors.add("Wind Charging recipes with action '" + action.getSerializedName() + "' must not specify processing_time.");
         }
+
+        if (results.isEmpty()) {
+            return errors;
+        }
+
+        float chance = results.getFirst().getChance();
+        if (chance != 1) {
+            errors.add("Wind Charging recipes must return items deterministically with chance 1; got " + chance + '.');
+        }
+
         return errors;
     }
 

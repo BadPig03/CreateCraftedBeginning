@@ -14,7 +14,7 @@ public class EtherealAirDrillHandler implements AirtightDrillHandler {
     }
 
     @Override
-    public float getConsumptionMultiplier() {
-        return 0.6F;
+    public double getConsumptionMultiplier() {
+        return 0.6;
     }
 }

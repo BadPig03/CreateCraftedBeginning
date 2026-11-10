@@ -8,6 +8,8 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
@@ -39,6 +41,27 @@ public class SmartAirtightPipeBlock extends AxisGasPipeBlock implements IBE<Smar
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         Direction horizontalFacing = context.getHorizontalDirection();
         return super.getStateForPlacement(context).setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(horizontalFacing));
+    }
+
+    @Override
+    protected BlockState rotate(BlockState state, Rotation rotation) {
+        BlockState rotatedState = super.rotate(state, rotation);
+        DirectionalFacing facing = state.getValue(DIRECTIONAL_FACING);
+        if (facing == DirectionalFacing.NULL) {
+            return rotatedState;
+        }
+
+        return rotatedState.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(rotation.rotate(DirectionalFacing.getDirection(facing))));
+    }
+
+    @Override
+    protected BlockState mirror(BlockState state, Mirror mirror) {
+        DirectionalFacing facing = state.getValue(DIRECTIONAL_FACING);
+        if (facing == DirectionalFacing.NULL) {
+            return state;
+        }
+
+        return state.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(mirror.mirror(DirectionalFacing.getDirection(facing))));
     }
 
     @Override

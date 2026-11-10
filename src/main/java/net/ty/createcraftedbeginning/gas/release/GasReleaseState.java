@@ -18,10 +18,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasReleaseState {
-    private static final String COMPOUND_KEY_EFFECT_PROGRESS = "EffectProgress";
+    @Internal
+    public static final String COMPOUND_KEY_EFFECT_PROGRESS = "EffectProgress";
     private static final String COMPOUND_KEY_EFFECT_COOLDOWN_UNTIL = "EffectCooldownUntil";
     private static final String COMPOUND_KEY_EFFECT_GAS = "EffectGas";
-    private static final String COMPOUND_KEY_EFFECT_PRESSURE_PROFILE = "EffectPressureProfile";
+    @Internal
+    public static final String COMPOUND_KEY_EFFECT_PRESSURE_PROFILE = "EffectPressureProfile";
 
     private GasStack effectGas = GasStack.EMPTY;
     private GameplayPressureProfile effectPressureProfile = GameplayPressureProfiles.NORMAL;

@@ -1,0 +1,20 @@
+{
+  "values": [
+    "createcraftedbeginning:industrial_iron_bricks",
+    "createcraftedbeginning:smooth_industrial_iron_block",
+    "createcraftedbeginning:chiseled_industrial_iron_block",
+    "createcraftedbeginning:cracked_industrial_iron_bricks",
+    "createcraftedbeginning:mossy_industrial_iron_bricks",
+    "createcraftedbeginning:exposed_industrial_iron_block",
+    "createcraftedbeginning:exposed_industrial_iron_bricks",
+    "createcraftedbeginning:exposed_smooth_industrial_iron_block",
+    "createcraftedbeginning:exposed_chiseled_industrial_iron_block",
+    "createcraftedbeginning:weathered_industrial_iron_bricks",
+    "createcraftedbeginning:weathered_smooth_industrial_iron_block",
+    "createcraftedbeginning:weathered_chiseled_industrial_iron_block",
+    "createcraftedbeginning:connected_industrial_iron_block",
+    "createcraftedbeginning:industrial_iron_pillar",
+    "createcraftedbeginning:exposed_industrial_iron_pillar",
+    "createcraftedbeginning:weathered_industrial_iron_pillar"
+  ]
+}

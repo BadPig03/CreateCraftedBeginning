@@ -27,13 +27,13 @@ public class AirtightValveScenes {
 
         BlockPos leftTankBottomPos = util.grid().at(5, 1, 5);
         BlockPos pipeFirstPos = leftTankBottomPos.north();
-        BlockPos pipeSecondPos = pipeFirstPos.north(2);
-        BlockPos encasedPos = pipeSecondPos.north();
-        BlockPos eastPipePos = encasedPos.west();
-        BlockPos valvePos = eastPipePos.west();
-        BlockPos drivePos = valvePos.south();
-        BlockPos westPipePos = valvePos.west();
-        BlockPos rightTankBottomPos = westPipePos.west();
+        BlockPos pipeSecondPos = leftTankBottomPos.north(3);
+        BlockPos encasedPos = leftTankBottomPos.north(4);
+        BlockPos eastPipePos = leftTankBottomPos.west().north(4);
+        BlockPos valvePos = leftTankBottomPos.west(2).north(4);
+        BlockPos drivePos = leftTankBottomPos.west(2).north(3);
+        BlockPos westPipePos = leftTankBottomPos.west(3).north(4);
+        BlockPos rightTankBottomPos = leftTankBottomPos.west(4).north(4);
 
         Selection leftTankSelection = util.select().fromTo(leftTankBottomPos, leftTankBottomPos.above());
         Selection backPipeSelection = util.select().fromTo(pipeFirstPos, pipeSecondPos);
@@ -53,7 +53,7 @@ public class AirtightValveScenes {
         Object eastClosedObject = new Object();
         Object openObject = new Object();
 
-        float slowSpeed = SpeedLevel.MEDIUM.getSpeedValue() / 2;
+        float slowSpeed = SpeedLevel.MEDIUM.getSpeedValue() / 8;
 
         scene.idle(20);
         scene.world().showSection(leftTankSelection, Direction.NORTH);

@@ -13,7 +13,6 @@ import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGra
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.FlowGraphSolution;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.PressureNode;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.SolverWork;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -37,6 +36,7 @@ final class GasNonlinearPressureSolver {
     private final GasPressureResiduals residuals;
     private final GasLinearPressureSolver linearSolver;
     private final GasDensePressureSolver denseSolver;
+    private double[] actualFlowRates = {};
 
     GasNonlinearPressureSolver(GasPressureFlowGraph graph) {
         this.graph = graph;
@@ -78,9 +78,9 @@ final class GasNonlinearPressureSolver {
         for (int edgeIndex = 0; edgeIndex < edges.size(); edgeIndex++) {
             constraintStates[edgeIndex] = edges.get(edgeIndex).nextConstraintState(nodes, EdgeConstraintState.LINEAR);
         }
-        EdgeFlow[] finalFlows = calculateActualFlows();
+        double[] finalFlows = calculateActualFlows();
         List<EdgeFlow[]> attemptedLinearizations = new ArrayList<>();
-        boolean converged = residuals.calculateUnknownResidual(finalFlows, false).converged(residuals.flowResidualTolerance(calculateLinearizedFlows(constraintStates)));
+        boolean converged = residuals.calculateUnknownResidual(finalFlows).converged(residuals.flowResidualTolerance(calculateLinearizedFlows(constraintStates)));
         boolean tryEarlyRecovery = true;
         double[] failedRecoveryPressures = null;
         if (!converged && denseSolver.isApplicable() && Arrays.asList(constraintStates).contains(EdgeConstraintState.PRESSURE_LIMITED)) {
@@ -134,7 +134,7 @@ final class GasNonlinearPressureSolver {
             finalFlows = calculateActualFlows();
             boolean constraintStateChanged = updateConstraintStates(constraintStates);
             double residualTolerance = residuals.flowResidualTolerance(linearizedFlows);
-            if (constraintStateChanged || !residuals.calculateUnknownResidual(finalFlows, false).converged(residualTolerance)) {
+            if (constraintStateChanged || !residuals.calculateUnknownResidual(finalFlows).converged(residualTolerance)) {
                 continue;
             }
 
@@ -153,17 +153,14 @@ final class GasNonlinearPressureSolver {
             finalFlows = calculateActualFlows();
         }
         if (!converged) {
-            Arrays.fill(finalFlows, EdgeFlow.ZERO);
+            Arrays.fill(finalFlows, 0, edges.size(), 0);
         }
 
         double[] pressures = new double[nodes.size()];
         for (int nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++) {
             pressures[nodeIndex] = nodes.get(nodeIndex).pressurePa;
         }
-        double[] flowRates = new double[edges.size()];
-        for (int edgeIndex = 0; edgeIndex < edges.size(); edgeIndex++) {
-            flowRates[edgeIndex] = finalFlows[edgeIndex].flowRate();
-        }
+        double[] flowRates = Arrays.copyOf(finalFlows, edges.size());
         return new FlowGraphSolution(pressures, flowRates, converged, work);
     }
 
@@ -187,10 +184,10 @@ final class GasNonlinearPressureSolver {
                 states[i] = edges.get(i).nextConstraintState(nodes, EdgeConstraintState.LINEAR);
             }
             EdgeFlow[] flows = calculateLinearizedFlows(states);
-            EdgeFlow[] actualFlows = calculateActualFlows();
+            double[] actualFlows = calculateActualFlows();
             double residual = residuals.nonlinearResidualNorm(actualFlows);
             double tolerance = residuals.flowResidualTolerance(flows);
-            if (residuals.calculateUnknownResidual(actualFlows, false).converged(tolerance)) {
+            if (residuals.calculateUnknownResidual(actualFlows).converged(tolerance)) {
                 double[] convergedPressures = new double[nodeCount];
                 for (int i = 0; i < nodeCount; i++) {
                     convergedPressures[i] = nodes.get(i).pressurePa;
@@ -198,9 +195,9 @@ final class GasNonlinearPressureSolver {
                 if (!denseSolver.projectPressures(flows)) {
                     linearSolver.solve(flows, work, false);
                 }
-                EdgeFlow[] polishedFlows = calculateActualFlows();
+                double[] polishedFlows = calculateActualFlows();
                 double polishedResidual = residuals.nonlinearResidualNorm(polishedFlows);
-                if (!Double.isFinite(polishedResidual) || polishedResidual > residual || !residuals.calculateUnknownResidual(polishedFlows, false).converged(tolerance)) {
+                if (!Double.isFinite(polishedResidual) || polishedResidual > residual || !residuals.calculateUnknownResidual(polishedFlows).converged(tolerance)) {
                     for (int i = 0; i < nodeCount; i++) {
                         nodes.get(i).pressurePa = convergedPressures[i];
                     }
@@ -252,7 +249,7 @@ final class GasNonlinearPressureSolver {
                 }
                 double stepFraction = 1;
                 for (int stepAttempt = 0; stepAttempt < MAX_RECOVERY_STEP_ATTEMPTS; stepAttempt++) {
-                    EdgeFlow[] candidateFlows = calculateActualFlows();
+                    double[] candidateFlows = calculateActualFlows();
                     double updatedResidual = residuals.nonlinearResidualNorm(candidateFlows);
                     if (Double.isFinite(updatedResidual) && updatedResidual <= residual + nodeCount * tolerance) {
                         accepted = true;
@@ -287,20 +284,22 @@ final class GasNonlinearPressureSolver {
     }
 
     private EdgeFlow[] calculateLinearizedFlows(EdgeConstraintState[] constraintStates) {
-        return calculateFlows(constraintStates);
-    }
-
-    private EdgeFlow[] calculateActualFlows() {
-        return calculateFlows(null);
-    }
-
-    private EdgeFlow[] calculateFlows(EdgeConstraintState @Nullable [] constraintStates) {
         EdgeFlow[] calculated = new EdgeFlow[edges.size()];
         for (int edgeIndex = 0; edgeIndex < edges.size(); edgeIndex++) {
-            FlowEdge edge = edges.get(edgeIndex);
-            calculated[edgeIndex] = constraintStates == null ? edge.calculate(nodes) : edge.linearize(nodes, constraintStates[edgeIndex]);
+            calculated[edgeIndex] = edges.get(edgeIndex).linearize(nodes, constraintStates[edgeIndex]);
         }
         return calculated;
+    }
+
+    private double[] calculateActualFlows() {
+        int edgeCount = edges.size();
+        if (actualFlowRates.length < edgeCount) {
+            actualFlowRates = new double[edgeCount];
+        }
+        for (int edgeIndex = 0; edgeIndex < edgeCount; edgeIndex++) {
+            actualFlowRates[edgeIndex] = edges.get(edgeIndex).calculateFlowRate(nodes);
+        }
+        return actualFlowRates;
     }
 
     private boolean updateConstraintStates(EdgeConstraintState[] constraintStates) {

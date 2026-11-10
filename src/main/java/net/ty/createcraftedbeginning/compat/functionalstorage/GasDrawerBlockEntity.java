@@ -33,6 +33,7 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.GasUnits;
 import net.ty.createcraftedbeginning.compat.functionalstorage.client.GasDrawerInfoGuiAddon;
 import net.ty.createcraftedbeginning.compat.functionalstorage.registry.CCBFunctionalStorageBlockEntities;
+import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackContainerContents;
 import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -48,7 +49,7 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
     private final GasDrawerHandler gasHandler;
     @Save
     private final GasDrawerStorage gasStorage;
-    @Save
+    @Save(GasDrawerFilter.COMPOUND_KEY_FILTER)
     private final GasDrawerFilter gasFilter;
     private boolean transactionActive;
     private boolean transactionDirty;
@@ -56,8 +57,9 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
     public GasDrawerBlockEntity(BasicTileBlock<GasDrawerBlockEntity> base, BlockEntityType<GasDrawerBlockEntity> blockEntityType, BlockPos pos, BlockState state, DrawerType drawerType) {
         super(base, blockEntityType, pos, state, new DrawerProperties(drawerType.getSlotAmount(), FSAttachments.FLUID_STORAGE_MODIFIER));
         this.drawerType = drawerType;
-        gasFilter = new GasDrawerFilter(drawerType.getSlots());
-        gasHandler = new GasDrawerHandler(this, drawerType.getSlots(), slot -> new GasDrawerTank(calculateTankLimits(getStorageMultiplier()), this, stack -> matchesLockedFilter(slot, stack)));
+        int slots = drawerType.getSlots();
+        gasFilter = new GasDrawerFilter(slots);
+        gasHandler = new GasDrawerHandler(this, slots, slot -> new GasDrawerTank(calculateTankLimits(getStorageMultiplier()), this, stack -> matchesLockedFilter(slot, stack)));
         gasStorage = new GasDrawerStorage(gasHandler);
         getUtilityUpgrades().setInputFilter((stack, slot) -> stack.is(FunctionalStorage.PUSHING_UPGRADE.get()) || stack.is(FunctionalStorage.PULLING_UPGRADE.get()) || stack.is(FunctionalStorage.VOID_UPGRADE.get()));
     }
@@ -100,6 +102,9 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
 
     @Override
     public void loadAdditional(CompoundTag compound, Provider provider) {
+        if (compound.contains(GasDrawerFilter.COMPOUND_KEY_FILTER)) {
+            gasFilter.deserializeNBT(provider, compound.getCompound(GasDrawerFilter.COMPOUND_KEY_FILTER));
+        }
         super.loadAdditional(compound, provider);
         updateTankLimits();
     }
@@ -129,7 +134,7 @@ public final class GasDrawerBlockEntity extends ControllableDrawerTile<GasDrawer
         }
 
         GasCanisterContainer gasCanister = heldStack.getCapability(CanisterCapabilities.ITEM);
-        if (gasCanister == null || !interactWithCanister(slot, gasCanister)) {
+        if (gasCanister == null || gasCanister instanceof GasCanisterPackContainerContents || !interactWithCanister(slot, gasCanister)) {
             return super.onSlotActivated(player, hand, facing, hitX, hitY, hitZ, slot);
         }
 

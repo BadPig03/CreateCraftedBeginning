@@ -4,6 +4,8 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads.Generation;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.recipe.FractionationTowerRecipe;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -38,16 +40,22 @@ public final class AirtightFractionationTowerRecipeLookup {
     }
 
     private static RecipeCache getCache(RecipeManager manager) {
-        return RECIPE_CACHES.computeIfAbsent(manager, recipeManager -> {
-            List<RecipeHolder<FractionationTowerRecipe>> candidates = recipeManager.getAllRecipesFor(CCBRecipeTypes.FRACTIONATION_TOWER.getType());
-            List<RecipeHolder<FractionationTowerRecipe>> recipes = candidates.stream().filter(holder -> holder.value().validate().isEmpty()).sorted(Comparator.comparing(holder -> holder.id().toString())).toList();
-            Map<ResourceLocation, FractionationTowerRecipe> byId = new HashMap<>();
-            for (RecipeHolder<FractionationTowerRecipe> holder : recipes) {
-                byId.put(holder.id(), holder.value());
-            }
-            return new RecipeCache(recipes, Map.copyOf(byId));
-        });
+        Generation generation = CCBRecipeReloads.getGeneration(manager);
+        RecipeCache cached = RECIPE_CACHES.get(manager);
+        if (cached != null && cached.generation() == generation) {
+            return cached;
+        }
+
+        List<RecipeHolder<FractionationTowerRecipe>> candidates = manager.getAllRecipesFor(CCBRecipeTypes.FRACTIONATION_TOWER.getType());
+        List<RecipeHolder<FractionationTowerRecipe>> recipes = candidates.stream().filter(holder -> holder.value().validate().isEmpty()).sorted(Comparator.comparing(holder -> holder.id().toString())).toList();
+        Map<ResourceLocation, FractionationTowerRecipe> byId = new HashMap<>();
+        for (RecipeHolder<FractionationTowerRecipe> holder : recipes) {
+            byId.put(holder.id(), holder.value());
+        }
+        RecipeCache rebuilt = new RecipeCache(generation, recipes, Map.copyOf(byId));
+        RECIPE_CACHES.put(manager, rebuilt);
+        return rebuilt;
     }
 
-    private record RecipeCache(List<RecipeHolder<FractionationTowerRecipe>> recipes, Map<ResourceLocation, FractionationTowerRecipe> byId) {}
+    private record RecipeCache(Generation generation, List<RecipeHolder<FractionationTowerRecipe>> recipes, Map<ResourceLocation, FractionationTowerRecipe> byId) {}
 }

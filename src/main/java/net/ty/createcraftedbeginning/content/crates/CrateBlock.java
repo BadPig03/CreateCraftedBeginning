@@ -87,6 +87,10 @@ public abstract class CrateBlock<T extends CratesBlockEntity> extends Horizontal
     }
 
     protected void onCrateRemoved(Level level, BlockPos pos, T crate, boolean isMoving) {
+        if (isMoving || level.isClientSide) {
+            return;
+        }
+
         crate.getHandler().dropContents(level, pos.getX(), pos.getY(), pos.getZ());
     }
 }

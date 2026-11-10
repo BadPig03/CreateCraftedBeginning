@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.api.packager.InventoryIdentifier.Single;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -22,6 +23,10 @@ import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.api.thermoregulatorhandlers.AirtightThermoregulatorHandler;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadout;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadoutSource;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureReadoutSource;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips.Snapshot;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,14 +36,16 @@ import java.util.function.UnaryOperator;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AirtightFractionationTowerBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, GasInventoryIdentifierProvider {
+public final class AirtightFractionationTowerBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, GasInventoryIdentifierProvider, GasStorageReadoutSource, OverpressureReadoutSource {
     private final AirtightFractionationTowerSerialization serialization;
     private final AirtightFractionationTowerStructureManager structureManager;
     private final AirtightFractionationTowerTooltipBuilder tooltipBuilder;
     private final AirtightFractionationTowerCrafting crafting;
     private @Nullable BlockPos origin;
+    private @Nullable AirtightFractionationTowerOverpressure overpressure;
     private int height;
     private AirtightFractionationTowerInventory inventory;
+    private boolean clearingAssemblyInventory;
 
     public AirtightFractionationTowerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -56,6 +63,21 @@ public final class AirtightFractionationTowerBlockEntity extends SmartBlockEntit
 
     public static void transformStructureNbt(CompoundTag tag, UnaryOperator<BlockPos> transform) {
         AirtightFractionationTowerSerialization.transformStructureNbt(tag, transform);
+    }
+
+    @Override
+    public GasStorageReadout getGasStorageReadout() {
+        return GasStorageReadout.PRESSURE_ONLY;
+    }
+
+    @Override
+    public @Nullable Snapshot getOverpressureReadout() {
+        AirtightFractionationTowerBlockEntity controller = findTowerController();
+        if (controller == null || controller.overpressure == null) {
+            return null;
+        }
+
+        return controller.overpressure.snapshot();
     }
 
     @Override
@@ -77,8 +99,21 @@ public final class AirtightFractionationTowerBlockEntity extends SmartBlockEntit
             return;
         }
 
+        if (overpressure != null && overpressure.tick()) {
+            return;
+        }
+
         structureManager.tick();
         crafting.tick();
+    }
+
+    @Override
+    public void setChanged() {
+        if (clearingAssemblyInventory) {
+            return;
+        }
+
+        super.setChanged();
     }
 
     @Override
@@ -102,9 +137,14 @@ public final class AirtightFractionationTowerBlockEntity extends SmartBlockEntit
     }
 
     @Override
+    public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        return tooltipBuilder.addToTooltip(tooltip);
+    }
+
+    @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        serialization.write(compoundTag, provider);
+        serialization.write(compoundTag, provider, clientPacket);
     }
 
     @Override
@@ -147,6 +187,10 @@ public final class AirtightFractionationTowerBlockEntity extends SmartBlockEntit
         return inventory;
     }
 
+    @Nullable AirtightFractionationTowerOverpressure getOverpressure() {
+        return overpressure;
+    }
+
     boolean isTowerController() {
         return origin != null && isLayerController() && worldPosition.getY() == origin.getY();
     }
@@ -186,9 +230,19 @@ public final class AirtightFractionationTowerBlockEntity extends SmartBlockEntit
     void assemble(BlockPos origin, int height) {
         loadStructure(origin, height);
         inventory.assemble();
-        structureManager.tick();
         invalidateCapabilities();
         notifyUpdate();
+    }
+
+    void clearAssemblyInventory() {
+        boolean previousClearing = clearingAssemblyInventory;
+        clearingAssemblyInventory = true;
+        try {
+            inventory.clear();
+        }
+        finally {
+            clearingAssemblyInventory = previousClearing;
+        }
     }
 
     void clearStructure() {
@@ -201,6 +255,7 @@ public final class AirtightFractionationTowerBlockEntity extends SmartBlockEntit
     void loadStructure(@Nullable BlockPos origin, int height) {
         this.origin = null;
         this.height = 0;
+        overpressure = null;
         structureManager.clear();
         crafting.clear();
         if (origin == null || height < AirtightFractionationTowerBlock.MIN_HEIGHT || height > AirtightFractionationTowerBlock.MAX_HEIGHT) {
@@ -217,6 +272,11 @@ public final class AirtightFractionationTowerBlockEntity extends SmartBlockEntit
 
         this.origin = origin.immutable();
         this.height = height;
+        if (!isTowerController()) {
+            return;
+        }
+
+        overpressure = new AirtightFractionationTowerOverpressure(this);
     }
 
     @Nullable AirtightFractionationTowerBlockEntity findTowerController() {

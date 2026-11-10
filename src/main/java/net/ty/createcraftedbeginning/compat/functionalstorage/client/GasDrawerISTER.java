@@ -26,7 +26,6 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
     public static final GasDrawerISTER SLOT_2 = new GasDrawerISTER(DrawerType.X_2);
     public static final GasDrawerISTER SLOT_4 = new GasDrawerISTER(DrawerType.X_4);
     private static final String COMPOUND_KEY_DRAWER_OPTIONS = "drawerOptions";
-    private static final String COMPOUND_KEY_CREATIVE = "isCreative";
 
     private final DrawerType drawerType;
 
@@ -41,10 +40,14 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
         }
 
         poseStack.pushPose();
-        poseStack.translate(offsetX, offsetY, 0);
-        AABB gasBounds = new AABB(0.0625, 0.078125, 0.0625, 0.0625 + width, 0.078125 + height, 0.9375);
-        GasDrawerRenderer.renderItemGas(poseStack, buffers, light, overlay, storedGas, options, gasBounds, compact, creative);
-        poseStack.popPose();
+        try {
+            poseStack.translate(offsetX, offsetY, 0);
+            AABB gasBounds = new AABB(0.0625, 0.078125, 0.0625, 0.0625 + width, 0.078125 + height, 0.9375);
+            GasDrawerRenderer.renderItemGas(poseStack, buffers, light, overlay, storedGas, options, gasBounds, compact, creative);
+        }
+        finally {
+            poseStack.popPose();
+        }
     }
 
     @Override
@@ -69,7 +72,7 @@ public final class GasDrawerISTER extends FunctionalStorageISTER {
 
         DrawerOptions drawerOptions = new DrawerOptions();
         drawerOptions.deserializeNBT(access, tileTag.getCompound(COMPOUND_KEY_DRAWER_OPTIONS));
-        boolean isCreative = tileTag.getBoolean(COMPOUND_KEY_CREATIVE);
+        boolean isCreative = tileTag.getBoolean(GasDrawerBlock.COMPOUND_KEY_CREATIVE);
         poseStack.mulPose(Axis.YP.rotationDegrees(-90));
         poseStack.mulPose(Axis.XP.rotationDegrees(90));
         poseStack.translate(0, -1, -1);

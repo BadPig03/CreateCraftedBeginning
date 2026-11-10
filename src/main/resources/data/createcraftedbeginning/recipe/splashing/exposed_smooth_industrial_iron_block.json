@@ -1,0 +1,14 @@
+{
+  "type": "create:splashing",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:exposed_smooth_industrial_iron_block"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:weathered_smooth_industrial_iron_block",
+      "count": 1
+    }
+  ]
+}

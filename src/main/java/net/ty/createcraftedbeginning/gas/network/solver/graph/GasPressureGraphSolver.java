@@ -1,5 +1,11 @@
 package net.ty.createcraftedbeginning.gas.network.solver.graph;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -17,7 +23,11 @@ import net.ty.createcraftedbeginning.gas.network.math.GasFlowMath;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology.Snapshot;
 import net.ty.createcraftedbeginning.gas.network.solver.GasSolverProfiler;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.FlowResistance;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.PredictionAccess;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.PressureState;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.TransferAccess;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.TransferLimits;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasFlowRouting.Edge;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.ActiveFlowComponents;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.FlowEdge;
@@ -38,6 +48,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -103,12 +114,102 @@ public final class GasPressureGraphSolver {
             graph.captureStaticState();
         }
 
+        private static void connectPartitionNodes(int[] partitions, int first, int second) {
+            int firstRoot = partitionRoot(partitions, first);
+            int secondRoot = partitionRoot(partitions, second);
+            if (firstRoot == secondRoot) {
+                return;
+            }
+
+            if (partitions[firstRoot] > partitions[secondRoot]) {
+                int swap = firstRoot;
+                firstRoot = secondRoot;
+                secondRoot = swap;
+            }
+            partitions[firstRoot] += partitions[secondRoot];
+            partitions[secondRoot] = firstRoot;
+        }
+
+        private static int partitionRoot(int[] partitions, int node) {
+            int root = node;
+            while (partitions[root] >= 0) {
+                root = partitions[root];
+            }
+            while (node != root) {
+                int parent = partitions[node];
+                partitions[node] = root;
+                node = parent;
+            }
+            return root;
+        }
+
         private static double warmStartPressurePa(double[] initialPressures, int nodeIndex) {
             if (nodeIndex < 0 || nodeIndex >= initialPressures.length) {
                 return -1;
             }
 
             return initialPressures[nodeIndex];
+        }
+
+        public List<Set<Object>> independentEndpointGroups(List<GasNetworkPressureEndpoint> endpoints) {
+            int staticCount = template.staticNodeCount();
+            int[] partitions = new int[staticCount + endpoints.size()];
+            Arrays.fill(partitions, -1);
+            Object2IntMap<BlockPos> budgets = new Object2IntOpenHashMap<>();
+            budgets.defaultReturnValue(-1);
+            for (FlowEdge edge : graph.edges) {
+                if (edge.from >= staticCount || edge.to >= staticCount) {
+                    continue;
+                }
+
+                connectPartitionNodes(partitions, edge.from, edge.to);
+                if (edge.flowBudgetPos == null) {
+                    continue;
+                }
+
+                int previous = budgets.putIfAbsent(edge.flowBudgetPos, edge.from);
+                if (previous < 0) {
+                    continue;
+                }
+
+                connectPartitionNodes(partitions, previous, edge.from);
+            }
+            Reference2IntMap<Object> identities = new Reference2IntOpenHashMap<>();
+            identities.defaultReturnValue(-1);
+            Reference2IntMap<Object> predictionGroups = new Reference2IntOpenHashMap<>();
+            predictionGroups.defaultReturnValue(-1);
+            for (int index = 0; index < endpoints.size(); index++) {
+                GasNetworkPressureEndpoint endpoint = endpoints.get(index);
+                int node = staticCount + index;
+                int previous = identities.putIfAbsent(endpoint.transferIdentity(), node);
+                if (previous >= 0) {
+                    connectPartitionNodes(partitions, previous, node);
+                }
+                connectPartitionFaces(partitions, node, endpoint.access().drainFaces());
+                connectPartitionFaces(partitions, node, endpoint.access().fillFaces());
+                for (PredictionAccess access : endpoint.predictionAccesses()) {
+                    connectPartitionFaces(partitions, node, access.faces());
+                    int related = predictionGroups.putIfAbsent(access.compartment().getPredictionGroup(), node);
+                    if (related < 0) {
+                        continue;
+                    }
+
+                    connectPartitionNodes(partitions, related, node);
+                }
+            }
+            Int2ObjectMap<Set<Object>> groupsByRoot = new Int2ObjectOpenHashMap<>();
+            List<Set<Object>> groups = new ArrayList<>();
+            for (int index = 0; index < endpoints.size(); index++) {
+                int root = partitionRoot(partitions, staticCount + index);
+                Set<Object> group = groupsByRoot.get(root);
+                if (group == null) {
+                    group = Collections.newSetFromMap(new IdentityHashMap<>());
+                    groupsByRoot.put(root, group);
+                    groups.add(group);
+                }
+                group.add(endpoints.get(index).transferIdentity());
+            }
+            return groups;
         }
 
         public GasPressureGraphSolution solve(List<GasNetworkPressureEndpoint> endpoints, GasTransportFlowBudget transportBudget) {
@@ -121,6 +222,17 @@ public final class GasPressureGraphSolver {
 
         public GasPressureGraphSolution solveHypothetical(List<GasNetworkPressureEndpoint> endpoints, GasTransportFlowBudget transportBudget) {
             return solve(endpoints, transportBudget, false, false, true);
+        }
+
+        private void connectPartitionFaces(int[] partitions, int node, List<BlockFace> faces) {
+            for (BlockFace face : faces) {
+                Integer port = template.portNodes().get(new PortKey(face.getPos(), face.getFace()));
+                if (port == null) {
+                    continue;
+                }
+
+                connectPartitionNodes(partitions, node, port);
+            }
         }
 
         private GasPressureGraphSolution solve(List<GasNetworkPressureEndpoint> endpoints, GasTransportFlowBudget transportBudget, boolean updateWarmStart, boolean collectFacePressures, boolean hypothetical) {
@@ -206,7 +318,7 @@ public final class GasPressureGraphSolver {
                 }
 
                 if (!endpointEdges.contains(edgeIndex)) {
-                    component.routingEdges.add(new Edge(edge.from, edge.to, flow, edge.pipeSegment, edge.flowBudgetPos));
+                    component.routingEdges.add(new Edge(edge.from, edge.to, flow, edge.pipeSegment, edge.flowBudgetPos, edge.pressureDrive()));
                 }
 
                 if (edge.pipeSegment != null) {
@@ -245,54 +357,64 @@ public final class GasPressureGraphSolver {
             }
 
             for (TransportEdgeTemplate edge : template.transportEdges()) {
-                GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, edge.pipePos());
+                BlockPos pipePos = edge.pipePos();
+                Direction entryFace = edge.entryFace();
+                Direction exitFace = edge.exitFace();
+                GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pipePos);
                 if (behaviour == null) {
                     continue;
                 }
 
-                BlockState state = level.getBlockState(edge.pipePos());
-                if (!behaviour.acceptsInboundGas(state, edge.entryFace(), gas) || !behaviour.allowsOutboundGas(state, edge.exitFace(), gas)) {
+                BlockState state = level.getBlockState(pipePos);
+                if (!behaviour.acceptsInboundGas(state, entryFace, gas) || !behaviour.allowsOutboundGas(state, exitFace, gas)) {
                     continue;
                 }
 
-                GasTransportEdgeProperties properties = behaviour.getTransportEdgeProperties(state, edge.entryFace(), edge.exitFace(), gas);
-                PipeSegment segment = PipeSegment.direct(edge.pipePos(), edge.entryFace(), edge.exitFace());
-                int edgeIndex = graph.addEdge(edge.fromNode(), edge.toNode(), properties, segment, properties.sharedFlowBudget() ? edge.pipePos() : null);
-                if (!properties.dynamic() && !properties.sharedFlowBudget()) {
+                GasTransportEdgeProperties properties = behaviour.getTransportEdgeProperties(state, entryFace, exitFace, gas);
+                PipeSegment segment = PipeSegment.direct(pipePos, entryFace, exitFace);
+                boolean sharedFlowBudget = properties.sharedFlowBudget();
+                int edgeIndex = graph.addEdge(edge.fromNode(), edge.toNode(), properties, segment, sharedFlowBudget ? pipePos : null);
+                if (!properties.dynamic() && !sharedFlowBudget) {
                     continue;
                 }
 
-                dynamicTransportEdges.add(new DynamicTransportEdgeBinding(edgeIndex, edge.pipePos(), edge.entryFace(), edge.exitFace()));
+                dynamicTransportEdges.add(new DynamicTransportEdgeBinding(edgeIndex, pipePos, entryFace, exitFace));
             }
 
             for (ManifoldSpokeTemplate spoke : template.manifoldSpokes()) {
-                GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, spoke.pipePos());
+                BlockPos pipePos = spoke.pipePos();
+                Direction face = spoke.face();
+                int portNode = spoke.portNode();
+                int manifoldNode = spoke.manifoldNode();
+                GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pipePos);
                 if (behaviour == null) {
                     continue;
                 }
 
-                BlockState state = level.getBlockState(spoke.pipePos());
-                long resistance = Math.max(GasFlowResistance.MIN_RESISTANCE_UNITS, behaviour.getManifoldSpokeResistanceUnits(state, spoke.face()));
-                if (behaviour.acceptsInboundGas(state, spoke.face(), gas)) {
-                    graph.addEdge(spoke.portNode(), spoke.manifoldNode(), resistance, Long.MAX_VALUE, PipeSegment.inboundSpoke(spoke.pipePos(), spoke.face()));
+                BlockState state = level.getBlockState(pipePos);
+                long resistance = Math.max(GasFlowResistance.MIN_RESISTANCE_UNITS, behaviour.getManifoldSpokeResistanceUnits(state, face));
+                if (behaviour.acceptsInboundGas(state, face, gas)) {
+                    graph.addEdge(portNode, manifoldNode, resistance, Long.MAX_VALUE, PipeSegment.inboundSpoke(pipePos, face));
                 }
-                if (!behaviour.allowsOutboundGas(state, spoke.face(), gas)) {
+                if (!behaviour.allowsOutboundGas(state, face, gas)) {
                     continue;
                 }
 
-                graph.addEdge(spoke.manifoldNode(), spoke.portNode(), resistance, Long.MAX_VALUE, PipeSegment.outboundSpoke(spoke.pipePos(), spoke.face()));
+                graph.addEdge(manifoldNode, portNode, resistance, Long.MAX_VALUE, PipeSegment.outboundSpoke(pipePos, face));
             }
 
             for (AdjacentEdgeTemplate edge : template.adjacentEdges()) {
-                GasTransportBehaviour sourceBehaviour = GasConnectionResolver.getTransportBehaviour(level, edge.source().pos());
-                GasTransportBehaviour targetBehaviour = GasConnectionResolver.getTransportBehaviour(level, edge.target().pos());
+                PortKey source = edge.source();
+                PortKey target = edge.target();
+                GasTransportBehaviour sourceBehaviour = GasConnectionResolver.getTransportBehaviour(level, source.pos());
+                GasTransportBehaviour targetBehaviour = GasConnectionResolver.getTransportBehaviour(level, target.pos());
                 if (sourceBehaviour == null || targetBehaviour == null) {
                     continue;
                 }
 
-                BlockState sourceState = level.getBlockState(edge.source().pos());
-                BlockState targetState = level.getBlockState(edge.target().pos());
-                if (!sourceBehaviour.allowsOutboundGas(sourceState, edge.source().face(), gas) || !targetBehaviour.acceptsInboundGas(targetState, edge.target().face(), gas)) {
+                BlockState sourceState = level.getBlockState(source.pos());
+                BlockState targetState = level.getBlockState(target.pos());
+                if (!sourceBehaviour.allowsOutboundGas(sourceState, source.face(), gas) || !targetBehaviour.acceptsInboundGas(targetState, target.face(), gas)) {
                     continue;
                 }
 
@@ -323,10 +445,12 @@ public final class GasPressureGraphSolver {
         }
 
         private FacePressureSamples resolveFacePressures(List<GasNetworkPressureEndpoint> endpoints, boolean[] pressureAnchoredNodes, FlowGraphSolution graphSolution) {
-            double[] observedPressures = new double[template.ports().size()];
+            int portCount = template.ports().size();
+            boolean[] observablePorts = template.observablePressurePorts();
+            double[] observedPressures = new double[portCount];
             Arrays.fill(observedPressures, Double.NaN);
 
-            for (int portIndex = 0; portIndex < template.ports().size(); portIndex++) {
+            for (int portIndex = 0; portIndex < portCount; portIndex++) {
                 if (!pressureAnchoredNodes[portIndex]) {
                     continue;
                 }
@@ -335,19 +459,23 @@ public final class GasPressureGraphSolver {
             }
 
             for (GasNetworkPressureEndpoint endpoint : endpoints) {
-                observeEndpointPressure(observedPressures, endpoint.access().drainFaces(), endpoint.pressureState().pressurePa());
-                observeEndpointPressure(observedPressures, endpoint.access().fillFaces(), endpoint.pressureState().pressurePa());
+                TransferAccess access = endpoint.access();
+                double pressurePa = endpoint.pressureState().pressurePa();
+                observeEndpointPressure(observedPressures, access.drainFaces(), pressurePa);
+                observeEndpointPressure(observedPressures, access.fillFaces(), pressurePa);
             }
 
             for (AdjacentEdgeTemplate edge : template.adjacentEdges()) {
-                if (!template.observablePressurePorts()[edge.fromNode()] || !template.observablePressurePorts()[edge.toNode()]) {
+                int fromNode = edge.fromNode();
+                int toNode = edge.toNode();
+                if (!observablePorts[fromNode] || !observablePorts[toNode]) {
                     continue;
                 }
 
-                double fromPressure = observedPressures[edge.fromNode()];
-                double toPressure = observedPressures[edge.toNode()];
+                double fromPressure = observedPressures[fromNode];
+                double toPressure = observedPressures[toNode];
                 if (Double.isFinite(fromPressure) && !Double.isFinite(toPressure)) {
-                    observedPressures[edge.toNode()] = fromPressure;
+                    observedPressures[toNode] = fromPressure;
                     continue;
                 }
 
@@ -355,7 +483,7 @@ public final class GasPressureGraphSolver {
                     continue;
                 }
 
-                observedPressures[edge.fromNode()] = toPressure;
+                observedPressures[fromNode] = toPressure;
             }
 
             return new FacePressureSamples(template.pressureLayout(), observedPressures);
@@ -378,12 +506,15 @@ public final class GasPressureGraphSolver {
 
         @Nullable
         private EndpointNodeBinding addEndpointNode(GasNetworkPressureEndpoint endpoint) {
+            TransferLimits transferLimits = endpoint.transferLimits();
+            TransferAccess access = endpoint.access();
+            Map<PortKey, Integer> portNodes = template.portNodes();
             List<Integer> drainPortNodes = new ArrayList<>();
-            if (endpoint.transferLimits().drainLimit() > 0) {
-                for (BlockFace face : endpoint.access().drainFaces()) {
+            if (transferLimits.drainLimit() > 0) {
+                for (BlockFace face : access.drainFaces()) {
                     BlockPos pos = face.getPos();
                     Direction direction = face.getFace();
-                    Integer portNode = template.portNodes().get(new PortKey(pos, direction));
+                    Integer portNode = portNodes.get(new PortKey(pos, direction));
                     GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pos);
                     if (portNode == null || behaviour == null) {
                         continue;
@@ -399,11 +530,11 @@ public final class GasPressureGraphSolver {
             }
 
             List<Integer> fillPortNodes = new ArrayList<>();
-            if (endpoint.transferLimits().fillLimit() > 0) {
-                for (BlockFace face : endpoint.access().fillFaces()) {
+            if (transferLimits.fillLimit() > 0) {
+                for (BlockFace face : access.fillFaces()) {
                     BlockPos pos = face.getPos();
                     Direction direction = face.getFace();
-                    Integer portNode = template.portNodes().get(new PortKey(pos, direction));
+                    Integer portNode = portNodes.get(new PortKey(pos, direction));
                     GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pos);
                     if (portNode == null || behaviour == null) {
                         continue;
@@ -431,10 +562,12 @@ public final class GasPressureGraphSolver {
             for (int portNode : fillPortNodes) {
                 graph.addEdge(portNode, manifoldNode, JUNCTION_RESISTANCE_UNITS, Long.MAX_VALUE, null);
             }
-            long drainFlowRateLimit = pressureState.fixedPressure() ? endpoint.transferLimits().drainLimit() : Long.MAX_VALUE;
-            long fillFlowRateLimit = pressureState.fixedPressure() ? endpoint.transferLimits().fillLimit() : Long.MAX_VALUE;
-            long drainResistanceUnits = BoundedMath.saturatedAdd(ENDPOINT_RESISTANCE_UNITS, endpoint.flowResistance().drainResistanceUnits());
-            long fillResistanceUnits = BoundedMath.saturatedAdd(ENDPOINT_RESISTANCE_UNITS, endpoint.flowResistance().fillResistanceUnits());
+            boolean fixedPressure = pressureState.fixedPressure();
+            FlowResistance flowResistance = endpoint.flowResistance();
+            long drainFlowRateLimit = fixedPressure ? transferLimits.drainLimit() : Long.MAX_VALUE;
+            long fillFlowRateLimit = fixedPressure ? transferLimits.fillLimit() : Long.MAX_VALUE;
+            long drainResistanceUnits = BoundedMath.saturatedAdd(ENDPOINT_RESISTANCE_UNITS, flowResistance.drainResistanceUnits());
+            long fillResistanceUnits = BoundedMath.saturatedAdd(ENDPOINT_RESISTANCE_UNITS, flowResistance.fillResistanceUnits());
             int drainEdge = drainPortNodes.isEmpty() ? -1 : graph.addEdge(fixedNode, manifoldNode, drainResistanceUnits, drainFlowRateLimit, null);
             int fillEdge = fillPortNodes.isEmpty() ? -1 : graph.addEdge(manifoldNode, fixedNode, fillResistanceUnits, fillFlowRateLimit, null);
             return new EndpointNodeBinding(endpoint, manifoldNode, drainEdge, fillEdge);

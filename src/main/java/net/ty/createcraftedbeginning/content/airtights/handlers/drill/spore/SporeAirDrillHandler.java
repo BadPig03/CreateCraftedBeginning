@@ -14,7 +14,7 @@ public class SporeAirDrillHandler implements AirtightDrillHandler {
     }
 
     @Override
-    public float getConsumptionMultiplier() {
+    public double getConsumptionMultiplier() {
         return 1;
     }
 }

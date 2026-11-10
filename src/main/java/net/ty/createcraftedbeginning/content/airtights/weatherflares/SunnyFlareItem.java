@@ -5,6 +5,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlare;
+import net.ty.createcraftedbeginning.api.weatherflares.WeatherFlareEffect;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -18,5 +19,10 @@ public class SunnyFlareItem extends Item implements WeatherFlare {
     @Override
     public void setWeather(ServerLevel level, double ratio) {
         level.setWeatherParameters(Mth.ceil(DEFAULT_DURATION * ratio), 0, false, false);
+    }
+
+    @Override
+    public WeatherFlareEffect getWeatherEffect() {
+        return WeatherFlareEffect.CLEAR;
     }
 }

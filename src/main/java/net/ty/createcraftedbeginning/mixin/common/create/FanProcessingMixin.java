@@ -27,20 +27,20 @@ public abstract class FanProcessingMixin {
     }
 
     @WrapOperation(method = "applyProcessing(Lcom/simibubi/create/content/kinetics/belt/transport/TransportedItemStack;Lnet/minecraft/world/level/Level;Lcom/simibubi/create/content/kinetics/fan/processing/FanProcessingType;)Lcom/simibubi/create/content/kinetics/belt/behaviour/TransportedItemStackHandlerBehaviour$TransportedResult;", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/kinetics/fan/processing/FanProcessingType;canProcess(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;)Z"))
-    private static boolean ccb$applyProcessing(FanProcessingType type, ItemStack stack, Level level, Operation<Boolean> original) {
+    private static boolean ccb$applyProcessing$canProcessOnBelt(FanProcessingType type, ItemStack stack, Level level, Operation<Boolean> original) {
         boolean canProcess = original.call(type, stack, level);
         return canProcess || GasInjectionChamberFilterItem.isFilter(stack);
     }
 
     @WrapOperation(method = "applyProcessing(Lnet/minecraft/world/entity/item/ItemEntity;Lcom/simibubi/create/content/kinetics/fan/processing/FanProcessingType;)Z", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/kinetics/fan/processing/FanProcessingType;process(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;)Ljava/util/List;"))
     @Nullable
-    private static List<ItemStack> ccb$processFilterEntity(FanProcessingType type, ItemStack stack, Level level, Operation<List<ItemStack>> original) {
+    private static List<ItemStack> ccb$applyProcessing$processEntity(FanProcessingType type, ItemStack stack, Level level, Operation<List<ItemStack>> original) {
         return ccb$processFilter(type, stack, level, original);
     }
 
     @WrapOperation(method = "applyProcessing(Lcom/simibubi/create/content/kinetics/belt/transport/TransportedItemStack;Lnet/minecraft/world/level/Level;Lcom/simibubi/create/content/kinetics/fan/processing/FanProcessingType;)Lcom/simibubi/create/content/kinetics/belt/behaviour/TransportedItemStackHandlerBehaviour$TransportedResult;", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/kinetics/fan/processing/FanProcessingType;process(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;)Ljava/util/List;"))
     @Nullable
-    private static List<ItemStack> ccb$processFilterOnBelt(FanProcessingType type, ItemStack stack, Level level, Operation<List<ItemStack>> original) {
+    private static List<ItemStack> ccb$applyProcessing$processOnBelt(FanProcessingType type, ItemStack stack, Level level, Operation<List<ItemStack>> original) {
         return ccb$processFilter(type, stack, level, original);
     }
 

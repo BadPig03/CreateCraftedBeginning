@@ -14,7 +14,7 @@ public class SteamAirDrillHandler implements AirtightDrillHandler {
     }
 
     @Override
-    public float getConsumptionMultiplier() {
-        return 0.9F;
+    public double getConsumptionMultiplier() {
+        return 0.9;
     }
 }

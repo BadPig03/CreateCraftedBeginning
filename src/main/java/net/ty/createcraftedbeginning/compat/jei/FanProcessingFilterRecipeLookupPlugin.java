@@ -86,7 +86,12 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
     @Override
     public <T, V> List<T> getRecipes(IRecipeCategory<T> recipeCategory, IFocus<V> focus) {
         LookupTarget target = readTarget(focus);
-        if (target == null || !recipeCategory.getRecipeType().getUid().equals(target.categoryId())) {
+        if (target == null) {
+            return List.of();
+        }
+
+        RecipeType<T> recipeType = recipeCategory.getRecipeType();
+        if (!recipeType.getUid().equals(target.categoryId())) {
             return List.of();
         }
 
@@ -95,7 +100,7 @@ public class FanProcessingFilterRecipeLookupPlugin implements IRecipeManagerPlug
             return List.of();
         }
 
-        return runtime.getRecipeManager().createRecipeLookup(recipeCategory.getRecipeType()).get().toList();
+        return runtime.getRecipeManager().createRecipeLookup(recipeType).get().toList();
     }
 
     @Override

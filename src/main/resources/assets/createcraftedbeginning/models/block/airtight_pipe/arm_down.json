@@ -1,0 +1,202 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": false,
+  "elements": [
+    {
+      "faces": {
+        "north": {
+          "rotation": 90,
+          "texture": "#pipe",
+          "uv": [
+            12.0,
+            16.0,
+            16.0,
+            8.0
+          ]
+        }
+      },
+      "from": [
+        4,
+        0,
+        4
+      ],
+      "to": [
+        12,
+        4,
+        4
+      ]
+    },
+    {
+      "faces": {
+        "south": {
+          "rotation": 90,
+          "texture": "#pipe",
+          "uv": [
+            11.0,
+            9.0,
+            16.0,
+            15.0
+          ]
+        }
+      },
+      "from": [
+        5,
+        0,
+        5
+      ],
+      "to": [
+        11,
+        5,
+        5
+      ]
+    },
+    {
+      "faces": {
+        "south": {
+          "rotation": 90,
+          "texture": "#pipe",
+          "uv": [
+            12.0,
+            8.0,
+            16.0,
+            16.0
+          ]
+        }
+      },
+      "from": [
+        4,
+        0,
+        12
+      ],
+      "to": [
+        12,
+        4,
+        12
+      ]
+    },
+    {
+      "faces": {
+        "north": {
+          "rotation": 90,
+          "texture": "#pipe",
+          "uv": [
+            11.0,
+            15.0,
+            16.0,
+            9.0
+          ]
+        }
+      },
+      "from": [
+        5,
+        0,
+        11
+      ],
+      "to": [
+        11,
+        5,
+        11
+      ]
+    },
+    {
+      "faces": {
+        "west": {
+          "rotation": 90,
+          "texture": "#pipe",
+          "uv": [
+            12.0,
+            8.0,
+            16.0,
+            16.0
+          ]
+        }
+      },
+      "from": [
+        4,
+        0,
+        4
+      ],
+      "to": [
+        4,
+        4,
+        12
+      ]
+    },
+    {
+      "faces": {
+        "east": {
+          "rotation": 90,
+          "texture": "#pipe",
+          "uv": [
+            11.0,
+            15.0,
+            16.0,
+            9.0
+          ]
+        }
+      },
+      "from": [
+        5,
+        0,
+        5
+      ],
+      "to": [
+        5,
+        5,
+        11
+      ]
+    },
+    {
+      "faces": {
+        "east": {
+          "rotation": 90,
+          "texture": "#pipe",
+          "uv": [
+            12.0,
+            16.0,
+            16.0,
+            8.0
+          ]
+        }
+      },
+      "from": [
+        12,
+        0,
+        4
+      ],
+      "to": [
+        12,
+        4,
+        12
+      ]
+    },
+    {
+      "faces": {
+        "west": {
+          "rotation": 90,
+          "texture": "#pipe",
+          "uv": [
+            11.0,
+            9.0,
+            16.0,
+            15.0
+          ]
+        }
+      },
+      "from": [
+        11,
+        0,
+        5
+      ],
+      "to": [
+        11,
+        5,
+        11
+      ]
+    }
+  ],
+  "textures": {
+    "particle": "createcraftedbeginning:block/airtight_pipe/casing_single",
+    "pipe": "createcraftedbeginning:block/airtight_pipe/pipe"
+  }
+}

@@ -52,7 +52,7 @@ final class CreativeAirtightTankPressureBehaviour extends ScrollValueBehaviour {
     }
 
     private static int pressureStepForPa(long pressurePa) {
-        double pressureAtm = (double) Math.max(GasPressure.VACUUM_PA, pressurePa) / GasPressure.REFERENCE_PRESSURE_PA;
+        double pressureAtm = (double) Mth.clamp(pressurePa, GasPressure.VACUUM_PA, MAX_PRESSURE_PA) / GasPressure.REFERENCE_PRESSURE_PA;
         return Mth.clamp((int) Math.round(pressureAtm * STEPS_PER_ATMOSPHERE), 0, MAX_PRESSURE_STEPS);
     }
 

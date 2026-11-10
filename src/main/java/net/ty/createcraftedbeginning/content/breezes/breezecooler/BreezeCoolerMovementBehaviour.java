@@ -32,6 +32,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
+    private static final double STATIONARY_PARTICLE_SPEED_THRESHOLD = 0.015625;
     private static final String COMPOUND_KEY_CONDUCTOR = "Conductor";
     private static CameraEntityProvider cameraEntityProvider = context -> null;
 
@@ -104,7 +105,7 @@ public class BreezeCoolerMovementBehaviour implements MovementBehaviour {
         RandomSource random = level.getRandom();
         Vec3 position = context.position;
         Vec3 particlePos = position.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125F).multiply(1, 0, 1));
-        if (random.nextInt(3) == 0 && context.motion.length() < 0.015625F) {
+        if (random.nextInt(3) == 0 && context.motion.length() < STATIONARY_PARTICLE_SPEED_THRESHOLD) {
             level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
         }
         LerpedFloat headAngle = getHeadAngle(context);

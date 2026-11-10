@@ -28,24 +28,23 @@ final class AirtightPumpTransportBehaviour extends GasTransportBehaviour {
 
     @Override
     public boolean isConnectionFaceEnabled(BlockState state, Direction direction) {
-        return pump.getPerformanceController().isSideAccessible(direction);
+        return AirtightPumpPerformanceController.isSideAccessible(state, direction);
     }
 
     @Override
     public boolean allowsInboundFlow(BlockState state, Direction direction) {
-        return isConnectionFaceEnabled(state, direction) && direction == pump.getPerformanceController().getPumpInletDirection();
+        return isConnectionFaceEnabled(state, direction) && direction == AirtightPumpPerformanceController.getPumpInletDirection(state);
     }
 
     @Override
     public boolean allowsOutboundFlow(BlockState state, Direction direction) {
-        return isConnectionFaceEnabled(state, direction) && direction == pump.getPerformanceController().getPumpOutletDirection();
+        return isConnectionFaceEnabled(state, direction) && direction == AirtightPumpPerformanceController.getPumpOutletDirection(state);
     }
 
     @Override
     public GasTransportEdgeProperties getTransportEdgeProperties(BlockState state, Direction entryFace, Direction exitFace, GasStack gasStack) {
         long resistanceUnits = getFlowResistanceUnits(state, entryFace, exitFace);
-        AirtightPumpPerformanceController controller = pump.getPerformanceController();
-        if (entryFace != controller.getPumpInletDirection() || exitFace != controller.getPumpOutletDirection()) {
+        if (!allowsInboundFlow(state, entryFace) || !allowsOutboundFlow(state, exitFace)) {
             return GasTransportEdgeProperties.passive(resistanceUnits);
         }
 

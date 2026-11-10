@@ -17,8 +17,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
+    @SuppressWarnings("MethodMayBeStatic")
     @WrapOperation(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;pick(DFZ)Lnet/minecraft/world/phys/HitResult;"))
-    private HitResult ccb$pickDrillLiquid(Entity entity, double distance, float partialTicks, boolean hitFluids, Operation<HitResult> original) {
+    private HitResult ccb$pick(Entity entity, double distance, float partialTicks, boolean hitFluids, Operation<HitResult> original) {
         boolean targetsLiquid = entity instanceof Player player && !player.isSpectator() && LiquidReplacementUpgrade.INSTANCE.canApply(player.getMainHandItem());
         return original.call(entity, distance, partialTicks, hitFluids || targetsLiquid);
     }

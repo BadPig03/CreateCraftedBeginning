@@ -17,15 +17,19 @@ import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.gas.network.endpoint.AtmosphericGasEndpoint;
 import net.ty.createcraftedbeginning.gas.network.endpoint.ExternalGasEndpoint;
 import net.ty.createcraftedbeginning.gas.network.endpoint.GasConnectionEndpoint;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasPendingTransfer {
-    private static final String COMPOUND_KEY_PENDING_TRANSFER = "PendingTransfer";
-    private static final String COMPOUND_KEY_PENDING_TRANSFER_ORIGIN = "PendingTransferOrigin";
+@Internal
+public final class GasPendingTransfer {
+    @Internal
+    public static final String COMPOUND_KEY_PENDING_TRANSFER = "PendingTransfer";
+    @Internal
+    public static final String COMPOUND_KEY_PENDING_TRANSFER_ORIGIN = "PendingTransferOrigin";
     private static final int RETIRED_RECOVERY_INITIAL_DELAY_TICKS = 20;
     private static final int RETIRED_RECOVERY_MAX_DELAY_TICKS = 640;
 

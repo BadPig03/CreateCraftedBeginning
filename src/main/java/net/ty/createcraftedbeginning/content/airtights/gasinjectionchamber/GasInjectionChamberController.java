@@ -45,6 +45,16 @@ final class GasInjectionChamberController {
             return;
         }
 
+        if (!level.isClientSide && !operation.hasAttemptedExecution() && !operation.isRecipeCurrent(level.getRecipeManager())) {
+            OperationType cancelledOperationType = operation.type;
+            chamber.clearOperationState();
+            if (cancelledOperationType == BASIN_RECIPE) {
+                chamber.scheduleBasinCheck();
+            }
+            chamber.notifyUpdate();
+            return;
+        }
+
         operation.advanceProcessingTicks();
         if (!level.isClientSide && operation.type == BASIN_RECIPE && !operation.hasAttemptedExecution() && operation.getProcessingTicks() <= GasInjectionChamberBlockEntity.INJECTION_EXECUTION_TICK) {
             operation.markExecutionAttempted();

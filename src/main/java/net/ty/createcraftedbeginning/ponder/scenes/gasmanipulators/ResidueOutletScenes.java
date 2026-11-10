@@ -33,15 +33,19 @@ public class ResidueOutletScenes {
         BlockPos tankTopPos = tankBottomPos.east(2).above(3).south(2);
         BlockPos enginePos = tankBottomPos.north().above().east(2);
         BlockPos outletPos = tankBottomPos.above(2).west();
-        BlockPos funnelPos = outletPos.north();
-        BlockPos fluidPipePos = outletPos.above();
-        BlockPos fluidPipeEndPos = fluidPipePos.west();
+        BlockPos inletPipePos = tankBottomPos.west();
+        BlockPos inletPipeEndPos = tankBottomPos.west(2);
+        BlockPos funnelPos = tankBottomPos.west().above(2).north();
+        BlockPos fluidPipePos = tankBottomPos.west().above(3);
+        BlockPos fluidPipeEndPos = tankBottomPos.west(2).above(3);
         BlockPos chamberLeftPos = tankBottomPos.above(4);
-        BlockPos chamberRightPos = chamberLeftPos.south(2).east(2);
+        BlockPos chamberRightPos = tankBottomPos.east(2).above(4).south(2);
 
         Selection tankSelection = util.select().fromTo(tankBottomPos, tankTopPos);
         Selection engineSelection = util.select().position(enginePos);
         Selection outletSelection = util.select().position(outletPos);
+        Selection inletPipeSelection = util.select().fromTo(inletPipePos, inletPipeEndPos);
+        Selection engineSupplySelection = engineSelection.copy().add(inletPipeSelection);
         Selection funnelSelection = util.select().position(funnelPos);
         Selection fluidPipeSelection = util.select().fromTo(fluidPipePos, fluidPipeEndPos);
         Selection chamberSelection = util.select().fromTo(chamberLeftPos, chamberRightPos);
@@ -64,24 +68,24 @@ public class ResidueOutletScenes {
         scene.world().showSection(tankSelection, Direction.DOWN);
 
         scene.idle(3);
-        scene.world().showSection(engineSelection, Direction.SOUTH);
-
-        scene.idle(3);
         scene.world().showSection(outletSelection, Direction.EAST);
 
         scene.idle(3);
         scene.world().showSection(chamberSelection, Direction.DOWN);
 
-        scene.idle(10);
+        scene.idle(3);
         for (int i = 0; i <= 1; i++) {
             for (int j = 0; j <= 1; j++) {
-                setWindLevel(scene, chamberLeftPos.south(i * 2).east(j * 2));
+                setWindLevel(scene, tankBottomPos.above(4).south(i * 2).east(j * 2));
             }
         }
+        scene.world().showSection(engineSupplySelection, Direction.SOUTH);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(engineSelection, (float) 32);
         scene.effects().rotationSpeedIndicator(enginePos);
 
-        scene.idle(20);
+        scene.idle(5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.WHITE, outletObject, outletArea, 3);
 
         scene.idle(3);
@@ -126,9 +130,9 @@ public class ResidueOutletScenes {
         scene.world().setKineticSpeed(engineSelection, 8);
         scene.effects().rotationSpeedIndicator(enginePos);
 
-        scene.idle(17);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, outletObject, outletArea, 60);
-        scene.overlay().showText(60).text("Once Residue can leave again, the Driver gradually recovers").colored(PonderPalette.GREEN).pointAt(outletVec).placeNearTarget().attachKeyFrame();
+        scene.idle(37);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, outletObject, outletArea, 60);
+        scene.overlay().showText(60).text("If Residue remains blocked, the Driver eventually stops").colored(PonderPalette.RED).pointAt(outletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(19);
         scene.world().setKineticSpeed(engineSelection, 4);

@@ -1,7 +1,5 @@
 {
   "values": [
-    "createcraftedbeginning:end_casing",
-    "createcraftedbeginning:end_sculk_silencer",
-    "createcraftedbeginning:end_sculk_silencer_structural"
+    "createcraftedbeginning:end_casing"
   ]
 }

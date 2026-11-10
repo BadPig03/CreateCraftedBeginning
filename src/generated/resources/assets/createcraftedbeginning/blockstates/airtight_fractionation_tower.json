@@ -1,7 +1,7 @@
 {
   "variants": {
     "": {
-      "model": "createcraftedbeginning:block/airtight_fractionation_tower"
+      "model": "createcraftedbeginning:block/airtight_fractionation_tower/block"
     }
   }
 }

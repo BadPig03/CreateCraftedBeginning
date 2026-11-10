@@ -43,7 +43,8 @@ public class CardboardCrateScenes {
 
         Vec3 crateVec = util.vector().centerOf(cratePos);
         Vec3 itemVec = util.vector().centerOf(itemPos);
-        Vec3 itemDropMotion = util.vector().of(0, -0.1, 0);
+        Vec3 crateNorthVec = util.vector().blockSurface(cratePos, Direction.NORTH);
+        Vec3 itemDropMotion = Vec3.ZERO.add(0, -0.1, 0);
 
         ItemStack coalItem = new ItemStack(Items.COAL);
         ItemStack copperIngotItem = new ItemStack(Items.COPPER_INGOT);
@@ -62,65 +63,65 @@ public class CardboardCrateScenes {
 
         scene.idle(60);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
-         scene.world().showSection(chuteSelection, Direction.DOWN);
+        scene.world().showSection(chuteSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).colored(PonderPalette.RED).text("When storing different items, items within the crate will be disposed").pointAt(crateVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).colored(PonderPalette.RED).text("When a different item is inserted, the previous contents are discarded").pointAt(crateVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(10);
-        ElementLink<EntityElement> remove = scene.world().createItemEntity(itemVec, itemDropMotion, coalItem.copy());
+        ElementLink<EntityElement> coalEntity = scene.world().createItemEntity(itemVec, itemDropMotion, coalItem.copy());
 
         scene.idle(2);
         scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, coalItem.copy());
-        scene.world().modifyEntity(remove, Entity::discard);
+        scene.world().modifyEntity(coalEntity, Entity::discard);
 
         scene.idle(10);
-        ElementLink<EntityElement> remove1 = scene.world().createItemEntity(itemVec, itemDropMotion, ironIngotItem.copy());
+        ElementLink<EntityElement> ironEntity = scene.world().createItemEntity(itemVec, itemDropMotion, ironIngotItem.copy());
 
         scene.idle(2);
         scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, ironIngotItem.copy());
-        scene.world().modifyEntity(remove1, Entity::discard);
+        scene.world().modifyEntity(ironEntity, Entity::discard);
 
         scene.idle(10);
-        ElementLink<EntityElement> remove2 = scene.world().createItemEntity(itemVec, itemDropMotion, copperIngotItem.copyWithCount(16));
+        ElementLink<EntityElement> copperEntity = scene.world().createItemEntity(itemVec, itemDropMotion, copperIngotItem.copyWithCount(16));
 
         scene.idle(2);
-        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, copperIngotItem.copy());
-        scene.world().modifyEntity(remove2, Entity::discard);
+        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, copperIngotItem.copyWithCount(16));
+        scene.world().modifyEntity(copperEntity, Entity::discard);
 
         scene.idle(10);
-        ElementLink<EntityElement> remove3 = scene.world().createItemEntity(itemVec, itemDropMotion, goldIngotItem.copyWithCount(32));
+        ElementLink<EntityElement> goldEntity = scene.world().createItemEntity(itemVec, itemDropMotion, goldIngotItem.copyWithCount(32));
 
         scene.idle(2);
-        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, goldIngotItem.copy());
-        scene.world().modifyEntity(remove3, Entity::discard);
+        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, goldIngotItem.copyWithCount(32));
+        scene.world().modifyEntity(goldEntity, Entity::discard);
 
         scene.idle(10);
-        ElementLink<EntityElement> remove4 = scene.world().createItemEntity(itemVec, itemDropMotion, diamondItem.copyWithCount(64));
+        ElementLink<EntityElement> diamondEntity = scene.world().createItemEntity(itemVec, itemDropMotion, diamondItem.copyWithCount(64));
 
         scene.idle(2);
-        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, goldIngotItem.copy());
-        scene.world().modifyEntity(remove4, Entity::discard);
+        scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, diamondItem.copyWithCount(64));
+        scene.world().modifyEntity(diamondEntity, Entity::discard);
 
         scene.idle(20);
         scene.overlay().showText(60).colored(PonderPalette.RED).text("When storing identical items, any excess beyond the capacity limit will be disposed as well").pointAt(crateVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(10);
-        ElementLink<EntityElement> remove5 = scene.world().createItemEntity(itemVec, itemDropMotion, minecartItem.copy());
+        ElementLink<EntityElement> firstMinecartEntity = scene.world().createItemEntity(itemVec, itemDropMotion, minecartItem.copy());
 
         scene.idle(2);
         scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, minecartItem.copy());
-        scene.world().modifyEntity(remove5, Entity::discard);
+        scene.world().modifyEntity(firstMinecartEntity, Entity::discard);
 
         scene.idle(10);
-        ElementLink<EntityElement> remove6 = scene.world().createItemEntity(itemVec, itemDropMotion, minecartItem.copy());
+        ElementLink<EntityElement> secondMinecartEntity = scene.world().createItemEntity(itemVec, itemDropMotion, minecartItem.copy());
 
         scene.idle(2);
         scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, minecartItem.copy());
-        scene.world().modifyEntity(remove6, Entity::discard);
+        scene.world().modifyEntity(secondMinecartEntity, Entity::discard);
 
         scene.idle(10);
-        scene.overlay().showControls(util.vector().blockSurface(cratePos, Direction.NORTH), Pointing.RIGHT, 40).withItem(minecartItem.copy());
+        scene.overlay().showControls(crateNorthVec, Pointing.RIGHT, 40).withItem(minecartItem.copy());
 
         scene.idle(60);
         scene.world().hideSection(chuteSelection, Direction.UP);
@@ -133,7 +134,7 @@ public class CardboardCrateScenes {
         }
         scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), cardboardCrateItem.copy());
 
-        scene.idle(57);
+        scene.idle(30);
         scene.markAsFinished();
     }
 }

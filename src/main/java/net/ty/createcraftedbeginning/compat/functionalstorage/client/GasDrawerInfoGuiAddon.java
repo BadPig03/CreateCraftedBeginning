@@ -96,19 +96,23 @@ public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
     private void drawSlot(GuiGraphics graphics, int guiX, int guiY, int slot, Rect2i rect) {
         int x = guiX + getPosX() + rect.getX();
         int y = guiY + getPosY() + rect.getY();
-        drawSlotFrame(graphics, x, y, rect.getWidth(), rect.getHeight());
+        int width = rect.getWidth();
+        int height = rect.getHeight();
+        drawSlotFrame(graphics, x, y, width, height);
         RenderGas renderGas = drawer.getRenderGas(slot);
         if (renderGas.isEmpty()) {
             return;
         }
 
-        renderGas(graphics, guiX, guiY, renderGas.stack(), renderGas.filterOnly(), rect);
-        if (renderGas.filterOnly()) {
-            graphics.fill(x + 1, y + 1, x + rect.getWidth() - 1, y + rect.getHeight() - 1, 0x55000000);
+        GasStack stack = renderGas.stack();
+        boolean filterOnly = renderGas.filterOnly();
+        renderGas(graphics, guiX, guiY, stack, filterOnly, rect);
+        if (filterOnly) {
+            graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0x55000000);
             return;
         }
 
-        drawAmount(graphics, guiX, guiY, rect, renderGas.stack());
+        drawAmount(graphics, guiX, guiY, rect, stack);
     }
 
     private boolean isHovered(int guiX, int guiY, int mouseX, int mouseY, Rect2i rect) {
@@ -136,11 +140,12 @@ public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
         if (!gasStack.isComponentsPatchEmpty()) {
             tooltip.add(CCBLang.translateDirect("compat.functional_storage.gas_drawer.has_components").withStyle(ChatFormatting.DARK_GRAY));
         }
-        if (renderGas.filterOnly()) {
+        boolean filterOnly = renderGas.filterOnly();
+        if (filterOnly) {
             tooltip.add(CCBLang.translateDirect("compat.functional_storage.gas_drawer.locked_filter").withStyle(ChatFormatting.GRAY));
         }
-        long displayedAmount = renderGas.filterOnly() ? 0 : gasStack.getAmount();
-        String amountText = drawer.isCreative() && !renderGas.filterOnly() ? CCBLang.translateDirect("generic.infinity_mark").getString() : GasUnitFormat.formatCompact(displayedAmount) + '/' + GasUnitFormat.formatCompact(drawer.getTankVolume());
+        long displayedAmount = filterOnly ? 0 : gasStack.getAmount();
+        String amountText = drawer.isCreative() && !filterOnly ? CCBLang.translateDirect("generic.infinity_mark").getString() : GasUnitFormat.formatCompact(displayedAmount) + '/' + GasUnitFormat.formatCompact(drawer.getTankVolume());
         tooltip.add(Component.translatable("gui.functionalstorage.amount").withStyle(ChatFormatting.GOLD).append(Component.literal(amountText).withStyle(ChatFormatting.WHITE)));
     }
 
@@ -150,13 +155,16 @@ public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
-        poseStack.translate(0, 0, 200);
-        poseStack.scale(0.5F, 0.5F, 0.5F);
-        Font font = Minecraft.getInstance().font;
-        String amountText = drawer.isCreative() ? CCBLang.translateDirect("generic.infinity_mark").getString() : GasUnitFormat.formatCompact(stack.getAmount()) + '/' + GasUnitFormat.formatCompact(drawer.getTankVolume());
-        graphics.drawString(font, amountText, Math.round(x * 2 + rect.getWidth() - font.width(amountText) / 2.0F), (y + rect.getHeight()) * 2 - 10, 0xFFFFFF, true);
-
-        poseStack.popPose();
+        try {
+            poseStack.translate(0, 0, 200);
+            poseStack.scale(0.5F, 0.5F, 0.5F);
+            Font font = Minecraft.getInstance().font;
+            String amountText = drawer.isCreative() ? CCBLang.translateDirect("generic.infinity_mark").getString() : GasUnitFormat.formatCompact(stack.getAmount()) + '/' + GasUnitFormat.formatCompact(drawer.getTankVolume());
+            graphics.drawString(font, amountText, Math.round(x * 2 + rect.getWidth() - font.width(amountText) / 2.0F), (y + rect.getHeight()) * 2 - 10, 0xFFFFFF, true);
+        }
+        finally {
+            poseStack.popPose();
+        }
     }
 
     private void renderGas(GuiGraphics graphics, int guiX, int guiY, GasStack gasStack, boolean isFilterOnly, Rect2i rect) {
@@ -175,14 +183,16 @@ public final class GasDrawerInfoGuiAddon extends BasicScreenAddon {
         RenderSystem.setShaderTexture(0, InventoryMenu.BLOCK_ATLAS);
         RenderSystem.setShaderColor(red, green, blue, alpha);
         RenderSystem.enableBlend();
-
-        int slotX = guiX + getPosX() + rect.getX();
-        int slotY = guiY + getPosY() + rect.getY();
-        int iconX = slotX + (rect.getWidth() - 16) / 2;
-        int iconY = slotY + (rect.getHeight() - 16) / 2;
-        graphics.blit(iconX, iconY, 0, 16, 16, CCBGasClientTextures.getGasTexture(gasStack.getGasHolder()));
-
-        RenderSystem.disableBlend();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
+        try {
+            int slotX = guiX + getPosX() + rect.getX();
+            int slotY = guiY + getPosY() + rect.getY();
+            int iconX = slotX + (rect.getWidth() - 16) / 2;
+            int iconY = slotY + (rect.getHeight() - 16) / 2;
+            graphics.blit(iconX, iconY, 0, 16, 16, CCBGasClientTextures.getGasTexture(gasStack.getGasHolder()));
+        }
+        finally {
+            RenderSystem.disableBlend();
+            RenderSystem.setShaderColor(1, 1, 1, 1);
+        }
     }
 }

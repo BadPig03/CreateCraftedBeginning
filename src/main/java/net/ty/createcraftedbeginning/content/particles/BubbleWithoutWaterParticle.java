@@ -16,7 +16,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
-public class BubbleWithoutWaterParticle extends TextureSheetParticle {
+public final class BubbleWithoutWaterParticle extends TextureSheetParticle {
     private static final double VERTICAL_ACCELERATION = 0.002;
 
     private BubbleWithoutWaterParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {

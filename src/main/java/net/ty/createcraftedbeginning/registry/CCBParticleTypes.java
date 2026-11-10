@@ -10,6 +10,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.content.particles.AmethystSoundSuppressorRippleParticleType;
 import net.ty.createcraftedbeginning.content.particles.ColoredBreezeCloudParticleType;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
@@ -22,7 +23,8 @@ public enum CCBParticleTypes {
     AIRTIGHT_JETPACK(() -> new SimpleParticleType(false)),
     BREEZE_CLOUD(() -> new SimpleParticleType(false)),
     COLORED_BREEZE_CLOUD(() -> new ColoredBreezeCloudParticleType(false)),
-    BUBBLE_WITHOUT_WATER(() -> new SimpleParticleType(false));
+    BUBBLE_WITHOUT_WATER(() -> new SimpleParticleType(false)),
+    AMETHYST_SOUND_SUPPRESSOR_RIPPLE(() -> new AmethystSoundSuppressorRippleParticleType(false));
 
     private final ParticleEntry<?> entry;
 

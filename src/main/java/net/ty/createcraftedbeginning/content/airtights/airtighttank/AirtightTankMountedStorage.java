@@ -55,7 +55,7 @@ public class AirtightTankMountedStorage extends WrapperMountedGasStorage<Handler
             return;
         }
 
-        tank.getTankInventory().tryApplyState(getState()).requireAccepted();
+        tank.applyMountedState(getState());
     }
 
     @Override

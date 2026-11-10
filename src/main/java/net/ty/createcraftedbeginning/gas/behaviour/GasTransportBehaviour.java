@@ -29,6 +29,7 @@ import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
 import net.ty.createcraftedbeginning.gas.telemetry.GasFlowTelemetryTarget;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -43,7 +44,8 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
 
     private static final int CONNECTION_REFRESH_INTERVAL = 20;
     private static final long PIPE_RESISTANCE_UNITS = GasFlowResistance.fromFactor(0.958);
-    private static final String COMPOUND_KEY_RETIRED_CONNECTIONS = "RetiredGasConnections";
+    @Internal
+    public static final String COMPOUND_KEY_RETIRED_CONNECTIONS = "RetiredGasConnections";
 
     private EnumMap<Direction, GasPipeConnection> connections;
     private @Nullable List<GasPipeConnection> retiredConnections;

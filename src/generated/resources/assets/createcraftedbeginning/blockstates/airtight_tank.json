@@ -1,7 +1,7 @@
 {
   "variants": {
     "": {
-      "model": "createcraftedbeginning:block/airtight_tank"
+      "model": "createcraftedbeginning:block/airtight_tanks/vertical"
     }
   }
 }

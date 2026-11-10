@@ -1,0 +1,8 @@
+{
+  "values": [
+    "minecraft:ui.button.click",
+    "minecraft:ui.toast.in",
+    "minecraft:ui.toast.out",
+    "minecraft:ui.toast.challenge_complete"
+  ]
+}

@@ -5,7 +5,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -34,28 +33,24 @@ public final class AirtightUpgradeMaterials {
         MATERIALS.put(upgradeId, item);
     }
 
-    @Internal
-    public static Item resolveMaterial(AirtightUpgrade upgrade, boolean clientSide) {
+    static Item resolveMaterial(AirtightUpgrade upgrade, boolean clientSide) {
         Map<ResourceLocation, Item> materials = clientSide ? clientMaterials : MATERIALS;
         return materials.getOrDefault(upgrade.getID(), upgrade.getDefaultUpgradeItem());
     }
 
-    @Internal
-    public static @Unmodifiable Map<ResourceLocation, ResourceLocation> createServerSnapshot() {
+    static @Unmodifiable Map<ResourceLocation, ResourceLocation> createServerSnapshot() {
         Map<ResourceLocation, ResourceLocation> snapshot = new HashMap<>();
         MATERIALS.forEach((upgradeId, item) -> snapshot.put(upgradeId, BuiltInRegistries.ITEM.getKey(item)));
         return Map.copyOf(snapshot);
     }
 
-    @Internal
-    public static void acceptClientSync(Map<ResourceLocation, ResourceLocation> snapshot) {
+    static void acceptClientSync(Map<ResourceLocation, ResourceLocation> snapshot) {
         Map<ResourceLocation, Item> materials = new HashMap<>();
         snapshot.forEach((upgradeId, itemId) -> materials.put(upgradeId, BuiltInRegistries.ITEM.get(itemId)));
         clientMaterials = Map.copyOf(materials);
     }
 
-    @Internal
-    public static void clearClientMaterials() {
+    static void clearClientMaterials() {
         clientMaterials = Map.of();
     }
 

@@ -6,6 +6,7 @@ import com.simibubi.create.api.registry.SimpleRegistry;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -31,17 +32,19 @@ public final class GasInventoryIdentifiers {
 
     @Nullable
     public static InventoryIdentifier get(Level level, BlockFace face) {
-        GasHandler targetHandler = level.getCapability(GasCapabilities.BLOCK, face.getPos(), face.getFace());
+        BlockPos pos = face.getPos();
+        Direction side = face.getFace();
+        GasHandler targetHandler = level.getCapability(GasCapabilities.BLOCK, pos, side);
         if (targetHandler == null) {
             return null;
         }
 
-        BlockEntity blockEntity = level.getBlockEntity(face.getPos());
+        BlockEntity blockEntity = level.getBlockEntity(pos);
         if (blockEntity instanceof GasInventoryIdentifierProvider provider) {
-            return provider.getGasInventoryIdentifier(face.getFace());
+            return provider.getGasInventoryIdentifier(side);
         }
 
-        BlockState state = level.getBlockState(face.getPos());
+        BlockState state = level.getBlockState(pos);
         Finder finder = REGISTRY.get(state);
         if (finder != null) {
             return finder.find(level, state, face);
@@ -60,9 +63,10 @@ public final class GasInventoryIdentifiers {
             return null;
         }
 
+        BlockPos pos = face.getPos();
         Set<Direction> sides = EnumSet.noneOf(Direction.class);
         for (Direction direction : Iterate.directions) {
-            GasHandler candidate = level.getCapability(GasCapabilities.BLOCK, face.getPos(), direction);
+            GasHandler candidate = level.getCapability(GasCapabilities.BLOCK, pos, direction);
             if (candidate == null) {
                 continue;
             }
@@ -78,7 +82,7 @@ public final class GasInventoryIdentifiers {
             return null;
         }
 
-        return new MultiFace(face.getPos(), Set.copyOf(sides));
+        return new MultiFace(pos, Set.copyOf(sides));
     }
 
     private static boolean identifiesSameStorage(GasHandler first, GasHandler second) {

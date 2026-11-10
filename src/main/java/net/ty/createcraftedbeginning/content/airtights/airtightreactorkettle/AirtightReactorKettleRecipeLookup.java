@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.kinetics.press.MechanicalPressBlockEntity;
-import com.simibubi.create.foundation.recipe.RecipeFinder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
@@ -21,6 +20,7 @@ import net.ty.createcraftedbeginning.recipe.ReactorKettleBrewingRecipes;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleCraftPlanner;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleMixingRecipe;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
+import net.ty.createcraftedbeginning.recipe.RecipeCandidateCache;
 import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 import net.ty.createcraftedbeginning.recipe.temperature.TemperatureMatching;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant;
@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -41,7 +40,6 @@ public final class AirtightReactorKettleRecipeLookup {
     private static final Object CRAFTING_RECIPE_CACHE_KEY = new Object();
     private static final Object MIXING_RECIPE_CACHE_KEY = new Object();
     private static final Object REACTOR_KETTLE_RECIPE_CACHE_KEY = new Object();
-    private static final AtomicLong RECIPE_CACHE_VERSION = new AtomicLong();
 
     private AirtightReactorKettleRecipeLookup() {
     }
@@ -50,7 +48,6 @@ public final class AirtightReactorKettleRecipeLookup {
         ReactorKettleBrewingRecipes.invalidateCaches();
         AirtightRecipeTrieFinder.invalidateFailures(REACTOR_KETTLE_RECIPE_CACHE_KEY);
         AirtightRecipeTrieFinder.invalidateFailures(MIXING_RECIPE_CACHE_KEY);
-        RECIPE_CACHE_VERSION.incrementAndGet();
     }
 
     @Internal
@@ -120,7 +117,7 @@ public final class AirtightReactorKettleRecipeLookup {
             }
         }
 
-        List<ReactorKettleRecipe> recipes = RecipeFinder.get(MIXING_RECIPE_CACHE_KEY, level, ReactorKettleMixingRecipe::isSupported).stream().map(holder -> ReactorKettleMixingRecipe.convert(holder).value()).toList();
+        List<ReactorKettleRecipe> recipes = RecipeCandidateCache.get(MIXING_RECIPE_CACHE_KEY, level.getRecipeManager(), ReactorKettleMixingRecipe::isSupported).stream().map(holder -> ReactorKettleMixingRecipe.convert(holder).value()).toList();
         return findMatchingMixingRecipe(kettle, recipes);
     }
 
@@ -134,17 +131,13 @@ public final class AirtightReactorKettleRecipeLookup {
         return findMatchingMixingRecipe(kettle, ReactorKettleBrewingRecipes.getCandidates(level, kettle.getAvailableItems()));
     }
 
-    static long getRecipeCacheVersion() {
-        return RECIPE_CACHE_VERSION.get();
-    }
-
     static Optional<RecipeHolder<CraftingRecipe>> getMatchingCraftingRecipe(AirtightReactorKettleBlockEntity kettle) {
         Level level = kettle.getLevel();
         if (level == null || kettle.getInventories().getFirst().isEmpty()) {
             return Optional.empty();
         }
 
-        List<RecipeHolder<? extends Recipe<?>>> candidates = RecipeFinder.get(CRAFTING_RECIPE_CACHE_KEY, level, holder -> {
+        List<RecipeHolder<?>> candidates = RecipeCandidateCache.get(CRAFTING_RECIPE_CACHE_KEY, level.getRecipeManager(), holder -> {
             if (AllRecipeTypes.shouldIgnoreInAutomation(holder)) {
                 return false;
             }
@@ -184,7 +177,7 @@ public final class AirtightReactorKettleRecipeLookup {
     private static Optional<ReactorKettleRecipe> findMatchingLinearRecipe(AirtightReactorKettleBlockEntity kettle, Level level) {
         ReactorKettleRecipe bestMatch = null;
         RecipeMatchPriority bestPriority = null;
-        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(REACTOR_KETTLE_RECIPE_CACHE_KEY, level, recipe -> recipe.value() instanceof ReactorKettleRecipe)) {
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeCandidateCache.get(REACTOR_KETTLE_RECIPE_CACHE_KEY, level.getRecipeManager(), recipe -> recipe.value() instanceof ReactorKettleRecipe)) {
             if (!(holder.value() instanceof ReactorKettleRecipe recipe) || !new ReactorKettleCraftPlanner(kettle, recipe).matches()) {
                 continue;
             }

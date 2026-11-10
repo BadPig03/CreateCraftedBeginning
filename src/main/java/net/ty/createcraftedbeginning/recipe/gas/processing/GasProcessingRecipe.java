@@ -43,11 +43,13 @@ public abstract class GasProcessingRecipe<I extends RecipeInput, P extends GasPr
         List<String> errors = super.validate();
         int ingredientCount = gasIngredients.size();
         int outputCount = gasResults.size();
-        if (ingredientCount > getMaxGasInputCount()) {
-            errors.add("Recipe has more gas inputs (" + ingredientCount + ") than supported (" + getMaxGasInputCount() + ").");
+        int maxInputCount = getMaxGasInputCount();
+        if (ingredientCount > maxInputCount) {
+            errors.add("Recipe has more gas inputs (" + ingredientCount + ") than supported (" + maxInputCount + ").");
         }
-        if (outputCount > getMaxGasOutputCount()) {
-            errors.add("Recipe has more gas outputs (" + outputCount + ") than supported (" + getMaxGasOutputCount() + ").");
+        int maxOutputCount = getMaxGasOutputCount();
+        if (outputCount > maxOutputCount) {
+            errors.add("Recipe has more gas outputs (" + outputCount + ") than supported (" + maxOutputCount + ").");
         }
 
         validateSpecial(errors);

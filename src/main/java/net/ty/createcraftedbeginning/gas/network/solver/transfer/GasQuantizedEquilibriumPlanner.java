@@ -9,6 +9,8 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.gas.network.math.GasFlowMath;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
+import net.ty.createcraftedbeginning.gas.network.solver.graph.GasFlowRouting.Route;
+import net.ty.createcraftedbeginning.gas.network.solver.graph.GasFlowRouting.RoutedPlan;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureGraphSolution;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureGraphSolution.EndpointFlow;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureGraphSolution.TransferComponent;
@@ -52,8 +54,9 @@ public final class GasQuantizedEquilibriumPlanner {
             return GasTransferPlan.EMPTY;
         }
 
-        int drainCursor = Math.floorMod(level.getGameTime() + substepIndex, drains.size());
-        int fillCursor = Math.floorMod(level.getGameTime() + substepIndex, fills.size());
+        long gameTime = level.getGameTime();
+        int drainCursor = Math.floorMod(gameTime + substepIndex, drains.size());
+        int fillCursor = Math.floorMod(gameTime + substepIndex, fills.size());
         int attempts = 0;
         pairSearch:
         for (int drainOffset = 0; drainOffset < drains.size(); drainOffset++) {
@@ -73,7 +76,7 @@ public final class GasQuantizedEquilibriumPlanner {
 
                     long sourcePressurePa = GasPressure.round(GasPressureLimits.clampToHardLimit(fill.manifoldPressurePa()));
                     GasTransferPlan candidate = new GasTransferPlan(List.of(new PlannedDrain(drain.endpoint(), candidateAmount)), List.of(new PlannedFill(fill.endpoint(), candidateAmount, sourcePressurePa)), candidateAmount);
-                    if (fitsTransportBudget(component, candidate, transportBudget) && improvesEquilibrium(pressureGraph, gas, endpoints, solution, candidate, transportBudget, false)) {
+                    if (improvesEquilibrium(pressureGraph, gas, endpoints, solution, component, candidate, transportBudget, false)) {
                         return candidate;
                     }
 
@@ -95,17 +98,13 @@ public final class GasQuantizedEquilibriumPlanner {
         return Double.isFinite(currentNorm) && Double.isFinite(hypotheticalNorm) && currentNorm - hypotheticalNorm > Math.max(IMPROVEMENT_EPSILON, currentNorm * IMPROVEMENT_EPSILON * 10);
     }
 
-    private static boolean fitsTransportBudget(TransferComponent component, GasTransferPlan candidate, GasTransportFlowBudget transportBudget) {
-        return component.routing().route(candidate, transportBudget).totalAmount() == candidate.totalAmount();
-    }
-
     private static GasTransferPlan planCoordinatedQuantizedStep(PreparedGraph pressureGraph, GasStack gas, List<GasNetworkPressureEndpoint> endpoints, GasPressureGraphSolution solution, TransferComponent component, List<EndpointFlow> drains, List<EndpointFlow> fills, GasTransportFlowBudget transportBudget, int drainCursor, int fillCursor) {
         GasTransferPlan best = GasTransferPlan.EMPTY;
         long previousAmount = 0;
         long scale = 1;
         for (int attempt = 0; attempt < MAX_COORDINATED_SCALE_ATTEMPTS; attempt++) {
             GasTransferPlan candidate = buildCoordinatedCandidate(gas, drains, fills, drainCursor, fillCursor, scale);
-            if (candidate.isEmpty() || candidate.totalAmount() <= previousAmount || !fitsTransportBudget(component, candidate, transportBudget) || !improvesEquilibrium(pressureGraph, gas, endpoints, solution, candidate, transportBudget, true)) {
+            if (candidate.isEmpty() || candidate.totalAmount() <= previousAmount || !improvesEquilibrium(pressureGraph, gas, endpoints, solution, component, candidate, transportBudget, true)) {
                 break;
             }
 
@@ -197,7 +196,12 @@ public final class GasQuantizedEquilibriumPlanner {
         return remaining <= 0;
     }
 
-    private static boolean improvesEquilibrium(PreparedGraph pressureGraph, GasStack gas, List<GasNetworkPressureEndpoint> endpoints, GasPressureGraphSolution currentSolution, GasTransferPlan candidate, GasTransportFlowBudget transportBudget, boolean rejectDirectionReversal) {
+    private static boolean improvesEquilibrium(PreparedGraph pressureGraph, GasStack gas, List<GasNetworkPressureEndpoint> endpoints, GasPressureGraphSolution currentSolution, TransferComponent component, GasTransferPlan candidate, GasTransportFlowBudget transportBudget, boolean rejectDirectionReversal) {
+        RoutedPlan routed = component.routing().route(candidate, transportBudget);
+        if (routed.totalAmount() != candidate.totalAmount()) {
+            return false;
+        }
+
         IdentityHashMap<GasNetworkPressureEndpoint, Long> deltas = new IdentityHashMap<>();
         for (PlannedDrain drain : candidate.drains()) {
             deltas.merge(drain.endpoint(), -drain.amount(), BoundedMath::saturatedAdd);
@@ -206,24 +210,34 @@ public final class GasQuantizedEquilibriumPlanner {
             deltas.merge(fill.endpoint(), fill.amount(), BoundedMath::saturatedAdd);
         }
 
-        List<GasNetworkPressureEndpoint> hypotheticalEndpoints = new ArrayList<>(endpoints.size());
+        List<GasNetworkPressureEndpoint> hypotheticalEndpoints = GasNetworkPressureEndpoint.predictAll(gas, endpoints, deltas);
+        if (hypotheticalEndpoints == null) {
+            return false;
+        }
+
         IdentityHashMap<GasNetworkPressureEndpoint, GasNetworkPressureEndpoint> originalByHypothetical = new IdentityHashMap<>();
+        IdentityHashMap<GasNetworkPressureEndpoint, GasNetworkPressureEndpoint> hypotheticalByOriginal = new IdentityHashMap<>();
         boolean changesFiniteEndpoint = false;
-        for (GasNetworkPressureEndpoint endpoint : endpoints) {
+        for (int index = 0; index < endpoints.size(); index++) {
+            GasNetworkPressureEndpoint endpoint = endpoints.get(index);
             long delta = deltas.getOrDefault(endpoint, 0L);
             if (delta != 0 && !endpoint.pressureState().fixedPressure()) {
                 changesFiniteEndpoint = true;
             }
-            GasNetworkPressureEndpoint hypothetical = endpoint.withAmountDelta(gas, delta);
-            if (hypothetical == null) {
-                return false;
-            }
-
-            hypotheticalEndpoints.add(hypothetical);
+            GasNetworkPressureEndpoint hypothetical = hypotheticalEndpoints.get(index);
             originalByHypothetical.put(hypothetical, endpoint);
+            hypotheticalByOriginal.put(endpoint, hypothetical);
         }
         if (!changesFiniteEndpoint) {
             return false;
+        }
+
+        for (Route route : routed.routes()) {
+            GasNetworkPressureEndpoint source = hypotheticalByOriginal.get(route.source());
+            GasNetworkPressureEndpoint target = hypotheticalByOriginal.get(route.target());
+            if (source == null || target == null || !route.allowsRegulatedPressure(source.pressureState().pressurePa(), target.pressureState().pressurePa())) {
+                return false;
+            }
         }
 
         GasPressureGraphSolution hypotheticalSolution = pressureGraph.solveHypothetical(hypotheticalEndpoints, transportBudget);

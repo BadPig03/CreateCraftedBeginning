@@ -9,15 +9,14 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class OpticalFiberShapes {
-    private static final int CONNECTION_BITS = Iterate.directions.length;
+    private static final int SHAPE_CACHE_SIZE = 1 << OpticalFiberBlock.CONNECTION_BITS * 2;
 
-    private final Map<Integer, VoxelShape> deviceShapes = new ConcurrentHashMap<>();
+    private final AtomicReferenceArray<VoxelShape> deviceShapes = new AtomicReferenceArray<>(SHAPE_CACHE_SIZE);
 
     static VoxelShape createBaseShape(BlockState state, VoxelShape baseShape) {
         int connections = 0;
@@ -46,22 +45,30 @@ final class OpticalFiberShapes {
         return Shapes.or(baseShape, CCBShapes.OPTICAL_FIBER_JUNCTION);
     }
 
-    VoxelShape getShape(VoxelShape baseShape, int shapeIndex, int ports) {
+    VoxelShape getShape(VoxelShape baseShape, int key) {
+        int ports = key >>> OpticalFiberBlock.CONNECTION_BITS;
         if (ports == 0) {
             return baseShape;
         }
 
-        int key = shapeIndex | ports << CONNECTION_BITS;
-        return deviceShapes.computeIfAbsent(key, ignored -> {
-            VoxelShape shape = baseShape;
-            for (Direction direction : Iterate.directions) {
-                if ((ports & 1 << direction.get3DDataValue()) == 0) {
-                    continue;
-                }
+        VoxelShape cached = deviceShapes.get(key);
+        if (cached != null) {
+            return cached;
+        }
 
-                shape = Shapes.or(shape, CCBShapes.OPTICAL_FIBER_DEVICE_PORT.get(direction));
+        VoxelShape shape = baseShape;
+        for (Direction direction : Iterate.directions) {
+            if ((ports & 1 << direction.get3DDataValue()) == 0) {
+                continue;
             }
-            return shape;
-        });
+
+            shape = Shapes.or(shape, CCBShapes.OPTICAL_FIBER_DEVICE_PORT.get(direction));
+        }
+        VoxelShape previous = deviceShapes.compareAndExchange(key, null, shape);
+        if (previous != null) {
+            return previous;
+        }
+
+        return shape;
     }
 }

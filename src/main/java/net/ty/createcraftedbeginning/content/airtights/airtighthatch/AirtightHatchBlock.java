@@ -139,6 +139,10 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         }
 
         BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity instanceof AirtightHatchBlockEntity hatch && !hatch.prepareForRemoval()) {
+            return InteractionResult.SUCCESS;
+        }
+
         if (!player.isCreative()) {
             getDrops(state, serverLevel, pos, blockEntity, player, context.getItemInHand()).forEach(dropStack -> ItemHandlerHelper.giveItemToPlayer(player, dropStack));
         }
@@ -149,6 +153,15 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         level.destroyBlock(pos, false);
         IWrenchable.playRemoveSound(level, pos);
         return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
+        if (!level.isClientSide && willHarvest && level.getBlockEntity(pos) instanceof AirtightHatchBlockEntity hatch && !hatch.prepareForRemoval()) {
+            return false;
+        }
+
+        return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
     }
 
     @Override
@@ -169,11 +182,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block otherBlock, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, otherBlock, neighborPos, isMoving);
-        if (canSurvive(state, level, pos)) {
-            return;
-        }
-
-        level.destroyBlock(pos, true);
+        destroyIfUnsupported(state, level, pos);
     }
 
     @Override
@@ -275,16 +284,17 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
         List<StackRequirement> requirements = new ArrayList<>(2);
         requirements.add(new StackRequirement(new ItemStack(asItem()), ItemUseType.CONSUME));
         if (blockEntity instanceof AirtightHatchBlockEntity hatch) {
-            ItemStack requiredCanister = hatch.createCanisterItemStack();
+            ItemStack requiredCanister = hatch.createSchematicCanisterItemStack();
             if (!requiredCanister.isEmpty()) {
                 requirements.add(new StrictNbtStackRequirement(requiredCanister, ItemUseType.CONSUME));
                 return new ItemRequirement(requirements);
             }
 
-            Level level = hatch.getLevel();
-            if (level != null && !level.isClientSide) {
-                return new ItemRequirement(requirements);
+            if (!hatch.isEmpty()) {
+                return ItemRequirement.INVALID;
             }
+
+            return new ItemRequirement(requirements);
         }
 
         CanisterType canisterType = state.getValue(CANISTER_TYPE);
@@ -303,6 +313,18 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
     @Override
     public BlockEntityType<? extends AirtightHatchBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.AIRTIGHT_HATCH.get();
+    }
+
+    void destroyIfUnsupported(BlockState state, Level level, BlockPos pos) {
+        if (level.isClientSide || canSurvive(state, level, pos)) {
+            return;
+        }
+
+        if (level.getBlockEntity(pos) instanceof AirtightHatchBlockEntity hatch && !hatch.prepareForRemoval()) {
+            return;
+        }
+
+        level.destroyBlock(pos, true);
     }
 
     public enum CanisterType implements StringRepresentable {

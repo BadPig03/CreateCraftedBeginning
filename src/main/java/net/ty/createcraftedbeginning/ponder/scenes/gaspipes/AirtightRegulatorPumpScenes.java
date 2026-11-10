@@ -35,13 +35,13 @@ public class AirtightRegulatorPumpScenes {
 
         BlockPos leftTankBottomPos = util.grid().at(5, 1, 5);
         BlockPos pipeFirstPos = leftTankBottomPos.north();
-        BlockPos pipeSecondPos = pipeFirstPos.north(2);
-        BlockPos encasedPos = pipeSecondPos.north();
-        BlockPos eastPipePos = encasedPos.west();
-        BlockPos regulatorPos = eastPipePos.west();
-        BlockPos drivePos = regulatorPos.south();
-        BlockPos westPipePos = regulatorPos.west();
-        BlockPos rightTankBottomPos = westPipePos.west();
+        BlockPos pipeSecondPos = leftTankBottomPos.north(3);
+        BlockPos encasedPos = leftTankBottomPos.north(4);
+        BlockPos eastPipePos = leftTankBottomPos.west().north(4);
+        BlockPos regulatorPos = leftTankBottomPos.west(2).north(4);
+        BlockPos drivePos = leftTankBottomPos.west(2).north(3);
+        BlockPos westPipePos = leftTankBottomPos.west(3).north(4);
+        BlockPos rightTankBottomPos = leftTankBottomPos.west(4).north(4);
 
         Selection leftTankSelection = util.select().fromTo(leftTankBottomPos, leftTankBottomPos.above());
         Selection backPipeSelection = util.select().fromTo(pipeFirstPos, pipeSecondPos);
@@ -66,9 +66,12 @@ public class AirtightRegulatorPumpScenes {
         AABB statusArea = new AABB(regulatorVec, regulatorVec);
         AABB connectionArea = new AABB(regulatorVec, regulatorVec).inflate(0.3125);
         AABB forwardFlowArea = new AABB(inputFlowStartVec, inputFlowStartVec);
+        AABB inletPressureStartArea = new AABB(inletTankVec, inletTankVec).inflate(0.5);
         AABB inletPressureArea = new AABB(inletTankVec, inletTankVec);
+        AABB outletPressureStartArea = new AABB(outletTankVec, outletTankVec).inflate(0.5);
         AABB outletPressureArea = new AABB(outletTankVec, outletTankVec);
         AABB highSpeedFlowArea = new AABB(inputFlowStartVec, inputFlowStartVec);
+        AABB flowStartArea = new AABB(inputFlowStartVec, inputFlowStartVec).inflate(0, 0.3125, 0.3125).expandTowards(0.5, 0, 0);
         AABB targetReachedFlowArea = new AABB(inputFlowStartVec, inputFlowStartVec).inflate(0, 0.3125, 0.3125).expandTowards(3, 0, 0);
 
         Object statusObject = new Object();
@@ -115,6 +118,8 @@ public class AirtightRegulatorPumpScenes {
         scene.world().setKineticSpeed(driveSelection, slowSpeed);
         scene.world().setKineticSpeed(regulatorSelection, slowSpeed);
         scene.effects().rotationSpeedIndicator(regulatorPos);
+
+        scene.idle(5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, statusObject, statusArea, 3);
 
         scene.idle(3);
@@ -160,9 +165,9 @@ public class AirtightRegulatorPumpScenes {
         outletPressureArea = outletPressureArea.inflate(0.5, 0.5, 0.5).expandTowards(0, 1, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, inletPressureObject, inletPressureArea, 60);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outletPressureObject, outletPressureArea, 60);
-        scene.overlay().showText(60).text("The regulator can raise outlet pressure only within the pressure rise allowed by its current speed").colored(PonderPalette.RED).pointAt(regulatorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("The regulator can raise outlet pressure only up to the inlet pressure plus its configured maximum pressure rise").colored(PonderPalette.RED).pointAt(regulatorVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(69);
+        scene.idle(74);
         scene.world().setKineticSpeed(driveSelection, fastSpeed);
         scene.world().setKineticSpeed(regulatorSelection, fastSpeed);
         scene.effects().rotationSpeedIndicator(regulatorPos);
@@ -175,26 +180,39 @@ public class AirtightRegulatorPumpScenes {
         scene.idle(3);
         highSpeedFlowArea = highSpeedFlowArea.expandTowards(3, 0, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, highSpeedFlowObject, highSpeedFlowArea, 60);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, highSpeedInletPressureObject, inletPressureArea, 60);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, highSpeedOutletPressureObject, outletPressureArea, 60);
-        scene.overlay().showText(60).text("Higher rotational speed increases both maximum pressure rise and maximum flow rate").colored(PonderPalette.GREEN).pointAt(regulatorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, highSpeedInletPressureObject, inletPressureStartArea, 3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, highSpeedOutletPressureObject, outletPressureStartArea, 3);
+        scene.overlay().showText(60).text("Higher rotational speed increases maximum flow rate, but does not change maximum pressure rise").colored(PonderPalette.GREEN).pointAt(regulatorVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(80);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetReachedFlowObject, targetReachedFlowArea, 24);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, highSpeedInletPressureObject, inletPressureArea, 57);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, highSpeedOutletPressureObject, outletPressureArea, 57);
+
+        scene.idle(77);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetReachedFlowObject, flowStartArea, 3);
         scene.overlay().showText(60).text("Once the outlet reaches the set pressure, the regulator stops adding gas").colored(PonderPalette.GREEN).pointAt(outletTankVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(20);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetReachedOutletObject, outletPressureArea, 40);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetReachedFlowObject, targetReachedFlowArea, 21);
 
-        scene.idle(60);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, loweredPressureObject, outletPressureArea, 60);
+        scene.idle(17);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetReachedOutletObject, outletPressureStartArea, 3);
+
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetReachedOutletObject, outletPressureArea, 37);
+
+        scene.idle(57);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, loweredPressureObject, outletPressureStartArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, loweredInputObject, connectionArea.move(-0.5, 0, 0), 60);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, loweredOutputObject, connectionArea.move(0.5, 0, 0), 60);
         scene.overlay().showCenteredScrollInput(regulatorPos, Direction.UP, 60);
         scene.overlay().showControls(panelVec, Pointing.DOWN, 60).scroll();
         scene.overlay().showText(60).text("Lowering the set pressure below the current outlet pressure does not vent gas or cause backflow").colored(PonderPalette.RED).pointAt(panelVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(7);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, loweredPressureObject, outletPressureArea, 57);
+
+        scene.idle(4);
         scene.world().modifyBlockEntity(regulatorPos, AirtightRegulatorPumpBlockEntity.class, pump -> pump.setOutletSetPressurePa(loweredSetPressurePa));
 
         scene.idle(73);
@@ -205,7 +223,7 @@ public class AirtightRegulatorPumpScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, directionInputObject, connectionArea.move(-0.5, 0, 0), 7);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, directionOutputObject, connectionArea.move(0.5, 0, 0), 7);
         scene.overlay().showText(60).text("Use a Wrench to swap the inlet and outlet sides").colored(PonderPalette.BLUE).pointAt(regulatorVec).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(util.vector().topOf(regulatorPos), Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
+        scene.overlay().showControls(panelVec, Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);
         scene.world().modifyBlock(regulatorPos, state -> state.setValue(BlockStateProperties.FACING, Direction.WEST), false);

@@ -38,7 +38,10 @@ public class CCBGases {
     public static final GasHolder<Gas, Gas> CREATIVE_AIR = GAS_REGISTER.register("creative_air", builder().tint(0x000000).tag(CCBGasTags.CREATIVE.tag));
 
     public static void provideLang(BiConsumer<String, String> consumer) {
-        GAS_REGISTER.getEntries().stream().map(DeferredHolder::getId).forEach(id -> consumer.accept("gas." + id.getNamespace() + '.' + id.getPath(), formatGasName(id.getPath())));
+        GAS_REGISTER.getEntries().stream().map(DeferredHolder::getId).forEach(id -> {
+            String path = id.getPath();
+            consumer.accept("gas." + id.getNamespace() + '.' + path, formatGasName(path));
+        });
     }
 
     @Contract(" -> new")

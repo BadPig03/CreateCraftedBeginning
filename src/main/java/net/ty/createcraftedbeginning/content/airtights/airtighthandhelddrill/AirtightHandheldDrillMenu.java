@@ -119,7 +119,10 @@ public class AirtightHandheldDrillMenu extends AirtightUpgradableMenu {
 
             if (!moveItemStackTo(movedStack, 0, PLAYER_INVENTORY_SLOTS, true)) {
                 slot.setChanged();
+                return ItemStack.EMPTY;
             }
+
+            slot.set(movedStack.isEmpty() ? ItemStack.EMPTY : movedStack);
             return ItemStack.EMPTY;
         }
 

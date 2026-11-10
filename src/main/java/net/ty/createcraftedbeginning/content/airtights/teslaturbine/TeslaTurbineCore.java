@@ -59,6 +59,10 @@ class TeslaTurbineCore {
         return true;
     }
 
+    boolean addToTooltip(List<Component> tooltip) {
+        return tooltipBuilder.addToTooltip(tooltip);
+    }
+
     TeslaTurbineStructureManager getStructureManager() {
         return structureManager;
     }

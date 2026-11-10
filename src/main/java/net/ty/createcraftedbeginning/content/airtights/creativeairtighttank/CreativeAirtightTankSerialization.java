@@ -27,7 +27,7 @@ final class CreativeAirtightTankSerialization {
             return;
         }
 
-        compoundTag.put(AirtightTankSerializationSupport.TANK_CONTENT, owner.getTankInventory().write(provider, new CompoundTag()));
+        compoundTag.put(AirtightTankSerializationSupport.COMPOUND_KEY_TANK_CONTENT, owner.getTankInventory().write(provider, new CompoundTag()));
     }
 
     void writeSafe(CompoundTag compoundTag) {
@@ -39,8 +39,8 @@ final class CreativeAirtightTankSerialization {
         boolean clientStructureChanged = AirtightTankSerializationSupport.readMultiblock(owner, compoundTag, clientPacket);
         if (owner.isController()) {
             storage.resetReservoirLimits();
-            if (compoundTag.contains(AirtightTankSerializationSupport.TANK_CONTENT)) {
-                owner.getTankInventory().read(provider, compoundTag.getCompound(AirtightTankSerializationSupport.TANK_CONTENT));
+            if (compoundTag.contains(AirtightTankSerializationSupport.COMPOUND_KEY_TANK_CONTENT)) {
+                owner.getTankInventory().read(provider, compoundTag.getCompound(AirtightTankSerializationSupport.COMPOUND_KEY_TANK_CONTENT));
             }
         }
 

@@ -50,11 +50,12 @@ public class CCBStress extends ConfigBase {
     }
 
     private static void assertFromCreateCraftedBeginning(BlockBuilder<?, ?> builder) {
-        if (builder.getOwner().getModid().equals(CCBAPI.MOD_ID)) {
+        String modId = builder.getOwner().getModid();
+        if (modId.equals(CCBAPI.MOD_ID)) {
             return;
         }
 
-        throw new IllegalStateException("Blocks from mod '" + builder.getOwner().getModid() + "' cannot be added to Create: Crafted Beginning's stress configuration.");
+        throw new IllegalStateException("Blocks from mod '" + modId + "' cannot be added to Create: Crafted Beginning's stress configuration.");
     }
 
     private static void registerValues(Builder builder, String name, String comment, Object2DoubleMap<ResourceLocation> defaults, Map<ResourceLocation, ConfigValue<Double>> values) {

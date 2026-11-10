@@ -31,7 +31,12 @@ public class MachineKubeRecipe extends KubeRecipe {
         try {
             afterLoaded(new ErrorStack());
             super.serializeChanges();
-            validateComplete();
+            Recipe<?> recipe = type.schemaType.getSerializer().codec().codec().parse(type.event.ops.json(), json).getOrThrow(error -> new IllegalStateException("Failed to decode recipe for serializer '" + type.idString + "': " + error));
+            if (!(recipe instanceof ProcessingRecipe<?, ?> processing)) {
+                throw new IllegalArgumentException("Recipe must be a CCB processing recipe; got serializer '" + type.idString + "'.");
+            }
+
+            validateComplete(processing);
         }
         catch (RuntimeException exception) {
             ConsoleJS.SERVER.error("Failed to validate CCB machine recipe '%s'; skipping recipe: %s".formatted(getOrCreateId(), exception.getMessage()), sourceLine, exception, RecipesKubeEvent.CREATE_RECIPE_SKIP_ERROR);
@@ -47,12 +52,7 @@ public class MachineKubeRecipe extends KubeRecipe {
         return this;
     }
 
-    private void validateComplete() {
-        Recipe<?> recipe = type.schemaType.getSerializer().codec().codec().parse(type.event.ops.json(), json).getOrThrow(error -> new IllegalStateException("Failed to decode recipe for serializer '" + type.idString + "': " + error));
-        if (!(recipe instanceof ProcessingRecipe<?, ?> processing)) {
-            throw new IllegalArgumentException("Recipe must be a CCB processing recipe; got serializer '" + type.idString + "'.");
-        }
-
+    protected void validateComplete(ProcessingRecipe<?, ?> processing) {
         List<String> errors = processing.validate();
         int itemInputCount = processing.getIngredients().size();
         int itemOutputCount = processing.getRollableResults().size();

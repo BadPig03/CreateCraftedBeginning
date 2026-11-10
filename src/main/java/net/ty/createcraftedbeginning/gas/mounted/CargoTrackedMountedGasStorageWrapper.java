@@ -3,8 +3,10 @@ package net.ty.createcraftedbeginning.gas.mounted;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.handler.GasTransferSnapshot;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.gas.storage.GasPressureCompartmentView;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -66,6 +68,11 @@ public final class CargoTrackedMountedGasStorageWrapper extends MountedGasStorag
         private CargoTrackedPressureCompartment(GasPressureCompartment wrapped, Runnable changeListener) {
             super(wrapped);
             this.changeListener = changeListener;
+        }
+
+        @Override
+        public @Nullable GasTransferSnapshot captureTransferSnapshot() {
+            return null;
         }
 
         @Override

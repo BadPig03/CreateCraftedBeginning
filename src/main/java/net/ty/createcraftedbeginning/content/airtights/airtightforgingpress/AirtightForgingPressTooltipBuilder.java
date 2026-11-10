@@ -44,6 +44,10 @@ class AirtightForgingPressTooltipBuilder {
     }
 
     boolean addToTooltip(List<Component> tooltip) {
+        if (OverpressureTooltips.addWarning(tooltip, press.getOverpressureBehaviour(), press.getGasCapability())) {
+            return true;
+        }
+
         AirtightForgingPressStructureManager structureManager = core.getStructureManager();
         if (structureManager.getOverstressed() && ClientContextBridge.isOverstressedTooltipEnabled()) {
             CCBLang.translate("gui.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
@@ -74,7 +78,9 @@ class AirtightForgingPressTooltipBuilder {
             return;
         }
 
-        tooltip.add(CommonComponents.EMPTY);
+        if (tooltip.size() > 1) {
+            tooltip.add(CommonComponents.EMPTY);
+        }
         tooltip.addAll(kineticTooltip);
     }
 
@@ -142,7 +148,7 @@ class AirtightForgingPressTooltipBuilder {
                 CCBLang.translate("gui.airtight_forging_press.gases").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             }
             CCBLang.gasName(storedGas).space().style(ChatFormatting.GRAY).add(GasUnitFormat.amount(storedGas.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 2);
-            GasUnitsTooltips.addPressureReading(tooltip, gasHandler, tank, 2, press);
+            GasUnitsTooltips.addPressureReading(tooltip, gasHandler, tank, 2, press.getGasStorageReadout());
             gasCount++;
         }
         return gasCount;

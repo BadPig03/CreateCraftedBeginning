@@ -15,6 +15,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasTransportNode;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.ValveState;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadoutSource;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -22,8 +24,8 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightValveBlockEntity extends KineticBlockEntity implements GasTransportNode {
-    private static final String VALVE_POSITION_KEY = "ValvePosition";
+public class AirtightValveBlockEntity extends KineticBlockEntity implements GasTransportNode, GasPipeReadoutSource {
+    private static final String COMPOUND_KEY_VALVE_POSITION = "ValvePosition";
 
     private final AirtightValveDisplay display;
     private CCBAdvancementBehaviour advancementBehaviour;
@@ -33,6 +35,11 @@ public class AirtightValveBlockEntity extends KineticBlockEntity implements GasT
         super(type, pos, state);
         display = new AirtightValveDisplay(this);
         valvePosition = state.hasProperty(AirtightValveBlock.OPEN) && state.getValue(AirtightValveBlock.OPEN) ? 1 : 0;
+    }
+
+    @Override
+    public ValveState getGasPipeReadout() {
+        return new ValveState(isOpen());
     }
 
     @Override
@@ -72,14 +79,14 @@ public class AirtightValveBlockEntity extends KineticBlockEntity implements GasT
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        compoundTag.putFloat(VALVE_POSITION_KEY, valvePosition);
+        compoundTag.putFloat(COMPOUND_KEY_VALVE_POSITION, valvePosition);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        if (compoundTag.contains(VALVE_POSITION_KEY)) {
-            valvePosition = Mth.clamp(compoundTag.getFloat(VALVE_POSITION_KEY), 0, 1);
+        if (compoundTag.contains(COMPOUND_KEY_VALVE_POSITION)) {
+            valvePosition = Mth.clamp(compoundTag.getFloat(COMPOUND_KEY_VALVE_POSITION), 0, 1);
             return;
         }
 
@@ -97,10 +104,7 @@ public class AirtightValveBlockEntity extends KineticBlockEntity implements GasT
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        boolean added = display.addToGoggleTooltip(tooltip);
-        if (!added) {
-            return false;
-        }
+        display.appendGoggleTooltip(tooltip);
 
         addStressImpactStats(tooltip, calculateStressApplied());
         return true;

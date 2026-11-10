@@ -15,11 +15,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
 import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
-import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeGasContainer;
 import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
 import net.ty.createcraftedbeginning.gas.storage.GasTankState;
 import net.ty.createcraftedbeginning.gas.storage.SmartGasTank;
+import net.ty.createcraftedbeginning.gas.visual.CreativeGasContainer;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitsTooltips;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 

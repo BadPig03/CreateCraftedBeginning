@@ -60,7 +60,7 @@ public final class BalloonGasTransferPlan {
         for (int tankIndex = 0; tankIndex < target.getTanks() && remainingAmount > 0; tankIndex++) {
             GasStack storedGas = target.getGasInTank(tankIndex);
             boolean matching = !storedGas.isEmpty() && GasStack.isSameGasSameComponents(storedGas, gas);
-            if (matchingPass != matching || !matching && !storedGas.isEmpty()) {
+            if (matchingPass != matching) {
                 continue;
             }
 

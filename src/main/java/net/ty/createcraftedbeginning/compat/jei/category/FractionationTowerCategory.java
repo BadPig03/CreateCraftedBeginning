@@ -284,25 +284,29 @@ public final class FractionationTowerCategory extends CCBRecipeCategory<Fraction
             int sourceY = texture.getStartY();
             PoseStack poseStack = graphics.pose();
             poseStack.pushPose();
+            try {
+                poseStack.translate(xOffset, yOffset, 0);
+                graphics.blit(location, 4, 0, sourceX, sourceY, width, 7);
 
-            poseStack.translate(xOffset, yOffset, 0);
-            graphics.blit(location, 4, 0, sourceX, sourceY, width, 7);
+                poseStack.pushPose();
+                try {
+                    poseStack.translate(0, 7, 0);
+                    poseStack.scale(1, height - 14, 1);
+                    graphics.blit(location, 4, 0, sourceX, sourceY + 7, width, 1);
+                }
+                finally {
+                    poseStack.popPose();
+                }
 
-            poseStack.pushPose();
-
-            poseStack.translate(0, 7, 0);
-            poseStack.scale(1, height - 14, 1);
-            graphics.blit(location, 4, 0, sourceX, sourceY + 7, width, 1);
-
-            poseStack.popPose();
-
-            graphics.blit(location, 4, height - 7, sourceX, sourceY + 8, width, 7);
-            float iconScale = Math.min(1, (float) (height - 7) / modeIcon.getHeight());
-            poseStack.translate(width - 5 - modeIcon.getWidth() * iconScale, upward ? height - 7 - modeIcon.getHeight() * iconScale : 7, 0);
-            poseStack.scale(iconScale, iconScale, 1);
-            modeIcon.render(graphics, 0, 0);
-
-            poseStack.popPose();
+                graphics.blit(location, 4, height - 7, sourceX, sourceY + 8, width, 7);
+                float iconScale = Math.min(1, (float) (height - 7) / modeIcon.getHeight());
+                poseStack.translate(width - 5 - modeIcon.getWidth() * iconScale, upward ? height - 7 - modeIcon.getHeight() * iconScale : 7, 0);
+                poseStack.scale(iconScale, iconScale, 1);
+                modeIcon.render(graphics, 0, 0);
+            }
+            finally {
+                poseStack.popPose();
+            }
         }
     }
 }

@@ -25,6 +25,7 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.functionalstorage.registry.CCBFunctionalStorageBlockEntities;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -34,7 +35,8 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasDrawerBlock extends Drawer<GasDrawerBlockEntity> {
-    private static final String COMPOUND_KEY_CREATIVE = "isCreative";
+    @Internal
+    public static final String COMPOUND_KEY_CREATIVE = "isCreative";
     private static final String COMPOUND_KEY_VOID = "isVoid";
     private static final Component CONTENTS_HEADER = Component.translatable("drawer.block.contents").withStyle(ChatFormatting.GRAY);
     private static final Component UPGRADES_HEADER = Component.translatable("drawer.block.upgrades").withStyle(ChatFormatting.GRAY);

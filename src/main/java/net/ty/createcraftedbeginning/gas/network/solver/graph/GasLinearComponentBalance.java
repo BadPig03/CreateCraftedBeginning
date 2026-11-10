@@ -5,20 +5,17 @@ import net.ty.createcraftedbeginning.gas.network.math.GasFlowMath;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.EdgeFlow;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.FlowEdge;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.PressureNode;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasLinearComponentBalance {
+final class GasLinearComponentBalance {
     private GasLinearComponentBalance() {
     }
 
-    @Internal
-    public static boolean isInconsistent(List<PressureNode> nodes, List<FlowEdge> edges, EdgeFlow[] flows, double tolerance) {
+    static boolean isInconsistent(List<PressureNode> nodes, List<FlowEdge> edges, EdgeFlow[] flows, double tolerance) {
         if (!Double.isFinite(tolerance) || tolerance < 0) {
             return false;
         }
@@ -48,7 +45,7 @@ public final class GasLinearComponentBalance {
         double[] outgoing = new double[count];
         for (int i = 0; i < count; i++) {
             parent[i] = find(parent, i);
-            if (!(!nodes.get(i).fixed)) {
+            if (nodes.get(i).fixed) {
                 continue;
             }
 

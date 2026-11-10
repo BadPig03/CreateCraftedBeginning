@@ -17,6 +17,8 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBPartialModels {
+    public static final PartialModel AMETHYST_LOADER_CORE = block("amethyst_loader/core");
+    public static final PartialModel AMETHYST_MIRROR_PANEL = block("amethyst_mirror/panel");
     public static final PartialModel PHOTOTHERMAL_RECEIVER_HORIZONTAL_PORT = block("photothermal_receiver/ports/horizontal");
     public static final PartialModel PHOTOTHERMAL_RECEIVER_HORIZONTAL_GLOW_PORT = block("photothermal_receiver/ports/horizontal_glow");
     public static final PartialModel PHOTOTHERMAL_RECEIVER_VERTICAL_PORT = block("photothermal_receiver/ports/vertical");
@@ -88,10 +90,6 @@ public class CCBPartialModels {
 
     public static final PartialModel AIR_VENT_CLOSED = block("air_vent/closed");
     public static final PartialModel AIR_VENT_OPENED = block("air_vent/opened");
-
-    public static final PartialModel END_SCULK_SILENCER_CORE = block("end_sculk_silencer/core");
-
-    public static final PartialModel SHAFT_HALF_UP = block("shaft_half_up");
 
     public static final PartialModel BALLOON_10X8 = balloon("balloon_10x8");
     public static final PartialModel BALLOON_10X12 = balloon("balloon_10x12");

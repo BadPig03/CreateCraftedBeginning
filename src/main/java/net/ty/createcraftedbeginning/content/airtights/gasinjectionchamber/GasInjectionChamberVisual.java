@@ -30,7 +30,7 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
 
     private float lastNozzleOffset = Float.NaN;
     private float lastPartOffset = Float.NaN;
-    private int lastFilterColor = Integer.MIN_VALUE;
+    private int lastFilterColor;
 
     public GasInjectionChamberVisual(VisualizationContext context, GasInjectionChamberBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
@@ -99,7 +99,7 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
         }
 
         int filterColor = installedFilter.getOrDefault(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR, 0xFFFFFFFF);
-        if (filterColor == lastFilterColor) {
+        if (!filterInstancesChanged && filterColor == lastFilterColor) {
             return;
         }
 
@@ -118,7 +118,6 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
             filterInner.delete();
             filter = null;
             filterInner = null;
-            lastFilterColor = Integer.MIN_VALUE;
             return true;
         }
 
@@ -129,7 +128,6 @@ public class GasInjectionChamberVisual extends AbstractBlockEntityVisual<GasInje
         filter = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER)).createInstance();
         filterInner = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.GAS_INJECTION_CHAMBER_FILTER_INNER)).createInstance();
         relight(filter, filterInner);
-        lastFilterColor = Integer.MIN_VALUE;
         return true;
     }
 

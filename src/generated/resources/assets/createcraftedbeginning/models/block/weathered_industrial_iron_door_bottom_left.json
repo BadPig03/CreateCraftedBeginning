@@ -1,0 +1,8 @@
+{
+  "parent": "createcraftedbeginning:block/industrial_iron/door/bottom_left",
+  "textures": {
+    "bottom": "createcraftedbeginning:block/industrial_iron/weathered_door/bottom",
+    "side": "createcraftedbeginning:block/industrial_iron/weathered_door/side",
+    "top": "createcraftedbeginning:block/industrial_iron/weathered_door/top"
+  }
+}

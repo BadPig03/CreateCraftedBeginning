@@ -16,7 +16,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ColoredBreezeCloudParticleType extends ParticleType<ColoredBreezeCloudParticleOptions> {
+public final class ColoredBreezeCloudParticleType extends ParticleType<ColoredBreezeCloudParticleOptions> {
     public ColoredBreezeCloudParticleType(boolean overrideLimiter) {
         super(overrideLimiter);
     }

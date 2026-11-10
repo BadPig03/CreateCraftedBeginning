@@ -1,33 +1,17 @@
 {
-  "credit": "Made with Blockbench",
-  "textures": {
-    "lock_icon": "functionalstorage:block/lock"
-  },
-  "render_type": "minecraft:cutout",
-  "elements": [
-    {
-      "from": [
-        7.5,
-        15,
-        -0.01
-      ],
-      "to": [
-        8.5,
-        16,
-        1
-      ],
-      "faces": {
-        "north": {
-          "texture": "#lock_icon",
-          "uv": [
-            0.0,
-            0.0,
-            16.0,
-            16.0
-          ],
-          "cullface": "north"
-        }
-      }
-    }
-  ]
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"render_type": "minecraft:cutout",
+	"textures": {
+		"lock_icon": "functionalstorage:block/lock"
+	},
+	"elements": [
+		{
+			"from": [7.5, 15, -0.01],
+			"to": [8.5, 16, 1],
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#lock_icon", "cullface": "north"}
+			}
+		}
+	]
 }

@@ -17,6 +17,7 @@ import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitsTooltips;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips;
 import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
 import net.ty.createcraftedbeginning.platform.client.GoggleTooltip;
 import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
@@ -62,16 +63,6 @@ final class AirtightFractionationTowerTooltipBuilder {
         }
         int percentage = (int) ((long) progress * 100 / duration);
         bar.append(CCBLang.text(' ' + String.valueOf(percentage) + '%').style(ChatFormatting.GRAY).component());
-        if (crafting.isPaused()) {
-            String pauseKey = switch (crafting.getPauseReason()) {
-                case TEMPERATURE -> "gui.airtight_fractionation_tower.progress_paused.temperature";
-                case OUTPUT -> "gui.airtight_fractionation_tower.progress_paused.output";
-                case STRUCTURE -> "gui.airtight_fractionation_tower.progress_paused.structure";
-                case OTHER -> "gui.airtight_fractionation_tower.progress_paused";
-            };
-            bar.append(CCBLang.translateDirect(pauseKey).withStyle(ChatFormatting.YELLOW));
-        }
-
         CCBLang.translate("gui.airtight_fractionation_tower.progress").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.builder().add(bar).forGoggles(tooltip, 1);
     }
@@ -90,7 +81,6 @@ final class AirtightFractionationTowerTooltipBuilder {
 
         AirtightFractionationTowerBlockEntity controller = tower.findTowerController();
         if (controller == null) {
-            CCBLang.translate("gui.airtight_fractionation_tower.controller_unavailable").style(ChatFormatting.GRAY).forGoggles(tooltip);
             return true;
         }
 
@@ -106,6 +96,29 @@ final class AirtightFractionationTowerTooltipBuilder {
         CCBLang.translate("gui.airtight_fractionation_tower.mode." + modeKey).color(condition.getColor()).forGoggles(tooltip, 1);
         CCBLang.translate("gui.airtight_fractionation_tower.temperature_state").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.translate(condition.getTranslationKey()).color(condition.getColor()).forGoggles(tooltip, 1);
+        OverpressureTooltips.addStatus(tooltip, controller.getOverpressureReadout());
+        return true;
+    }
+
+    boolean addToTooltip(List<Component> tooltip) {
+        AirtightFractionationTowerBlockEntity controller = tower.findTowerController();
+        if (controller == null) {
+            return false;
+        }
+
+        boolean hasWarning = OverpressureTooltips.addWarning(tooltip, controller.getOverpressureReadout());
+        String issueKey = switch (controller.getCrafting().getProcessingIssue()) {
+            case HEIGHT -> "gui.airtight_fractionation_tower.failure.height";
+            case TEMPERATURE -> "gui.airtight_fractionation_tower.failure.temperature";
+            case OUTPUT -> "gui.airtight_fractionation_tower.failure.output";
+            case NONE -> "";
+        };
+        if (issueKey.isEmpty()) {
+            return hasWarning;
+        }
+
+        CCBLang.translate("gui.airtight_fractionation_tower.failure").style(ChatFormatting.GOLD).forGoggles(tooltip);
+        CCBLang.addToGoggles(tooltip, issueKey);
         return true;
     }
 
@@ -206,7 +219,7 @@ final class AirtightFractionationTowerTooltipBuilder {
                 CCBLang.translate("gui.airtight_fractionation_tower.gases").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             }
             CCBLang.gasName(gasStack).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(GasUnitFormat.amount(gasStack.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 2);
-            GasUnitsTooltips.addPressureReading(tooltip, gases, tank, 2, tower);
+            GasUnitsTooltips.addPressureReading(tooltip, gases, tank, 2, tower.getGasStorageReadout());
             gasCount++;
         }
         return gasCount;

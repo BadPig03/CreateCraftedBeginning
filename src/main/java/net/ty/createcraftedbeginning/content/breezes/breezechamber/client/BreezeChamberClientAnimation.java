@@ -5,6 +5,7 @@ import net.createmod.catnip.math.AngleHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
@@ -48,10 +49,12 @@ public final class BreezeChamberClientAnimation {
         float targetAngle = 0;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null && !player.isInvisible()) {
-            double playerX = chamber.isVirtual() ? -4 : player.getX();
-            double playerZ = chamber.isVirtual() ? -10 : player.getZ();
-            double deltaX = playerX - (chamber.getBlockPos().getX() + 0.5);
-            double deltaZ = playerZ - (chamber.getBlockPos().getZ() + 0.5);
+            boolean virtual = chamber.isVirtual();
+            BlockPos pos = chamber.getBlockPos();
+            double playerX = virtual ? -4 : player.getX();
+            double playerZ = virtual ? -10 : player.getZ();
+            double deltaX = playerX - (pos.getX() + 0.5);
+            double deltaZ = playerZ - (pos.getZ() + 0.5);
             targetAngle = AngleHelper.deg(-Mth.atan2(deltaZ, deltaX)) - 90;
         }
         float currentAngle = chamber.getHeadAngle().getValue();

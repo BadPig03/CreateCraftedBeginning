@@ -24,3 +24,10 @@ runs
 run-data
 
 repo
+/outputs/
+/logs/
+/docs/
+/benchmarks/
+/src/test/
+/.editorconfig
+/.gradle-user/

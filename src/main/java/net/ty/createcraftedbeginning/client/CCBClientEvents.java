@@ -28,17 +28,15 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightch
 import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightleggings.AirtightLeggingsLayer;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonItemRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
-import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeOutlineRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightExtendArmRenderHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillOutlineRenderer;
-import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillRenderHandler;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeOutlineRenderer;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterOverlay;
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackClientOverrides;
-import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex;
 import net.ty.createcraftedbeginning.platform.client.CreativeInventoryBridge;
 import net.ty.createcraftedbeginning.platform.client.CreativeInventoryBridge.View;
 import net.ty.createcraftedbeginning.ponder.CCBPonderPlugin;
-import net.ty.createcraftedbeginning.recipe.ReactorKettleBrewingRecipes;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.PositionedSection;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabs;
@@ -61,8 +59,7 @@ public class CCBClientEvents {
 
     @SubscribeEvent
     public static void onRecipesUpdated(RecipesUpdatedEvent event) {
-        BreezeChamberRecipeIndex.rebuild(event.getRecipeManager());
-        ReactorKettleBrewingRecipes.invalidateCaches();
+        CCBRecipeReloads.onClientRecipesUpdated(event.getRecipeManager());
     }
 
     @SubscribeEvent
@@ -133,18 +130,22 @@ public class CCBClientEvents {
     }
 
     private static void onTick(boolean isPreTick) {
-        if (isPreTick || Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) {
+        if (isPreTick) {
+            return;
+        }
+
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.level == null || minecraft.player == null) {
             return;
         }
 
         GasFilteringRenderer.tick();
-        AirtightEncasedPipeOutlineRenderer.tick();
+        AirtightPipeOutlineRenderer.tick();
         AirtightHandheldDrillOutlineRenderer.tick();
         AirtightChestplateFirstPersonRenderer.tick();
 
         AirtightCannonRenderHandler.INSTANCE.tick();
         AirtightExtendArmRenderHandler.INSTANCE.tick();
-        AirtightHandheldDrillRenderHandler.INSTANCE.tick();
 
     }
 

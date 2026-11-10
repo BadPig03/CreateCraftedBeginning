@@ -16,7 +16,9 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBMixinConfigPlugin implements IMixinConfigPlugin {
-    private static final String BASIN_TRANSACTION_ACCESS_MIXIN = "net.ty.createcraftedbeginning.mixin.common.create.BasinTransactionAccessMixin";
+    private static final String MIRROR_BUFFER_MIXIN = "net.ty.createcraftedbeginning.mixin.client.minecraft.BufferBuilderMixin";
+    private static final boolean CUSTOM_VERTEX_WRITER_AVAILABLE = hasClassResource("net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter") || hasClassResource("org.embeddedt.embeddium.api.vertex.buffer.VertexBufferWriter");
+    private static final String BASIN_TRANSACTION_ACCESS_MIXIN = "net.ty.createcraftedbeginning.mixin.common.create.BasinBlockEntityTransactionAccessMixin";
     private static final boolean BASIN_TRANSACTION_ACCESS_AVAILABLE = hasFieldResource("com.simibubi.create.content.processing.basin.BasinBlockEntity", "spoutputBuffer", "Ljava/util/List;") && hasFieldResource("com.simibubi.create.content.processing.basin.BasinBlockEntity", "spoutputFluidBuffer", "Ljava/util/List;");
     private static final boolean JEI_RECIPE_TRANSFER_AVAILABLE = hasClassResource("mezz.jei.api.recipe.transfer.IRecipeTransferError");
     private static final boolean FUNCTIONAL_STORAGE_AVAILABLE = hasClassResource("com.buuz135.functionalstorage.FunctionalStorage");
@@ -60,6 +62,10 @@ public final class CCBMixinConfigPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.equals(MIRROR_BUFFER_MIXIN)) {
+            return !CUSTOM_VERTEX_WRITER_AVAILABLE;
+        }
+
         if (mixinClassName.equals(BASIN_TRANSACTION_ACCESS_MIXIN)) {
             return BASIN_TRANSACTION_ACCESS_AVAILABLE;
         }

@@ -34,9 +34,17 @@ final class GasInjectionChamberDisplay {
         }
 
         GasStorageHandler gasHandler = chamber.getGasTankBehaviour().getPrimaryHandler();
-        GasUnitsTooltips.addContainer(tooltip, gasHandler, false, chamber);
+        GasUnitsTooltips.addContainer(tooltip, gasHandler, false, chamber.getGasStorageReadout());
         OverpressureTooltips.addStatus(tooltip, chamber.getOverpressureBehaviour(), gasHandler);
         return true;
+    }
+
+    boolean addToTooltip(List<Component> tooltip) {
+        if (chamber.getLevel() == null) {
+            return false;
+        }
+
+        return OverpressureTooltips.addWarning(tooltip, chamber.getOverpressureBehaviour(), chamber.getGasTankBehaviour().getPrimaryHandler());
     }
 
     int getMaxValue() {

@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.gaspackager;
 
 import com.simibubi.create.content.logistics.BigItemStack;
+import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.packager.PackagingRequest;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -9,26 +10,23 @@ import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonFactory;
-import net.ty.createcraftedbeginning.content.airtights.gasfilter.VirtualGasItems;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonItem;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerRequestPlanner.GasRequestPlan;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerRequestPlanner.PlannedGasRequest;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasPackagerRequestProcessor {
+final class GasPackagerRequestProcessor {
     private final List<PackagingRequest> queuedRequests;
     private final GasHandler handler;
 
-    @Internal
-    public GasPackagerRequestProcessor(List<PackagingRequest> queuedRequests, GasHandler handler) {
+    GasPackagerRequestProcessor(List<PackagingRequest> queuedRequests, GasHandler handler) {
         this.queuedRequests = queuedRequests;
         this.handler = handler;
     }
@@ -48,13 +46,26 @@ public final class GasPackagerRequestProcessor {
         deductions.add(new Deduction(token.copyWithCount(1), amount));
     }
 
-    @Internal
-    public @Nullable Result process(long maxAmount) {
-        while (!queuedRequests.isEmpty() && !GasPackagerRequestPlanner.isValidGasRequest(queuedRequests.getFirst())) {
-            queuedRequests.removeFirst();
+    @Nullable Result process(long maxAmount) {
+        int firstValidIndex = 0;
+        while (firstValidIndex < queuedRequests.size() && !GasPackagerRequestPlanner.isValidGasRequest(queuedRequests.get(firstValidIndex))) {
+            firstValidIndex++;
         }
-        GasRequestPlan requestPlan = GasPackagerRequestPlanner.planGasRequestBatch(queuedRequests, maxAmount);
+        if (firstValidIndex == queuedRequests.size()) {
+            queuedRequests.clear();
+            return null;
+        }
+
+        GasRequestPlan requestPlan = GasPackagerRequestPlanner.planGasRequestBatch(queuedRequests.subList(firstValidIndex, queuedRequests.size()), maxAmount);
         if (requestPlan.isEmpty()) {
+            return null;
+        }
+
+        PlannedGasRequest firstPlanned = requestPlan.requests().getFirst();
+        long preparedAmount = requestPlan.requests().stream().mapToLong(PlannedGasRequest::amount).sum();
+        GasStack preparedGas = firstPlanned.gasType().copyWithAmount(preparedAmount);
+        ItemStack packedBalloon = BalloonFactory.create(preparedGas, firstPlanned.request().address());
+        if (!GasStack.matches(BalloonItem.getGas(packedBalloon), preparedGas)) {
             return null;
         }
 
@@ -63,29 +74,19 @@ public final class GasPackagerRequestProcessor {
             return null;
         }
 
-        GasRequestCommit commitResult = commitGasRequestBatch(requestExtraction);
-        PackagingRequest metadata = commitResult.metadata();
-        ItemStack packedBalloon = BalloonFactory.createOrdered(commitResult.gas(), metadata.address(), metadata.orderId(), metadata.linkIndex(), metadata.finalLink().booleanValue(), commitResult.packageIndexAtLink(), commitResult.finalPackageAtLink(), commitResult.orderContext());
-        if (packedBalloon.isEmpty()) {
-            return null;
+        GasRequestCommit commit = planGasRequestCommit(requestExtraction, firstValidIndex);
+        PackagingRequest metadata = requestExtraction.transfers().getFirst().request();
+        BalloonItem.setGas(packedBalloon, requestExtraction.gas());
+        PackageItem.setOrder(packedBalloon, metadata.orderId(), metadata.linkIndex(), metadata.finalLink().booleanValue(), commit.packageIndexAtLink(), commit.finalPackageAtLink(), commit.orderContext());
+        for (ExtractedGasRequest transfer : requestExtraction.transfers()) {
+            transfer.request().subtract(transfer.amount());
+            transfer.request().packageCounter().setValue(commit.packageIndexAtLink() + 1);
         }
-
-        return new Result(packedBalloon, commitResult.deductions());
-    }
-
-    private boolean propagatePackageCounter(PackagingRequest completed, int nextPackageIndex) {
-        while (!queuedRequests.isEmpty() && GasPackagerRequestPlanner.isSameLink(completed, queuedRequests.getFirst())) {
-            PackagingRequest next = queuedRequests.getFirst();
-            if (next.getCount() <= 0 || !VirtualGasItems.isVirtualItem(next.item()) || VirtualGasItems.readGasSample(next.item()).isEmpty()) {
-                queuedRequests.removeFirst();
-                continue;
-            }
-
-            next.packageCounter().setValue(nextPackageIndex);
-            return false;
+        queuedRequests.subList(0, commit.removedRequests()).clear();
+        if (!queuedRequests.isEmpty() && GasPackagerRequestPlanner.isSameLink(metadata, queuedRequests.getFirst())) {
+            queuedRequests.getFirst().packageCounter().setValue(commit.packageIndexAtLink() + 1);
         }
-
-        return true;
+        return new Result(packedBalloon, commit.deductions());
     }
 
     private GasRequestExtraction extractGasRequestBatch(GasRequestPlan plan) {
@@ -126,48 +127,40 @@ public final class GasPackagerRequestProcessor {
         return new GasRequestExtraction(List.copyOf(extractedRequests), packedGas.copyWithAmount(packedAmount));
     }
 
-    private GasRequestCommit commitGasRequestBatch(GasRequestExtraction extraction) {
-        ExtractedGasRequest firstTransfer = extraction.transfers().getFirst();
-        PackagingRequest packageMetadata = firstTransfer.request();
-        int packageIndexAtLink = packageMetadata.packageCounter().getAndIncrement();
+    private GasRequestCommit planGasRequestCommit(GasRequestExtraction extraction, int firstValidIndex) {
+        PackagingRequest metadata = extraction.transfers().getFirst().request();
+        int packageIndexAtLink = metadata.packageCounter().intValue();
+        int queueIndex = firstValidIndex;
         boolean finalPackageAtLink = false;
         PackageOrderWithCrafts orderContext = null;
         List<Deduction> deductions = new ArrayList<>();
-
         for (ExtractedGasRequest transfer : extraction.transfers()) {
             PackagingRequest request = transfer.request();
-            if (queuedRequests.isEmpty() || queuedRequests.getFirst() != request) {
-                throw new IllegalStateException("Gas packaging request queue changed during commit.");
+            if (queueIndex >= queuedRequests.size() || queuedRequests.get(queueIndex) != request) {
+                throw new IllegalStateException("Gas packaging request queue changed during commit planning.");
             }
 
             PackageOrderWithCrafts context = request.context();
             if (context != null) {
                 orderContext = context;
             }
-
-            request.subtract(transfer.amount());
             addGasDeduction(deductions, transfer.token(), transfer.amount());
-            if (!request.isEmpty()) {
+            if (request.getCount() > transfer.amount()) {
                 break;
             }
 
-            PackagingRequest completed = queuedRequests.removeFirst();
-            finalPackageAtLink = propagatePackageCounter(completed, packageIndexAtLink + 1);
-            if (!finalPackageAtLink) {
-                continue;
+            queueIndex++;
+            while (queueIndex < queuedRequests.size() && GasPackagerRequestPlanner.isSameLink(metadata, queuedRequests.get(queueIndex)) && !GasPackagerRequestPlanner.isValidGasRequest(queuedRequests.get(queueIndex))) {
+                queueIndex++;
             }
-
-            break;
+            finalPackageAtLink = queueIndex == queuedRequests.size() || !GasPackagerRequestPlanner.isSameLink(metadata, queuedRequests.get(queueIndex));
         }
-
-        return new GasRequestCommit(packageMetadata, extraction.gas(), orderContext, packageIndexAtLink, finalPackageAtLink, List.copyOf(deductions));
+        return new GasRequestCommit(orderContext, packageIndexAtLink, finalPackageAtLink, queueIndex, List.copyOf(deductions));
     }
 
-    @Internal
-    public record Result(ItemStack balloon, List<Deduction> deductions) {}
+    record Result(ItemStack balloon, List<Deduction> deductions) {}
 
-    @Internal
-    public record Deduction(ItemStack token, int amount) {}
+    record Deduction(ItemStack token, int amount) {}
 
     private record ExtractedGasRequest(PackagingRequest request, ItemStack token, int amount) {}
 
@@ -179,5 +172,5 @@ public final class GasPackagerRequestProcessor {
         }
     }
 
-    private record GasRequestCommit(PackagingRequest metadata, GasStack gas, @Nullable PackageOrderWithCrafts orderContext, int packageIndexAtLink, boolean finalPackageAtLink, List<Deduction> deductions) {}
+    private record GasRequestCommit(@Nullable PackageOrderWithCrafts orderContext, int packageIndexAtLink, boolean finalPackageAtLink, int removedRequests, List<Deduction> deductions) {}
 }

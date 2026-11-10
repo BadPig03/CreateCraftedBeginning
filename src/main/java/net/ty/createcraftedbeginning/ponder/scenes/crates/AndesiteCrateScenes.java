@@ -46,7 +46,8 @@ public class AndesiteCrateScenes {
         Vec3 crateVec = util.vector().centerOf(cratePos);
         Vec3 itemVec = util.vector().centerOf(itemPos);
         Vec3 crateNorthVec = util.vector().blockSurface(cratePos, Direction.NORTH);
-        Vec3 itemDropMotion = util.vector().of(0, -0.1, 0);
+        Vec3 crateWestVec = util.vector().blockSurface(cratePos, Direction.WEST);
+        Vec3 itemDropMotion = Vec3.ZERO.add(0, -0.1, 0);
 
         ItemStack diamondPickaxeItem = new ItemStack(Items.DIAMOND_PICKAXE);
         ItemStack andesiteCrateItem = new ItemStack(CCBBlocks.ANDESITE_CRATE_BLOCK.asItem());
@@ -67,11 +68,11 @@ public class AndesiteCrateScenes {
         scene.overlay().showText(60).text("Even if they are unstackable").colored(PonderPalette.BLUE).pointAt(crateVec).placeNearTarget().attachKeyFrame();
         for (int i = 0; i < 5; i++) {
             scene.idle(10);
-            ElementLink<EntityElement> remove = scene.world().createItemEntity(itemVec, itemDropMotion, diamondPickaxeItem.copy());
+            ElementLink<EntityElement> pickaxeEntity = scene.world().createItemEntity(itemVec, itemDropMotion, diamondPickaxeItem.copy());
 
             scene.idle(2);
             scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, diamondPickaxeItem.copy());
-            scene.world().modifyEntity(remove, Entity::discard);
+            scene.world().modifyEntity(pickaxeEntity, Entity::discard);
         }
 
         scene.idle(20);
@@ -82,7 +83,7 @@ public class AndesiteCrateScenes {
 
         scene.idle(20);
         scene.overlay().showControls(crateNorthVec, Pointing.RIGHT, 60).showing(AllIcons.I_MTD_CLOSE).withItem(brassHandItem.copy());
-        scene.overlay().showText(60).text("However, contents cannot be added or taken manually").colored(PonderPalette.RED).placeNearTarget().pointAt(util.vector().blockSurface(cratePos, Direction.WEST)).attachKeyFrame();
+        scene.overlay().showText(60).text("However, contents cannot be added or taken manually").colored(PonderPalette.RED).placeNearTarget().pointAt(crateWestVec).attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showText(60).text("Andesite Crate drops itself and contents when broken").colored(PonderPalette.GREEN).pointAt(crateVec).placeNearTarget().attachKeyFrame();
@@ -95,7 +96,7 @@ public class AndesiteCrateScenes {
             scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), diamondPickaxeItem.copy());
         }
 
-        scene.idle(57);
+        scene.idle(30);
         scene.markAsFinished();
     }
 }

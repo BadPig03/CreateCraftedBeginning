@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
@@ -14,7 +15,6 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -50,6 +50,6 @@ public class AirtightForgingPressStructuralShaftRenderer extends KineticBlockEnt
 
     @Override
     protected SuperByteBuffer getRotatedModel(AirtightForgingPressStructuralShaftBlockEntity blockEntity, BlockState blockState) {
-        return CachedBuffers.partial(CCBPartialModels.SHAFT_HALF_UP, blockState);
+        return CachedBuffers.partialFacing(AllPartialModels.SHAFT_HALF, blockState, Direction.UP);
     }
 }

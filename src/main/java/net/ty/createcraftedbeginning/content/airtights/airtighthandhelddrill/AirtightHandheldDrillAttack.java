@@ -13,13 +13,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
 import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandler;
 import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandlers;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
-import net.ty.createcraftedbeginning.gas.interaction.GasInteractionFeedback;
 import net.ty.createcraftedbeginning.registry.CCBDamageTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -57,14 +55,18 @@ final class AirtightHandheldDrillAttack {
 
         AffordableFuel selectedFuel = affordableFuel.get();
         AirtightDrillHandler drillHandler = AirtightDrillHandlers.resolveForEquipment(selectedFuel.gasType());
-        int successfulHits = 0;
+        AirtightHandheldDrillConsumption consumption = new AirtightHandheldDrillConsumption(player, selectedFuel);
+        double hitCost = (double) perEntityHitConsumption * drillHandler.getConsumptionMultiplier();
         for (LivingEntity entity : vulnerableEntities) {
             int damageAmount = AirtightDrillHandler.BASE_DAMAGE_AMOUNT + drillHandler.getDamageAddition();
-            if (!entity.hurt(damageSource, damageAmount)) {
+            if (!consumption.execute(hitCost, () -> entity.hurt(damageSource, damageAmount))) {
+                if (consumption.hasFailed()) {
+                    break;
+                }
+
                 continue;
             }
 
-            successfulHits++;
             if (!(level instanceof ServerLevel serverLevel)) {
                 continue;
             }
@@ -72,16 +74,6 @@ final class AirtightHandheldDrillAttack {
             drillHandler.extraBehaviour(entity, player, serverLevel);
         }
 
-        if (successfulHits == 0) {
-            return;
-        }
-
-        long gasConsumption = GasConsumptionMath.roundUp((double) perEntityHitConsumption * drillHandler.getConsumptionMultiplier() * successfulHits);
-        if (CanisterContainerConsumers.interactContainer(player, new AffordableFuel(selectedFuel.gasContent(), selectedFuel.sourcePressurePa(), gasConsumption), () -> true, false)) {
-            return;
-        }
-
-        GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", selectedFuel.gasContent().getHoverName());
     }
 
     private static List<LivingEntity> getVulnerableEntities(Player player, Level level, DamageSource damageSource, double range, Vec3 eyePosition, Vec3 viewVector) {

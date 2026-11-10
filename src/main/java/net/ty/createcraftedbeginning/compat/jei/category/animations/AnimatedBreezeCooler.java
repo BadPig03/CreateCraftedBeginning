@@ -28,15 +28,17 @@ public class AnimatedBreezeCooler extends AnimatedKinetics {
     private void drawAt(GuiGraphics graphics, int xOffset, int yOffset, int zOffset, double localY) {
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
+        try {
+            poseStack.translate(xOffset, yOffset, zOffset);
+            poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
 
-        poseStack.translate(xOffset, yOffset, zOffset);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
-
-        blockElement(CCBBlocks.BREEZE_COOLER_BLOCK.getDefaultState()).atLocal(0, localY, 0).scale(SCALE).render(graphics);
-        blockElement(CCBPartialModels.BREEZE_CHILLED).rotateBlock(0, 180, 0).atLocal(0, localY, 0).scale(SCALE).render(graphics);
-        blockElement(CCBPartialModels.BREEZE_COOLER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, localY, 0).scale(SCALE).render(graphics);
-
-        poseStack.popPose();
+            blockElement(CCBBlocks.BREEZE_COOLER_BLOCK.getDefaultState()).atLocal(0, localY, 0).scale(SCALE).render(graphics);
+            blockElement(CCBPartialModels.BREEZE_CHILLED).rotateBlock(0, 180, 0).atLocal(0, localY, 0).scale(SCALE).render(graphics);
+            blockElement(CCBPartialModels.BREEZE_COOLER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, localY, 0).scale(SCALE).render(graphics);
+        }
+        finally {
+            poseStack.popPose();
+        }
     }
 }

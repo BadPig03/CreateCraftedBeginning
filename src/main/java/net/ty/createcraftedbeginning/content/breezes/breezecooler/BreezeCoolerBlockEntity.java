@@ -46,11 +46,14 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     private final BreezeCoolerRecipeCache recipeCache;
     private final BreezeCoolerController controller;
     private final BreezeCoolerDisplay display;
+    private final BreezeCoolerEffects effects;
     private final LerpedFloat headAngle;
 
     private CCBAdvancementBehaviour advancementBehaviour;
     private SmartFluidTankBehaviour tankBehaviour;
     private BaseCoolerState currentState;
+    private boolean goggles;
+    private boolean trainHat;
     private long clientCoolingSyncGameTime = Long.MIN_VALUE;
 
     public BreezeCoolerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -63,6 +66,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         recipeCache = new BreezeCoolerRecipeCache(this);
         controller = new BreezeCoolerController(this);
         display = new BreezeCoolerDisplay(this);
+        effects = new BreezeCoolerEffects(this);
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -144,7 +148,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public void spawnParticles() {
-        display.spawnParticles();
+        effects.spawnParticles();
     }
 
     public CoolingData getFluidCoolingData(FluidStack fluidStack) {
@@ -160,11 +164,11 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public boolean hasGoggles() {
-        return display.hasGoggles();
+        return goggles;
     }
 
     public boolean hasTrainHat() {
-        return display.hasTrainHat();
+        return trainHat;
     }
 
     public boolean isStockKeeper() {
@@ -232,7 +236,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public void playSound() {
-        display.playSound();
+        effects.playSound();
     }
 
     public void setCoolerState(BaseCoolerState newState) {
@@ -246,7 +250,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public void spawnParticleBurst() {
-        display.spawnParticleBurst();
+        effects.spawnParticleBurst();
     }
 
     public void switchToChilledState() {
@@ -254,7 +258,7 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     public void tickAnimation(float targetAngle) {
-        display.tickAnimation(targetAngle);
+        BreezeCoolerAnimation.tick(this, targetAngle);
     }
 
     boolean tryUpdateCoolantByItem(ItemStack itemStack, boolean forceOverflow, boolean simulate) {
@@ -262,15 +266,11 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     void setGoggles(boolean newGoggles) {
-        display.setGoggles(newGoggles);
+        goggles = newGoggles;
     }
 
     BaseCoolerState getCurrentState() {
         return currentState;
-    }
-
-    LerpedFloat getHeadAnimationInternal() {
-        return headAnimation;
     }
 
     void runClientTicker() {
@@ -292,11 +292,11 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
     }
 
     void setGogglesFromSerialization(boolean goggles) {
-        display.setGoggles(goggles);
+        this.goggles = goggles;
     }
 
     void setTrainHatFromSerialization(boolean trainHat) {
-        display.setTrainHat(trainHat);
+        this.trainHat = trainHat;
     }
 
     public enum CoolantType {

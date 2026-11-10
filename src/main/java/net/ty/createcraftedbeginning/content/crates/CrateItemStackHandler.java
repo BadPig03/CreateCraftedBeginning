@@ -11,7 +11,6 @@ import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Objects;
@@ -19,10 +18,9 @@ import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INBTSerializable<CompoundTag> {
+class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiable, INBTSerializable<CompoundTag> {
     private static final String COMPOUND_KEY_CONTENT = "Content";
     private static final String COMPOUND_KEY_COUNT = "Count";
 
@@ -156,20 +154,17 @@ public class CrateItemStackHandler implements IItemHandler, IItemHandlerModifiab
         setStoredItems(slot, stack, Math.min(stack.getCount(), getConfiguredCapacity()));
     }
 
-    @Internal
-    public int getCountInSlot(int slot) {
+    int getCountInSlot(int slot) {
         validateSlotIndex(slot);
         return count;
     }
 
-    @Internal
-    public void setStoredItems(int slot, ItemStack stack, int newCount) {
+    void setStoredItems(int slot, ItemStack stack, int newCount) {
         validateSlotIndex(slot);
         applyStoredItems(stack, newCount, true);
     }
 
-    @Internal
-    public final int getRemainingCapacity() {
+    final int getRemainingCapacity() {
         return Math.max(0, getConfiguredCapacity() - count);
     }
 

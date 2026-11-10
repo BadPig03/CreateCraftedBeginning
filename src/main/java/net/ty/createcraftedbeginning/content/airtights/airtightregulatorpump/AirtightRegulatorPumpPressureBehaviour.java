@@ -61,8 +61,8 @@ final class AirtightRegulatorPumpPressureBehaviour extends ScrollValueBehaviour 
     }
 
     private static int pressureStepForPa(long pressurePa) {
-        double pressureAtm = (double) Math.max(GasPressure.VACUUM_PA, pressurePa) / GasPressure.REFERENCE_PRESSURE_PA;
-        return Mth.clamp((int) Math.round(pressureAtm * STEPS_PER_ATMOSPHERE), 0, MAX_OUTLET_SET_PRESSURE_STEPS);
+        double pressureAtm = (double) Mth.clamp(pressurePa, GasPressure.VACUUM_PA, maxOutletSetPressurePa()) / GasPressure.REFERENCE_PRESSURE_PA;
+        return (int) Math.round(pressureAtm * STEPS_PER_ATMOSPHERE);
     }
 
     private static long pressurePaForStep(int pressureStep) {

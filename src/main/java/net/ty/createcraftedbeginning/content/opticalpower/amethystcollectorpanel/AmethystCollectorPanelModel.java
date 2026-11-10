@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.SimpleBakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -32,8 +33,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AmethystCollectorPanelModel extends BakedModelWrapperWithData {
+    private static final double UV_VERTEX_WEIGHT = 0.9999;
+    private static final double UV_CENTER_WEIGHT = 0.0001;
     private static final ModelProperty<AmethystCollectorPanelLayout> LAYOUT = new ModelProperty<>();
-    private final Map<AmethystCollectorPanelLayout, List<BakedQuad>> cache = new ConcurrentHashMap<>();
+    private final Map<AmethystCollectorPanelLayout, List<BakedQuad>> fixedQuadsByLayout = new ConcurrentHashMap<>();
 
     public AmethystCollectorPanelModel(BakedModel originalModel) {
         super(originalModel);
@@ -81,7 +84,11 @@ public final class AmethystCollectorPanelModel extends BakedModelWrapperWithData
         int[] vertices = quad.getVertices();
         double[] us = new double[4];
         double[] vs = new double[4];
-        int reversedZ = layout.depth() - 1 - layout.z();
+        int width = layout.width();
+        int depth = layout.depth();
+        int layoutX = layout.x();
+        int layoutZ = layout.z();
+        int reversedZ = depth - 1 - layoutZ;
         for (int i = 0; i < 4; i++) {
             Vec3 old = BakedQuadHelper.getXYZ(vertices, i);
             double x = old.x < 0.5 ? part.minX() : part.maxX();
@@ -89,21 +96,21 @@ public final class AmethystCollectorPanelModel extends BakedModelWrapperWithData
             double z = old.z < 0.5 ? part.minZ() : part.maxZ();
             BakedQuadHelper.setXYZ(vertices, i, new Vec3(x / 16, y / 16, z / 16));
             if (face == Direction.UP) {
-                us[i] = AmethystCollectorPanelTextureMapping.topU(layout.x(), layout.width(), layout.depth(), x);
-                vs[i] = AmethystCollectorPanelTextureMapping.topV(layout.z(), layout.width(), layout.depth(), z);
+                us[i] = AmethystCollectorPanelTextureMapping.topU(layoutX, width, depth, x);
+                vs[i] = AmethystCollectorPanelTextureMapping.topV(layoutZ, width, depth, z);
                 continue;
             }
 
             if (face == Direction.DOWN) {
-                us[i] = AmethystCollectorPanelTextureMapping.bottomU(layout.x(), layout.width(), layout.depth(), x);
-                vs[i] = AmethystCollectorPanelTextureMapping.bottomV(reversedZ, layout.width(), layout.depth(), 16 - z);
+                us[i] = AmethystCollectorPanelTextureMapping.bottomU(layoutX, width, depth, x);
+                vs[i] = AmethystCollectorPanelTextureMapping.bottomV(reversedZ, width, depth, 16 - z);
                 continue;
             }
 
             int index = switch (face) {
-                case NORTH -> layout.width() - 1 - layout.x();
-                case SOUTH -> layout.x();
-                case WEST -> layout.z();
+                case NORTH -> width - 1 - layoutX;
+                case SOUTH -> layoutX;
+                case WEST -> layoutZ;
                 default -> reversedZ;
             };
             double horizontal = switch (face) {
@@ -112,22 +119,23 @@ public final class AmethystCollectorPanelModel extends BakedModelWrapperWithData
                 case WEST -> z;
                 default -> 16 - z;
             };
-            us[i] = AmethystCollectorPanelTextureMapping.sideU(index, face.getAxis() == Axis.Z ? layout.width() : layout.depth(), horizontal);
+            us[i] = AmethystCollectorPanelTextureMapping.sideU(index, face.getAxis() == Axis.Z ? width : depth, horizontal);
             vs[i] = 64 - y;
         }
         double centerU = (us[0] + us[1] + us[2] + us[3]) / 4;
         double centerV = (vs[0] + vs[1] + vs[2] + vs[3]) / 4;
         TextureAtlasSprite sprite = quad.getSprite();
         for (int i = 0; i < 4; i++) {
-            BakedQuadHelper.setU(vertices, i, sprite.getU((float) ((us[i] * 0.9999 + centerU * 0.0001) / 128)));
-            BakedQuadHelper.setV(vertices, i, sprite.getV((float) ((vs[i] * 0.9999 + centerV * 0.0001) / 128)));
+            BakedQuadHelper.setU(vertices, i, sprite.getU((float) ((us[i] * UV_VERTEX_WEIGHT + centerU * UV_CENTER_WEIGHT) / 128)));
+            BakedQuadHelper.setV(vertices, i, sprite.getV((float) ((vs[i] * UV_VERTEX_WEIGHT + centerV * UV_CENTER_WEIGHT) / 128)));
         }
         return quad;
     }
 
     @Override
     protected Builder gatherModelData(Builder builder, BlockAndTintGetter level, BlockPos pos, BlockState state, ModelData blockEntityData) {
-        return builder.with(LAYOUT, AmethystCollectorPanelLayout.at(level, pos));
+        AmethystCollectorPanelGeometry geometry = AmethystCollectorPanelGeometry.scanGeometry(level, pos);
+        return builder.with(LAYOUT, AmethystCollectorPanelLayout.at(geometry, pos));
     }
 
     @Override
@@ -145,6 +153,10 @@ public final class AmethystCollectorPanelModel extends BakedModelWrapperWithData
             return List.of();
         }
 
-        return cache.computeIfAbsent(layout, key -> build(key, super.getQuads(state, null, random, data, renderType)));
+        if (originalModel.getClass() != SimpleBakedModel.class) {
+            return build(layout, super.getQuads(state, null, random, data, renderType));
+        }
+
+        return fixedQuadsByLayout.computeIfAbsent(layout, key -> build(key, super.getQuads(state, null, random, data, renderType)));
     }
 }

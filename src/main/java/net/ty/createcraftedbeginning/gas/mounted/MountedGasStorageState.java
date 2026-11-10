@@ -31,6 +31,14 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class MountedGasStorageState {
+    static final String COMPOUND_KEY_GASES = "gases";
+    private static final String COMPOUND_KEY_POS = "pos";
+    private static final String COMPOUND_KEY_STORAGE = "storage";
+    static final String COMPOUND_KEY_INTERACTABLE_POSITIONS = "interactable_positions";
+    private static final String COMPOUND_KEY_X = "X";
+    private static final String COMPOUND_KEY_Y = "Y";
+    private static final String COMPOUND_KEY_Z = "Z";
+
     private Map<BlockPos, MountedGasStorage> builder;
     private Map<BlockPos, SyncedMountedStorage> syncedBuilder;
     private MountedGasStorageWrapper gases;
@@ -159,44 +167,44 @@ public final class MountedGasStorageState {
 
             MountedGasStorage.CODEC.encodeStart(NbtOps.INSTANCE, storage).resultOrPartial(err -> CCBAPI.LOGGER.error("Failed to serialize mounted gas storage: {}", err)).ifPresent(encoded -> {
                 CompoundTag tag = new CompoundTag();
-                tag.put("pos", NbtUtils.writeBlockPos(pos));
-                tag.put("storage", encoded);
+                tag.put(COMPOUND_KEY_POS, NbtUtils.writeBlockPos(pos));
+                tag.put(COMPOUND_KEY_STORAGE, encoded);
                 gases.add(tag);
             });
         });
         if (!gases.isEmpty()) {
-            compoundTag.put("gases", gases);
+            compoundTag.put(COMPOUND_KEY_GASES, gases);
         }
         if (!clientPacket) {
             return;
         }
 
-        ListTag list = compoundTag.getList("interactable_positions", Tag.TAG_COMPOUND);
+        ListTag list = compoundTag.getList(COMPOUND_KEY_INTERACTABLE_POSITIONS, Tag.TAG_COMPOUND);
         Set<BlockPos> positions = new HashSet<>();
-        NBTHelper.iterateCompoundList(list, tag -> positions.add(new BlockPos(tag.getInt("X"), tag.getInt("Y"), tag.getInt("Z"))));
+        NBTHelper.iterateCompoundList(list, tag -> positions.add(new BlockPos(tag.getInt(COMPOUND_KEY_X), tag.getInt(COMPOUND_KEY_Y), tag.getInt(COMPOUND_KEY_Z))));
         for (BlockPos pos : storages.keySet()) {
             if (!positions.add(pos)) {
                 continue;
             }
 
             CompoundTag tag = new CompoundTag();
-            tag.putInt("X", pos.getX());
-            tag.putInt("Y", pos.getY());
-            tag.putInt("Z", pos.getZ());
+            tag.putInt(COMPOUND_KEY_X, pos.getX());
+            tag.putInt(COMPOUND_KEY_Y, pos.getY());
+            tag.putInt(COMPOUND_KEY_Z, pos.getZ());
             list.add(tag);
         }
-        compoundTag.put("interactable_positions", list);
+        compoundTag.put(COMPOUND_KEY_INTERACTABLE_POSITIONS, list);
     }
 
     public void read(CompoundTag nbt) {
         try {
-            if (!nbt.contains("gases")) {
+            if (!nbt.contains(COMPOUND_KEY_GASES)) {
                 return;
             }
 
-            NBTHelper.iterateCompoundList(nbt.getList("gases", Tag.TAG_COMPOUND), tag -> {
-                BlockPos pos = NBTHelper.readBlockPos(tag, "pos");
-                CompoundTag data = tag.getCompound("storage");
+            NBTHelper.iterateCompoundList(nbt.getList(COMPOUND_KEY_GASES, Tag.TAG_COMPOUND), tag -> {
+                BlockPos pos = NBTHelper.readBlockPos(tag, COMPOUND_KEY_POS);
+                CompoundTag data = tag.getCompound(COMPOUND_KEY_STORAGE);
                 MountedGasStorage.CODEC.decode(NbtOps.INSTANCE, data).resultOrPartial(err -> CCBAPI.LOGGER.error("Failed to deserialize mounted gas storage: {}", err)).map(Pair::getFirst).ifPresent(storage -> addStorage(storage, pos));
             });
         }

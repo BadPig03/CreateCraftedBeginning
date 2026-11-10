@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "createcraftedbeginning:block/amethyst_mirror/block",
+      "x": 180
+    },
+    "facing=east": {
+      "model": "createcraftedbeginning:block/amethyst_mirror/block",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/amethyst_mirror/block",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/amethyst_mirror/block",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up": {
+      "model": "createcraftedbeginning:block/amethyst_mirror/block"
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/amethyst_mirror/block",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

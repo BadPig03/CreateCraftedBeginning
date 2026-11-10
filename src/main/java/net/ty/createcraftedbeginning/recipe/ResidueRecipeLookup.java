@@ -10,13 +10,15 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class ResidueRecipeLookup {
+    private static final int MAX_CACHED_OUTPUTS = 256;
     private static final Map<RecipeManager, Map<GasStack, ResidueOutput>> OUTPUT_CACHES = new WeakHashMap<>();
 
     private ResidueRecipeLookup() {
@@ -28,8 +30,8 @@ public final class ResidueRecipeLookup {
         }
 
         RecipeManager manager = level.getRecipeManager();
-        Map<GasStack, ResidueOutput> outputCache = OUTPUT_CACHES.computeIfAbsent(manager, ignored -> new HashMap<>());
-        return outputCache.computeIfAbsent(gasStack.copyWithAmount(1), normalizedGas -> {
+        Map<GasStack, ResidueOutput> outputCache = OUTPUT_CACHES.computeIfAbsent(manager, ignored -> new LinkedHashMap<>(16, 0.75F, true));
+        ResidueOutput output = outputCache.computeIfAbsent(gasStack.copyWithAmount(1), normalizedGas -> {
             for (RecipeHolder<ResidueGenerationRecipe> recipeHolder : manager.<SingleRecipeInput, ResidueGenerationRecipe>getAllRecipesFor(CCBRecipeTypes.RESIDUE_GENERATION.getType())) {
                 ResidueGenerationRecipe recipe = recipeHolder.value();
                 if (recipe.getGasRequirements().isEmpty() || !recipe.getGasRequirement().ingredient().test(normalizedGas)) {
@@ -37,7 +39,8 @@ public final class ResidueRecipeLookup {
                 }
 
                 boolean hasItemOutput = !recipe.getRollableResults().isEmpty();
-                boolean hasFluidOutput = !recipe.getFluidResults().isEmpty();
+                List<FluidStack> fluidResults = recipe.getFluidResults();
+                boolean hasFluidOutput = !fluidResults.isEmpty();
                 if (hasItemOutput && hasFluidOutput) {
                     continue;
                 }
@@ -47,7 +50,7 @@ public final class ResidueRecipeLookup {
                 }
 
                 if (hasFluidOutput) {
-                    return new ResidueOutput(ItemStack.EMPTY, recipe.getFluidResults().getFirst());
+                    return new ResidueOutput(ItemStack.EMPTY, fluidResults.getFirst());
                 }
 
                 return new ResidueOutput(recipe.getResultItem(level.registryAccess()), FluidStack.EMPTY);
@@ -55,6 +58,10 @@ public final class ResidueRecipeLookup {
 
             return ResidueOutput.EMPTY;
         });
+        if (outputCache.size() > MAX_CACHED_OUTPUTS) {
+            outputCache.remove(outputCache.keySet().iterator().next());
+        }
+        return output;
     }
 
     public static synchronized void invalidateCaches() {

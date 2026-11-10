@@ -17,20 +17,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class BreezeChamberSerialization {
-    private static final String STATE_TYPE = "StateType";
-    private static final String STATE_DATA = "StateData";
-    private static final String GOGGLES = "Goggles";
-    private static final String TRAIN_HAT = "TrainHat";
-    private static final String GAS_PROCESSING = "GasProcessing";
-    private static final String IS_CREATIVE = "isCreative";
-    private static final String REMAINING_TIME = "RemainingTime";
+    private static final String COMPOUND_KEY_STATE_TYPE = "StateType";
+    private static final String COMPOUND_KEY_STATE_DATA = "StateData";
+    static final String COMPOUND_KEY_GOGGLES = "Goggles";
+    static final String COMPOUND_KEY_TRAIN_HAT = "TrainHat";
+    private static final String COMPOUND_KEY_GAS_PROCESSING = "GasProcessing";
 
     private static BaseChamberState readState(CompoundTag compoundTag) {
-        CompoundTag stateData = compoundTag.getCompound(STATE_DATA);
-        ChargerType chargerType = ChargerType.fromTag(compoundTag, STATE_TYPE);
-        boolean isCreative = NbtValues.getBooleanOrDefault(stateData, IS_CREATIVE, false);
+        CompoundTag stateData = compoundTag.getCompound(COMPOUND_KEY_STATE_DATA);
+        ChargerType chargerType = ChargerType.fromTag(compoundTag, COMPOUND_KEY_STATE_TYPE);
+        boolean isCreative = NbtValues.getBooleanOrDefault(stateData, BaseChamberState.COMPOUND_KEY_IS_CREATIVE, false);
         int maxWindCapacity = BreezeChamberBlockEntity.getMaxWindCapacity();
-        int remainingTime = BoundedMath.clampMagnitude(NbtValues.getIntOrDefault(stateData, REMAINING_TIME, 0), maxWindCapacity);
+        int remainingTime = BoundedMath.clampMagnitude(NbtValues.getIntOrDefault(stateData, BaseChamberState.COMPOUND_KEY_REMAINING_TIME, 0), maxWindCapacity);
         return createState(chargerType, remainingTime, isCreative);
     }
 
@@ -62,28 +60,28 @@ final class BreezeChamberSerialization {
         BaseChamberState chamberState = chamber.getChamberStateInternal();
         CompoundTag stateTag = new CompoundTag();
         chamberState.save(stateTag);
-        compoundTag.put(STATE_DATA, stateTag);
-        compoundTag.putString(STATE_TYPE, chamberState.getChargerType().name());
-        compoundTag.putBoolean(GOGGLES, chamber.hasGoggles());
-        compoundTag.putBoolean(TRAIN_HAT, chamber.hasTrainHat());
+        compoundTag.put(COMPOUND_KEY_STATE_DATA, stateTag);
+        compoundTag.putString(COMPOUND_KEY_STATE_TYPE, chamberState.getChargerType().name());
+        compoundTag.putBoolean(COMPOUND_KEY_GOGGLES, chamber.hasGoggles());
+        compoundTag.putBoolean(COMPOUND_KEY_TRAIN_HAT, chamber.hasTrainHat());
         CompoundTag gasProcessingTag = new CompoundTag();
         chamber.getGasProcessorInternal().writePendingProcessing(gasProcessingTag);
-        compoundTag.put(GAS_PROCESSING, gasProcessingTag);
+        compoundTag.put(COMPOUND_KEY_GAS_PROCESSING, gasProcessingTag);
     }
 
     void read(BreezeChamberBlockEntity chamber, CompoundTag compoundTag) {
-        if (compoundTag.contains(STATE_DATA, Tag.TAG_COMPOUND)) {
+        if (compoundTag.contains(COMPOUND_KEY_STATE_DATA, Tag.TAG_COMPOUND)) {
             chamber.setChamberStateFromSerialization(readState(compoundTag));
         }
-        chamber.getGasProcessorInternal().readPendingProcessing(NbtValues.getCompoundOrEmpty(compoundTag, GAS_PROCESSING));
-        if (compoundTag.contains(GOGGLES, Tag.TAG_BYTE)) {
-            chamber.setGogglesFromSerialization(compoundTag.getBoolean(GOGGLES));
+        chamber.getGasProcessorInternal().readPendingProcessing(NbtValues.getCompoundOrEmpty(compoundTag, COMPOUND_KEY_GAS_PROCESSING));
+        if (compoundTag.contains(COMPOUND_KEY_GOGGLES, Tag.TAG_BYTE)) {
+            chamber.setGogglesFromSerialization(compoundTag.getBoolean(COMPOUND_KEY_GOGGLES));
         }
-        if (!compoundTag.contains(TRAIN_HAT, Tag.TAG_BYTE)) {
+        if (!compoundTag.contains(COMPOUND_KEY_TRAIN_HAT, Tag.TAG_BYTE)) {
             return;
         }
 
-        chamber.setTrainHatFromSerialization(compoundTag.getBoolean(TRAIN_HAT));
+        chamber.setTrainHatFromSerialization(compoundTag.getBoolean(COMPOUND_KEY_TRAIN_HAT));
     }
 
 }

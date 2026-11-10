@@ -9,16 +9,18 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record GasCanisterPackMenuSyncPacket(int containerId, int slot, ItemStack canister) implements ClientboundPacketPayload {
-    public static final StreamCodec<RegistryFriendlyByteBuf, GasCanisterPackMenuSyncPacket> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.VAR_INT, GasCanisterPackMenuSyncPacket::containerId, ByteBufCodecs.VAR_INT, GasCanisterPackMenuSyncPacket::slot, ItemStack.OPTIONAL_STREAM_CODEC, GasCanisterPackMenuSyncPacket::canister, GasCanisterPackMenuSyncPacket::new);
+public record GasCanisterPackMenuSyncPacket(int containerId, int slot, ItemStack expectedCanister, ItemStack canister) implements ClientboundPacketPayload {
+    public static final StreamCodec<RegistryFriendlyByteBuf, GasCanisterPackMenuSyncPacket> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.VAR_INT, GasCanisterPackMenuSyncPacket::containerId, ByteBufCodecs.VAR_INT, GasCanisterPackMenuSyncPacket::slot, ItemStack.OPTIONAL_STREAM_CODEC, GasCanisterPackMenuSyncPacket::expectedCanister, ItemStack.OPTIONAL_STREAM_CODEC, GasCanisterPackMenuSyncPacket::canister, GasCanisterPackMenuSyncPacket::new);
 
     public GasCanisterPackMenuSyncPacket {
+        expectedCanister = expectedCanister.copy();
         canister = canister.copy();
     }
 
@@ -26,6 +28,11 @@ public record GasCanisterPackMenuSyncPacket(int containerId, int slot, ItemStack
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
         if (!(player.containerMenu instanceof GasCanisterPackMenu menu) || menu.containerId != containerId) {
+            return;
+        }
+
+        IItemHandler inventory = menu.getPackInventory();
+        if (slot < 0 || slot >= inventory.getSlots() || !ItemStack.matches(inventory.getStackInSlot(slot), expectedCanister)) {
             return;
         }
 

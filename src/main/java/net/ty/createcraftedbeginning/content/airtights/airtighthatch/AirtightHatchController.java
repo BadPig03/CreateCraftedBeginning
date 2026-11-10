@@ -15,6 +15,7 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.gas.transfer.GasPressureTransferEndpoint;
 import net.ty.createcraftedbeginning.gas.transfer.GasPressureTransferResult;
 import net.ty.createcraftedbeginning.gas.transfer.GasPressureTransferService;
+import net.ty.createcraftedbeginning.gas.transfer.GasPressureTransferService.EquilibriumPolicy;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Optional;
@@ -97,7 +98,7 @@ public final class AirtightHatchController {
                 continue;
             }
 
-            GasPressureTransferResult result = GasPressureTransferService.transferPassive(source.get(), target, remaining, GasAction.EXECUTE);
+            GasPressureTransferResult result = GasPressureTransferService.transferPassive(source.get(), target, remaining, EquilibriumPolicy.BOUNDED_FINAL_UNIT, GasAction.EXECUTE);
             transferred += result.filledAmount();
             remaining -= result.filledAmount();
         }
@@ -113,7 +114,7 @@ public final class AirtightHatchController {
                 continue;
             }
 
-            GasPressureTransferResult result = GasPressureTransferService.transferPassive(source, target.get(), remaining, GasAction.EXECUTE);
+            GasPressureTransferResult result = GasPressureTransferService.transferPassive(source, target.get(), remaining, EquilibriumPolicy.BOUNDED_FINAL_UNIT, GasAction.EXECUTE);
             transferred += result.filledAmount();
             remaining -= result.filledAmount();
         }
@@ -155,16 +156,11 @@ public final class AirtightHatchController {
         }
 
         if (!hatchBlock.canSurvive(hatchState, level, hatch.getBlockPos())) {
-            level.destroyBlock(hatch.getBlockPos(), true);
+            hatchBlock.destroyIfUnsupported(hatchState, level, hatch.getBlockPos());
             return;
         }
 
         canisterManager.reconcileCanisterState();
-        if (hatch.isEmpty()) {
-            return;
-        }
-
-        canisterManager.updateTankLimits();
     }
 
     void resetTransferQuota() {

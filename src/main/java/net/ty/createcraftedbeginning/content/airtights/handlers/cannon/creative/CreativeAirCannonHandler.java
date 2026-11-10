@@ -71,7 +71,7 @@ public class CreativeAirCannonHandler implements AirtightCannonHandler, Airtight
     }
 
     @Override
-    public float getGasConsumptionMultiplier() {
+    public double getGasConsumptionMultiplier() {
         return 0;
     }
 

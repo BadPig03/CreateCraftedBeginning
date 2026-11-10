@@ -3,13 +3,18 @@ package net.ty.createcraftedbeginning.content.airtights.gascanisterpack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickAction;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -23,6 +28,8 @@ import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.CanisterMiningReset;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilter;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
@@ -46,6 +53,11 @@ public class GasCanisterPackItem extends Item implements MenuProvider, GasFilter
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerItem(CanisterCapabilities.ITEM, (itemStack, context) -> new GasCanisterPackContainerContents(itemStack), CCBItems.GAS_CANISTER_PACK);
+    }
+
+    private static void onCanisterTransferred(Player player, SoundEvent sound) {
+        CanisterContainerSuppliers.invalidateCache(player);
+        player.playSound(sound, 0.8F, 0.8F + player.getRandom().nextFloat() * 0.4F);
     }
 
     @Override
@@ -82,6 +94,79 @@ public class GasCanisterPackItem extends Item implements MenuProvider, GasFilter
         player.openMenu(this, buffer -> ItemStack.STREAM_CODEC.encode(buffer, pack));
         player.getCooldowns().addCooldown(this, 10);
         return InteractionResultHolder.sidedSuccess(pack, false);
+    }
+
+    @Override
+    public boolean overrideStackedOnOther(ItemStack pack, Slot slot, ClickAction action, Player player) {
+        if (pack.getCount() != 1 || action != ClickAction.SECONDARY || !(pack.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+            return false;
+        }
+
+        ItemStack other = slot.getItem();
+        if (other.isEmpty()) {
+            int canisterSlot = packContents.findLastOccupiedSlot();
+            if (canisterSlot < 0) {
+                return true;
+            }
+
+            ItemStack remainder = slot.safeInsert(packContents.getCanister(canisterSlot));
+            if (!remainder.isEmpty()) {
+                return true;
+            }
+
+            packContents.setCanister(canisterSlot, ItemStack.EMPTY);
+            onCanisterTransferred(player, SoundEvents.BUNDLE_REMOVE_ONE);
+            return true;
+        }
+        if (!(other.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents)) {
+            return true;
+        }
+
+        int canisterSlot = packContents.findEmptySlot();
+        if (canisterSlot < 0) {
+            return true;
+        }
+
+        ItemStack canister = slot.safeTake(1, 1, player);
+        if (canister.isEmpty()) {
+            return true;
+        }
+
+        packContents.setCanister(canisterSlot, canister);
+        onCanisterTransferred(player, SoundEvents.BUNDLE_INSERT);
+        return true;
+    }
+
+    @Override
+    public boolean overrideOtherStackedOnMe(ItemStack pack, ItemStack other, Slot slot, ClickAction action, Player player, SlotAccess access) {
+        if (pack.getCount() != 1 || action != ClickAction.SECONDARY || !slot.allowModification(player) || !(pack.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+            return false;
+        }
+
+        if (other.isEmpty()) {
+            int canisterSlot = packContents.findLastOccupiedSlot();
+            if (canisterSlot < 0 || !access.set(packContents.getCanister(canisterSlot))) {
+                return true;
+            }
+
+            packContents.setCanister(canisterSlot, ItemStack.EMPTY);
+            slot.setChanged();
+            onCanisterTransferred(player, SoundEvents.BUNDLE_REMOVE_ONE);
+            return true;
+        }
+        if (!(other.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents)) {
+            return true;
+        }
+
+        int canisterSlot = packContents.findEmptySlot();
+        if (canisterSlot < 0) {
+            return true;
+        }
+
+        packContents.setCanister(canisterSlot, other.split(1));
+        slot.setChanged();
+        onCanisterTransferred(player, SoundEvents.BUNDLE_INSERT);
+        return true;
     }
 
     @Override

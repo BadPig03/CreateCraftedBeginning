@@ -6,7 +6,6 @@ import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseContext;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseHandler;
 import net.ty.createcraftedbeginning.platform.EntityConversionBridge;
@@ -24,8 +23,7 @@ public class MoistAirEffectHandler implements GasReleaseHandler {
 
     protected void applyEffects(GasReleaseContext context, int scale) {
         Level level = context.level();
-        AABB area = context.effectBounds();
-        List<LivingEntity> entities = level.getEntitiesOfClass(LivingEntity.class, area);
+        List<LivingEntity> entities = context.findEntities(LivingEntity.class);
         for (LivingEntity entity : entities) {
             if (entity.isOnFire()) {
                 entity.extinguishFire();

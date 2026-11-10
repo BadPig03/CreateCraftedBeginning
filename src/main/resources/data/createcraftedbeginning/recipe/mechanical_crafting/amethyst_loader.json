@@ -1,0 +1,33 @@
+{
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": true,
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "createcraftedbeginning:amethyst_crystal_sheet"
+    },
+    "E": {
+      "item": "create:electron_tube"
+    },
+    "S": {
+      "item": "create:sturdy_sheet"
+    },
+    "P": {
+      "item": "create:precision_mechanism"
+    },
+    "G": {
+      "tag": "c:glass_blocks/colorless"
+    }
+  },
+  "pattern": [
+    " GGG ",
+    "GAEAG",
+    "GEPEG",
+    "GAEAG",
+    " SSS "
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:amethyst_loader"
+  }
+}

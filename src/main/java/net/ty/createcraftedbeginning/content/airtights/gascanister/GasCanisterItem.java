@@ -107,6 +107,11 @@ public class GasCanisterItem extends Item implements GasFilter {
     }
 
     @Override
+    public int getEnchantmentValue(ItemStack canister) {
+        return 20;
+    }
+
+    @Override
     public boolean test(ItemStack filterItem, GasStack filterGasStack) {
         if (filterGasStack.isEmpty() || !(filterItem.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents filterContents)) {
             return false;

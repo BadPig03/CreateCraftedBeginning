@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.registry.registrate;
 
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.builders.BlockBuilder;
+import com.tterrag.registrate.util.nullness.NonNullSupplier;
 import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.resources.ResourceLocation;
@@ -48,7 +49,7 @@ public final class ObsidianRegistration {
             ResourceLocation top = provider.modLoc("block/obsidians/" + topName);
             String name = context.getName();
             provider.slabBlock(context.get(), models.slab(name, side, top, top), models.slabTop(name + "_top", side, top, top), models.cubeColumn(name + "_double", side, top));
-        }).item().tag(ItemTags.SLABS).build();
+        }).loot((loot, block) -> loot.add(block, loot.createSlabItemTable(block))).item().tag(ItemTags.SLABS).build();
     }
 
     @Contract(pure = true)
@@ -77,17 +78,17 @@ public final class ObsidianRegistration {
     }
 
     @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> obsidianSlabProperties() {
-        return builder -> builder.initialProperties(CCBSharedProperties::obsidian).tag(BlockTags.MINEABLE_WITH_PICKAXE).tag(BlockTags.SLABS);
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> obsidianSlabProperties(NonNullSupplier<? extends Block> reference) {
+        return builder -> builder.initialProperties(reference).tag(BlockTags.MINEABLE_WITH_PICKAXE).tag(BlockTags.SLABS);
     }
 
     @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> obsidianStairsProperties() {
-        return builder -> builder.initialProperties(CCBSharedProperties::obsidian).tag(BlockTags.STAIRS);
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> obsidianStairsProperties(NonNullSupplier<? extends Block> reference) {
+        return builder -> builder.initialProperties(reference).tag(BlockTags.MINEABLE_WITH_PICKAXE).tag(BlockTags.STAIRS);
     }
 
     @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> obsidianWallProperties() {
-        return builder -> builder.initialProperties(CCBSharedProperties::obsidian).tag(BlockTags.WALLS);
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> obsidianWallProperties(NonNullSupplier<? extends Block> reference) {
+        return builder -> builder.initialProperties(reference).properties(properties -> properties.forceSolidOn()).tag(BlockTags.MINEABLE_WITH_PICKAXE).tag(BlockTags.WALLS);
     }
 }

@@ -9,7 +9,6 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import net.createmod.catnip.gui.element.GuiGameElement;
 import net.createmod.catnip.gui.widget.AbstractSimiWidget;
 import net.createmod.catnip.lang.FontHelper.Palette;
-import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,11 +30,9 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
@@ -54,10 +51,8 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
     protected final Map<AirtightUpgrade, IconButton> upgradeButtons = new HashMap<>();
     protected final Map<AirtightUpgrade, AbstractSimiWidget> upgradeIndicators = new HashMap<>();
     protected final Map<AirtightUpgrade, ScreenButtonConfig> buttonConfigsMap = new HashMap<>();
-    private final Set<ResourceLocation> pendingUpgradeRequests = new HashSet<>();
 
     protected IconButton disableUpgradeButton;
-    private int lastServerStateRevision;
 
     protected AirtightUpgradableScreen(T container, Inventory inv, Component title, CCBGUITextures background) {
         super(container, inv, title);
@@ -84,11 +79,6 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
             player.closeContainer();
         }
         super.containerTick();
-        int serverStateRevision = menu.getServerStateRevision();
-        if (serverStateRevision != lastServerStateRevision) {
-            pendingUpgradeRequests.clear();
-            lastServerStateRevision = serverStateRevision;
-        }
         updateStates();
     }
 
@@ -151,22 +141,17 @@ public abstract class AirtightUpgradableScreen<T extends AirtightUpgradableMenu>
 
     protected void onUpgradeButtonPressed(AirtightUpgrade upgrade) {
         ResourceLocation upgradeId = upgrade.getID();
-        if (!pendingUpgradeRequests.add(upgradeId)) {
-            return;
-        }
-
         if (menu.getStatus(upgrade).isInstalled()) {
-            CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(upgradeId, false));
+            menu.sendUpgradeRequest(upgradeId, false);
             return;
         }
 
         ItemStack upgradeStack = menu.getMenuInventory().getStackInSlot(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX);
-        if (menu.player.isCreative() || upgrade.testUpgradeItem(upgradeStack, menu.player.level())) {
-            CatnipServices.NETWORK.sendToServer(new AirtightUpgradePacket(upgradeId, true));
+        if (!menu.player.isCreative() && !upgrade.testUpgradeItem(upgradeStack, menu.player.level())) {
             return;
         }
 
-        pendingUpgradeRequests.remove(upgradeId);
+        menu.sendUpgradeRequest(upgradeId, true);
     }
 
     protected abstract void updateStates();

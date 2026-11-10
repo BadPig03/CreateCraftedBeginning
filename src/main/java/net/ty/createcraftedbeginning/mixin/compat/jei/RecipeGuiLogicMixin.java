@@ -28,7 +28,7 @@ public abstract class RecipeGuiLogicMixin {
     public abstract IRecipeCategory<?> getSelectedRecipeCategory();
 
     @Inject(method = "getVisibleRecipeLayoutsWithButtons", at = @At("HEAD"))
-    private void ccb$getVisibleRecipeLayoutsWithButtons(CallbackInfoReturnable<List<?>> callback, @Local(argsOnly = true, ordinal = 0) int availableHeight, @Local(argsOnly = true, ordinal = 1) int minRecipePadding) {
+    private void ccb$getVisibleRecipeLayoutsWithButtons$head(CallbackInfoReturnable<List<?>> callback, @Local(argsOnly = true, ordinal = 0) int availableHeight, @Local(argsOnly = true, ordinal = 1) int minRecipePadding) {
         if (!(getSelectedRecipeCategory() instanceof FractionationTowerCategory category) || !category.updateAvailableHeight(availableHeight, minRecipePadding)) {
             return;
         }
@@ -37,7 +37,7 @@ public abstract class RecipeGuiLogicMixin {
     }
 
     @ModifyArg(method = "getVisibleRecipeLayoutsWithButtons", at = @At(value = "INVOKE", target = "Lmezz/jei/gui/recipes/lookups/ILookupState;setRecipesPerPage(I)V"), index = 0)
-    private int ccb$limitFractionationTowerRecipesPerPage(int recipesPerPage) {
+    private int ccb$getVisibleRecipeLayoutsWithButtons$setRecipesPerPage(int recipesPerPage) {
         if (!(getSelectedRecipeCategory() instanceof FractionationTowerCategory)) {
             return recipesPerPage;
         }

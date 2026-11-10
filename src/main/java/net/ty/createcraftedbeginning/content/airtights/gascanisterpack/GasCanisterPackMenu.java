@@ -17,8 +17,6 @@ import net.neoforged.neoforge.items.SlotItemHandler;
 import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
-import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackOverrides.GasCanisterPackType;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBMenuTypes;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -95,12 +93,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
             storedCanisters.add(packInventory.getStackInSlot(canisterSlot).copy());
         }
         packContents.replaceCanisters(storedCanisters);
-        int packType = getPackType();
-        if (pack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, -1) == packType) {
-            return;
-        }
-
-        pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, packType);
+        CanisterContainerSuppliers.invalidateCache(player);
     }
 
     @Override
@@ -138,6 +131,10 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
 
     @Override
     public void clicked(int slotId, int dragType, ClickType clickType, Player player) {
+        if (clickType == ClickType.SWAP && dragType == playerInventory.selected) {
+            return;
+        }
+
         int selectedHotbarSlotId = playerInventory.selected + PLAYER_INVENTORY_SLOTS - 9;
         if (slotId == selectedHotbarSlotId && clickType != ClickType.THROW) {
             return;
@@ -173,20 +170,6 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
 
     IItemHandler getPackInventory() {
         return packInventory;
-    }
-
-    private int getPackType() {
-        boolean rightDown = hasCanister(I_SLOT_INDEX);
-        boolean leftDown = hasCanister(II_SLOT_INDEX);
-        boolean rightUp = hasCanister(III_SLOT_INDEX);
-        boolean leftUp = hasCanister(IV_SLOT_INDEX);
-        int occupancyFlags = GasCanisterPackOverrides.calculateFlags(leftUp, rightUp, leftDown, rightDown);
-        return GasCanisterPackType.getTypeFromFlags(occupancyFlags).ordinal();
-    }
-
-    private boolean hasCanister(int slotIndex) {
-        ItemStack canister = packInventory.getStackInSlot(slotIndex);
-        return CanisterContainerSuppliers.isValidGasCanister(canister) || CanisterContainerSuppliers.isValidCreativeGasCanister(canister);
     }
 
     private enum SlotType {

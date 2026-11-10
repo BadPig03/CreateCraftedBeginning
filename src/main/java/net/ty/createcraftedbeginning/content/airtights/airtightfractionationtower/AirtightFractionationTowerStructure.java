@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
+import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
@@ -134,19 +135,8 @@ final class AirtightFractionationTowerStructure {
             }
         }
 
-        for (AirtightTankBlockEntity part : tanks) {
-            part.removeController(false);
-        }
-        BlockState towerState = CCBBlocks.AIRTIGHT_FRACTIONATION_TOWER_BLOCK.getDefaultState();
-        for (AirtightTankBlockEntity part : tanks) {
-            BlockPos pos = part.getBlockPos();
-            int layer = pos.getY() - origin.getY();
-            level.setBlockAndUpdate(pos, towerState.setValue(AirtightFractionationTowerBlock.TOP, layer == height - 1).setValue(AirtightFractionationTowerBlock.BOTTOM, layer == 0));
-            if (!(level.getBlockEntity(pos) instanceof AirtightFractionationTowerBlockEntity tower)) {
-                throw new IllegalStateException("Failed to initialize airtight fractionation tower at " + pos + '.');
-            }
-
-            tower.assemble(origin, height);
+        if (!new ResourceTransaction().add(new AirtightFractionationTowerAssembly(level, tanks, origin, height)).commit()) {
+            return new AssemblyFailure(origin, end, INVALID_STRUCTURE, false);
         }
         CCBAdvancements.DISSOCIATIVE_RECOMBINATION.awardTo(player);
         if (height != AirtightFractionationTowerBlock.MAX_HEIGHT) {

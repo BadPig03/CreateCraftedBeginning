@@ -18,6 +18,7 @@ import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightTurbineHandler
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightUpgradeMaterialsEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AtmosphereProviderEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.GasReleaseHandlerEvent;
+import net.ty.createcraftedbeginning.compat.kubejs.events.WeatherFlareHandlerEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.recipe.CCBRecipeComponents;
 import net.ty.createcraftedbeginning.compat.kubejs.recipe.CCBRecipeSchemas;
 import net.ty.createcraftedbeginning.compat.kubejs.recipe.GasRecipeValue;
@@ -58,6 +59,7 @@ public class CCBKubeJSPlugin implements KubeJSPlugin {
         CCBEvents.AIRTIGHT_TURBINE_HANDLER.post(ScriptType.STARTUP, new AirtightTurbineHandlerEvent());
         CCBEvents.AIRTIGHT_UPGRADE_MATERIALS.post(ScriptType.STARTUP, new AirtightUpgradeMaterialsEvent());
         CCBEvents.GAS_RELEASE_HANDLER.post(ScriptType.STARTUP, new GasReleaseHandlerEvent());
+        CCBEvents.WEATHER_FLARE_HANDLER.post(ScriptType.STARTUP, new WeatherFlareHandlerEvent());
     }
 
     @Override

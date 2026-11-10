@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class BrimstoneFluidType extends SolidRenderedPlaceableFluidType {
+    private static final double ITEM_BUOYANCY_SPEED_THRESHOLD = 0.06;
     private static final double ITEM_VERTICAL_ACCELERATION = 5.0E-4;
 
     private BrimstoneFluidType(Properties properties, ResourceLocation stillTexture, ResourceLocation flowingTexture, int fogColor, Supplier<Float> fogDistance) {
@@ -35,7 +36,7 @@ public final class BrimstoneFluidType extends SolidRenderedPlaceableFluidType {
     @Override
     public void setItemMovement(ItemEntity entity) {
         Vec3 movement = entity.getDeltaMovement();
-        double verticalSpeed = movement.y + (movement.y < 0.06 ? ITEM_VERTICAL_ACCELERATION : 0);
+        double verticalSpeed = movement.y + (movement.y < ITEM_BUOYANCY_SPEED_THRESHOLD ? ITEM_VERTICAL_ACCELERATION : 0);
         entity.setDeltaMovement(movement.x * 0.8, verticalSpeed, movement.z * 0.8);
     }
 }

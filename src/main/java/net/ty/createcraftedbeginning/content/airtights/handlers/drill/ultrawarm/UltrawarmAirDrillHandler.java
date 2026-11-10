@@ -27,13 +27,12 @@ public class UltrawarmAirDrillHandler implements AirtightDrillHandler {
     }
 
     @Override
-    public float getConsumptionMultiplier() {
-        return 0.8F;
+    public double getConsumptionMultiplier() {
+        return 0.8;
     }
 
     @Override
-    public void appendHoverText(ItemStack drill, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        AirtightDrillHandler.super.appendHoverText(drill, context, tooltip, flag);
+    public void appendAdditionalHoverText(ItemStack drill, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         MutableComponent advancedBurningTime = flag.isAdvanced() ? CCBLang.text(" [+" + BASE_BURNING_TIME + ']').component() : Component.empty();
         tooltip.add(CCBLang.translate("gui.airtight_handheld_drill.burning_time", BASE_BURNING_TIME).add(advancedBurningTime.withStyle(ChatFormatting.GRAY)).style(ChatFormatting.DARK_GREEN).component());
     }

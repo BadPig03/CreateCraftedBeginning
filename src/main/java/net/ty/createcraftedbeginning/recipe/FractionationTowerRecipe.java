@@ -78,8 +78,9 @@ public final class FractionationTowerRecipe extends GasProcessingRecipe<RecipeIn
         if (!temperature.isValid() || temperature.condition() == TemperatureCondition.NONE) {
             errors.add("Fractionation tower temperature must specify valid heating or cooling; got " + temperature + '.');
         }
-        if (getProcessingDuration() <= 0) {
-            errors.add("Fractionation tower duration must be positive; got " + getProcessingDuration() + " ticks.");
+        int processingDuration = getProcessingDuration();
+        if (processingDuration <= 0) {
+            errors.add("Fractionation tower duration must be positive; got " + processingDuration + " ticks.");
         }
         if (getIngredients().isEmpty() && getFluidIngredients().isEmpty() && getGasRequirements().isEmpty()) {
             errors.add("Fractionation tower recipe requires at least one input.");
@@ -90,8 +91,9 @@ public final class FractionationTowerRecipe extends GasProcessingRecipe<RecipeIn
         Set<Integer> layers = new HashSet<>();
         boolean distinctProducts = false;
         for (FractionationTowerOutput output : outputs) {
-            if (!output.isValid() || !layers.add(output.layer())) {
-                errors.add("Fractionation tower output requires one product and a unique layer offset in [1, 9); got offset " + output.layer() + '.');
+            int layer = output.layer();
+            if (!output.isValid() || !layers.add(layer)) {
+                errors.add("Fractionation tower output requires one product and a unique layer offset in [1, 9); got offset " + layer + '.');
             }
             if (output.isSameProduct(outputs.getFirst())) {
                 continue;

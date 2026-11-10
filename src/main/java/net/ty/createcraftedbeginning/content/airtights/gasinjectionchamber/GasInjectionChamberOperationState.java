@@ -1,6 +1,9 @@
 package net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.item.crafting.RecipeManager;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads.Generation;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +14,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasInjectionChamberOperationState {
-    static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
+    @Internal
+    public static final String COMPOUND_KEY_PROCESSING_TICKS = "ProcessingTicks";
     static final String COMPOUND_KEY_PRESSURE_SPEED_MULTIPLIER = "PressureSpeedMultiplier";
     static final String COMPOUND_KEY_PROCESSING_CYCLE = "ProcessingCycle";
 
@@ -22,6 +26,7 @@ public final class GasInjectionChamberOperationState {
     private int processingCycle;
     private boolean executionAttempted;
     private @Nullable GasInjectionRecipe recipe;
+    private @Nullable Generation recipeGeneration;
 
     private static float sanitizePressureSpeedMultiplier(float multiplier) {
         if (Float.isFinite(multiplier) && multiplier >= 1.0F) {
@@ -32,11 +37,12 @@ public final class GasInjectionChamberOperationState {
     }
 
     @Internal
-    public void startProcessing(OperationType type, float pressureSpeedMultiplier, @Nullable GasInjectionRecipe recipe) {
+    public void startProcessing(OperationType type, float pressureSpeedMultiplier, @Nullable GasInjectionRecipe recipe, RecipeManager recipeManager) {
         processingCycle++;
         this.type = type;
         this.pressureSpeedMultiplier = sanitizePressureSpeedMultiplier(pressureSpeedMultiplier);
         this.recipe = recipe;
+        recipeGeneration = recipe == null ? null : CCBRecipeReloads.getGeneration(recipeManager);
         processingTicks = GasInjectionChamberBlockEntity.PROCESSING_TIME + GasInjectionChamberBlockEntity.NOZZLE_IDLE_TIME;
         previousProcessingTicks = processingTicks;
         executionAttempted = false;
@@ -62,9 +68,13 @@ public final class GasInjectionChamberOperationState {
         return recipe;
     }
 
-    void synchronizeProcessingState(float syncedTicks, float syncedSpeedMultiplier, int syncedCycle) {
+    boolean isRecipeCurrent(RecipeManager recipeManager) {
+        return recipe == null || recipeGeneration == CCBRecipeReloads.getGeneration(recipeManager);
+    }
+
+    void loadProcessingState(float syncedTicks, float syncedSpeedMultiplier, int syncedCycle, boolean clientPacket) {
         boolean sameRunningCycle = processingTicks >= 0 && syncedTicks >= 0 && processingCycle == syncedCycle;
-        if (sameRunningCycle) {
+        if (clientPacket && sameRunningCycle) {
             return;
         }
 
@@ -101,6 +111,7 @@ public final class GasInjectionChamberOperationState {
         pressureSpeedMultiplier = 1;
         executionAttempted = false;
         recipe = null;
+        recipeGeneration = null;
     }
 
     @Internal

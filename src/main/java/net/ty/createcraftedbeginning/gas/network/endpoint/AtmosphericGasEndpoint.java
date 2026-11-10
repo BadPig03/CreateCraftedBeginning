@@ -24,6 +24,7 @@ import net.ty.createcraftedbeginning.gas.network.GasTransportNode;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseState;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 import org.jetbrains.annotations.Nullable;
@@ -78,7 +79,7 @@ public final class AtmosphericGasEndpoint extends GasConnectionEndpoint {
     }
 
     public boolean canExtractAtmosphericGas() {
-        if (level == null || !level.isLoaded(outputPos) || !CCBConfig.server().gas.atmosphere.allowEnvironmentAirExtraction.get()) {
+        if (level == null || !level.isLoaded(outputPos) || !level.isLoaded(SubLevelBridge.resolve(level, outputPos).blockPos()) || !CCBConfig.server().gas.atmosphere.allowEnvironmentAirExtraction.get()) {
             return false;
         }
 
@@ -149,7 +150,7 @@ public final class AtmosphericGasEndpoint extends GasConnectionEndpoint {
         }
 
         private long fill(GasStack resource, OptionalLong sourcePressurePa, GasAction action) {
-            if (level == null || !level.isLoaded(outputPos) || resource.isEmpty()) {
+            if (level == null || !level.isLoaded(outputPos) || !level.isLoaded(SubLevelBridge.resolve(level, outputPos).blockPos()) || resource.isEmpty()) {
                 return 0;
             }
 
@@ -194,11 +195,12 @@ public final class AtmosphericGasEndpoint extends GasConnectionEndpoint {
             }
 
             AtmosphereState atmosphereState = getAtmosphereState();
-            if (atmosphereState.gas().isEmpty()) {
+            Gas atmosphericGas = atmosphereState.gas();
+            if (atmosphericGas.isEmpty()) {
                 return GasStack.EMPTY;
             }
 
-            return new GasStack(atmosphereState.gas(), Long.MAX_VALUE);
+            return new GasStack(atmosphericGas, Long.MAX_VALUE);
         }
     }
 }

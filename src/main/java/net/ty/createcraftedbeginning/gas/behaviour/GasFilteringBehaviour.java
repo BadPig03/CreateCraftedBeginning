@@ -29,6 +29,7 @@ import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilters;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.gas.interaction.GasInteractionFeedback;
 import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -40,7 +41,8 @@ import java.util.function.Predicate;
 public class GasFilteringBehaviour extends BlockEntityBehaviour implements ValueSettingsBehaviour {
     public static final BehaviourType<GasFilteringBehaviour> TYPE = new BehaviourType<>();
 
-    private static final String COMPOUND_KEY_FILTER = "Filter";
+    @Internal
+    public static final String COMPOUND_KEY_FILTER = "Filter";
     private static final String COMPOUND_KEY_FILTERING = "Filtering";
 
     private final Predicate<ItemStack> predicate = GasFilters::isFilter;

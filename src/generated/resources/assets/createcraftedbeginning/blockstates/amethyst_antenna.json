@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "createcraftedbeginning:block/amethyst_antenna/block",
+      "x": 180
+    },
+    "facing=east": {
+      "model": "createcraftedbeginning:block/amethyst_antenna/block",
+      "x": 270,
+      "y": 270
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/amethyst_antenna/block",
+      "x": 270,
+      "y": 180
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/amethyst_antenna/block",
+      "x": 270
+    },
+    "facing=up": {
+      "model": "createcraftedbeginning:block/amethyst_antenna/block"
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/amethyst_antenna/block",
+      "x": 270,
+      "y": 90
+    }
+  }
+}

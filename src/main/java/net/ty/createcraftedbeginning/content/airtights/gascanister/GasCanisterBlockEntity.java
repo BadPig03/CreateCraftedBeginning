@@ -5,6 +5,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -13,8 +14,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.ty.createcraftedbeginning.api.canister.CanisterCapabilities;
+import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseCause;
 import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
 import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
 import net.ty.createcraftedbeginning.gas.storage.GasTankState;
 import net.ty.createcraftedbeginning.gas.storage.SmartGasTank;
@@ -31,6 +37,7 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
 
     private ItemStack canister = ItemStack.EMPTY;
     private SmartGasTankBehaviour tankBehaviour;
+    private boolean overflowPending;
 
     public GasCanisterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -54,21 +61,42 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.read(compoundTag, provider, clientPacket);
-        if (!compoundTag.contains(COMPOUND_KEY_CANISTER)) {
-            return;
-        }
-
         ItemStack loadedCanister = ItemStack.parseOptional(provider, compoundTag.getCompound(COMPOUND_KEY_CANISTER));
         if (!(loadedCanister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+            super.read(compoundTag, provider, clientPacket);
             return;
         }
 
-        if (!applyCanisterState(canisterContents)) {
-            return;
-        }
-
+        applyCanisterState(canisterContents);
         canister = loadedCanister;
+        CompoundTag behaviourData = compoundTag.copy();
+        tankBehaviour.write(behaviourData, provider, clientPacket);
+        super.read(behaviourData, provider, clientPacket);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!overflowPending || level == null || level.isClientSide) {
+            return;
+        }
+
+        overflowPending = false;
+        if (!(canister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents contents)) {
+            return;
+        }
+
+        long excessAmount = contents.getGasInTank(0).getAmount() - contents.getTankMaxAmount(0);
+        if (excessAmount <= 0) {
+            applyCanisterState(contents);
+            return;
+        }
+
+        long sourcePressurePa = contents.getTankPressurePa(0);
+        GasStack excessGas = contents.drain(0, excessAmount, GasAction.EXECUTE);
+        applyCanisterState(contents);
+        notifyUpdate();
+        GasReleaseService.release(level, GasReleaseRequest.radial(excessGas, worldPosition, GasReleaseCause.OVERFLOW, sourcePressurePa));
     }
 
     @Override
@@ -94,10 +122,7 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
             return;
         }
 
-        if (!applyCanisterState(canisterContents)) {
-            return;
-        }
-
+        applyCanisterState(canisterContents);
         canister = installedCanister;
         notifyUpdate();
     }
@@ -106,15 +131,31 @@ public class GasCanisterBlockEntity extends SmartBlockEntity implements IHaveGog
         return canister;
     }
 
-    private boolean applyCanisterState(GasCanisterContainerContents canisterContents) {
-        GasTankLimits limits = new GasTankLimits(canisterContents.getTankVolume(0), canisterContents.getTankMaxPressurePa(0));
-        GasTankState state = new GasTankState(limits, canisterContents.getGasInTank(0));
-        SmartGasTank gasTank = tankBehaviour.getPrimaryHandler();
-        if (!gasTank.canContain(state.limits(), state.contents())) {
-            return false;
+    void releaseGas() {
+        if (level == null || level.isClientSide) {
+            return;
         }
 
-        gasTank.tryApplyState(state).requireAccepted();
-        return true;
+        if (!(canister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents contents) || contents.isEmpty()) {
+            return;
+        }
+
+        long sourcePressurePa = contents.getTankPressurePa(0);
+        GasStack releasedGas = contents.drain(0, contents.getGasInTank(0).getAmount(), GasAction.EXECUTE);
+        setCanisterContent(canister);
+        GasReleaseService.release(level, GasReleaseRequest.directional(releasedGas, worldPosition, Direction.UP, GasReleaseCause.MANUAL_VENT, sourcePressurePa));
+    }
+
+    private void applyCanisterState(GasCanisterContainerContents canisterContents) {
+        GasTankLimits limits = new GasTankLimits(canisterContents.getTankVolume(0), canisterContents.getTankMaxPressurePa(0));
+        GasStack storedGas = canisterContents.getGasInTank(0);
+        long maxAmount = limits.maxAmount();
+        overflowPending = storedGas.getAmount() > maxAmount;
+        if (overflowPending) {
+            storedGas = storedGas.copyWithAmount(maxAmount);
+        }
+
+        SmartGasTank gasTank = tankBehaviour.getPrimaryHandler();
+        gasTank.tryApplyState(new GasTankState(limits, storedGas)).requireAccepted();
     }
 }

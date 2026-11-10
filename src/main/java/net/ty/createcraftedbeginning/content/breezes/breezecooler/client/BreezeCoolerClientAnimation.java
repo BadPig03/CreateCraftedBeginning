@@ -5,6 +5,7 @@ import net.createmod.catnip.math.AngleHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
@@ -48,10 +49,12 @@ public final class BreezeCoolerClientAnimation {
         float targetAngle = 0;
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer != null && !localPlayer.isInvisible()) {
-            double playerX = cooler.isVirtual() ? -4 : localPlayer.getX();
-            double playerZ = cooler.isVirtual() ? -10 : localPlayer.getZ();
-            double deltaX = playerX - (cooler.getBlockPos().getX() + 0.5);
-            double deltaZ = playerZ - (cooler.getBlockPos().getZ() + 0.5);
+            boolean virtual = cooler.isVirtual();
+            BlockPos pos = cooler.getBlockPos();
+            double playerX = virtual ? -4 : localPlayer.getX();
+            double playerZ = virtual ? -10 : localPlayer.getZ();
+            double deltaX = playerX - (pos.getX() + 0.5);
+            double deltaZ = playerZ - (pos.getZ() + 0.5);
             targetAngle = AngleHelper.deg(-Mth.atan2(deltaZ, deltaX)) - 90;
         }
         float currentAngle = cooler.getHeadAngle().getValue();

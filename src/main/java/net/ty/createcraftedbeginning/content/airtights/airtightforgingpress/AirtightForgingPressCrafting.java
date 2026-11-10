@@ -12,6 +12,7 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
@@ -55,7 +56,7 @@ public final class AirtightForgingPressCrafting {
         return AirtightForgingPressAutomationPlanner.planSmithingRecipe(press, recipe).map(plan -> press.commitCraft(plan.consumption(), plan.output())).orElse(false);
     }
 
-    private static boolean insertOutputs(SmartInventory inventory, List<ItemStack> outputItems) {
+    private static boolean insertOutputs(IItemHandler inventory, List<ItemStack> outputItems) {
         for (ItemStack outputStack : outputItems) {
             if (outputStack.isEmpty()) {
                 continue;
@@ -100,7 +101,7 @@ public final class AirtightForgingPressCrafting {
     }
 
     Optional<OutputPlan> planOutputs(List<ItemStack> outputItems) {
-        SmartInventory simulatedOutput = createOutputSimulation();
+        ItemStackHandler simulatedOutput = createOutputSimulation();
         if (!insertOutputs(simulatedOutput, outputItems)) {
             return Optional.empty();
         }
@@ -130,12 +131,15 @@ public final class AirtightForgingPressCrafting {
     ConsumptionPlan createConsumptionPlan(ItemStack expectedProcessingStack, int processingAmount, ItemStack expectedInputStack, int inputAmount, int[] fluidAmounts, GasConsumptionPlan gasPlan) {
         IFluidHandler fluidCapability = press.getFluidCapability();
         GasStorageHandler gasCapability = press.getGasCapability();
-        if (fluidAmounts.length != fluidCapability.getTanks() || gasPlan.tankAmounts().length != gasCapability.getTanks()) {
-            throw new IllegalArgumentException("Forging press consumption plan tank count mismatch: expected " + fluidCapability.getTanks() + " fluid tanks and " + gasCapability.getTanks() + " gas tanks, got " + fluidAmounts.length + " and " + gasPlan.tankAmounts().length + ", respectively.");
+        int fluidTankCount = fluidCapability.getTanks();
+        int gasTankCount = gasCapability.getTanks();
+        int plannedGasTankCount = gasPlan.tankAmounts().length;
+        if (fluidAmounts.length != fluidTankCount || plannedGasTankCount != gasTankCount) {
+            throw new IllegalArgumentException("Forging press consumption plan tank count mismatch: expected " + fluidTankCount + " fluid tanks and " + gasTankCount + " gas tanks, got " + fluidAmounts.length + " and " + plannedGasTankCount + ", respectively.");
         }
 
-        if (fluidAmounts.length != 1 || gasCapability.getTanks() != 1) {
-            throw new IllegalStateException("The airtight forging press requires exactly one fluid tank and one gas tank; got " + fluidAmounts.length + " fluid tanks and " + gasCapability.getTanks() + " gas tanks.");
+        if (fluidAmounts.length != 1 || gasTankCount != 1) {
+            throw new IllegalStateException("The airtight forging press requires exactly one fluid tank and one gas tank; got " + fluidAmounts.length + " fluid tanks and " + gasTankCount + " gas tanks.");
         }
 
         ItemStack expectedPressHead = press.getPressHeadInventory().getStackInSlot(0).copy();
@@ -221,11 +225,16 @@ public final class AirtightForgingPressCrafting {
         }
     }
 
-    private SmartInventory createOutputSimulation() {
+    private ItemStackHandler createOutputSimulation() {
         SmartInventory outputInventory = press.getOutputInventory();
-        SmartInventory simulatedOutput = new SmartInventory(outputInventory.getSlots(), press);
-        simulatedOutput.allowInsertion();
-        for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
+        int outputSlotCount = outputInventory.getSlots();
+        ItemStackHandler simulatedOutput = new ItemStackHandler(outputSlotCount) {
+            @Override
+            public int getSlotLimit(int slot) {
+                return outputInventory.getSlotLimit(slot);
+            }
+        };
+        for (int slot = 0; slot < outputSlotCount; slot++) {
             simulatedOutput.setStackInSlot(slot, outputInventory.getStackInSlot(slot).copy());
         }
         return simulatedOutput;

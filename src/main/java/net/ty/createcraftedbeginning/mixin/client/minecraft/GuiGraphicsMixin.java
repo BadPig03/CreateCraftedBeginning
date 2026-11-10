@@ -32,21 +32,20 @@ public abstract class GuiGraphicsMixin {
         }
 
         Couple<Integer> hoveredSlot = accessor.ccb$getHoveredSlot(mouseX, mouseY);
-        if (hoveredSlot.getFirst() == -1 && hoveredSlot.getSecond() == -1 || hoveredSlot.getFirst() == -2) {
+        int row = hoveredSlot.getFirst();
+        int column = hoveredSlot.getSecond();
+        if (row == -1 && column == -1 || row == -2) {
             return;
         }
 
-        boolean orderHovered = hoveredSlot.getFirst() == -1;
+        boolean orderHovered = row == -1;
         BigItemStack entry = null;
         if (orderHovered) {
-            int index = hoveredSlot.getSecond();
-            if (index >= 0 && index < requestScreen.itemsToOrder.size()) {
-                entry = requestScreen.itemsToOrder.get(index);
+            if (column >= 0 && column < requestScreen.itemsToOrder.size()) {
+                entry = requestScreen.itemsToOrder.get(column);
             }
         }
         else {
-            int row = hoveredSlot.getFirst();
-            int column = hoveredSlot.getSecond();
             if (row < 0 || row >= requestScreen.displayedItems.size()) {
                 return;
             }

@@ -11,11 +11,14 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads.Generation;
 import net.ty.createcraftedbeginning.recipe.FractionationTowerCraftPlanner;
 import net.ty.createcraftedbeginning.recipe.FractionationTowerCraftPlanner.InputPlan;
 import net.ty.createcraftedbeginning.recipe.FractionationTowerOutput;
 import net.ty.createcraftedbeginning.recipe.FractionationTowerRecipe;
 import net.ty.createcraftedbeginning.recipe.PotionFractionationRecipes;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -26,25 +29,31 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightFractionationTowerCrafting {
+@Internal
+public final class AirtightFractionationTowerCrafting {
     private static final int RECIPE_SEARCH_INTERVAL = 10;
     private static final int PROGRESS_SYNC_INTERVAL = 4;
-    private static final String COMPOUND_KEY_RECIPE = "Recipe";
-    private static final String COMPOUND_KEY_PROGRESS = "Progress";
-    private static final String COMPOUND_KEY_DURATION = "Duration";
-    private static final String COMPOUND_KEY_PAUSED = "Paused";
-    private static final String COMPOUND_KEY_PAUSE_REASON = "PauseReason";
+    @Internal
+    public static final String COMPOUND_KEY_RECIPE = "Recipe";
+    @Internal
+    public static final String COMPOUND_KEY_PROGRESS = "Progress";
+    @Internal
+    public static final String COMPOUND_KEY_DURATION = "Duration";
+    @Internal
+    public static final String COMPOUND_KEY_PAUSED = "Paused";
+    @Internal
+    public static final String COMPOUND_KEY_PROCESSING_ISSUE = "ProcessingIssue";
     private static final String COMPOUND_KEY_POTION_INPUT = "PotionInput";
 
     private final AirtightFractionationTowerBlockEntity tower;
     private @Nullable ResourceLocation recipeId;
     private @Nullable FractionationTowerRecipe activeRecipe;
     private FluidStack potionInput = FluidStack.EMPTY;
-    private @Nullable List<RecipeHolder<FractionationTowerRecipe>> potionRecipeGeneration;
+    private @Nullable Generation potionRecipeGeneration;
     private int progress;
     private int duration;
     private boolean paused;
-    private PauseReason pauseReason = PauseReason.OTHER;
+    private ProcessingIssue processingIssue = ProcessingIssue.NONE;
     private int searchCooldown;
 
     AirtightFractionationTowerCrafting(AirtightFractionationTowerBlockEntity tower) {
@@ -61,11 +70,10 @@ final class AirtightFractionationTowerCrafting {
         int previousProgress = progress;
         int previousDuration = duration;
         boolean previouslyPaused = paused;
-        PauseReason previousPauseReason = pauseReason;
+        ProcessingIssue previousProcessingIssue = processingIssue;
         paused = recipeId != null;
-        pauseReason = PauseReason.OTHER;
         advance(level);
-        if (Objects.equals(previousRecipe, recipeId) && previousDuration == duration && previouslyPaused == paused && previousPauseReason == pauseReason && (previousProgress == progress || progress % PROGRESS_SYNC_INTERVAL != 0)) {
+        if (Objects.equals(previousRecipe, recipeId) && previousDuration == duration && previouslyPaused == paused && previousProcessingIssue == processingIssue && (previousProgress == progress || progress % PROGRESS_SYNC_INTERVAL != 0)) {
             return;
         }
 
@@ -80,16 +88,15 @@ final class AirtightFractionationTowerCrafting {
         return duration;
     }
 
-    boolean isPaused() {
-        return paused;
-    }
-
-    PauseReason getPauseReason() {
-        return pauseReason;
+    ProcessingIssue getProcessingIssue() {
+        return processingIssue;
     }
 
     CompoundTag write(Provider provider) {
         CompoundTag tag = new CompoundTag();
+        if (processingIssue != ProcessingIssue.NONE) {
+            tag.putString(COMPOUND_KEY_PROCESSING_ISSUE, processingIssue.name());
+        }
         if (recipeId == null) {
             return tag;
         }
@@ -98,7 +105,6 @@ final class AirtightFractionationTowerCrafting {
         tag.putInt(COMPOUND_KEY_PROGRESS, progress);
         tag.putInt(COMPOUND_KEY_DURATION, duration);
         tag.putBoolean(COMPOUND_KEY_PAUSED, paused);
-        tag.putString(COMPOUND_KEY_PAUSE_REASON, pauseReason.name());
         if (!potionInput.isEmpty()) {
             tag.put(COMPOUND_KEY_POTION_INPUT, potionInput.save(provider));
         }
@@ -111,6 +117,12 @@ final class AirtightFractionationTowerCrafting {
             return;
         }
 
+        processingIssue = switch (tag.getString(COMPOUND_KEY_PROCESSING_ISSUE)) {
+            case "HEIGHT" -> ProcessingIssue.HEIGHT;
+            case "TEMPERATURE" -> ProcessingIssue.TEMPERATURE;
+            case "OUTPUT" -> ProcessingIssue.OUTPUT;
+            default -> ProcessingIssue.NONE;
+        };
         String savedRecipe = tag.getString(COMPOUND_KEY_RECIPE);
         if (savedRecipe.isEmpty()) {
             return;
@@ -118,7 +130,7 @@ final class AirtightFractionationTowerCrafting {
 
         recipeId = ResourceLocation.tryParse(savedRecipe);
         if (recipeId == null || recipeId.getPath().isEmpty()) {
-            recipeId = null;
+            clear();
             return;
         }
 
@@ -134,16 +146,6 @@ final class AirtightFractionationTowerCrafting {
         duration = Math.max(0, tag.getInt(COMPOUND_KEY_DURATION));
         progress = Math.clamp(tag.getInt(COMPOUND_KEY_PROGRESS), 0, duration);
         paused = tag.getBoolean(COMPOUND_KEY_PAUSED);
-        if (!paused) {
-            return;
-        }
-
-        pauseReason = switch (tag.getString(COMPOUND_KEY_PAUSE_REASON)) {
-            case "TEMPERATURE" -> PauseReason.TEMPERATURE;
-            case "OUTPUT" -> PauseReason.OUTPUT;
-            case "STRUCTURE" -> PauseReason.STRUCTURE;
-            default -> PauseReason.OTHER;
-        };
     }
 
     void clear() {
@@ -154,7 +156,7 @@ final class AirtightFractionationTowerCrafting {
         progress = 0;
         duration = 0;
         paused = false;
-        pauseReason = PauseReason.OTHER;
+        processingIssue = ProcessingIssue.NONE;
         searchCooldown = 0;
     }
 
@@ -164,15 +166,14 @@ final class AirtightFractionationTowerCrafting {
             return;
         }
 
+        processingIssue = ProcessingIssue.NONE;
         List<Layer> layers = findLayers(level);
         if (layers.isEmpty()) {
-            if (paused) {
-                pauseReason = PauseReason.STRUCTURE;
-            }
             return;
         }
 
         RecipeManager recipes = level.getRecipeManager();
+        Generation generation = CCBRecipeReloads.getGeneration(recipes);
         List<RecipeHolder<FractionationTowerRecipe>> candidates = AirtightFractionationTowerRecipeLookup.getRecipes(recipes);
         if (recipeId != null) {
             FractionationTowerRecipe recipe;
@@ -180,13 +181,13 @@ final class AirtightFractionationTowerCrafting {
                 recipe = AirtightFractionationTowerRecipeLookup.findRecipe(recipes, recipeId);
             }
             else {
-                if (potionRecipeGeneration != null && potionRecipeGeneration != candidates) {
+                if (potionRecipeGeneration != null && potionRecipeGeneration != generation) {
                     clear();
                     tower.setChanged();
                     return;
                 }
 
-                potionRecipeGeneration = candidates;
+                potionRecipeGeneration = generation;
                 recipe = activeRecipe;
             }
             if (recipe == null || activeRecipe != null && activeRecipe != recipe) {
@@ -206,12 +207,12 @@ final class AirtightFractionationTowerCrafting {
             searchCooldown = RECIPE_SEARCH_INTERVAL;
             for (RecipeHolder<FractionationTowerRecipe> holder : candidates) {
                 FractionationTowerRecipe recipe = holder.value();
-                if (recipe.getRequiredHeight() > layers.size() || !recipe.getTemperatureRecipeData().test(tower.getRecipeTemperature())) {
+                int inputIndex = recipe.isCondensation() ? layers.size() - 1 : 0;
+                if (layers.get(inputIndex).planner().planInputs(recipe).isEmpty()) {
                     continue;
                 }
 
-                int inputIndex = recipe.isCondensation() ? layers.size() - 1 : 0;
-                if (layers.get(inputIndex).planner().planInputs(recipe).isEmpty()) {
+                if (!checkRecipeConditions(recipe, layers.size())) {
                     continue;
                 }
 
@@ -227,12 +228,12 @@ final class AirtightFractionationTowerCrafting {
                     for (int tank = 0; tank < fluids.getTanks(); tank++) {
                         FluidStack fluid = fluids.getFluidInTank(tank);
                         FractionationTowerRecipe potionRecipe = PotionFractionationRecipes.create(fluid);
-                        if (potionRecipe == null || potionRecipe.getRequiredHeight() > layers.size() || !potionRecipe.getTemperatureRecipeData().test(tower.getRecipeTemperature())) {
+                        if (potionRecipe == null || !checkRecipeConditions(potionRecipe, layers.size())) {
                             continue;
                         }
 
                         potionInput = fluid.copyWithAmount(PotionFractionationRecipes.BATCH_AMOUNT);
-                        potionRecipeGeneration = candidates;
+                        potionRecipeGeneration = generation;
                         recipeId = PotionFractionationRecipes.RECIPE_ID;
                         activeRecipe = potionRecipe;
                         progress = 0;
@@ -247,8 +248,10 @@ final class AirtightFractionationTowerCrafting {
             return;
         }
 
+        processingIssue = ProcessingIssue.NONE;
         if (recipe.getRequiredHeight() > layers.size()) {
             clear();
+            processingIssue = ProcessingIssue.HEIGHT;
             tower.setChanged();
             return;
         }
@@ -266,14 +269,14 @@ final class AirtightFractionationTowerCrafting {
         }
 
         if (!recipe.getTemperatureRecipeData().test(tower.getRecipeTemperature())) {
-            pauseReason = PauseReason.TEMPERATURE;
+            processingIssue = ProcessingIssue.TEMPERATURE;
             return;
         }
 
         for (FractionationTowerOutput output : recipe.getLayerOutputs()) {
             Layer layer = layers.get(inputIndex + direction * output.layer());
             if (!layer.inventory().transferOutput(output, true)) {
-                pauseReason = PauseReason.OUTPUT;
+                processingIssue = ProcessingIssue.OUTPUT;
                 return;
             }
         }
@@ -301,6 +304,22 @@ final class AirtightFractionationTowerCrafting {
         for (Layer layer : layers) {
             layer.controller().notifyUpdate();
         }
+    }
+
+    private boolean checkRecipeConditions(FractionationTowerRecipe recipe, int height) {
+        if (recipe.getRequiredHeight() > height) {
+            processingIssue = ProcessingIssue.HEIGHT;
+            return false;
+        }
+
+        if (!recipe.getTemperatureRecipeData().test(tower.getRecipeTemperature())) {
+            if (processingIssue != ProcessingIssue.HEIGHT) {
+                processingIssue = ProcessingIssue.TEMPERATURE;
+            }
+            return false;
+        }
+
+        return true;
     }
 
     private List<Layer> findLayers(Level level) {
@@ -333,11 +352,11 @@ final class AirtightFractionationTowerCrafting {
         return layers;
     }
 
-    enum PauseReason {
-        OTHER,
+    enum ProcessingIssue {
+        NONE,
+        HEIGHT,
         TEMPERATURE,
-        OUTPUT,
-        STRUCTURE
+        OUTPUT
     }
 
     private record Layer(AirtightFractionationTowerBlockEntity controller, AirtightFractionationTowerInventory inventory, FractionationTowerCraftPlanner planner) {}

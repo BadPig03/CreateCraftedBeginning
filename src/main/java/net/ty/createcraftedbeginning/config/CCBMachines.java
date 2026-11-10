@@ -23,15 +23,12 @@ public final class CCBMachines extends ConfigBase {
     public final GasPackager gasPackager = nested(0, GasPackager::new, "Gas Packager");
     public final TeslaTurbine teslaTurbine = nested(0, TeslaTurbine::new, "Tesla Turbine");
     public final AirtightAssemblyDriver airtightAssemblyDriver = nested(0, AirtightAssemblyDriver::new, "Airtight Assembly Driver");
-    public final EndSculkSilencer endSculkSilencer = nested(0, EndSculkSilencer::new, "End Sculk Silencer");
 
     @Override
     public String getName() {
         return "machines";
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class ResidueOutlet extends ConfigBase {
         public final ConfigInt fluidCapacity = i(4, 1, "fluid_capacity", "[Unit: buckets]", "Fluid storage capacity of one Residue Outlet.");
 
@@ -41,8 +38,6 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class AirtightForgingPress extends ConfigBase {
         public final ConfigBool enableAutomaticPressingRecipes = b(true, "enable_automatic_pressing_recipes", "Allow the Airtight Forging Press to process eligible Create pressing recipes in addition to its native recipes.");
         public final ConfigBool enableAutomaticCrushingRecipes = b(true, "enable_automatic_crushing_recipes", "Allow the Airtight Forging Press to process eligible Create crushing recipes with a Heavy Core installed as the press head and an empty addition slot. Items without a matching recipe are kept. Disabling this option leaves native forging recipes available.");
@@ -57,8 +52,6 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class AirtightFractionationTower extends ConfigBase {
         private static final int MAX_ITEM_SLOTS_PER_LAYER = 64;
         private static final int MAX_TANKS_PER_LAYER = 9;
@@ -76,8 +69,6 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class AirtightHatch extends ConfigBase {
         public final ConfigInt maxTransferPerSecond = i(20000, 1, "max_transfer_per_second", "[Unit: GU/s]", "Maximum passive gas transfer through an Airtight Hatch per second. Transfer requires a favorable pressure difference and slows as the connected pressures approach equilibrium.");
 
@@ -87,8 +78,6 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class AirtightPump extends ConfigBase {
         public final ConfigFloat maxPressureBoost = f(4, 0, GasPressureLimits.HARD_PRESSURE_ATM, "max_pressure_boost", "[Unit: atm; 1 atm = 100000 Pa]", "Maximum pressure boost in the pumping direction at Create's configured maximum rotation speed. Boost scales with absolute speed; forward flow stops when the opposing pressure difference reaches the available boost. Set to 0 to disable pressure boost.");
         public final ConfigInt maxFlowPerTick = i(4000, 0, 1000000, "max_flow_per_tick", "[Unit: GU/t]", "Maximum free flow at Create's configured maximum rotation speed with an inlet pressure of at least 1 atm. Flow scales with absolute speed and decreases with opposing pressure difference. Inlet pressure below 1 atm further reduces throughput. Set to 0 to disable pump flow.");
@@ -99,8 +88,6 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class AirtightRegulatorPump extends ConfigBase {
         public final ConfigFloat maxPressureRise = f(8, 0, GasPressureLimits.HARD_PRESSURE_ATM, "max_pressure_rise", "[Unit: atm; 1 atm = 100000 Pa]", "Maximum pressure rise above the inlet pressure in one pump stage, independent of rotation speed. Flow stops at the lower of the outlet set pressure and the inlet pressure plus this rise.");
         public final ConfigInt maxFlowPerTick = i(4000, 0, 1000000, "max_flow_per_tick", "[Unit: GU/t]", "Maximum free flow at Create's configured maximum rotation speed with an inlet pressure of at least 1 atm. Flow scales with absolute speed and decreases as outlet pressure approaches the regulation limit. Low inlet pressure further reduces throughput. Set to 0 to disable pump flow.");
@@ -111,14 +98,14 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class AirtightReactorKettle extends ConfigBase {
+        private static final int MAX_FLUID_CAPACITY_PER_TANK = 2147483;
+
         public final ConfigBool enableAutomaticMixingRecipes = b(true, "enable_automatic_mixing_recipes", "Allow the Airtight Reactor Kettle to process eligible Create mixing recipes and chilled mixing recipes with no additional processing duration. Automatic brewing is controlled separately. Disabling this option cancels uncommitted automatic mixing operations and leaves other reactor kettle recipe categories available under their existing rules.");
         public final ConfigBool enableAutomaticBrewingRecipes = b(true, "enable_automatic_brewing_recipes", "Allow the Airtight Reactor Kettle to process brewing recipes generated by Create with no additional processing duration. This option is independent of automatic mixing and Create's mixer brewing option. Disabling it cancels uncommitted automatic brewing operations and leaves other reactor kettle recipe categories available under their existing rules.");
         public final ConfigBool enableAutomaticShapelessRecipes = b(true, "enable_automatic_shapeless_recipes", "Allow the Airtight Reactor Kettle to process eligible shapeless crafting recipes in addition to its native recipes.");
         public final ConfigFloat mixerDamageMultiplier = f(1, 0, "mixer_damage_multiplier", "[Unit: multiplier relative to standard behavior; 1 = standard]", "Multiplier applied to operating mixer damage, whose base value is absolute rotation speed divided by 32. Set to 0 to disable mixer damage.");
-        public final ConfigInt fluidCapacityPerTank = i(9, 1, "fluid_capacity_per_tank", "[Unit: buckets]", "Fluid capacity of each Airtight Reactor Kettle fluid tank segment.");
+        public final ConfigInt fluidCapacityPerTank = i(9, 1, MAX_FLUID_CAPACITY_PER_TANK, "fluid_capacity_per_tank", "[Unit: buckets]", "Fluid capacity of each Airtight Reactor Kettle fluid tank segment.");
         public final ConfigInt gasVolumePerTank = i(90, 1, "gas_volume_per_tank", "[Unit: kL]", "Physical gas volume of each Airtight Reactor Kettle gas tank segment. Gas amount at a given pressure scales with this volume.");
 
         @Override
@@ -127,8 +114,6 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class AirtightTank extends ConfigBase {
         public final ConfigInt gasVolumePerBlock = i(80, 1, "gas_volume_per_block", "[Unit: kL]", "Physical gas volume contributed by each block of an Airtight Tank multiblock. At 1 atm, each liter holds 1 GU; increasing volume increases the gas amount held at the same pressure.");
         public final ConfigInt maxHeight = i(4, 1, 32, "max_height", "[Unit: blocks]", "Maximum height of an Airtight Tank or Creative Airtight Tank multiblock. Existing tanks may need to be reassembled after changing this value.");
@@ -140,8 +125,6 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class BreezeChamber extends ConfigBase {
         public final ConfigInt gasVolume = i(40, 1, "gas_volume", "[Unit: kL]", "Physical gas volume of the Breeze Chamber tank. Gas amount at a given pressure scales with this volume.");
         public final ConfigInt maxProcessingPerSecond = i(5120, 1, "max_processing_per_second", "[Unit: GU/s]", "Maximum gas processing rate of a Breeze Chamber. Actual processing also depends on the available wind charge and operating pressure.");
@@ -153,11 +136,11 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class BreezeCooler extends ConfigBase {
+        private static final int MAX_FLUID_CAPACITY = 2147483;
+
         public final ConfigBool allowSpawnerCapture = b(true, "allow_spawner_capture", "Allow an Empty Breeze Cooler to capture a Breeze from a spawner or trial spawner.");
-        public final ConfigInt fluidCapacity = i(4, 1, "fluid_capacity", "[Unit: buckets]", "Fluid capacity of the Breeze Cooler input tank.");
+        public final ConfigInt fluidCapacity = i(4, 1, MAX_FLUID_CAPACITY, "fluid_capacity", "[Unit: buckets]", "Fluid capacity of the Breeze Cooler input tank. Applies when the block entity is created or loaded.");
         public final ConfigInt destructionTemperatureKelvin = i(1300, 1, "destruction_temperature_kelvin", "[Unit: K]", "Fluid temperature at or above which a non-creative Breeze Cooler is destroyed.");
         public final ConfigInt maxCoolingTicks = i(72000, 20, "max_cooling_ticks", "[Unit: ticks; 20 ticks = 1 second at 20 TPS]", "Maximum stored cooling duration in a Breeze Cooler. This controls cooling time, not fluid capacity.");
         public final ConfigInt coolingTicksPerSnowball = i(20, 0, "cooling_ticks_per_snowball", "[Unit: ticks; 20 ticks = 1 second at 20 TPS]", "Cooling duration added when a snowball hits a Breeze Cooler. Set to 0 to disable cooling with snowballs.");
@@ -168,8 +151,6 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class GasInjectionChamber extends ConfigBase {
         public final ConfigInt fanProcessingGasPerItem = i(500, 0, 10000, "fan_processing_gas_per_item", "[Unit: GU per item]", "Base gas consumption per item processed by the Gas Injection Chamber fan. Set to 0 to disable this consumption.");
         public final ConfigInt gasVolume = i(10, 1, "gas_volume", "[Unit: kL]", "Physical gas volume of the Gas Injection Chamber tank. Gas amount at a given pressure scales with this volume.");
@@ -180,8 +161,6 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class GasPackager extends ConfigBase {
         public final ConfigInt referenceGasPerBalloon = i(10, 1, "reference_gas_per_balloon", "[Unit: kGU]", "Gas amount corresponding to one standard balloon volume at 1 atm. The local packing limit scales with ambient pressure.");
 
@@ -191,12 +170,10 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class TeslaTurbine extends ConfigBase {
-        public final ConfigBool explodesOnIncompatibleGases = b(true, "explodes_on_incompatible_gases", "Cause a Tesla Turbine to explode and lose its rotors when incompatible gases are mixed.");
-        public final ConfigFloat explosionStrengthMultiplier = f(1, 0, "explosion_strength_multiplier", "[Unit: multiplier relative to standard behavior; 1 = standard]", "Multiplier applied to the explosion strength when incompatible gases are mixed in a Tesla Turbine. Base strength equals the installed rotor count. A value of 0 does not protect the rotors when mixed-gas failure is enabled.");
-        public final ConfigBool explosionDamagesSurroundingBlocks = b(false, "explosion_damages_surrounding_blocks", "Allow explosions from incompatible gases in a Tesla Turbine to destroy surrounding blocks. This does not prevent rotor loss when mixed-gas failure is enabled.");
+        public final ConfigBool explodesOnIncompatibleGases = b(true, "explodes_on_incompatible_gases", "Cause a rotating Tesla Turbine to explode and lose its rotors when incompatible gases are mixed. A stopped turbine clears the mixed gas without exploding or losing rotors.");
+        public final ConfigFloat explosionStrengthMultiplier = f(1, 0, "explosion_strength_multiplier", "[Unit: multiplier relative to standard behavior; 1 = standard]", "Multiplier applied to the explosion strength when incompatible gases are mixed in a Tesla Turbine. Base strength equals the installed rotor count. A value of 0 does not protect the rotors when mixed-gas failure is enabled and the turbine is rotating.");
+        public final ConfigBool explosionDamagesSurroundingBlocks = b(false, "explosion_damages_surrounding_blocks", "Allow explosions from incompatible gases in a Tesla Turbine to destroy surrounding blocks. This does not prevent rotor loss when mixed-gas failure is triggered.");
 
         @Override
         public String getName() {
@@ -204,8 +181,6 @@ public final class CCBMachines extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class AirtightAssemblyDriver extends ConfigBase {
         public final ConfigBool useFluidResidueRoundRobin = b(false, "use_fluid_residue_round_robin", "Rotate the preferred Residue Outlet after each successfully generated Fluid Residue batch. Disable to prioritize the first outlet for every batch.");
         public final ConfigBool useItemResidueRoundRobin = b(false, "use_item_residue_round_robin", "Rotate the preferred Residue Outlet after each successfully generated Item Residue batch. Disable to prioritize the first outlet for every batch.");
@@ -215,17 +190,6 @@ public final class CCBMachines extends ConfigBase {
         @Override
         public String getName() {
             return "airtight_assembly_driver";
-        }
-    }
-
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
-    public static final class EndSculkSilencer extends ConfigBase {
-        public final ConfigFloat requiredSpeedMultiplier = f(1, 0, "required_speed_multiplier", "[Unit: multiplier relative to standard behavior; 1 = standard]", "Multiplier applied to the rotation speed required for each End Sculk Silencer range setting.");
-
-        @Override
-        public String getName() {
-            return "end_sculk_silencer";
         }
     }
 }

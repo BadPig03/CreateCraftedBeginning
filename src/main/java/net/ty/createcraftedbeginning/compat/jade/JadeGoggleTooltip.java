@@ -13,12 +13,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlockEntity;
+import net.ty.createcraftedbeginning.platform.client.GoggleItemStorageSource;
 import net.ty.createcraftedbeginning.platform.client.GoggleTooltip;
 import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
-import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import snownee.jade.api.Accessor;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.ITooltip;
@@ -37,7 +35,8 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class JadeGoggleTooltip {
+@Internal
+public final class JadeGoggleTooltip {
     private static final ResourceLocation GOGGLES = ResourceLocation.fromNamespaceAndPath("jadeaddons.create", "goggles");
     private static final ResourceLocation REQUIRES_GOGGLES = ResourceLocation.fromNamespaceAndPath("jadeaddons.create", "goggles.requires_goggles");
     private static final ResourceLocation DETAILED = ResourceLocation.fromNamespaceAndPath("jadeaddons.create", "goggles.detailed");
@@ -45,7 +44,7 @@ final class JadeGoggleTooltip {
     private JadeGoggleTooltip() {
     }
 
-    static void onTooltipCollected(IBoxElement box, Accessor<?> accessor) {
+    public static void onTooltipCollected(IBoxElement box, Accessor<?> accessor) {
         if (!(accessor instanceof BlockAccessor blockAccessor)) {
             return;
         }
@@ -76,27 +75,16 @@ final class JadeGoggleTooltip {
         if (!tooltip.get(JadePlugin.GAS_PIPE_TELEMETRY_TOOLTIP).isEmpty()) {
             hiddenSections.add(Section.PIPE_TELEMETRY);
         }
-        if (!tooltip.get(CCBBlockEntities.BREEZE_CHAMBER.getId()).isEmpty() || !tooltip.get(CCBBlockEntities.BREEZE_COOLER.getId()).isEmpty()) {
+        if (!tooltip.get(BreezeChamberProvider.INSTANCE.getUid()).isEmpty() || !tooltip.get(BreezeCoolerProvider.INSTANCE.getUid()).isEmpty()) {
             hiddenSections.add(Section.BREEZE_TIME);
         }
         if (!tooltip.get(JadeIds.UNIVERSAL_FLUID_STORAGE).isEmpty()) {
             hiddenSections.add(Section.FLUID_STORAGE);
         }
         if (!tooltip.get(JadeIds.UNIVERSAL_ITEM_STORAGE).isEmpty()) {
-            BlockEntity observed = blockAccessor.getBlockEntity();
-            if (source instanceof AirtightForgingPressBlockEntity) {
-                if (observed instanceof AirtightForgingPressBlockEntity) {
-                    hiddenSections.add(Section.PRESS_HEAD);
-                }
-                else if (observed instanceof AirtightForgingPressStructuralShaftBlockEntity) {
-                    hiddenSections.add(Section.PROCESSING_MATERIAL);
-                }
-                else if (observed instanceof AirtightForgingPressStructuralBlockEntity) {
-                    hiddenSections.add(Section.ITEM_STORAGE);
-                }
-            }
-            else {
-                hiddenSections.add(Section.ITEM_STORAGE);
+            Section itemSection = GoggleItemStorageSource.section(source, blockAccessor.getBlockEntity());
+            if (itemSection != null) {
+                hiddenSections.add(itemSection);
             }
         }
         if (hiddenSections.isEmpty()) {

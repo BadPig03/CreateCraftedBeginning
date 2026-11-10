@@ -70,7 +70,8 @@ final class AirtightForgingPressInteraction {
         }
 
         player.setItemInHand(hand, pressHeadInventory.getStackInSlot(0));
-        pressHeadInventory.setStackInSlot(0, remainingStack);
+        pressHeadInventory.setStackInSlot(0, remainingStack.copyWithCount(1));
+        ItemHandlerHelper.giveItemToPlayer(player, remainingStack.copyWithCount(remainingStack.getCount() - 1));
         level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2F, 1 + level.getRandom().nextFloat());
         return ItemInteractionResult.SUCCESS;
     }

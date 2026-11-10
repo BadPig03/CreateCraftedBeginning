@@ -74,6 +74,9 @@ public class AirtightTankBlock extends Block implements IBE<AirtightTankBlockEnt
             return;
         }
 
+        if (!isMoving) {
+            tank.releasePendingOverflow();
+        }
         if (!isMoving && tank.isController() && tank.getWidth() == 1 && tank.getHeight() == 1) {
             tank.releaseContentsOnRemoval();
         }

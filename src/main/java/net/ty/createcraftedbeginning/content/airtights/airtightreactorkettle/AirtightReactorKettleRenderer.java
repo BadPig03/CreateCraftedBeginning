@@ -34,7 +34,6 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -58,7 +57,7 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         SmartFluidTankBehaviour inputTank = kettle.getInputFluidTank();
         SmartFluidTankBehaviour outputTank = kettle.getOutputFluidTank();
         float totalUnits = getFluidUnits(inputTank, partialTicks) + getFluidUnits(outputTank, partialTicks);
-        int totalCapacity = getFluidCapacity(inputTank) + getFluidCapacity(outputTank);
+        long totalCapacity = getFluidCapacity(inputTank) + getFluidCapacity(outputTank);
         if (totalUnits < 1 || totalCapacity <= 0) {
             return 0;
         }
@@ -110,7 +109,8 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         Minecraft minecraft = Minecraft.getInstance();
         ItemRenderer itemRenderer = minecraft.getItemRenderer();
         ClientLevel clientLevel = minecraft.level;
-        boolean shouldRenderSingleCopy = isBeyondFullItemDetailDistance(kettle, minecraft.cameraEntity);
+        Entity camera = minecraft.cameraEntity;
+        boolean shouldRenderSingleCopy = camera != null && kettle.getLevel() == camera.level() && camera.position().distanceToSqr(VecHelper.getCenterOf(kettle.getBlockPos())) > FULL_ITEM_DETAIL_DISTANCE_SQR;
         for (int slot = 0; slot < items.getSlots(); slot++) {
             ItemStack itemStack = items.getStackInSlot(slot);
             if (itemStack.isEmpty()) {
@@ -150,10 +150,6 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         poseStack.popPose();
     }
 
-    private static boolean isBeyondFullItemDetailDistance(AirtightReactorKettleBlockEntity kettle, @Nullable Entity camera) {
-        return camera != null && kettle.getLevel() == camera.level() && camera.position().distanceToSqr(VecHelper.getCenterOf(kettle.getBlockPos())) > FULL_ITEM_DETAIL_DISTANCE_SQR;
-    }
-
     private static void renderMixerModels(AirtightReactorKettleBlockEntity kettle, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
         SuperByteBuffer mixerModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_MIXER, kettle.getBlockState());
         float mixerAngle = kettle.getMixerRotation().getValue(partialTicks) * Mth.DEG_TO_RAD;
@@ -166,11 +162,13 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         SuperByteBuffer leftWindowModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_LEFT_WINDOW, blockState);
         SuperByteBuffer rightWindowModel = CachedBuffers.partial(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_RIGHT_WINDOW, blockState);
         float windowDistance = kettle.getWindowDistance().getValue(partialTicks);
+        RenderType renderType = RenderType.cutoutMipped();
         for (Direction direction : Iterate.horizontalDirections) {
             Vec3i leftDistance = direction.getClockWise().getNormal();
             Vec3i rightDistance = direction.getCounterClockWise().getNormal();
-            leftWindowModel.translate(direction.getNormal()).translate(leftDistance.getX() * windowDistance, leftDistance.getY() * windowDistance, leftDistance.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
-            rightWindowModel.translate(direction.getNormal()).translate(rightDistance.getX() * windowDistance, rightDistance.getY() * windowDistance, rightDistance.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
+            Vec3i normal = direction.getNormal();
+            leftWindowModel.translate(normal).translate(leftDistance.getX() * windowDistance, leftDistance.getY() * windowDistance, leftDistance.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(poseStack, buffer.getBuffer(renderType));
+            rightWindowModel.translate(normal).translate(rightDistance.getX() * windowDistance, rightDistance.getY() * windowDistance, rightDistance.getZ() * windowDistance).rotateYCenteredDegrees(AngleHelper.horizontalAngle(direction)).light(light).renderInto(poseStack, buffer.getBuffer(renderType));
         }
     }
 
@@ -242,9 +240,9 @@ public class AirtightReactorKettleRenderer extends SmartBlockEntityRenderer<Airt
         return 4;
     }
 
-    private static int getFluidCapacity(SmartFluidTankBehaviour tankBehaviour) {
+    private static long getFluidCapacity(SmartFluidTankBehaviour tankBehaviour) {
         IFluidHandler fluidHandler = tankBehaviour.getCapability();
-        int capacity = 0;
+        long capacity = 0;
         for (int tank = 0; tank < fluidHandler.getTanks(); tank++) {
             capacity += fluidHandler.getTankCapacity(tank);
         }

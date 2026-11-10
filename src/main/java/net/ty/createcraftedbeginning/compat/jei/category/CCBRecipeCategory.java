@@ -34,6 +34,7 @@ import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
+import net.ty.createcraftedbeginning.recipe.pressure.PressureRequirement;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -97,8 +98,9 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
 
     public static void addGasRequirementTooltip(ITooltipBuilder tooltip, GasRecipeRequirement requirement) {
         tooltip.add(GasUnitFormat.amount(requirement.amount()).style(ChatFormatting.GRAY).component());
-        requirement.pressure().minimumPressurePa().ifPresent(pressurePa -> tooltip.add(Component.translatable("createcraftedbeginning.jei.gas.minimum_pressure", GasPressure.formatAtm(pressurePa)).withStyle(ChatFormatting.GOLD)));
-        requirement.pressure().maximumPressurePa().ifPresent(pressurePa -> tooltip.add(Component.translatable("createcraftedbeginning.jei.gas.maximum_pressure", GasPressure.formatAtm(pressurePa)).withStyle(ChatFormatting.GOLD)));
+        PressureRequirement pressure = requirement.pressure();
+        pressure.minimumPressurePa().ifPresent(pressurePa -> tooltip.add(Component.translatable("createcraftedbeginning.jei.gas.minimum_pressure", GasPressure.formatAtm(pressurePa)).withStyle(ChatFormatting.GOLD)));
+        pressure.maximumPressurePa().ifPresent(pressurePa -> tooltip.add(Component.translatable("createcraftedbeginning.jei.gas.maximum_pressure", GasPressure.formatAtm(pressurePa)).withStyle(ChatFormatting.GOLD)));
     }
 
     @Contract(value = "_ -> new", pure = true)
@@ -231,11 +233,12 @@ public abstract class CCBRecipeCategory<T extends Recipe<?>> implements IRecipeC
 
         public <I extends RecipeInput, R extends Recipe<I>> Builder<T> addTypedRecipes(Supplier<net.minecraft.world.item.crafting.RecipeType<R>> recipeType) {
             return addRecipeListConsumer(recipes -> CCBJEIPlugin.consumeTypedRecipes(recipe -> {
-                if (!recipeClass.isInstance(recipe.value())) {
+                Recipe<?> value = recipe.value();
+                if (!recipeClass.isInstance(value)) {
                     return;
                 }
 
-                recipes.add(new RecipeHolder<>(recipe.id(), recipeClass.cast(recipe.value())));
+                recipes.add(new RecipeHolder<>(recipe.id(), recipeClass.cast(value)));
             }, recipeType.get()));
         }
 

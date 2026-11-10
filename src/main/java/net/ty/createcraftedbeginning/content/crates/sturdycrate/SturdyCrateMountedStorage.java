@@ -26,7 +26,9 @@ public class SturdyCrateMountedStorage extends FilteredCrateMountedItemStorage<S
     }
 
     public static SturdyCrateMountedStorage fromBlockEntity(SturdyCrateBlockEntity crate) {
-        return new SturdyCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount(), crate.getFilterItem());
+        SturdyCrateMountedStorage storage = new SturdyCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount(), crate.getFilterItem());
+        storage.setLevel(crate.getLevel());
+        return storage;
     }
 
     @Override

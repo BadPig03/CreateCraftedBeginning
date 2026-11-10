@@ -45,8 +45,7 @@ public class AirtightTankScenes {
 
         BlockPos tankPos = util.grid().at(3, 1, 3);
         BlockPos tankPipePos = tankPos.west();
-        BlockPos pipeStartPos = tankPipePos.west();
-        BlockPos pipeEndPos = pipeStartPos.west();
+        BlockPos pipeEndPos = tankPos.west(3);
 
         Selection tankSelection = util.select().position(tankPos);
         Selection pipeSelection = util.select().fromTo(tankPipePos, pipeEndPos);
@@ -54,7 +53,9 @@ public class AirtightTankScenes {
         Vec3 tankVec = util.vector().centerOf(tankPos);
         Vec3 pipeStartVec = util.vector().centerOf(pipeEndPos);
         Vec3 tankWestFaceVec = util.vector().blockSurface(tankPos, Direction.WEST);
+        Vec3 tankTopVec = util.vector().topOf(tankPos);
 
+        AABB flowStartArea = new AABB(pipeStartVec, pipeStartVec).inflate(0.5, 0.3125, 0.3125);
         AABB flowArea = new AABB(pipeStartVec, pipeStartVec);
         AABB lowPressureArea = new AABB(tankVec, tankVec);
         AABB pressureLimitArea = new AABB(pipeStartVec, pipeStartVec);
@@ -119,14 +120,18 @@ public class AirtightTankScenes {
         scene.overlay().showText(60).text("A tank that already contains gas only accepts more of the same type").colored(PonderPalette.RED).pointAt(tankVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showControls(util.vector().blockSurface(tankPos, Direction.UP), Pointing.DOWN, 60).showing(AllIcons.I_MTD_CLOSE).withItem(gasCanisterItem.copy());
+        scene.overlay().showControls(tankTopVec, Pointing.DOWN, 60).showing(AllIcons.I_MTD_CLOSE).withItem(gasCanisterItem.copy());
         scene.overlay().showText(60).text("Gas Canisters cannot fill or drain an Airtight Tank directly").colored(PonderPalette.RED).pointAt(tankVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, flowObject, flowArea, 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, flowObject, flowStartArea, 3);
         scene.overlay().showText(60).text("Use a gas network to transfer gas to or from the tank instead").colored(PonderPalette.GREEN).pointAt(tankWestFaceVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(74);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, flowObject, flowArea, 57);
+
+        scene.idle(71);
+        scene.world().destroyBlock(tankPos);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, releaseObject, releaseArea, 3);
 
         scene.idle(3);
@@ -137,10 +142,7 @@ public class AirtightTankScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, releaseObject, releaseArea.inflate(1.25), 60);
         scene.overlay().showText(60).text("Breaking a filled Airtight Tank releases its stored gas").colored(PonderPalette.RED).pointAt(tankVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(7);
-        scene.world().destroyBlock(tankPos);
-
-        scene.idle(53);
+        scene.idle(60);
         scene.markAsFinished();
     }
 
@@ -149,7 +151,6 @@ public class AirtightTankScenes {
 
         scene.title("airtight_tank_size", "Building Larger Airtight Tanks");
         scene.configureBasePlate(0, 0, 7);
-        scene.scaleSceneView(0.9F);
         scene.showBasePlate();
 
         BlockPos startPos = util.grid().at(2, 1, 2);
@@ -176,7 +177,7 @@ public class AirtightTankScenes {
         scene.idle(20);
         scene.world().showSection(firstSliceSelection, Direction.DOWN);
 
-        scene.idle(15);
+        scene.idle(20);
         for (BlockPos pos : firstSliceSelection) {
             scene.effects().indicateSuccess(pos);
         }
@@ -185,7 +186,7 @@ public class AirtightTankScenes {
         scene.idle(7);
         scene.world().showSection(remainderSelection, horizontal ? Direction.WEST : Direction.DOWN);
 
-        scene.idle(8);
+        scene.idle(20);
         for (BlockPos pos : remainderSelection) {
             scene.effects().indicateSuccess(pos);
         }

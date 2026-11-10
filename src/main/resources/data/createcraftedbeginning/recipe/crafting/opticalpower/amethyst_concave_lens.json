@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "OAO",
+    "AGA",
+    "OAO"
+  ],
+  "key": {
+    "O": {
+      "tag": "c:plates/gold"
+    },
+    "G": {
+      "tag": "c:glass_blocks/colorless"
+    },
+    "A": {
+      "tag": "c:plates/amethyst_crystal"
+    }
+  },
+  "result": {
+    "id": "createcraftedbeginning:amethyst_concave_lens",
+    "count": 4
+  }
+}

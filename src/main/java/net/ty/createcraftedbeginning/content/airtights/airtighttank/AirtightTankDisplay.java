@@ -32,9 +32,22 @@ final class AirtightTankDisplay {
             tooltip.add(Component.empty());
         }
         GasStorageHandler gasHandler = controller.getTankInventory();
-        GasUnitsTooltips.addContainer(tooltip, gasHandler, false, controller);
+        GasUnitsTooltips.addContainer(tooltip, gasHandler, false, controller.getGasStorageReadout());
         OverpressureTooltips.addStatus(tooltip, controller.getOverpressureBehaviour(), gasHandler);
         return true;
+    }
+
+    boolean addToTooltip(List<Component> tooltip) {
+        AirtightTankBlockEntity controller = owner.getControllerBE();
+        if (controller == null) {
+            return false;
+        }
+
+        if (OverpressureTooltips.addWarning(tooltip, controller.getOverpressureBehaviour(), controller.getTankInventory())) {
+            return true;
+        }
+
+        return controller.getCore().addToTooltip(tooltip);
     }
 
     int getMaxValue() {

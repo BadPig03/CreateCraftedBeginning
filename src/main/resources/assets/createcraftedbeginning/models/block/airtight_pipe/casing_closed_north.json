@@ -1,0 +1,27 @@
+{
+  "parent": "minecraft:block/block",
+  "elements": [
+    {
+      "faces": {
+        "north": {
+          "cullface": "north",
+          "texture": "#casing"
+        }
+      },
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ]
+    }
+  ],
+  "textures": {
+    "casing": "createcraftedbeginning:block/airtight_pipe/casing_single",
+    "particle": "createcraftedbeginning:block/airtight_pipe/casing_single"
+  }
+}

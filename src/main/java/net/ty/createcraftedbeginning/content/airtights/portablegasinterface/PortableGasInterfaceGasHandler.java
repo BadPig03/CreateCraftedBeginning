@@ -4,9 +4,11 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
-import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
+import net.ty.createcraftedbeginning.api.gas.handler.GasTransferSnapshot;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment.PressureModel;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.gas.storage.GasPressureCompartmentView;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -131,6 +133,11 @@ class PortableGasInterfaceGasHandler implements GasStorageHandler {
     private final class PortablePressureCompartment extends GasPressureCompartmentView {
         private PortablePressureCompartment(GasPressureCompartment wrapped) {
             super(wrapped);
+        }
+
+        @Override
+        public @Nullable GasTransferSnapshot captureTransferSnapshot() {
+            return null;
         }
 
         @Override

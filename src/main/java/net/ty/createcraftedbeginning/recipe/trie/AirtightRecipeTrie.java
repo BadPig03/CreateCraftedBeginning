@@ -31,7 +31,6 @@ import net.ty.createcraftedbeginning.recipe.trie.AbstractIngredient.Universal;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant.AbstractFluid;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant.AbstractGas;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant.AbstractItem;
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -76,9 +75,8 @@ public class AirtightRecipeTrie<R extends Recipe<?>> {
         return variants;
     }
 
-    @Internal
     @Contract(" -> new")
-    public static <R extends Recipe<?>> @NotNull Builder<R> builder() {
+    static <R extends Recipe<?>> @NotNull Builder<R> builder() {
         return new Builder<>();
     }
 
@@ -161,8 +159,7 @@ public class AirtightRecipeTrie<R extends Recipe<?>> {
         }
     }
 
-    @Internal
-    public static class Builder<R extends Recipe<?>> {
+    static class Builder<R extends Recipe<?>> {
         private final IntArrayTrie<R> trie = new IntArrayTrie<>();
         private final Map<Object, AbstractVariant> variantCache = new HashMap<>();
         private final Object2IntOpenHashMap<AbstractVariant> variantToId = new Object2IntOpenHashMap<>();
@@ -180,12 +177,12 @@ public class AirtightRecipeTrie<R extends Recipe<?>> {
             universalIngredientId = getOrAssignId(Universal.INSTANCE);
         }
 
-        public <R1 extends R> void insert(R1 recipe) {
+        <R1 extends R> void insert(R1 recipe) {
             recipeOrder.putIfAbsent(recipe, recipeOrder.size());
             insert(createRecipe(recipe));
         }
 
-        public AirtightRecipeTrie<R> build() {
+        AirtightRecipeTrie<R> build() {
             variantToId.trim();
             variantToIngredients.trim();
             CCBAPI.LOGGER.info("Built airtight recipe trie: depth={}, nodes={}, variants={}, ingredients={}, recipes={}", trie.getMaxDepth(), trie.getNodeCount(), variantToId.size(), ingredientToId.size(), trie.getValueCount());

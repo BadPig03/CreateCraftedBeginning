@@ -42,11 +42,7 @@ enum SpectralUpgrade implements TickingAirtightUpgrade {
     private static List<LivingEntity> getNearbyEntities(Player player) {
         BlockPos origin = player.getOnPos();
         AABB scanBounds = new AABB(origin).inflate(RADIUS);
-        return player.level().getEntitiesOfClass(LivingEntity.class, scanBounds, target -> isValidTarget(origin, target));
-    }
-
-    private static boolean isValidTarget(BlockPos origin, LivingEntity target) {
-        return !(target instanceof Player) && target.isAlive() && !target.isRemoved() && origin.closerToCenterThan(target.position(), RADIUS);
+        return player.level().getEntitiesOfClass(LivingEntity.class, scanBounds, target -> !(target instanceof Player) && target.isAlive() && !target.isRemoved() && origin.closerToCenterThan(target.position(), RADIUS));
     }
 
     @Override

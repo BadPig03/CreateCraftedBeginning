@@ -55,12 +55,12 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
         return 42 - inputIndex * 19;
     }
 
-    private static int getOutputX(int size) {
-        if (size == 1) {
+    private static int getOutputX(int resultCount, int resultIndex) {
+        if (resultCount == 1) {
             return 144;
         }
 
-        return 134;
+        return 132 + resultIndex % 2 * 19;
     }
 
     private static Optional<IRecipeSlotDrawable> findSlot(List<IRecipeSlotDrawable> slots, String name) {
@@ -211,7 +211,7 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
         }
         SmithingRecipe smithingRecipe = recipe.getSmithingRecipe();
         if (smithingRecipe != null) {
-            IRecipeSlotBuilder outputSlot = builder.addSlot(RecipeIngredientRole.OUTPUT, getOutputX(1), 82).setSlotName(SLOT_OUTPUT).setBackground(BASIC_SLOT, -1, -1);
+            IRecipeSlotBuilder outputSlot = builder.addSlot(RecipeIngredientRole.OUTPUT, getOutputX(1, 0), 82).setSlotName(SLOT_OUTPUT).setBackground(BASIC_SLOT, -1, -1);
             Level level = Minecraft.getInstance().level;
             if (level == null) {
                 return;
@@ -226,8 +226,12 @@ public class ForgingPressCategory extends CCBRecipeCategory<ForgingPressRecipe> 
             return;
         }
 
-        for (ProcessingOutput output : results) {
-            builder.addSlot(RecipeIngredientRole.OUTPUT, getOutputX(results.size()), 82).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(addStochasticTooltip(output));
+        int resultCount = results.size();
+        for (int resultIndex = 0; resultIndex < resultCount; resultIndex++) {
+            ProcessingOutput output = results.get(resultIndex);
+            int slotX = getOutputX(resultCount, resultIndex);
+            int slotY = 82 - resultIndex / 2 * 19;
+            builder.addSlot(RecipeIngredientRole.OUTPUT, slotX, slotY).setBackground(getRenderedSlot(output), -1, -1).addItemStack(output.getStack()).addRichTooltipCallback(addStochasticTooltip(output));
         }
     }
 }

@@ -8,7 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record AmethystCollectorPanelOutput(int powerLp, Limitation limitation) {
+public record AmethystCollectorPanelOutput(double fluxLm, Limitation limitation) {
     public enum Limitation {
         NONE,
         OVERSIZED,

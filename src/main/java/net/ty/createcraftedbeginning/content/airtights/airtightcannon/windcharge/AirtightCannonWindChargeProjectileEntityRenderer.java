@@ -23,7 +23,6 @@ import java.util.Map;
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public class AirtightCannonWindChargeProjectileEntityRenderer extends EntityRenderer<AirtightCannonWindChargeProjectileEntity> {
-
     private final Map<CannonModelType, AirtightCannonWindChargeModel> models = new EnumMap<>(CannonModelType.class);
 
     public AirtightCannonWindChargeProjectileEntityRenderer(Context context) {

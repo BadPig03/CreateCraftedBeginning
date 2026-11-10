@@ -33,11 +33,7 @@ public class GasRepackagerRenderer extends SmartBlockEntityRenderer<GasRepackage
         super(context);
     }
 
-    static PartialModel getTrayModel(BlockState state) {
-        if (state.getBlock() instanceof GasRepackagerBlock) {
-            return CCBPartialModels.GAS_PACKAGER_TRAY_REGULAR;
-        }
-
+    static PartialModel getTrayModel() {
         return CCBPartialModels.GAS_PACKAGER_TRAY_DEFRAG;
     }
 
@@ -69,7 +65,7 @@ public class GasRepackagerRenderer extends SmartBlockEntityRenderer<GasRepackage
             SuperByteBuffer hatch = CachedBuffers.partial(getHatchModel(repackager), blockState);
             hatch.translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(0.5)).rotateYCenteredDegrees(AngleHelper.horizontalAngle(facing)).rotateXCenteredDegrees(AngleHelper.verticalAngle(facing)).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.solid()));
 
-            SuperByteBuffer tray = CachedBuffers.partial(getTrayModel(blockState), blockState);
+            SuperByteBuffer tray = CachedBuffers.partial(getTrayModel(), blockState);
             tray.translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(trayOffset)).rotateYCenteredDegrees(facing.toYRot()).light(light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
         }
 

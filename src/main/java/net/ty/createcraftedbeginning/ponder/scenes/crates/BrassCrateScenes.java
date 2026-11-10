@@ -43,10 +43,11 @@ public class BrassCrateScenes {
         Selection crateSelection = util.select().position(cratePos);
         Selection chuteSelection = util.select().position(chutePos);
 
-        Vec3 filterVec = util.vector().blockSurface(cratePos, Direction.UP).add(0, -0.0625, 0);
+        Vec3 filterVec = util.vector().topOf(cratePos).add(0, -0.0625, 0);
         Vec3 itemVec = util.vector().centerOf(itemPos);
         Vec3 crateVec = util.vector().centerOf(cratePos);
-        Vec3 itemDropMotion = util.vector().of(0, -0.1, 0);
+        Vec3 crateNorthVec = util.vector().blockSurface(cratePos, Direction.NORTH);
+        Vec3 itemDropMotion = Vec3.ZERO.add(0, -0.1, 0);
 
         ItemStack enderPearlItem = new ItemStack(Items.ENDER_PEARL);
         ItemStack ironIngotItem = new ItemStack(Items.IRON_INGOT);
@@ -58,7 +59,7 @@ public class BrassCrateScenes {
         scene.world().showSection(crateSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Brass Crate has twice the storage capacity of Andesite Crate").colored(PonderPalette.GREEN).pointAt(crateVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("By default, Brass Crate has twice the storage capacity of Andesite Crate").colored(PonderPalette.GREEN).pointAt(crateVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showFilterSlotInput(filterVec, Direction.UP, 60);
@@ -75,14 +76,14 @@ public class BrassCrateScenes {
         scene.world().showSection(chuteSelection, Direction.DOWN);
 
         scene.idle(20);
-        ElementLink<EntityElement> remove = scene.world().createItemEntity(itemVec, itemDropMotion, ironIngotItem.copy());
+        ElementLink<EntityElement> firstIronEntity = scene.world().createItemEntity(itemVec, itemDropMotion, ironIngotItem.copy());
 
         scene.idle(2);
         scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, ironIngotItem.copy());
-        scene.world().modifyEntity(remove, Entity::discard);
+        scene.world().modifyEntity(firstIronEntity, Entity::discard);
 
         scene.idle(20);
-        ElementLink<EntityElement> remove2 = scene.world().createItemEntity(itemVec, itemDropMotion, ironIngotItem.copy());
+        ElementLink<EntityElement> secondIronEntity = scene.world().createItemEntity(itemVec, itemDropMotion, ironIngotItem.copy());
 
         scene.idle(20);
         for (int i = 0; i < 10; i++) {
@@ -90,32 +91,34 @@ public class BrassCrateScenes {
             scene.world().incrementBlockBreakingProgress(chutePos);
         }
         scene.world().hideSection(chuteSelection, Direction.UP);
-        ElementLink<EntityElement> remove3 = scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), ironIngotItem.copy());
-        ElementLink<EntityElement> remove4 = scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), chuteItem.copy());
-        scene.overlay().showControls(util.vector().blockSurface(cratePos, Direction.NORTH), Pointing.RIGHT, 60).showing(AllIcons.I_MTD_CLOSE).withItem(ironIngotItem.copy());
+        ElementLink<EntityElement> rejectedIronEntity = scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), ironIngotItem.copy());
+        ElementLink<EntityElement> chuteItemEntity = scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), chuteItem.copy());
+        scene.overlay().showControls(crateNorthVec, Pointing.RIGHT, 60).showing(AllIcons.I_MTD_CLOSE).withItem(ironIngotItem.copy());
         scene.overlay().showText(60).text("Thus preventing unnecessary items from entering").colored(PonderPalette.GREEN).pointAt(crateVec).attachKeyFrame().placeNearTarget();
 
         scene.idle(80);
         scene.world().hideSection(crateSelection, Direction.UP);
 
         scene.idle(10);
-        scene.world().modifyEntity(remove2, Entity::discard);
-        scene.world().modifyEntity(remove3, Entity::discard);
-        scene.world().modifyEntity(remove4, Entity::discard);
+        scene.world().modifyEntity(secondIronEntity, Entity::discard);
+        scene.world().modifyEntity(rejectedIronEntity, Entity::discard);
+        scene.world().modifyEntity(chuteItemEntity, Entity::discard);
 
         scene.idle(10);
         scene.world().setBlock(cratePos, CCBBlocks.BRASS_CRATE_BLOCK.getDefaultState(), false);
         scene.world().setFilterData(crateSelection, BrassCrateBlockEntity.class, ItemStack.EMPTY);
         scene.world().showSection(crateSelection, Direction.DOWN);
+
+        scene.idle(20);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
         scene.world().showSection(chuteSelection, Direction.DOWN);
 
         scene.idle(20);
-        ElementLink<EntityElement> remove5 = scene.world().createItemEntity(itemVec, itemDropMotion, enderPearlItem.copy());
+        ElementLink<EntityElement> pearlEntity = scene.world().createItemEntity(itemVec, itemDropMotion, enderPearlItem.copy());
 
         scene.idle(2);
         scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, enderPearlItem.copy());
-        scene.world().modifyEntity(remove5, Entity::discard);
+        scene.world().modifyEntity(pearlEntity, Entity::discard);
 
         scene.idle(20);
         scene.world().hideSection(chuteSelection, Direction.UP);
@@ -129,7 +132,7 @@ public class BrassCrateScenes {
         scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), brassCrateItem.copy());
         scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), enderPearlItem.copy());
 
-        scene.idle(57);
+        scene.idle(30);
         scene.markAsFinished();
     }
 }

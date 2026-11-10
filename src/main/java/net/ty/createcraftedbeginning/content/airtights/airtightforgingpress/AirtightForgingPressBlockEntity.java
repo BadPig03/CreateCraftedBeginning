@@ -19,6 +19,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SmithingTemplateItem;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -35,6 +36,7 @@ import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.GasUnits;
+import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
@@ -45,12 +47,21 @@ import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.gas.overpressure.PressureRuptureService;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageObservationSource;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadout;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadoutSource;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureReadoutSource;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips.Snapshot;
+import net.ty.createcraftedbeginning.platform.client.GoggleItemStorageSource;
+import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
 import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
 import net.ty.createcraftedbeginning.recipe.interfaces.ForgingPressRecipeContext;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -58,7 +69,7 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, GasInventoryIdentifierProvider, ForgingPressRecipeContext {
+public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, GasInventoryIdentifierProvider, ForgingPressRecipeContext, GasStorageReadoutSource, OverpressureReadoutSource, GasStorageObservationSource, GoggleItemStorageSource {
     private static final int MAX_INPUT_SLOT = 1;
     private static final int MAX_OUTPUT_SLOT = 8;
     private static final int LAZY_TICK_RATE = 4;
@@ -101,6 +112,48 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(ItemHandler.BLOCK, CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get(), (press, ignoredDirection) -> press.pressHeadInventory);
+    }
+
+    @Override
+    public @Nullable Section getItemStorageSection(@Nullable BlockEntity observed) {
+        if (observed instanceof AirtightForgingPressBlockEntity) {
+            return Section.PRESS_HEAD;
+        }
+
+        if (observed instanceof AirtightForgingPressStructuralShaftBlockEntity) {
+            return Section.PROCESSING_MATERIAL;
+        }
+
+        if (observed instanceof AirtightForgingPressStructuralBlockEntity) {
+            return Section.ITEM_STORAGE;
+        }
+
+        return null;
+    }
+
+    @Override
+    public AirtightForgingPressBlockEntity getGasStorageOwner() {
+        return this;
+    }
+
+    @Override
+    public List<GasHandler> getAdditionalObservedGasHandlers() {
+        return List.of(getGasCapability());
+    }
+
+    @Override
+    public @Nullable Snapshot getOverpressureReadout() {
+        OverpressureBehaviour overpressure = BlockEntityBehaviour.get(this, OverpressureBehaviour.TYPE);
+        if (overpressure == null) {
+            return null;
+        }
+
+        return OverpressureTooltips.snapshot(overpressure, getGasCapability());
+    }
+
+    @Override
+    public GasStorageReadout getGasStorageReadout() {
+        return GasStorageReadout.PRESSURE_ONLY;
     }
 
     @Override

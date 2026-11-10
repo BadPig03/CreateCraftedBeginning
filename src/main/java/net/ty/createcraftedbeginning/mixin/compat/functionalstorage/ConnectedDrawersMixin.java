@@ -42,18 +42,18 @@ public abstract class ConnectedDrawersMixin implements GasConnectedDrawersAccess
     }
 
     @Inject(method = "rebuild", at = @At("HEAD"))
-    private void ccb$beginRebuild(CallbackInfo callback) {
+    private void ccb$rebuild$head(CallbackInfo callback) {
         ccb$connections.beginRebuild(connectedDrawers);
     }
 
     @WrapOperation(method = "rebuild", at = @At(value = "INVOKE", target = "Ljava/util/List;sort(Ljava/util/Comparator;)V"))
-    private void ccb$includeGasDrawers(List<Long> validDrawers, Comparator<? super Long> comparator, Operation<Void> original) {
+    private void ccb$rebuild$sort(List<Long> validDrawers, Comparator<? super Long> comparator, Operation<Void> original) {
         ccb$connections.include(level, controllerTile, validDrawers);
         original.call(validDrawers, comparator);
     }
 
     @Inject(method = "rebuild", at = @At("TAIL"))
-    private void ccb$rebuild(CallbackInfo callback) {
+    private void ccb$rebuild$tail(CallbackInfo callback) {
         ccb$connections.finishRebuild(level, controllerTile, connectedDrawers);
     }
 }

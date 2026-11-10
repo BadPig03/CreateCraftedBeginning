@@ -25,7 +25,7 @@ import java.util.Locale;
 @MethodsReturnNonnullByDefault
 final class AirtightHatchTargetPressureBehaviour extends ScrollValueBehaviour {
     static final BehaviourType<AirtightHatchTargetPressureBehaviour> TYPE = new BehaviourType<>();
-    static final String NBT_KEY = "HatchTargetPressure";
+    static final String COMPOUND_KEY_TARGET_PRESSURE = "HatchTargetPressure";
     static final int STEPS_PER_ATMOSPHERE = 2;
     static final int MAX_PRESSURE_ATM = GasPressureLimits.HARD_PRESSURE_ATM;
     static final int MAX_PRESSURE_STEPS = MAX_PRESSURE_ATM * STEPS_PER_ATMOSPHERE;
@@ -75,15 +75,15 @@ final class AirtightHatchTargetPressureBehaviour extends ScrollValueBehaviour {
 
     @Override
     public void write(CompoundTag nbt, Provider registries, boolean clientPacket) {
-        nbt.putInt(NBT_KEY, value);
+        nbt.putInt(COMPOUND_KEY_TARGET_PRESSURE, value);
     }
 
     @Override
     public void read(CompoundTag nbt, Provider registries, boolean clientPacket) {
         int maxSteps = maxPressureStepsForCanister();
         between(0, maxSteps);
-        if (nbt.contains(NBT_KEY)) {
-            value = Mth.clamp(nbt.getInt(NBT_KEY), 0, maxSteps);
+        if (nbt.contains(COMPOUND_KEY_TARGET_PRESSURE)) {
+            value = Mth.clamp(nbt.getInt(COMPOUND_KEY_TARGET_PRESSURE), 0, maxSteps);
             return;
         }
 

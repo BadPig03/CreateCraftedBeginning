@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.api.gas.handler;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -10,6 +11,17 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface GasHandler {
+    /**
+     * Captures a checkpoint before an EXECUTE call. The default keeps existing
+     * handlers usable without promising rollback after an exception. Override when
+     * all state changed by the operation can be restored; return null otherwise.
+     * Capturing must not change state. Subclasses adding transactional side effects
+     * must extend the checkpoint or opt out, rather than inherit incomplete recovery.
+     */
+    default @Nullable GasTransferSnapshot captureTransferSnapshot() {
+        return null;
+    }
+
     boolean isGasValid(int tank, GasStack stack);
 
     GasStack drain(GasStack resource, GasAction action);

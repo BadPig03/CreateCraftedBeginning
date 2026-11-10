@@ -15,10 +15,21 @@ import java.util.Optional;
 @MethodsReturnNonnullByDefault
 public final class GasInjectionChamberFilterState {
     static final String COMPOUND_KEY_FILTER_LOCKED = "FilterLocked";
-    private static final String COMPOUND_KEY_INSTALLED_FILTER = "InstalledFilter";
+    @Internal
+    public static final String COMPOUND_KEY_INSTALLED_FILTER = "InstalledFilter";
 
     private ItemStack installedFilter = ItemStack.EMPTY;
     private boolean clientLocked;
+
+    @Internal
+    public boolean install(ItemStack stack) {
+        if (hasInstalledFilter() || !GasInjectionChamberFilterItem.isFilter(stack)) {
+            return false;
+        }
+
+        installedFilter = stack.copyWithCount(1);
+        return true;
+    }
 
     boolean hasInstalledFilter() {
         return !installedFilter.isEmpty();
@@ -30,15 +41,6 @@ public final class GasInjectionChamberFilterState {
 
     Optional<ResourceLocation> getFanProcessingType() {
         return GasInjectionChamberFilterItem.getFanProcessingTypeId(installedFilter);
-    }
-
-    boolean install(ItemStack stack) {
-        if (hasInstalledFilter() || !GasInjectionChamberFilterItem.isFilter(stack)) {
-            return false;
-        }
-
-        installedFilter = stack.copyWithCount(1);
-        return true;
     }
 
     ItemStack remove() {

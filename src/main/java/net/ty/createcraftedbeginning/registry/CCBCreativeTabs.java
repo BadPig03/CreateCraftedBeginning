@@ -71,18 +71,19 @@ public class CCBCreativeTabs {
             itemsExclusions.addAll(List.of(CCBItems.GAS_CANISTER, CCBItems.GAS_CANISTER_PLACEABLE, CCBItems.CREATIVE_GAS_CANISTER, CCBItems.CREATIVE_GAS_CANISTER_PLACEABLE, CCBItems.NATURAL_WIND_CHARGE, CCBItems.ULTRAWARM_WIND_CHARGE, CCBItems.ETHEREAL_WIND_CHARGE, CCBItems.MOIST_WIND_CHARGE, CCBItems.SPORE_WIND_CHARGE, CCBItems.SCULK_WIND_CHARGE, CCBItems.STEAM_WIND_CHARGE, CCBItems.ENERGIZED_NATURAL_WIND_CHARGE, CCBItems.ENERGIZED_ULTRAWARM_WIND_CHARGE, CCBItems.ENERGIZED_ETHEREAL_WIND_CHARGE, CCBItems.CREATIVE_WIND_CHARGE, CCBItems.GAS_VIRTUAL_ITEM));
             itemsExclusions.addAll(List.of(CCBItems.BALLOON_RARE_REVERTED, CCBItems.BALLOON_RARE_SMILE, CCBItems.BALLOON_RARE_CRY, CCBItems.BALLOON_RARE_EYE, CCBItems.BALLOON_RARE_ISAAC, CCBItems.BALLOON_RARE_GHAST, CCBItems.BALLOON_RARE_TROLLFACE, CCBItems.BALLOON_RARE_TENNA, CCBItems.BALLOON_RARE_PVZ, CCBItems.BALLOON_RARE_QUESTION_MARKS, CCBItems.BALLOON_RARE_POWERFUL, CCBItems.BALLOON_RARE_CHEESE));
             itemsExclusions.stream().map(ItemProviderEntry::asItem).forEach(exclusions::add);
-
             return exclusions::contains;
         }
 
         private static List<ItemOrdering> makeOrderings() {
             List<ItemOrdering> orderings = new ReferenceArrayList<>();
-            orderings.add(ItemOrdering.before(CCBItems.GAS_CANISTER.asItem(), CCBItems.CREATIVE_GAS_CANISTER.asItem()));
+            orderings.add(ItemOrdering.before(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL.asItem(), CCBBlocks.AIRTIGHT_TANK_BLOCK.asItem()));
             orderings.add(ItemOrdering.before(CCBItems.AIRTIGHT_METER.asItem(), CCBBlocks.AIRTIGHT_FLOWMETER_BLOCK.asItem()));
-            orderings.add(ItemOrdering.before(CCBItems.AIRTIGHT_FRACTIONATION_TOWER_INSTRUMENT_PANEL.asItem(), CCBBlocks.CREATIVE_AIRTIGHT_TANK_BLOCK.asItem()));
-
-            orderings.add(ItemOrdering.after(CCBItems.TESLA_TURBINE_ROTOR.asItem(), CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK.asItem()));
-            orderings.add(ItemOrdering.after(CCBItems.GAS_INJECTION_CHAMBER_FILTER.asItem(), CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.asItem()));
+            orderings.add(ItemOrdering.before(CCBItems.AMETHYST_CRYSTAL_SHEET.asItem(), CCBBlocks.OPTICAL_FIBER_BLOCK.asItem()));
+            orderings.add(ItemOrdering.before(CCBItems.END_ALLOY_SHEET.asItem(), CCBBlocks.END_CASING_BLOCK.asItem()));
+            orderings.add(ItemOrdering.before(CCBItems.GAS_CANISTER.asItem(), CCBItems.CREATIVE_GAS_CANISTER.asItem()));
+            orderings.add(ItemOrdering.before(CCBItems.GAS_INJECTION_CHAMBER_FILTER.asItem(), CCBBlocks.GAS_INJECTION_CHAMBER_BLOCK.asItem()));
+            orderings.add(ItemOrdering.before(CCBItems.MIRROR.asItem(), CCBBlocks.AMETHYST_MIRROR_BLOCK.asItem()));
+            orderings.add(ItemOrdering.before(CCBItems.TESLA_TURBINE_ROTOR.asItem(), CCBBlocks.TESLA_TURBINE_BLOCK.asItem()));
             return orderings;
         }
 
@@ -202,6 +203,7 @@ public class CCBCreativeTabs {
             return new ItemOrdering(item, anchor, true);
         }
 
+        @SuppressWarnings("unused")
         @Contract("_, _ -> new")
         public static ItemOrdering after(Item item, Item anchor) {
             return new ItemOrdering(item, anchor, false);

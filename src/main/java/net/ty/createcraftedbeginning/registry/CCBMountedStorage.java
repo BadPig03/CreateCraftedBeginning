@@ -34,7 +34,6 @@ public class CCBMountedStorage {
     public static final RegistryEntry<MountedItemStorageType<?>, CrateMountedStorageType<SturdyCrateBlockEntity, SturdyCrateMountedStorage>> STURDY_CRATE = simpleItem("sturdy_crate", () -> new CrateMountedStorageType<>(SturdyCrateMountedStorage.CODEC, SturdyCrateBlockEntity.class, SturdyCrateMountedStorage::fromBlockEntity));
 
     public static final RegistryEntry<MountedGasStorageType<?>, AirtightTankMountedStorageType> AIRTIGHT_TANK = simpleGas("airtight_tank", AirtightTankMountedStorageType::new);
-    public static final RegistryEntry<MountedGasStorageType<?>, AirtightTankMountedStorageType> HORIZONTAL_AIRTIGHT_TANK = simpleGas("horizontal_airtight_tank", AirtightTankMountedStorageType::new);
     public static final RegistryEntry<MountedGasStorageType<?>, CreativeAirtightTankMountedStorageType> CREATIVE_AIRTIGHT_TANK = simpleGas("creative_airtight_tank", CreativeAirtightTankMountedStorageType::new);
 
     public static void register() {

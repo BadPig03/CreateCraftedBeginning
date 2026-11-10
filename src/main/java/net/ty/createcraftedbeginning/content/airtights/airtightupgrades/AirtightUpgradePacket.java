@@ -14,12 +14,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record AirtightUpgradePacket(ResourceLocation id, boolean install) implements ServerboundPacketPayload {
-    public static final StreamCodec<RegistryFriendlyByteBuf, AirtightUpgradePacket> STREAM_CODEC = StreamCodec.composite(ResourceLocation.STREAM_CODEC, AirtightUpgradePacket::id, ByteBufCodecs.BOOL, AirtightUpgradePacket::install, AirtightUpgradePacket::new);
+public record AirtightUpgradePacket(int containerId, ResourceLocation id, boolean install) implements ServerboundPacketPayload {
+    public static final StreamCodec<RegistryFriendlyByteBuf, AirtightUpgradePacket> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.VAR_INT, AirtightUpgradePacket::containerId, ResourceLocation.STREAM_CODEC, AirtightUpgradePacket::id, ByteBufCodecs.BOOL, AirtightUpgradePacket::install, AirtightUpgradePacket::new);
 
     @Override
     public void handle(ServerPlayer player) {
-        if (!(player.containerMenu instanceof AirtightUpgradableMenu menu)) {
+        if (!(player.containerMenu instanceof AirtightUpgradableMenu menu) || menu.containerId != containerId) {
             return;
         }
 
@@ -34,7 +34,7 @@ public record AirtightUpgradePacket(ResourceLocation id, boolean install) implem
             menu.slots.get(AirtightUpgradableMenu.UPGRADE_SLOT_INDEX + Inventory.INVENTORY_SIZE).setChanged();
             menu.broadcastChanges();
         }
-        menu.syncToClient(player);
+        menu.syncToClient(player, id);
     }
 
     @Override

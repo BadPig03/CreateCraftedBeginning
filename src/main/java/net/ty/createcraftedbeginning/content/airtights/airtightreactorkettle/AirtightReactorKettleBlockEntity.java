@@ -53,6 +53,11 @@ import net.ty.createcraftedbeginning.gas.overpressure.PressureRuptureService;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
 import net.ty.createcraftedbeginning.gas.storage.handler.CombinedGasStorageHandler;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadout;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadoutSource;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureReadoutSource;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips.Snapshot;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
 import net.ty.createcraftedbeginning.recipe.interfaces.ReactorKettleRecipeContext;
@@ -60,6 +65,7 @@ import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -67,7 +73,7 @@ import java.util.function.LongSupplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, GasInventoryIdentifierProvider, ReactorKettleRecipeContext {
+public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, GasInventoryIdentifierProvider, ReactorKettleRecipeContext, GasStorageReadoutSource, OverpressureReadoutSource {
     private static final int LAZY_TICK_RATE = 4;
     private static final int MAX_ITEM_SLOT = 27;
 
@@ -128,6 +134,21 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
     static long getGasCapacity() {
         return Math.max(1, CCBConfig.server().machines.airtightReactorKettle.gasVolumePerTank.get()) * GasUnits.LITERS_PER_KILOLITER;
+    }
+
+    @Override
+    public @Nullable Snapshot getOverpressureReadout() {
+        OverpressureBehaviour overpressure = BlockEntityBehaviour.get(this, OverpressureBehaviour.TYPE);
+        if (overpressure == null) {
+            return null;
+        }
+
+        return OverpressureTooltips.snapshot(overpressure, getAvailableGases());
+    }
+
+    @Override
+    public GasStorageReadout getGasStorageReadout() {
+        return GasStorageReadout.PRESSURE_ONLY;
     }
 
     @Override
@@ -543,6 +564,46 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             this.outputItems = outputItems.stream().map(ItemStack::copy).toList();
             this.outputFluids = outputFluids.stream().map(FluidStack::copy).toList();
             this.outputGases = outputGases.stream().map(GasStack::copy).toList();
+        }
+
+        @Override
+        public @Unmodifiable List<ItemStack> expectedItems() {
+            return expectedItems.stream().map(ItemStack::copy).toList();
+        }
+
+        @Override
+        public @Unmodifiable List<FluidStack> expectedFluids() {
+            return expectedFluids.stream().map(FluidStack::copy).toList();
+        }
+
+        @Override
+        public @Unmodifiable List<GasStack> expectedGases() {
+            return expectedGases.stream().map(GasStack::copy).toList();
+        }
+
+        @Override
+        public int[] itemAmounts() {
+            return itemAmounts.clone();
+        }
+
+        @Override
+        public int[] fluidAmounts() {
+            return fluidAmounts.clone();
+        }
+
+        @Override
+        public @Unmodifiable List<ItemStack> outputItems() {
+            return outputItems.stream().map(ItemStack::copy).toList();
+        }
+
+        @Override
+        public @Unmodifiable List<FluidStack> outputFluids() {
+            return outputFluids.stream().map(FluidStack::copy).toList();
+        }
+
+        @Override
+        public @Unmodifiable List<GasStack> outputGases() {
+            return outputGases.stream().map(GasStack::copy).toList();
         }
     }
 }

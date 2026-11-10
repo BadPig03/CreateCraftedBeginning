@@ -24,14 +24,14 @@ import java.util.List;
 public enum MagnetUpgrade implements AirtightUpgrade {
     INSTANCE;
 
-    public static final float BASE_GAS_MULTIPLIER = 1.5F;
+    public static final double BASE_GAS_MULTIPLIER = 1.5;
 
     private static final ResourceLocation ID = CCBAPI.asResource("magnet");
     private static final Couple<Integer> OFFSET = Couple.create(141, 78);
 
     @Override
     public @Unmodifiable List<Component> getComponents(Player player, ItemStack item) {
-        float multiplier = BASE_GAS_MULTIPLIER * CCBConfig.server().equipment.airtightHandheldDrill.magnetGasMultiplier.getF();
+        double multiplier = BASE_GAS_MULTIPLIER * CCBConfig.server().equipment.airtightHandheldDrill.magnetGasMultiplier.get();
         return List.of(CCBLang.translateDirect("gui.gas_consumption.multiplier", multiplier));
     }
 

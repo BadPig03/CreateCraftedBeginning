@@ -28,6 +28,9 @@ import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageObservationSource;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadout;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadoutSource;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,7 +39,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity implements ThresholdSwitchObservable, GasInventoryIdentifierProvider {
+public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity implements ThresholdSwitchObservable, GasInventoryIdentifierProvider, GasStorageReadoutSource, GasStorageObservationSource {
     private FilteringBehaviour filteringBehaviour;
     private boolean syncingFilter;
 
@@ -53,6 +56,30 @@ public class AirtightReactorKettleStructuralBlockEntity extends SmartBlockEntity
 
     public static boolean canStore(BlockState state) {
         return state.getValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION).canStore();
+    }
+
+    @Override
+    public @Nullable AirtightReactorKettleBlockEntity getGasStorageOwner() {
+        BlockState state = getBlockState();
+        if (!canStore(state)) {
+            return null;
+        }
+
+        BlockPos masterPos = AirtightReactorKettleStructural.getMaster(getBlockPos(), state);
+        if (level == null || !level.isLoaded(masterPos)) {
+            return null;
+        }
+
+        if (!(level.getBlockEntity(masterPos) instanceof AirtightReactorKettleBlockEntity master) || master.isRemoved()) {
+            return null;
+        }
+
+        return master;
+    }
+
+    @Override
+    public GasStorageReadout getGasStorageReadout() {
+        return GasStorageReadout.PRESSURE_ONLY;
     }
 
     @Override

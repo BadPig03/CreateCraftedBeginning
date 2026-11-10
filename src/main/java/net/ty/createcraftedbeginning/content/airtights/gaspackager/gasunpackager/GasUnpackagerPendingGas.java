@@ -77,7 +77,12 @@ final class GasUnpackagerPendingGas {
         }
 
         Tag pendingTag = compoundTag.get(COMPOUND_KEY_PENDING_GAS);
-        pendingGas = pendingTag == null ? GasStack.EMPTY : GasStack.parse(provider, pendingTag).orElse(GasStack.EMPTY);
+        if (pendingTag == null || pendingTag instanceof CompoundTag gasTag && gasTag.isEmpty()) {
+            pendingGas = GasStack.EMPTY;
+            return;
+        }
+
+        pendingGas = GasStack.parse(provider, pendingTag).orElse(GasStack.EMPTY);
     }
 
     void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {

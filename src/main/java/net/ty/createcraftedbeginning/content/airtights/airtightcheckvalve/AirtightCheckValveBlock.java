@@ -8,6 +8,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
@@ -116,7 +117,8 @@ public class AirtightCheckValveBlock extends AxisGasPipeBlock implements IBE<Air
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         Axis axis = state.getValue(AXIS);
-        boolean isSneaking = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
+        Player player = context.getPlayer();
+        boolean isSneaking = player != null && player.isShiftKeyDown();
         Direction output = GasPlacementHelper.chooseOutputDirection(context, axis, GasPlacementHelper.getConnectableDirections(context.getLevel(), context.getClickedPos()), !isSneaking);
         boolean isInverted = output.getAxisDirection() == AxisDirection.POSITIVE;
         DirectionalFacing facing = DirectionalFacing.getFacingDirection(context.getHorizontalDirection());

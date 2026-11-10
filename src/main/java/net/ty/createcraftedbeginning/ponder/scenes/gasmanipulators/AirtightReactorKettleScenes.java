@@ -42,20 +42,19 @@ public class AirtightReactorKettleScenes {
 
         BlockPos centerPos = util.grid().at(3, 1, 3);
         BlockPos leftUpPos = centerPos.above(2).east().south();
-        BlockPos industrialIronPos = leftUpPos.below(2);
+        BlockPos industrialIronPos = centerPos.east().south();
         BlockPos realCenterPos = centerPos.above();
         BlockPos rightDownPos = centerPos.west().north();
-        BlockPos bottomFarPos = rightDownPos.east(2).south(2);
-        BlockPos cogCenterPos = centerPos.above(2);
-        BlockPos westCogPos = cogCenterPos.west(2);
-        BlockPos southCogPos = cogCenterPos.south(2);
-        BlockPos eastCogPos = cogCenterPos.east(2);
-        BlockPos northCogPos = cogCenterPos.north(2);
-        BlockPos motorPos = westCogPos.above();
-        BlockPos funnelPos = rightDownPos.west();
-        BlockPos hatchPos = funnelPos.south(2);
-        BlockPos fluidPipePos = rightDownPos.north();
-        BlockPos airtightPipePos = fluidPipePos.east(2);
+        BlockPos bottomFarPos = centerPos.east().south();
+        BlockPos westCogPos = centerPos.west(2).above(2);
+        BlockPos southCogPos = centerPos.above(2).south(2);
+        BlockPos eastCogPos = centerPos.east(2).above(2);
+        BlockPos northCogPos = centerPos.above(2).north(2);
+        BlockPos motorPos = centerPos.west(2).above(3);
+        BlockPos funnelPos = centerPos.west(2).north();
+        BlockPos hatchPos = centerPos.west(2).south();
+        BlockPos fluidPipePos = centerPos.west().north(2);
+        BlockPos airtightPipePos = centerPos.east().north(2);
 
         Selection kettleSelection = util.select().fromTo(leftUpPos, rightDownPos);
         Selection industrialIronSelection = util.select().position(industrialIronPos);
@@ -64,7 +63,7 @@ public class AirtightReactorKettleScenes {
         Selection eastCogSelection = util.select().position(eastCogPos);
         Selection northCogSelection = util.select().position(northCogPos);
         Selection motorSelection = util.select().position(motorPos);
-        Selection kettleCogsSelection = util.select().fromTo(leftUpPos, rightDownPos.above(2));
+        Selection kettleCogsSelection = util.select().fromTo(leftUpPos, centerPos.west().north().above(2));
         Selection fluidPipeSelection = util.select().position(fluidPipePos);
         Selection airtightPipeSelection = util.select().position(airtightPipePos);
         Selection funnelSelection = util.select().position(funnelPos);
@@ -77,6 +76,7 @@ public class AirtightReactorKettleScenes {
         Vec3 airtightPipeVec = util.vector().centerOf(airtightPipePos);
         Vec3 hatchVec = util.vector().centerOf(hatchPos);
 
+        AABB kettleStartArea = new AABB(realCenterVec, realCenterVec).inflate(0.5);
         AABB kettleArea = new AABB(realCenterVec, realCenterVec);
         AABB cogArea = new AABB(westCogVec, westCogVec);
         AABB bottomArea = new AABB(util.vector().centerOf(rightDownPos), util.vector().centerOf(bottomFarPos));
@@ -105,10 +105,13 @@ public class AirtightReactorKettleScenes {
         scene.overlay().showText(60).text("An Airtight Reactor Kettle automatically forms its 3x3x3 structure when placed").pointAt(realCenterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, kettleObject, kettleArea, 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, kettleObject, kettleStartArea, 3);
         scene.overlay().showText(60).text("The entire 3x3x3 area must be clear before placement").colored(PonderPalette.RED).pointAt(realCenterVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(45);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, kettleObject, kettleArea, 57);
+
+        scene.idle(42);
         scene.world().hideSection(industrialIronSelection, Direction.UP);
 
         scene.idle(20);
@@ -137,7 +140,7 @@ public class AirtightReactorKettleScenes {
         scene.world().setKineticSpeed(kettleCogsSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(motorPos);
 
-        scene.idle(20);
+        scene.idle(25);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.WHITE, cogObject, cogArea, 3);
 
         scene.idle(3);
@@ -168,6 +171,8 @@ public class AirtightReactorKettleScenes {
 
         scene.idle(80);
         scene.world().showSection(fluidPipeSelection, Direction.SOUTH);
+
+        scene.idle(20);
         scene.world().showSection(airtightPipeSelection, Direction.SOUTH);
 
         scene.idle(20);
@@ -181,6 +186,8 @@ public class AirtightReactorKettleScenes {
 
         scene.idle(85);
         scene.world().showSection(funnelSelection, Direction.EAST);
+
+        scene.idle(20);
         scene.world().showSection(hatchSelection, Direction.EAST);
 
         scene.idle(20);
@@ -201,27 +208,26 @@ public class AirtightReactorKettleScenes {
         BlockPos corePos = centerPos.above(2);
         BlockPos leftUpPos = centerPos.above(3).east().south();
         BlockPos rightDownPos = centerPos.above().west().north();
-        BlockPos filterPos = rightDownPos.east();
+        BlockPos filterPos = centerPos.above().north();
         BlockPos cogPos = centerPos.above(3).west(2);
-        BlockPos motorPos = cogPos.above();
-        BlockPos inputFunnelPos = rightDownPos.west();
-        BlockPos inputBeltLeftPos = inputFunnelPos.below();
-        BlockPos inputBeltRightPos = inputBeltLeftPos.west();
-        BlockPos inputMotorPos = inputBeltRightPos.north();
+        BlockPos motorPos = centerPos.west(2).above(4);
+        BlockPos inputFunnelPos = centerPos.west(2).above().north();
+        BlockPos inputBeltLeftPos = centerPos.west(2).north();
+        BlockPos inputBeltRightPos = centerPos.west(3).north();
+        BlockPos inputMotorPos = centerPos.west(3).north(2);
         BlockPos outputFunnelPos = centerPos.above().east().north(2);
-        BlockPos outputBeltRightPos = outputFunnelPos.below().west();
-        BlockPos outputBeltLeftPos = outputBeltRightPos.east(3);
-        BlockPos outputMotorPos = outputBeltLeftPos.south();
+        BlockPos outputBeltLeftPos = centerPos.east(3).north(2);
+        BlockPos outputMotorPos = centerPos.east(3).north();
         BlockPos blazePos = centerPos.east().north();
         BlockPos breezePos = centerPos.north();
-        BlockPos secondCoolerPos = breezePos.west();
-        BlockPos thirdCoolerPos = secondCoolerPos.south();
+        BlockPos secondCoolerPos = centerPos.west().north();
+        BlockPos thirdCoolerPos = centerPos.west();
 
         Selection kettleSelection = util.select().fromTo(leftUpPos, rightDownPos);
-        Selection kettleCogsSelection = util.select().fromTo(leftUpPos, rightDownPos.above(2));
+        Selection kettleCogsSelection = util.select().fromTo(leftUpPos, centerPos.west().above(3).north());
         Selection sourceSelection = util.select().fromTo(cogPos, motorPos);
         Selection inputFunnelSelection = util.select().fromTo(inputFunnelPos, inputMotorPos);
-        Selection outputFunnelSelection = util.select().fromTo(outputBeltLeftPos, outputBeltRightPos.above());
+        Selection outputFunnelSelection = util.select().fromTo(outputBeltLeftPos, centerPos.north(2).above());
         Selection outputMotorSelection = util.select().position(outputMotorPos);
         Selection ironSelection = util.select().fromTo(secondCoolerPos, centerPos.south().east());
 
@@ -243,6 +249,8 @@ public class AirtightReactorKettleScenes {
 
         scene.idle(20);
         scene.world().showSection(ironSelection, Direction.DOWN);
+
+        scene.idle(3);
         scene.world().showSection(kettleSelection, Direction.DOWN);
 
         scene.idle(3);
@@ -254,13 +262,18 @@ public class AirtightReactorKettleScenes {
         scene.world().setKineticSpeed(kettleCogsSelection, -fastSpeed);
         scene.effects().rotationSpeedIndicator(motorPos);
 
-        scene.idle(20);
+        scene.idle(5);
+
         scene.overlay().showText(60).text("The Reactor Kettle can process Items, Fluids, and Gases together").pointAt(coreVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(70);
         scene.world().setBlock(inputMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.SOUTH), false);
         scene.world().showSection(inputFunnelSelection, Direction.EAST);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(inputFunnelSelection, -mediumSpeed);
+
+        scene.idle(5);
 
         scene.idle(10);
         scene.overlay().showText(60).text("This recipe consumes Stone, produces Natural Air, and returns the Breeze Core").pointAt(coreVec).placeNearTarget().attachKeyFrame();
@@ -290,14 +303,18 @@ public class AirtightReactorKettleScenes {
         scene.idle(70);
         scene.world().setBlock(outputMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.NORTH), false);
         scene.world().showSection(outputFunnelSelection, Direction.SOUTH);
+
+        scene.idle(20);
         scene.world().showSection(outputMotorSelection, Direction.NORTH);
 
         scene.idle(15);
         scene.world().setKineticSpeed(outputFunnelSelection, -mediumSpeed);
         scene.world().setKineticSpeed(outputMotorSelection, -mediumSpeed);
+
+        scene.idle(5);
         scene.world().flapFunnel(outputFunnelPos, true);
         scene.world().modifyBlockEntity(corePos, AirtightReactorKettleBlockEntity.class, kettle -> kettle.getAvailableItems().extractItem(27, 1, false));
-        scene.world().createItemOnBeltLike(outputFunnelPos.below(), Direction.UP, breezeCoreItem.copy());
+        scene.world().createItemOnBeltLike(centerPos.east().north(2), Direction.UP, breezeCoreItem.copy());
         scene.overlay().showText(60).text("Finished products are extracted through the bottom interfaces").colored(PonderPalette.OUTPUT).pointAt(coreVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);

@@ -17,8 +17,6 @@ public final class CCBGas extends ConfigBase {
         return "gas";
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class PressureRupture extends ConfigBase {
         public final ConfigFloat explosionStrength = f(4, 0, 64, "explosion_strength", "[Unit: explosion strength]", "Strength of the explosion caused by pressure rupture. Set to 0 to disable the blast; gas release and destruction of the failed pressure-bearing block still occur.");
         public final ConfigBool explosionDamagesSurroundingBlocks = b(false, "explosion_damages_surrounding_blocks", "Allow pressure rupture explosions to destroy surrounding blocks. The failed pressure-bearing block is destroyed regardless of this setting.");
@@ -29,8 +27,6 @@ public final class CCBGas extends ConfigBase {
         }
     }
 
-    @ParametersAreNonnullByDefault
-    @MethodsReturnNonnullByDefault
     public static final class Atmosphere extends ConfigBase {
         public final ConfigBool allowEnvironmentAirExtraction = b(true, "allow_environment_air_extraction", "Allow open-ended gas pipes to extract air from the environment. This does not disable gas exhaust into the environment.");
         public final ConfigFloat overworldPressure = f(1, 0, GasPressureLimits.HARD_PRESSURE_ATM, "overworld_pressure", "[Unit: atm; 1 atm = 100000 Pa]", "Default Overworld pressure supplied by the built-in atmosphere provider. Also used as the fallback for dimensions without a dedicated provider override.");

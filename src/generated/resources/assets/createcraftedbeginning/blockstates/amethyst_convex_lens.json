@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "createcraftedbeginning:block/amethyst_convex_lens/block",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "createcraftedbeginning:block/amethyst_convex_lens/block",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "createcraftedbeginning:block/amethyst_convex_lens/block"
+    },
+    "facing=south": {
+      "model": "createcraftedbeginning:block/amethyst_convex_lens/block",
+      "y": 180
+    },
+    "facing=up": {
+      "model": "createcraftedbeginning:block/amethyst_convex_lens/block",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "createcraftedbeginning:block/amethyst_convex_lens/block",
+      "y": 270
+    }
+  }
+}

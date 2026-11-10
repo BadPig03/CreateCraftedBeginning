@@ -75,7 +75,7 @@ public class NaturalAirCannonHandler implements AirtightCannonHandler, AirtightC
     }
 
     @Override
-    public float getGasConsumptionMultiplier() {
+    public double getGasConsumptionMultiplier() {
         return 1;
     }
 

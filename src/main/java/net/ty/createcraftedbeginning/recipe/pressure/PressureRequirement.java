@@ -29,8 +29,12 @@ public record PressureRequirement(Optional<Long> minimumPressurePa, Optional<Lon
     public PressureRequirement {
         minimumPressurePa.ifPresent(pressurePa -> validatePressure("Minimum", pressurePa));
         maximumPressurePa.ifPresent(pressurePa -> validatePressure("Maximum", pressurePa));
-        if (minimumPressurePa.isPresent() && maximumPressurePa.isPresent() && minimumPressurePa.get() > maximumPressurePa.get()) {
-            throw new IllegalArgumentException("Minimum pressure must not exceed maximum pressure; got minimum=" + minimumPressurePa.get() + " Pa, maximum=" + maximumPressurePa.get() + " Pa.");
+        if (minimumPressurePa.isPresent() && maximumPressurePa.isPresent()) {
+            long minimum = minimumPressurePa.get();
+            long maximum = maximumPressurePa.get();
+            if (minimum > maximum) {
+                throw new IllegalArgumentException("Minimum pressure must not exceed maximum pressure; got minimum=" + minimum + " Pa, maximum=" + maximum + " Pa.");
+            }
         }
     }
 

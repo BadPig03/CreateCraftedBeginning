@@ -17,6 +17,7 @@ import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -25,7 +26,8 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity {
     private static final int LAZY_TICK_RATE = 4;
-    private static final String COMPOUND_KEY_CORE = "Core";
+    @Internal
+    public static final String COMPOUND_KEY_CORE = "Core";
     private final TeslaTurbineCore core;
 
     private CCBAdvancementBehaviour advancementBehaviour;
@@ -52,6 +54,15 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity {
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         return core.addToGoggleTooltip(tooltip);
+    }
+
+    @Override
+    public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        if (super.addToTooltip(tooltip, isPlayerSneaking)) {
+            return true;
+        }
+
+        return core.addToTooltip(tooltip);
     }
 
     @Override

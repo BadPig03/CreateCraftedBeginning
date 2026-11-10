@@ -6,6 +6,5 @@ pluginManagement {
     }
 }
 
-plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.9.0'
-}
+// Toolchain resolution stays local so offline builds do not depend on the Foojay resolver.
+// CI and the supported development environment provide JDK 21 explicitly.

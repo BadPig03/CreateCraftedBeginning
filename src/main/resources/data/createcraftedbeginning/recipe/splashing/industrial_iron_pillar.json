@@ -1,0 +1,14 @@
+{
+  "type": "create:splashing",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:industrial_iron_pillar"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:exposed_industrial_iron_pillar",
+      "count": 1
+    }
+  ]
+}

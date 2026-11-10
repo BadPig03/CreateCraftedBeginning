@@ -75,8 +75,9 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
 
     @Override
     protected void saveData(ItemStack filter) {
-        List<GasStack> configuredGases = new ArrayList<>(filterInventory.getSlots());
-        for (int slotIndex = 0; slotIndex < filterInventory.getSlots(); slotIndex++) {
+        int slotCount = filterInventory.getSlots();
+        List<GasStack> configuredGases = new ArrayList<>(slotCount);
+        for (int slotIndex = 0; slotIndex < slotCount; slotIndex++) {
             GasStack configuredGas = VirtualGasItems.readGasSample(filterInventory.getStackInSlot(slotIndex));
             if (configuredGas.isEmpty()) {
                 continue;
@@ -216,7 +217,7 @@ public class GasFilterMenu extends MenuBase<ItemStack> implements IClearableMenu
     }
 
     private boolean isHeldFilterSlot(Slot slot) {
-        return slot.container == playerInventory && slot.index == playerInventory.selected;
+        return slot.container == playerInventory && slot.getContainerSlot() == playerInventory.selected;
     }
 
     private int findFirstEmptySlot() {

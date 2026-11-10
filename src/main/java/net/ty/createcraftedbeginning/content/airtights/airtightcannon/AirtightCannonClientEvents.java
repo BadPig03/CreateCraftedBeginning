@@ -8,6 +8,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ComputeFovModifierEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -21,6 +22,10 @@ final class AirtightCannonClientEvents {
 
     @SubscribeEvent
     private static void onComputeFovModifier(ComputeFovModifierEvent event) {
+        if (!CCBConfig.client().equipmentRendering.enableCannonFovZoom.get()) {
+            return;
+        }
+
         Player player = event.getPlayer();
         if (!player.isUsingItem()) {
             return;

@@ -96,7 +96,7 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
             return;
         }
 
-        super.onRemove(state, level, pos, newState, isMoving);
+        super.onRemove(state, level, pos, newState, false);
         if (level.isClientSide) {
             return;
         }

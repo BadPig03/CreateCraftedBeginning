@@ -18,6 +18,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.Air
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenu;
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeSetGasMenu;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterMenu;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderMenu;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -38,6 +39,8 @@ public class CCBMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<GasCanisterPackMenu>> GAS_CANISTER_PACK_MENU = register("gas_canister_pack", GasCanisterPackMenu::new);
     public static final DeferredHolder<MenuType<?>, MenuType<GasFilterMenu>> GAS_FILTER_MENU = register("gas_filter", GasFilterMenu::new);
     public static final DeferredHolder<MenuType<?>, MenuType<GasFactoryGaugeSetGasMenu>> GAS_FACTORY_GAUGE_SET_GAS_MENU = register("gas_factory_gauge_set_gas", GasFactoryGaugeSetGasMenu::new);
+
+    public static final DeferredHolder<MenuType<?>, MenuType<AmethystLoaderMenu>> AMETHYST_LOADER_MENU = register("amethyst_loader", AmethystLoaderMenu::new);
 
     public static void register(IEventBus modEventBus) {
         MENU_TYPES.register(modEventBus);

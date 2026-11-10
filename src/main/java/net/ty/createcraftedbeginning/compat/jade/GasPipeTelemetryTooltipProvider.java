@@ -8,14 +8,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
-import net.ty.createcraftedbeginning.content.airtights.AirtightTelemetryVisibility;
-import net.ty.createcraftedbeginning.content.airtights.AirtightTelemetryVisibility.PipeReadout;
-import net.ty.createcraftedbeginning.content.airtights.airtightmeters.AirtightFlowmeterBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightmeters.AirtightManometerBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightregulatorpump.AirtightRegulatorPumpBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightvalve.AirtightValveBlockEntity;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.Flow;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.Pressure;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.PumpConfiguration;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.RegulatorConfiguration;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.ValveState;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadoutSource;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 import org.jetbrains.annotations.Nullable;
 import snownee.jade.api.BlockAccessor;
@@ -32,65 +32,63 @@ public enum GasPipeTelemetryTooltipProvider implements IServerDataProvider<Block
     INSTANCE;
 
     private static final long NO_PRESSURE_READING = -1;
-    private static final String DATA_KEY = "JadeGasPipeTelemetry";
-    private static final String MIN_PRESSURE_KEY = "MinPressure";
-    private static final String MAX_PRESSURE_KEY = "MaxPressure";
-    private static final String FLOW_RATE_KEY = "FlowRate";
-    private static final String MAX_PRESSURE_BOOST_KEY = "MaxPressureBoost";
-    private static final String MAX_PRESSURE_RISE_KEY = "MaxPressureRise";
-    private static final String OUTLET_SET_PRESSURE_KEY = "OutletSetPressure";
-    private static final String VALVE_OPEN_KEY = "ValveOpen";
+    private static final String COMPOUND_KEY_DATA = "JadeGasPipeTelemetry";
+    private static final String COMPOUND_KEY_MIN_PRESSURE = "MinPressure";
+    private static final String COMPOUND_KEY_MAX_PRESSURE = "MaxPressure";
+    private static final String COMPOUND_KEY_FLOW_RATE = "FlowRate";
+    private static final String COMPOUND_KEY_MAX_PRESSURE_BOOST = "MaxPressureBoost";
+    private static final String COMPOUND_KEY_MAX_PRESSURE_RISE = "MaxPressureRise";
+    private static final String COMPOUND_KEY_OUTLET_SET_PRESSURE = "OutletSetPressure";
+    private static final String COMPOUND_KEY_VALVE_OPEN = "ValveOpen";
 
     static @Nullable CompoundTag createServerData(@Nullable BlockEntity blockEntity) {
-        if (blockEntity == null) {
+        GasPipeReadout readout = GasPipeReadoutSource.readout(blockEntity);
+        if (readout == null) {
             return null;
         }
 
         CompoundTag telemetryData = new CompoundTag();
-        switch (AirtightTelemetryVisibility.pipeReadout(blockEntity)) {
-            case FLOW -> telemetryData.putLong(FLOW_RATE_KEY, ((AirtightFlowmeterBlockEntity) blockEntity).getFlowRate());
-            case PRESSURE -> {
-                AirtightManometerBlockEntity manometer = (AirtightManometerBlockEntity) blockEntity;
-                if (!manometer.hasPressureReading()) {
+        switch (readout) {
+            case Flow flow -> telemetryData.putLong(COMPOUND_KEY_FLOW_RATE, flow.flowRate());
+            case Pressure pressure -> {
+                if (!pressure.hasReading()) {
                     return telemetryData;
                 }
 
-                telemetryData.putLong(MIN_PRESSURE_KEY, manometer.getMinPressurePa());
-                telemetryData.putLong(MAX_PRESSURE_KEY, manometer.getMaxPressurePa());
+                telemetryData.putLong(COMPOUND_KEY_MIN_PRESSURE, pressure.minPressurePa());
+                telemetryData.putLong(COMPOUND_KEY_MAX_PRESSURE, pressure.maxPressurePa());
             }
-            case PUMP_CONFIGURATION -> telemetryData.putLong(MAX_PRESSURE_BOOST_KEY, ((AirtightPumpBlockEntity) blockEntity).getPumpMaxPressureBoostPa());
-            case REGULATOR_CONFIGURATION -> {
-                AirtightRegulatorPumpBlockEntity regulatorPump = (AirtightRegulatorPumpBlockEntity) blockEntity;
-                telemetryData.putLong(MAX_PRESSURE_RISE_KEY, regulatorPump.getMaxPressureRisePa());
-                telemetryData.putLong(OUTLET_SET_PRESSURE_KEY, regulatorPump.getOutletSetPressurePa());
+            case PumpConfiguration pump -> telemetryData.putLong(COMPOUND_KEY_MAX_PRESSURE_BOOST, pump.maxPressureBoostPa());
+            case RegulatorConfiguration regulator -> {
+                telemetryData.putLong(COMPOUND_KEY_MAX_PRESSURE_RISE, regulator.maxPressureRisePa());
+                telemetryData.putLong(COMPOUND_KEY_OUTLET_SET_PRESSURE, regulator.outletSetPressurePa());
             }
-            case VALVE_STATE -> telemetryData.putBoolean(VALVE_OPEN_KEY, ((AirtightValveBlockEntity) blockEntity).isOpen());
-            case NONE -> { return null; }
+            case ValveState valve -> telemetryData.putBoolean(COMPOUND_KEY_VALVE_OPEN, valve.open());
         }
         return telemetryData;
     }
 
     @Override
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
-        PipeReadout readout = AirtightTelemetryVisibility.pipeReadout(accessor.getBlockEntity());
-        if (readout == PipeReadout.NONE) {
+        GasPipeReadout readout = GasPipeReadoutSource.readout(accessor.getBlockEntity());
+        if (readout == null) {
             return;
         }
 
         CompoundTag serverData = accessor.getServerData();
-        if (!serverData.contains(DATA_KEY)) {
+        if (!serverData.contains(COMPOUND_KEY_DATA)) {
             return;
         }
 
-        CompoundTag data = NbtValues.getCompoundOrEmpty(serverData, DATA_KEY);
+        CompoundTag data = NbtValues.getCompoundOrEmpty(serverData, COMPOUND_KEY_DATA);
         switch (readout) {
-            case FLOW -> {
-                long flowRate = NbtValues.getLongOrDefault(data, FLOW_RATE_KEY, 0);
+            case Flow ignored -> {
+                long flowRate = NbtValues.getLongOrDefault(data, COMPOUND_KEY_FLOW_RATE, 0);
                 tooltip.add(Component.translatable("jade.gas.flow_rate", GasUnitFormat.formatRate(flowRate)));
             }
-            case PRESSURE -> {
-                long minPressure = NbtValues.getLongOrDefault(data, MIN_PRESSURE_KEY, NO_PRESSURE_READING);
-                long maxPressure = NbtValues.getLongOrDefault(data, MAX_PRESSURE_KEY, NO_PRESSURE_READING);
+            case Pressure ignored -> {
+                long minPressure = NbtValues.getLongOrDefault(data, COMPOUND_KEY_MIN_PRESSURE, NO_PRESSURE_READING);
+                long maxPressure = NbtValues.getLongOrDefault(data, COMPOUND_KEY_MAX_PRESSURE, NO_PRESSURE_READING);
                 boolean hasPressureReading = minPressure >= GasPressure.VACUUM_PA && maxPressure >= minPressure;
                 Component maxPressureValue = Component.literal(hasPressureReading ? GasPressure.formatAtm(maxPressure) : "--");
                 if (hasPressureReading && GasPressureLimits.isOverpressure(maxPressure)) {
@@ -99,19 +97,19 @@ public enum GasPipeTelemetryTooltipProvider implements IServerDataProvider<Block
                 tooltip.add(Component.translatable("jade.gas.max_pressure", maxPressureValue));
                 tooltip.add(Component.translatable("jade.gas.pressure_difference", hasPressureReading ? GasPressure.formatAtm(maxPressure - minPressure) : "--"));
             }
-            case PUMP_CONFIGURATION -> {
-                if (data.contains(MAX_PRESSURE_BOOST_KEY)) {
-                    long maxPressureBoost = NbtValues.getLongOrDefault(data, MAX_PRESSURE_BOOST_KEY, GasPressure.VACUUM_PA);
+            case PumpConfiguration ignored -> {
+                if (data.contains(COMPOUND_KEY_MAX_PRESSURE_BOOST)) {
+                    long maxPressureBoost = NbtValues.getLongOrDefault(data, COMPOUND_KEY_MAX_PRESSURE_BOOST, GasPressure.VACUUM_PA);
                     tooltip.add(Component.translatable("jade.gas.max_pressure_boost", GasPressure.formatAtm(maxPressureBoost)));
                 }
             }
-            case REGULATOR_CONFIGURATION -> {
-                if (data.contains(MAX_PRESSURE_RISE_KEY)) {
-                    long maxPressureRise = NbtValues.getLongOrDefault(data, MAX_PRESSURE_RISE_KEY, GasPressure.VACUUM_PA);
+            case RegulatorConfiguration ignored -> {
+                if (data.contains(COMPOUND_KEY_MAX_PRESSURE_RISE)) {
+                    long maxPressureRise = NbtValues.getLongOrDefault(data, COMPOUND_KEY_MAX_PRESSURE_RISE, GasPressure.VACUUM_PA);
                     tooltip.add(Component.translatable("jade.gas.max_pressure_rise", GasPressure.formatAtm(maxPressureRise)));
                 }
-                if (data.contains(OUTLET_SET_PRESSURE_KEY)) {
-                    long outletSetPressure = NbtValues.getLongOrDefault(data, OUTLET_SET_PRESSURE_KEY, GasPressure.VACUUM_PA);
+                if (data.contains(COMPOUND_KEY_OUTLET_SET_PRESSURE)) {
+                    long outletSetPressure = NbtValues.getLongOrDefault(data, COMPOUND_KEY_OUTLET_SET_PRESSURE, GasPressure.VACUUM_PA);
                     Component outletSetPressureValue = Component.literal(GasPressure.formatAtm(outletSetPressure));
                     if (GasPressureLimits.isOverpressure(outletSetPressure)) {
                         outletSetPressureValue = outletSetPressureValue.copy().withStyle(ChatFormatting.RED);
@@ -119,9 +117,9 @@ public enum GasPipeTelemetryTooltipProvider implements IServerDataProvider<Block
                     tooltip.add(Component.translatable("jade.gas.outlet_set_pressure", outletSetPressureValue));
                 }
             }
-            case VALVE_STATE -> {
-                if (data.contains(VALVE_OPEN_KEY)) {
-                    boolean valveOpen = NbtValues.getBooleanOrDefault(data, VALVE_OPEN_KEY, false);
+            case ValveState ignored -> {
+                if (data.contains(COMPOUND_KEY_VALVE_OPEN)) {
+                    boolean valveOpen = NbtValues.getBooleanOrDefault(data, COMPOUND_KEY_VALVE_OPEN, false);
                     tooltip.add(Component.translatable("jade.gas.valve_state", Component.translatable(valveOpen ? "jade.gas.valve_open" : "jade.gas.valve_closed")));
                 }
             }
@@ -135,7 +133,7 @@ public enum GasPipeTelemetryTooltipProvider implements IServerDataProvider<Block
             return;
         }
 
-        compoundTag.put(DATA_KEY, telemetryData);
+        compoundTag.put(COMPOUND_KEY_DATA, telemetryData);
     }
 
     @Override

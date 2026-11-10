@@ -35,8 +35,8 @@ import java.util.stream.Stream;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasStorageDataProvider {
-    public static final String STORAGE_KEY = "JadeGasStorage";
-    public static final String STORAGE_UID_KEY = "JadeGasStorageUid";
+    public static final String COMPOUND_KEY_STORAGE = "JadeGasStorage";
+    public static final String COMPOUND_KEY_STORAGE_UID = "JadeGasStorageUid";
 
     private static final String COMPOUND_KEY_HIDDEN_TANK_COUNT = "+";
     private static final ResourceLocation ICON = CCBAPI.asResource("icon");
@@ -73,14 +73,14 @@ public class GasStorageDataProvider {
         for (GasHandler gasHandler : gasHandlers) {
             groups.addAll(fromGasHandler(gasHandler, creative, includeCapacity, includePressure));
         }
-        ViewGroup.saveList(data, STORAGE_KEY, groups, Function.identity());
-        data.putString(STORAGE_UID_KEY, location.toString());
+        ViewGroup.saveList(data, COMPOUND_KEY_STORAGE, groups, Function.identity());
+        data.putString(COMPOUND_KEY_STORAGE_UID, location.toString());
     }
 
     public static void appendData(ITooltip tooltip, CompoundTag data, boolean showDetails, boolean includeCapacity, boolean includePressure) {
         List<ViewGroup<CompoundTag>> groups;
         try {
-            groups = ViewGroup.readList(data, STORAGE_KEY, Function.identity());
+            groups = ViewGroup.readList(data, COMPOUND_KEY_STORAGE, Function.identity());
         }
         catch (Exception exception) {
             CCBAPI.LOGGER.error("Failed to read Jade gas storage tooltip data.", exception);

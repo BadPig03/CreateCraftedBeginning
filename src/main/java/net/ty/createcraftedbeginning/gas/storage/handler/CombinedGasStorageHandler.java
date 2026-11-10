@@ -7,8 +7,10 @@ import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
-import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
+import net.ty.createcraftedbeginning.api.gas.handler.GasTransferSnapshot;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment.PressureModel;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressurePrediction;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -292,6 +294,20 @@ public class CombinedGasStorageHandler implements GasStorageHandler {
         }
 
         @Override
+        public @Nullable GasTransferSnapshot captureTransferSnapshot() {
+            return delegate.captureTransferSnapshot();
+        }
+
+        @Override
+        public Object getPredictionGroup() {
+            if (enforceVariety) {
+                return CombinedGasStorageHandler.this;
+            }
+
+            return delegate.getPredictionGroup();
+        }
+
+        @Override
         public @Nullable PredictedTransferLimits predictTransferLimits(GasStack gas, long storedAmount) {
             long amount = Math.max(0, Math.min(getMaxAmount(), storedAmount));
             if (enforceVariety && delegate.getGasStack().isEmpty() != (amount == 0)) {
@@ -311,6 +327,46 @@ public class CombinedGasStorageHandler implements GasStorageHandler {
             long fill = canFillPressureCompartment(tank) && isGasValid(gas) ? limits.fillLimit() : 0;
             if (enforceVariety && amount == 0 && fill > 0 && fill(gas.copyWithAmount(1), GasAction.SIMULATE) == 0) {
                 fill = 0;
+            }
+            return new PredictedTransferLimits(drain, fill);
+        }
+
+        @Override
+        public @Nullable PredictedTransferLimits predictTransferLimits(GasStack gas, GasPressurePrediction prediction) {
+            PredictedTransferLimits limits = delegate.predictTransferLimits(gas, prediction);
+            if (limits == null) {
+                return null;
+            }
+
+            long drain = canDrainPressureCompartment(tank) ? limits.drainLimit() : 0;
+            long fill = canFillPressureCompartment(tank) && isGasValid(gas) ? limits.fillLimit() : 0;
+            if (!enforceVariety || fill <= 0 || !prediction.getGas(delegate).isEmpty()) {
+                return new PredictedTransferLimits(drain, fill);
+            }
+
+            for (int otherTank = 0; otherTank < tankCount; otherTank++) {
+                if (otherTank == tank) {
+                    continue;
+                }
+
+                GasStack otherGas = prediction.getGas(getPressureCompartment(otherTank));
+                if (otherGas.isEmpty() || !GasStack.isSameGasSameComponents(otherGas, gas)) {
+                    continue;
+                }
+
+                return new PredictedTransferLimits(drain, 0);
+            }
+            for (int earlierTank = 0; earlierTank < tank; earlierTank++) {
+                PredictedTransferLimits earlier = getPressureCompartment(earlierTank).predictTransferLimits(gas, prediction);
+                if (earlier == null) {
+                    return null;
+                }
+
+                if (earlier.fillLimit() <= 0) {
+                    continue;
+                }
+
+                return new PredictedTransferLimits(drain, 0);
             }
             return new PredictedTransferLimits(drain, fill);
         }

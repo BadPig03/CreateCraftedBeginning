@@ -6,15 +6,19 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock.VentState;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.UnaryOperator;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirVentLouverState {
-    private static final String COMPOUND_KEY_LOUVER_MASK = "LouverMask";
-    private static final String COMPOUND_KEY_OPENED_MASK = "OpenedMask";
+@Internal
+public final class AirVentLouverState {
+    @Internal
+    public static final String COMPOUND_KEY_LOUVER_MASK = "LouverMask";
+    @Internal
+    public static final String COMPOUND_KEY_OPENED_MASK = "OpenedMask";
     private static final int VALID_DIRECTION_MASK = (1 << Direction.values().length) - 1;
 
     private int louverMask;

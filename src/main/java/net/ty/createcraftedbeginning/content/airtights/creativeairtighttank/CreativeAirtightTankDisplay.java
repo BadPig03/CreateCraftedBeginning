@@ -32,7 +32,7 @@ final class CreativeAirtightTankDisplay {
         }
 
         GasStorageHandler gasHandler = controller.getCapability();
-        GasUnitsTooltips.addContainer(tooltip, gasHandler, true, controller);
+        GasUnitsTooltips.addContainer(tooltip, gasHandler, true, controller.getGasStorageReadout());
         return true;
     }
 

@@ -25,17 +25,33 @@ public interface AirtightDrillHandler {
 
     int getDamageAddition();
 
-    float getConsumptionMultiplier();
+    double getConsumptionMultiplier();
 
     default void appendHoverText(ItemStack drill, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        float consumptionMultiplier = getConsumptionMultiplier();
-        MutableComponent advancedGasConsumption = flag.isAdvanced() ? Component.literal(" [x" + GasConsumptionMath.format(consumptionMultiplier) + ']') : Component.empty();
+        double consumptionMultiplier = getConsumptionMultiplier();
+        boolean advanced = flag.isAdvanced();
+        MutableComponent advancedGasConsumption = advanced ? Component.literal(" [x" + GasConsumptionMath.format(consumptionMultiplier) + ']') : Component.empty();
         tooltip.add(Component.translatable(CCBAPI.MOD_ID + ".gui.gas_tools.gas_consumption", GasConsumptionMath.formatPercent(consumptionMultiplier)).append(advancedGasConsumption.withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GREEN));
 
         int additionDamage = getDamageAddition();
         int damage = BASE_DAMAGE_AMOUNT + additionDamage;
-        MutableComponent advancedAttackDamage = flag.isAdvanced() ? Component.literal(" [" + (additionDamage != 0 ? "" : "+") + BASE_DAMAGE_AMOUNT + (additionDamage != 0 ? " + " + additionDamage : "") + ']') : Component.empty();
+        MutableComponent advancedAttackDamage = Component.empty();
+        if (advanced) {
+            String damageDetails;
+            if (additionDamage == 0) {
+                damageDetails = '+' + String.valueOf(BASE_DAMAGE_AMOUNT);
+            }
+            else {
+                damageDetails = BASE_DAMAGE_AMOUNT + " + " + additionDamage;
+            }
+            advancedAttackDamage = Component.literal(" [" + damageDetails + ']');
+        }
         tooltip.add(Component.translatable(CCBAPI.MOD_ID + ".gui.airtight_handheld_drill.attack_damage", damage).append(advancedAttackDamage.withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GREEN));
+        appendAdditionalHoverText(drill, context, tooltip, flag);
+    }
+
+    /** Appends gas-specific information after the current handler's standard consumption and damage lines. */
+    default void appendAdditionalHoverText(ItemStack drill, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
     }
 
     default void extraBehaviour(LivingEntity entity, Player player, ServerLevel serverLevel) {

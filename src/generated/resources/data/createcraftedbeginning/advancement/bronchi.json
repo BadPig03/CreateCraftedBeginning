@@ -2,14 +2,7 @@
   "parent": "createcraftedbeginning:gas_industry_from_scratch",
   "criteria": {
     "0": {
-      "conditions": {
-        "items": [
-          {
-            "items": "createcraftedbeginning:airtight_encased_pipe"
-          }
-        ]
-      },
-      "trigger": "minecraft:inventory_changed"
+      "trigger": "minecraft:impossible"
     }
   },
   "display": {
@@ -20,7 +13,7 @@
     },
     "icon": {
       "count": 1,
-      "id": "createcraftedbeginning:airtight_encased_pipe"
+      "id": "createcraftedbeginning:airtight_pipe"
     },
     "title": {
       "translate": "advancement.createcraftedbeginning.bronchi"

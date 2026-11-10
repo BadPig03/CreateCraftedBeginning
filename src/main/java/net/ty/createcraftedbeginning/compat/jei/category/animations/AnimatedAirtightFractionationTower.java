@@ -31,24 +31,36 @@ public final class AnimatedAirtightFractionationTower extends AnimatedKinetics {
         double yOffset = bottomY - PROJECTED_HALF_DEPTH * scale;
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
-        poseStack.translate(xOffset, yOffset, 0);
-        poseStack.scale(scale, scale, 1);
-        CCBJEITextures.JEI_SHADOW.render(graphics, -CCBJEITextures.JEI_SHADOW.getWidth() / 2, -CCBJEITextures.JEI_SHADOW.getHeight() / 2);
-        poseStack.popPose();
+        try {
+            poseStack.translate(xOffset, yOffset, 0);
+            poseStack.scale(scale, scale, 1);
+            CCBJEITextures.JEI_SHADOW.render(graphics, -CCBJEITextures.JEI_SHADOW.getWidth() / 2, -CCBJEITextures.JEI_SHADOW.getHeight() / 2);
+        }
+        finally {
+            poseStack.popPose();
+        }
 
         poseStack.pushPose();
-        poseStack.translate(xOffset, yOffset, 192);
-        poseStack.scale(scale, scale, scale);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
-        blockElement(CCBPartialModels.AIRTIGHT_FRACTIONATION_TOWER_JEI_PREVIEW).atLocal(-0.5, -1, -0.5).scale(SCALE).render(graphics);
-        poseStack.popPose();
+        try {
+            poseStack.translate(xOffset, yOffset, 192);
+            poseStack.scale(scale, scale, scale);
+            poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
+            blockElement(CCBPartialModels.AIRTIGHT_FRACTIONATION_TOWER_JEI_PREVIEW).atLocal(-0.5, -1, -0.5).scale(SCALE).render(graphics);
+        }
+        finally {
+            poseStack.popPose();
+        }
 
         Font font = Minecraft.getInstance().font;
         String layerCount = Integer.toString(requiredLayers);
         poseStack.pushPose();
-        poseStack.translate(xOffset, bottomY, 300);
-        graphics.drawString(font, layerCount, 2 + Math.round(24 * scale) - font.width(layerCount), -font.lineHeight, 0xFFFFFFFF, true);
-        poseStack.popPose();
+        try {
+            poseStack.translate(xOffset, bottomY, 300);
+            graphics.drawString(font, layerCount, 2 + Math.round(24 * scale) - font.width(layerCount), -font.lineHeight, 0xFFFFFFFF, true);
+        }
+        finally {
+            poseStack.popPose();
+        }
     }
 }

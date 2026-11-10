@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.recipe;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipe;
-import com.simibubi.create.foundation.recipe.RecipeFinder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
@@ -25,9 +24,11 @@ import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
@@ -89,21 +90,28 @@ public final class GasInjectionRecipeLookup {
     }
 
     public Optional<RecipeMatch> findBasinRecipeMatch(IItemHandler items, IFluidHandler fluids) {
-        GasStack gasStack = gasSource.getGasStack();
-        if (gasStack.isEmpty()) {
+        return findBasinResult(items, fluids, recipe -> Optional.of(new RecipeMatch(recipe, false)));
+    }
+
+    public <T> Optional<T> findBasinResult(IItemHandler items, IFluidHandler fluids, Function<GasInjectionRecipe, Optional<T>> evaluate) {
+        if (gasSource.getGasStack().isEmpty()) {
             return Optional.empty();
         }
 
-        if (!AirtightRecipeTrieFinder.hasFailed(RECIPE_CACHE_KEY, level)) {
-            try {
-                return findBasinInTrie(items, fluids);
+        Iterator<? extends Recipe<?>> candidates = getBasinCandidates(items, fluids);
+        while (candidates.hasNext()) {
+            if (!(candidates.next() instanceof GasInjectionRecipe recipe) || !recipe.matchesBasinInput(items, fluids) || !recipe.matchesGas(gasSource)) {
+                continue;
             }
-            catch (ExecutionException | UncheckedExecutionException exception) {
 
-                disableRecipeTrie(exception);
+            Optional<T> result = evaluate.apply(recipe);
+            if (result.isEmpty()) {
+                continue;
             }
+
+            return result;
         }
-        return findBasinLinear(items, fluids);
+        return Optional.empty();
     }
 
     public record RecipeMatch(GasInjectionRecipe recipe, boolean sequencedAssembly) {}
@@ -125,18 +133,17 @@ public final class GasInjectionRecipeLookup {
         return Optional.empty();
     }
 
-    private Optional<RecipeMatch> findBasinInTrie(IItemHandler items, IFluidHandler fluids) throws ExecutionException {
-        AirtightRecipeTrie<?> recipeTrie = getRecipeTrie();
-        Set<AbstractVariant> lookupVariants = AirtightRecipeTrie.getVariants(items, fluids, gasSource);
-        for (Recipe<?> candidateRecipe : recipeTrie.lookup(lookupVariants)) {
-            if (!(candidateRecipe instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.matchesBasinInput(items, fluids) || !injectionRecipe.matchesGas(gasSource)) {
-                continue;
+    private Iterator<? extends Recipe<?>> getBasinCandidates(IItemHandler items, IFluidHandler fluids) {
+        if (!AirtightRecipeTrieFinder.hasFailed(RECIPE_CACHE_KEY, level)) {
+            try {
+                return getRecipeTrie().lookup(AirtightRecipeTrie.getVariants(items, fluids, gasSource)).iterator();
             }
-
-            return Optional.of(new RecipeMatch(injectionRecipe, false));
+            catch (ExecutionException | UncheckedExecutionException exception) {
+                disableRecipeTrie(exception);
+            }
         }
 
-        return Optional.empty();
+        return RecipeCandidateCache.get(RECIPE_CACHE_KEY, level.getRecipeManager(), holder -> holder.value() instanceof GasInjectionRecipe).stream().map(RecipeHolder::value).iterator();
     }
 
     private Optional<RecipeMatch> findFluidInTrie(IFluidHandler fluids) throws ExecutionException {
@@ -157,7 +164,7 @@ public final class GasInjectionRecipeLookup {
 
         lookupVariants.add(new AbstractGas(gasStack.getGasType()));
         for (Recipe<?> candidateRecipe : recipeTrie.lookup(lookupVariants)) {
-            if (!(candidateRecipe instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.isFluidInjection() || !injectionRecipe.matchesFluid(fluids) || !injectionRecipe.matchesGas(gasSource)) {
+            if (!(candidateRecipe instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.matchesFluid(fluids) || !injectionRecipe.matchesGas(gasSource)) {
                 continue;
             }
 
@@ -172,7 +179,7 @@ public final class GasInjectionRecipeLookup {
     }
 
     private Optional<RecipeMatch> findItemLinear(SingleRecipeInput input) {
-        for (RecipeHolder<? extends Recipe<?>> recipeHolder : RecipeFinder.get(RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof GasInjectionRecipe)) {
+        for (RecipeHolder<? extends Recipe<?>> recipeHolder : RecipeCandidateCache.get(RECIPE_CACHE_KEY, level.getRecipeManager(), holder -> holder.value() instanceof GasInjectionRecipe)) {
             if (!(recipeHolder.value() instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.canProcessOnBelt() || !injectionRecipe.matches(input, level) || !injectionRecipe.matchesGas(gasSource)) {
                 continue;
             }
@@ -183,21 +190,9 @@ public final class GasInjectionRecipeLookup {
         return Optional.empty();
     }
 
-    private Optional<RecipeMatch> findBasinLinear(IItemHandler items, IFluidHandler fluids) {
-        for (RecipeHolder<? extends Recipe<?>> recipeHolder : RecipeFinder.get(RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof GasInjectionRecipe)) {
-            if (!(recipeHolder.value() instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.matchesBasinInput(items, fluids) || !injectionRecipe.matchesGas(gasSource)) {
-                continue;
-            }
-
-            return Optional.of(new RecipeMatch(injectionRecipe, false));
-        }
-
-        return Optional.empty();
-    }
-
     private Optional<RecipeMatch> findFluidLinear(IFluidHandler fluids) {
-        for (RecipeHolder<? extends Recipe<?>> recipeHolder : RecipeFinder.get(RECIPE_CACHE_KEY, level, holder -> holder.value() instanceof GasInjectionRecipe)) {
-            if (!(recipeHolder.value() instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.isFluidInjection() || !injectionRecipe.matchesFluid(fluids) || !injectionRecipe.matchesGas(gasSource)) {
+        for (RecipeHolder<? extends Recipe<?>> recipeHolder : RecipeCandidateCache.get(RECIPE_CACHE_KEY, level.getRecipeManager(), holder -> holder.value() instanceof GasInjectionRecipe)) {
+            if (!(recipeHolder.value() instanceof GasInjectionRecipe injectionRecipe) || !injectionRecipe.matchesFluid(fluids) || !injectionRecipe.matchesGas(gasSource)) {
                 continue;
             }
 

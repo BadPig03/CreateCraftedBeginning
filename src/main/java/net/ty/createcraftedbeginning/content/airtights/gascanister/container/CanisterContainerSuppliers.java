@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.gascanister.container;
 
+import com.google.common.collect.MapMaker;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -16,20 +17,20 @@ import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.function.Function;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CanisterContainerSuppliers {
     private static final List<ContainerSupplier> CANISTER_CONTAINER_SUPPLIERS = new ArrayList<>();
-    private static final Map<Player, SupplierCache> SUPPLIER_CACHE = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<Player, SupplierCache> SUPPLIER_CACHE = new MapMaker().weakKeys().makeMap();
 
     static {
         addCanisterContainerSuppliers(CanisterContainerSuppliers::getCanisterContainersInInventory, SupplyOrder.CONTAINER_PRIORITY);
@@ -62,8 +63,11 @@ public final class CanisterContainerSuppliers {
         long gameTime = level.getGameTime();
         synchronized (SUPPLIER_CACHE) {
             SupplierCache cache = SUPPLIER_CACHE.get(player);
-            if (cache != null && cache.level() == level && cache.gameTime() == gameTime) {
-                return cache.containers();
+            if (cache != null && cache.level().get() == level && cache.gameTime() == gameTime) {
+                List<GasCanisterContainer> cachedContainers = cache.containers().get();
+                if (cachedContainers != null) {
+                    return cachedContainers;
+                }
             }
         }
 
@@ -114,7 +118,7 @@ public final class CanisterContainerSuppliers {
 
         List<GasCanisterContainer> resolvedContainers = List.copyOf(containers);
         synchronized (SUPPLIER_CACHE) {
-            SUPPLIER_CACHE.put(player, new SupplierCache(level, gameTime, resolvedContainers));
+            SUPPLIER_CACHE.put(player, new SupplierCache(new WeakReference<>(level), gameTime, new WeakReference<>(resolvedContainers)));
         }
         return resolvedContainers;
     }
@@ -136,6 +140,15 @@ public final class CanisterContainerSuppliers {
     public static void invalidateCache(Player player) {
         synchronized (SUPPLIER_CACHE) {
             SUPPLIER_CACHE.remove(player);
+        }
+    }
+
+    public static void invalidateCaches(Level level) {
+        synchronized (SUPPLIER_CACHE) {
+            SUPPLIER_CACHE.values().removeIf(cache -> {
+                Level cachedLevel = cache.level().get();
+                return cachedLevel == null || cachedLevel == level;
+            });
         }
     }
 
@@ -201,5 +214,5 @@ public final class CanisterContainerSuppliers {
 
     private record SuppliedContainer(GasCanisterContainer container, SupplyOrder order) {}
 
-    private record SupplierCache(Level level, long gameTime, List<GasCanisterContainer> containers) {}
+    private record SupplierCache(WeakReference<Level> level, long gameTime, WeakReference<List<GasCanisterContainer>> containers) {}
 }

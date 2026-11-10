@@ -1,0 +1,58 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": false,
+  "elements": [
+    {
+      "faces": {
+        "west": {
+          "rotation": 90,
+          "texture": "#pipe",
+          "uv": [
+            4.0,
+            8.0,
+            12.0,
+            16.0
+          ]
+        }
+      },
+      "from": [
+        4,
+        4,
+        4
+      ],
+      "to": [
+        4,
+        12,
+        12
+      ]
+    },
+    {
+      "faces": {
+        "east": {
+          "rotation": 90,
+          "texture": "#pipe",
+          "uv": [
+            5.0,
+            15.0,
+            11.0,
+            9.0
+          ]
+        }
+      },
+      "from": [
+        5,
+        5,
+        5
+      ],
+      "to": [
+        5,
+        11,
+        11
+      ]
+    }
+  ],
+  "textures": {
+    "particle": "createcraftedbeginning:block/airtight_pipe/casing_single",
+    "pipe": "createcraftedbeginning:block/airtight_pipe/pipe"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "createcraftedbeginning:block/industrial_iron/trapdoor/open",
+  "textures": {
+    "side": "createcraftedbeginning:block/industrial_iron/weathered_door/side",
+    "texture": "createcraftedbeginning:block/industrial_iron/weathered_door/trapdoor"
+  }
+}

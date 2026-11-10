@@ -4,10 +4,12 @@ import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.net.base.ServerboundPacketPayload;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.AirtightHandheldDrillMiningTemplates;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.BaseTemplate;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
@@ -16,14 +18,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record AirtightHandheldDrillParametersPacket(AirtightHandheldDrillMiningTemplates template, BlockPos sizeParams, DrillMiningDirection direction, BlockPos relativeParams) implements ServerboundPacketPayload {
+public record AirtightHandheldDrillParametersPacket(int containerId, AirtightHandheldDrillMiningTemplates template, BlockPos sizeParams, DrillMiningDirection direction, BlockPos relativeParams) implements ServerboundPacketPayload {
 
-    public static final StreamCodec<ByteBuf, AirtightHandheldDrillParametersPacket> STREAM_CODEC = StreamCodec.composite(AirtightHandheldDrillMiningTemplates.STREAM_CODEC, AirtightHandheldDrillParametersPacket::template, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::sizeParams, DrillMiningDirection.STREAM_CODEC, AirtightHandheldDrillParametersPacket::direction, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::relativeParams, AirtightHandheldDrillParametersPacket::new);
+    public static final StreamCodec<ByteBuf, AirtightHandheldDrillParametersPacket> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.VAR_INT, AirtightHandheldDrillParametersPacket::containerId, AirtightHandheldDrillMiningTemplates.STREAM_CODEC, AirtightHandheldDrillParametersPacket::template, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::sizeParams, DrillMiningDirection.STREAM_CODEC, AirtightHandheldDrillParametersPacket::direction, BlockPos.STREAM_CODEC, AirtightHandheldDrillParametersPacket::relativeParams, AirtightHandheldDrillParametersPacket::new);
 
     @Override
     public void handle(ServerPlayer player) {
-        ItemStack drill = player.getMainHandItem();
-        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL) || !hasValidParameters()) {
+        if (!(player.containerMenu instanceof AirtightHandheldDrillMenu menu) || menu.containerId != containerId || !menu.stillValid(player) || player.getMainHandItem() != menu.contentHolder || !hasValidParameters()) {
+            return;
+        }
+
+        ItemStack drill = menu.contentHolder;
+        if (!drill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
             return;
         }
 
@@ -41,9 +47,10 @@ public record AirtightHandheldDrillParametersPacket(AirtightHandheldDrillMiningT
     private boolean hasValidParameters() {
         int[] miningSize = {sizeParams.getX(), sizeParams.getY(), sizeParams.getZ()};
         int[] relativePosition = {relativeParams.getX(), relativeParams.getY(), relativeParams.getZ()};
+        BaseTemplate miningTemplate = template.getTemplate();
 
         for (int index = 0; index < miningSize.length; index++) {
-            if (miningSize[index] < template.getTemplate().getMinValue(index) || miningSize[index] > template.getTemplate().getMaxValue(index)) {
+            if (miningSize[index] < miningTemplate.getMinValue(index) || miningSize[index] > miningTemplate.getMaxValue(index)) {
                 return false;
             }
 

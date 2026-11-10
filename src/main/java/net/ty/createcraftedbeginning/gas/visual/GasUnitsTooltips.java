@@ -4,17 +4,13 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
-import net.ty.createcraftedbeginning.content.airtights.AirtightTelemetryVisibility;
-import net.ty.createcraftedbeginning.content.airtights.AirtightTelemetryVisibility.StorageReadout;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.platform.client.GoggleTooltip;
 import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -26,19 +22,18 @@ public final class GasUnitsTooltips {
     }
 
     public static void addContainer(List<Component> tooltip, GasStorageHandler handler) {
-        addContainer(tooltip, handler, false, null);
+        addContainer(tooltip, handler, false, GasStorageReadout.AMOUNT_ONLY);
     }
 
     public static void addContainer(List<Component> tooltip, GasStorageHandler handler, boolean infinite) {
-        addContainer(tooltip, handler, infinite, null);
+        addContainer(tooltip, handler, infinite, GasStorageReadout.AMOUNT_ONLY);
     }
 
-    public static void addContainer(List<Component> tooltip, GasStorageHandler handler, boolean infinite, @Nullable BlockEntity observed) {
+    public static void addContainer(List<Component> tooltip, GasStorageHandler handler, boolean infinite, GasStorageReadout readout) {
         if (!GoggleTooltip.isVisible(tooltip, Section.GAS_STORAGE)) {
             return;
         }
 
-        StorageReadout readout = AirtightTelemetryVisibility.storageReadout(observed);
         CCBLang.translate("gui.gas_container").forGoggles(tooltip);
         addTankState(tooltip, handler, 0, 1, infinite, readout.capacity(), readout.pressure());
     }
@@ -53,8 +48,8 @@ public final class GasUnitsTooltips {
         addTankState(tooltip, handler, tank, indent, infinite, false, false);
     }
 
-    public static void addPressureReading(List<Component> tooltip, GasStorageHandler handler, int tank, int indent, @Nullable BlockEntity observed) {
-        if (!AirtightTelemetryVisibility.canReadStoragePressure(observed) || tank < 0 || tank >= handler.getTanks()) {
+    public static void addPressureReading(List<Component> tooltip, GasStorageHandler handler, int tank, int indent, GasStorageReadout readout) {
+        if (!readout.pressure() || tank < 0 || tank >= handler.getTanks()) {
             return;
         }
 

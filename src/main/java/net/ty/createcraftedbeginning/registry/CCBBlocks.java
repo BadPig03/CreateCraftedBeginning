@@ -1,19 +1,24 @@
 package net.ty.createcraftedbeginning.registry;
 
+import com.simibubi.create.api.behaviour.interaction.MovingInteractionBehaviour;
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
+import com.simibubi.create.content.decoration.MetalScaffoldingBlock;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ColorRGBA;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ColoredFallingBlock;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.HalfTransparentBlock;
+import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WallBlock;
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import net.ty.createcraftedbeginning.client.render.CCBSpriteShifts;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlock;
@@ -55,10 +60,16 @@ import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlock;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlock;
 import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
-import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerBlock;
-import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerMovementBehaviour;
-import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerStructuralBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystlens.AmethystLensBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderMovementBehaviour;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderMovingInteraction;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorMovementBehaviour;
+import net.ty.createcraftedbeginning.content.opticalpower.experiencecrystal.ExperienceCrystalBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverBlock;
@@ -74,8 +85,11 @@ import net.ty.createcraftedbeginning.registry.registrate.EndRegistration;
 import net.ty.createcraftedbeginning.registry.registrate.GasLogisticsRegistration;
 import net.ty.createcraftedbeginning.registry.registrate.GasPipeRegistration;
 import net.ty.createcraftedbeginning.registry.registrate.GasStorageRegistration;
+import net.ty.createcraftedbeginning.registry.registrate.IndustrialIronDoorRegistration;
+import net.ty.createcraftedbeginning.registry.registrate.IndustrialIronRegistration;
 import net.ty.createcraftedbeginning.registry.registrate.ObsidianRegistration;
 import net.ty.createcraftedbeginning.registry.registrate.OpticalRegistration;
+import net.ty.createcraftedbeginning.registry.registrate.ScaffoldingRegistration;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -92,7 +106,6 @@ public class CCBBlocks {
     public static final BlockEntry<Block> AIRTIGHT_SHEET_BLOCK = CCB_REGISTRATE.block("airtight_sheet_block", Block::new).transform(GasStorageRegistration.airtightSheetBlock()).transform(AirtightBlockProperties.airtightMetal()).register();
 
     public static final BlockEntry<AirtightPipeBlock> AIRTIGHT_PIPE_BLOCK = CCB_REGISTRATE.block("airtight_pipe", AirtightPipeBlock::new).transform(GasPipeRegistration.airtightPipe()).transform(AirtightBlockProperties.airtightComponent()).register();
-    public static final BlockEntry<AirtightEncasedPipeBlock> AIRTIGHT_ENCASED_PIPE_BLOCK = CCB_REGISTRATE.block("airtight_encased_pipe", AirtightEncasedPipeBlock::new).transform(GasPipeRegistration.airtightEncasedPipe()).transform(AirtightBlockProperties.airtightComponent()).register();
     public static final BlockEntry<AirtightCheckValveBlock> AIRTIGHT_CHECK_VALVE_BLOCK = CCB_REGISTRATE.block("airtight_check_valve", AirtightCheckValveBlock::new).transform(GasPipeRegistration.airtightCheckValve()).transform(AirtightBlockProperties.airtightComponent()).register();
     public static final BlockEntry<AirtightValveBlock> AIRTIGHT_VALVE_BLOCK = CCB_REGISTRATE.block("airtight_valve", AirtightValveBlock::new).transform(GasPipeRegistration.airtightValve()).transform(AirtightBlockProperties.airtightComponentWithImpact(4)).register();
     public static final BlockEntry<SmartAirtightPipeBlock> SMART_AIRTIGHT_PIPE_BLOCK = CCB_REGISTRATE.block("smart_airtight_pipe", SmartAirtightPipeBlock::new).transform(GasPipeRegistration.smartAirtightPipe()).transform(AirtightBlockProperties.airtightComponent()).register();
@@ -104,7 +117,7 @@ public class CCBBlocks {
 
     public static final BlockEntry<AirtightTankBlock> AIRTIGHT_TANK_BLOCK = CCB_REGISTRATE.block("airtight_tank", AirtightTankBlock::new).transform(GasStorageRegistration.airtightTank()).transform(GasStorageRegistration.airtightTankProperties()).register();
     public static final BlockEntry<AirtightFractionationTowerBlock> AIRTIGHT_FRACTIONATION_TOWER_BLOCK = CCB_REGISTRATE.block("airtight_fractionation_tower", AirtightFractionationTowerBlock::new).transform(AirtightMachineRegistration.airtightFractionationTower()).transform(AirtightBlockProperties.airtightComponent()).register();
-    public static final BlockEntry<HorizontalAirtightTankBlock> HORIZONTAL_AIRTIGHT_TANK_BLOCK = CCB_REGISTRATE.block("horizontal_airtight_tank", HorizontalAirtightTankBlock::new).transform(GasStorageRegistration.horizontalAirtightTank()).transform(GasStorageRegistration.horizontalAirtightTankProperties()).register();
+    public static final BlockEntry<HorizontalAirtightTankBlock> HORIZONTAL_AIRTIGHT_TANK_BLOCK = CCB_REGISTRATE.block("horizontal_airtight_tank", HorizontalAirtightTankBlock::new).transform(GasStorageRegistration.horizontalAirtightTank()).transform(GasStorageRegistration.airtightTankProperties()).register();
     public static final BlockEntry<CreativeAirtightTankBlock> CREATIVE_AIRTIGHT_TANK_BLOCK = CCB_REGISTRATE.block("creative_airtight_tank", CreativeAirtightTankBlock::new).transform(GasStorageRegistration.creativeAirtightTank()).transform(GasStorageRegistration.creativeAirtightTankProperties()).register();
 
     public static final BlockEntry<AirtightHatchBlock> AIRTIGHT_HATCH_BLOCK = CCB_REGISTRATE.block("airtight_hatch", AirtightHatchBlock::new).transform(GasStorageRegistration.airtightHatch()).transform(AirtightBlockProperties.airtightComponent()).register();
@@ -150,6 +163,18 @@ public class CCBBlocks {
     public static final BlockEntry<LaserEmitterBlock> LASER_EMITTER_BLOCK = CCB_REGISTRATE.block("laser_emitter", LaserEmitterBlock::new).transform(OpticalRegistration.laserEmitter()).transform(OpticalRegistration.opticalComponentProperties()).register();
     public static final BlockEntry<PhotothermalReceiverBlock> PHOTOTHERMAL_RECEIVER_BLOCK = CCB_REGISTRATE.block("photothermal_receiver", PhotothermalReceiverBlock::new).transform(OpticalRegistration.photothermalReceiver()).transform(OpticalRegistration.photothermalReceiverProperties()).register();
 
+    public static final BlockEntry<AmethystLoaderBlock> AMETHYST_LOADER_BLOCK = CCB_REGISTRATE.block("amethyst_loader", AmethystLoaderBlock::new).transform(OpticalRegistration.amethystLoader()).transform(OpticalRegistration.opticalComponentProperties()).onRegister(MovementBehaviour.movementBehaviour(new AmethystLoaderMovementBehaviour())).onRegister(MovingInteractionBehaviour.interactionBehaviour(new AmethystLoaderMovingInteraction())).register();
+    public static final BlockEntry<AmethystAntennaBlock> AMETHYST_ANTENNA_BLOCK = CCB_REGISTRATE.block("amethyst_antenna", AmethystAntennaBlock::new).transform(OpticalRegistration.amethystAntenna()).transform(OpticalRegistration.opticalComponentProperties()).onRegister(AmethystAntennaBlock::registerMovementChecks).register();
+
+    public static final BlockEntry<AmethystMirrorBlock> AMETHYST_MIRROR_BLOCK = CCB_REGISTRATE.block("amethyst_mirror", AmethystMirrorBlock::new).transform(OpticalRegistration.amethystMirror()).transform(OpticalRegistration.opticalComponentProperties()).register();
+    public static final BlockEntry<AmethystLensBlock> AMETHYST_CONCAVE_LENS_BLOCK = CCB_REGISTRATE.block("amethyst_concave_lens", properties -> new AmethystLensBlock(properties, false)).transform(OpticalRegistration.amethystLens()).transform(OpticalRegistration.opticalComponentProperties()).register();
+    public static final BlockEntry<AmethystLensBlock> AMETHYST_CONVEX_LENS_BLOCK = CCB_REGISTRATE.block("amethyst_convex_lens", properties -> new AmethystLensBlock(properties, true)).transform(OpticalRegistration.amethystLens()).transform(OpticalRegistration.opticalComponentProperties()).register();
+
+    public static final BlockEntry<AmethystSoundSuppressorBlock> AMETHYST_SOUND_SUPPRESSOR_BLOCK = CCB_REGISTRATE.block("amethyst_sound_suppressor", AmethystSoundSuppressorBlock::new).transform(OpticalRegistration.amethystSoundSuppressor()).transform(OpticalRegistration.opticalComponentProperties()).onRegister(MovementBehaviour.movementBehaviour(new AmethystSoundSuppressorMovementBehaviour())).register();
+    public static final BlockEntry<ExperienceCrystalBlock> SMALL_EXPERIENCE_BUD = CCB_REGISTRATE.block("small_experience_bud", properties -> new ExperienceCrystalBlock(ExperienceCrystalBlock.SMALL_STAGE, properties)).transform(OpticalRegistration.experienceCrystal(() -> Blocks.SMALL_AMETHYST_BUD, false)).register();
+    public static final BlockEntry<ExperienceCrystalBlock> MEDIUM_EXPERIENCE_BUD = CCB_REGISTRATE.block("medium_experience_bud", properties -> new ExperienceCrystalBlock(ExperienceCrystalBlock.MEDIUM_STAGE, properties)).transform(OpticalRegistration.experienceCrystal(() -> Blocks.MEDIUM_AMETHYST_BUD, false)).register();
+    public static final BlockEntry<ExperienceCrystalBlock> EXPERIENCE_CLUSTER = CCB_REGISTRATE.block("experience_cluster", properties -> new ExperienceCrystalBlock(ExperienceCrystalBlock.MATURE_STAGE, properties)).transform(OpticalRegistration.experienceCrystal(() -> Blocks.AMETHYST_CLUSTER, true)).register();
+
     static {
         CCBCreativeSectionTracker.set(CCB_REGISTRATE, CCBCreativeTabSection.ENDS);
     }
@@ -157,30 +182,51 @@ public class CCBBlocks {
     public static final BlockEntry<Block> END_ALLOY_BLOCK = CCB_REGISTRATE.block("end_alloy_block", Block::new).transform(EndRegistration.endAlloyBlock()).transform(EndRegistration.endAlloyBlockProperties()).register();
 
     public static final BlockEntry<EndCasingBlock> END_CASING_BLOCK = CCB_REGISTRATE.block("end_casing", EndCasingBlock::new).transform(EndRegistration.endCasing()).transform(EndRegistration.endCasingProperties()).register();
-    public static final BlockEntry<EndSculkSilencerBlock> END_SCULK_SILENCER_BLOCK = CCB_REGISTRATE.block("end_sculk_silencer", EndSculkSilencerBlock::new).transform(EndRegistration.endSculkSilencer()).transform(EndRegistration.endComponentWithImpactProperties(4)).onRegister(MovementBehaviour.movementBehaviour(new EndSculkSilencerMovementBehaviour())).register();
-    public static final BlockEntry<EndSculkSilencerStructuralBlock> END_SCULK_SILENCER_STRUCTURAL_BLOCK = CCB_REGISTRATE.block("end_sculk_silencer_structural", EndSculkSilencerStructuralBlock::new).transform(EndRegistration.endSculkSilencerStructural()).transform(EndRegistration.endComponentWithImpactProperties(0)).register();
 
     static {
         CCBCreativeSectionTracker.set(CCB_REGISTRATE, CCBCreativeTabSection.DECORATIONS);
     }
 
-    public static final BlockEntry<HalfTransparentBlock> AEROGEL_BLOCK = CCB_REGISTRATE.block("aerogel_block", HalfTransparentBlock::new).transform(AerogelRegistration.aerogelBlock()).register();
-
     public static final BlockEntry<AndesiteCrateBlock> ANDESITE_CRATE_BLOCK = CCB_REGISTRATE.block("andesite_crate", AndesiteCrateBlock::new).transform(CrateRegistration.crate("andesite")).transform(CrateRegistration.andesiteCrateProperties()).register();
     public static final BlockEntry<BrassCrateBlock> BRASS_CRATE_BLOCK = CCB_REGISTRATE.block("brass_crate", BrassCrateBlock::new).transform(CrateRegistration.crate("brass")).transform(CrateRegistration.brassCrateProperties()).register();
     public static final BlockEntry<SturdyCrateBlock> STURDY_CRATE_BLOCK = CCB_REGISTRATE.block("sturdy_crate", SturdyCrateBlock::new).transform(CrateRegistration.uncontainableCrate()).transform(CrateRegistration.sturdyCrateProperties()).register();
     public static final BlockEntry<CardboardCrateBlock> CARDBOARD_CRATE_BLOCK = CCB_REGISTRATE.block("cardboard_crate", CardboardCrateBlock::new).transform(CrateRegistration.crate("cardboard")).transform(CrateRegistration.cardboardCrateProperties()).register();
+
+    public static final BlockEntry<HalfTransparentBlock> AEROGEL_BLOCK = CCB_REGISTRATE.block("aerogel_block", HalfTransparentBlock::new).transform(AerogelRegistration.aerogelBlock()).register();
+
     public static final BlockEntry<AirVentBlock> AIR_VENT_BLOCK = CCB_REGISTRATE.block("air_vent", AirVentBlock::new).transform(GasPipeRegistration.airVent()).transform(GasPipeRegistration.airVentProperties()).register();
+    public static final BlockEntry<MetalScaffoldingBlock> INDUSTRIAL_IRON_BLOCK_SCAFFOLDING = CCB_REGISTRATE.block("industrial_iron_block_scaffolding", MetalScaffoldingBlock::new).transform(ScaffoldingRegistration.industrialIronBlockScaffolding()).transform(ScaffoldingRegistration.industrialIronBlockScaffoldingProperties()).register();
+
+    public static final BlockEntry<Block> INDUSTRIAL_IRON_BRICKS = CCB_REGISTRATE.block("industrial_iron_bricks", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> SMOOTH_INDUSTRIAL_IRON_BLOCK = CCB_REGISTRATE.block("smooth_industrial_iron_block", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> CHISELED_INDUSTRIAL_IRON_BLOCK = CCB_REGISTRATE.block("chiseled_industrial_iron_block", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> CRACKED_INDUSTRIAL_IRON_BRICKS = CCB_REGISTRATE.block("cracked_industrial_iron_bricks", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> MOSSY_INDUSTRIAL_IRON_BRICKS = CCB_REGISTRATE.block("mossy_industrial_iron_bricks", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> EXPOSED_INDUSTRIAL_IRON_BLOCK = CCB_REGISTRATE.block("exposed_industrial_iron_block", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> EXPOSED_INDUSTRIAL_IRON_BRICKS = CCB_REGISTRATE.block("exposed_industrial_iron_bricks", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> EXPOSED_SMOOTH_INDUSTRIAL_IRON_BLOCK = CCB_REGISTRATE.block("exposed_smooth_industrial_iron_block", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> EXPOSED_CHISELED_INDUSTRIAL_IRON_BLOCK = CCB_REGISTRATE.block("exposed_chiseled_industrial_iron_block", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> WEATHERED_INDUSTRIAL_IRON_BRICKS = CCB_REGISTRATE.block("weathered_industrial_iron_bricks", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> WEATHERED_SMOOTH_INDUSTRIAL_IRON_BLOCK = CCB_REGISTRATE.block("weathered_smooth_industrial_iron_block", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> WEATHERED_CHISELED_INDUSTRIAL_IRON_BLOCK = CCB_REGISTRATE.block("weathered_chiseled_industrial_iron_block", Block::new).transform(IndustrialIronRegistration.industrialIronBlock()).register();
+    public static final BlockEntry<Block> CONNECTED_INDUSTRIAL_IRON_BLOCK = CCB_REGISTRATE.block("connected_industrial_iron_block", Block::new).transform(IndustrialIronRegistration.connectedIndustrialIronBlock()).register();
+    public static final BlockEntry<RotatedPillarBlock> INDUSTRIAL_IRON_PILLAR = CCB_REGISTRATE.block("industrial_iron_pillar", RotatedPillarBlock::new).transform(IndustrialIronRegistration.industrialIronPillar(() -> CCBSpriteShifts.INDUSTRIAL_IRON_PILLAR)).register();
+    public static final BlockEntry<RotatedPillarBlock> EXPOSED_INDUSTRIAL_IRON_PILLAR = CCB_REGISTRATE.block("exposed_industrial_iron_pillar", RotatedPillarBlock::new).transform(IndustrialIronRegistration.industrialIronPillar(() -> CCBSpriteShifts.EXPOSED_INDUSTRIAL_IRON_PILLAR)).register();
+    public static final BlockEntry<RotatedPillarBlock> WEATHERED_INDUSTRIAL_IRON_PILLAR = CCB_REGISTRATE.block("weathered_industrial_iron_pillar", RotatedPillarBlock::new).transform(IndustrialIronRegistration.industrialIronPillar(() -> CCBSpriteShifts.WEATHERED_INDUSTRIAL_IRON_PILLAR)).register();
+    public static final BlockEntry<DoorBlock> INDUSTRIAL_IRON_DOOR = CCB_REGISTRATE.block("industrial_iron_door", properties -> new DoorBlock(IndustrialIronDoorRegistration.INDUSTRIAL_IRON, properties)).transform(IndustrialIronDoorRegistration.industrialIronDoor("door")).register();
+    public static final BlockEntry<TrapDoorBlock> INDUSTRIAL_IRON_TRAPDOOR = CCB_REGISTRATE.block("industrial_iron_trapdoor", properties -> new TrapDoorBlock(IndustrialIronDoorRegistration.INDUSTRIAL_IRON, properties)).transform(IndustrialIronDoorRegistration.industrialIronTrapdoor("door")).register();
+    public static final BlockEntry<DoorBlock> WEATHERED_INDUSTRIAL_IRON_DOOR = CCB_REGISTRATE.block("weathered_industrial_iron_door", properties -> new DoorBlock(IndustrialIronDoorRegistration.INDUSTRIAL_IRON, properties)).transform(IndustrialIronDoorRegistration.industrialIronDoor("weathered_door")).register();
+    public static final BlockEntry<TrapDoorBlock> WEATHERED_INDUSTRIAL_IRON_TRAPDOOR = CCB_REGISTRATE.block("weathered_industrial_iron_trapdoor", properties -> new TrapDoorBlock(IndustrialIronDoorRegistration.INDUSTRIAL_IRON, properties)).transform(IndustrialIronDoorRegistration.industrialIronTrapdoor("weathered_door")).register();
 
     public static final BlockEntry<Block> OBSIDIAN_BRICKS = CCB_REGISTRATE.block("obsidian_bricks", Block::new).transform(ObsidianRegistration.obsidianAlikeBlocks("obsidian_bricks")).transform(ObsidianRegistration.obsidianBlockProperties()).register();
-    public static final BlockEntry<SlabBlock> OBSIDIAN_BRICKS_SLAB = CCB_REGISTRATE.block("obsidian_bricks_slab", properties -> new SlabBlock(Properties.ofFullCopy(OBSIDIAN_BRICKS.get()))).transform(ObsidianRegistration.obsidianAlikeSlabs("obsidian_bricks")).transform(ObsidianRegistration.obsidianSlabProperties()).register();
-    public static final BlockEntry<StairBlock> OBSIDIAN_BRICKS_STAIRS = CCB_REGISTRATE.block("obsidian_bricks_stairs", properties -> new StairBlock(OBSIDIAN_BRICKS.get().defaultBlockState(), Properties.ofFullCopy(OBSIDIAN_BRICKS.get()))).transform(ObsidianRegistration.obsidianAlikeStairs("obsidian_bricks")).transform(ObsidianRegistration.obsidianStairsProperties()).register();
-    public static final BlockEntry<WallBlock> OBSIDIAN_BRICKS_WALL = CCB_REGISTRATE.block("obsidian_bricks_wall", properties -> new WallBlock(Properties.ofFullCopy(OBSIDIAN_BRICKS.get()).forceSolidOn())).transform(ObsidianRegistration.obsidianAlikeWall("obsidian_bricks")).transform(ObsidianRegistration.obsidianWallProperties()).register();
+    public static final BlockEntry<SlabBlock> OBSIDIAN_BRICKS_SLAB = CCB_REGISTRATE.block("obsidian_bricks_slab", SlabBlock::new).transform(ObsidianRegistration.obsidianAlikeSlabs("obsidian_bricks")).transform(ObsidianRegistration.obsidianSlabProperties(OBSIDIAN_BRICKS::get)).register();
+    public static final BlockEntry<StairBlock> OBSIDIAN_BRICKS_STAIRS = CCB_REGISTRATE.block("obsidian_bricks_stairs", properties -> new StairBlock(OBSIDIAN_BRICKS.get().defaultBlockState(), properties)).transform(ObsidianRegistration.obsidianAlikeStairs("obsidian_bricks")).transform(ObsidianRegistration.obsidianStairsProperties(OBSIDIAN_BRICKS::get)).register();
+    public static final BlockEntry<WallBlock> OBSIDIAN_BRICKS_WALL = CCB_REGISTRATE.block("obsidian_bricks_wall", WallBlock::new).transform(ObsidianRegistration.obsidianAlikeWall("obsidian_bricks")).transform(ObsidianRegistration.obsidianWallProperties(OBSIDIAN_BRICKS::get)).register();
     public static final BlockEntry<Block> CHISELED_OBSIDIAN_BRICKS = CCB_REGISTRATE.block("chiseled_obsidian_bricks", Block::new).transform(ObsidianRegistration.obsidianAlikeBlocks("chiseled_obsidian_bricks")).transform(ObsidianRegistration.obsidianBlockProperties()).register();
     public static final BlockEntry<Block> SMOOTH_OBSIDIAN_BRICKS = CCB_REGISTRATE.block("smooth_obsidian_bricks", Block::new).transform(ObsidianRegistration.obsidianAlikeBlocks("smooth_obsidian_bricks")).transform(ObsidianRegistration.obsidianBlockProperties()).register();
-    public static final BlockEntry<SlabBlock> SMOOTH_OBSIDIAN_BRICKS_SLAB = CCB_REGISTRATE.block("smooth_obsidian_bricks_slab", properties -> new SlabBlock(Properties.ofFullCopy(SMOOTH_OBSIDIAN_BRICKS.get()))).transform(ObsidianRegistration.obsidianAlikeSlabs("smooth_obsidian_bricks_slab", "smooth_obsidian_bricks")).transform(ObsidianRegistration.obsidianSlabProperties()).register();
-    public static final BlockEntry<StairBlock> SMOOTH_OBSIDIAN_BRICKS_STAIRS = CCB_REGISTRATE.block("smooth_obsidian_bricks_stairs", properties -> new StairBlock(SMOOTH_OBSIDIAN_BRICKS.get().defaultBlockState(), Properties.ofFullCopy(SMOOTH_OBSIDIAN_BRICKS.get()))).transform(ObsidianRegistration.obsidianAlikeStairs("smooth_obsidian_bricks")).transform(ObsidianRegistration.obsidianStairsProperties()).register();
-    public static final BlockEntry<WallBlock> SMOOTH_OBSIDIAN_BRICKS_WALL = CCB_REGISTRATE.block("smooth_obsidian_bricks_wall", properties -> new WallBlock(Properties.ofFullCopy(SMOOTH_OBSIDIAN_BRICKS.get()).forceSolidOn())).transform(ObsidianRegistration.obsidianAlikeWall("smooth_obsidian_bricks")).transform(ObsidianRegistration.obsidianWallProperties()).register();
+    public static final BlockEntry<SlabBlock> SMOOTH_OBSIDIAN_BRICKS_SLAB = CCB_REGISTRATE.block("smooth_obsidian_bricks_slab", SlabBlock::new).transform(ObsidianRegistration.obsidianAlikeSlabs("smooth_obsidian_bricks_slab", "smooth_obsidian_bricks")).transform(ObsidianRegistration.obsidianSlabProperties(SMOOTH_OBSIDIAN_BRICKS::get)).register();
+    public static final BlockEntry<StairBlock> SMOOTH_OBSIDIAN_BRICKS_STAIRS = CCB_REGISTRATE.block("smooth_obsidian_bricks_stairs", properties -> new StairBlock(SMOOTH_OBSIDIAN_BRICKS.get().defaultBlockState(), properties)).transform(ObsidianRegistration.obsidianAlikeStairs("smooth_obsidian_bricks")).transform(ObsidianRegistration.obsidianStairsProperties(SMOOTH_OBSIDIAN_BRICKS::get)).register();
+    public static final BlockEntry<WallBlock> SMOOTH_OBSIDIAN_BRICKS_WALL = CCB_REGISTRATE.block("smooth_obsidian_bricks_wall", WallBlock::new).transform(ObsidianRegistration.obsidianAlikeWall("smooth_obsidian_bricks")).transform(ObsidianRegistration.obsidianWallProperties(SMOOTH_OBSIDIAN_BRICKS::get)).register();
     public static final BlockEntry<Block> OBSIDIAN_BRICKS_CONCAVE = CCB_REGISTRATE.block("obsidian_bricks_concave", Block::new).transform(ObsidianRegistration.obsidianAlikeBlocks("obsidian_bricks_concave")).transform(ObsidianRegistration.obsidianBlockProperties()).register();
     public static final BlockEntry<Block> OBSIDIAN_BRICKS_CONVEX = CCB_REGISTRATE.block("obsidian_bricks_convex", Block::new).transform(ObsidianRegistration.obsidianAlikeBlocks("obsidian_bricks_convex")).transform(ObsidianRegistration.obsidianBlockProperties()).register();
     public static final BlockEntry<Block> OBSIDIAN_BRICKS_A = CCB_REGISTRATE.block("obsidian_bricks_a", Block::new).transform(ObsidianRegistration.obsidianAlikeBlocks("obsidian_bricks_a_letter")).transform(ObsidianRegistration.obsidianBlockProperties()).register();
@@ -211,14 +257,14 @@ public class CCBBlocks {
     public static final BlockEntry<Block> OBSIDIAN_BRICKS_Z = CCB_REGISTRATE.block("obsidian_bricks_z", Block::new).transform(ObsidianRegistration.obsidianAlikeBlocks("obsidian_bricks_z_letter")).transform(ObsidianRegistration.obsidianBlockProperties()).register();
 
     public static final BlockEntry<Block> CRYING_OBSIDIAN_BRICKS = CCB_REGISTRATE.block("crying_obsidian_bricks", Block::new).transform(ObsidianRegistration.cryingObsidianAlikeBlocks("crying_obsidian_bricks")).transform(ObsidianRegistration.cryingObsidianBlockProperties()).register();
-    public static final BlockEntry<SlabBlock> CRYING_OBSIDIAN_BRICKS_SLAB = CCB_REGISTRATE.block("crying_obsidian_bricks_slab", properties -> new SlabBlock(Properties.ofFullCopy(CRYING_OBSIDIAN_BRICKS.get()))).transform(ObsidianRegistration.obsidianAlikeSlabs("crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianSlabProperties()).register();
-    public static final BlockEntry<StairBlock> CRYING_OBSIDIAN_BRICKS_STAIRS = CCB_REGISTRATE.block("crying_obsidian_bricks_stairs", properties -> new StairBlock(CRYING_OBSIDIAN_BRICKS.get().defaultBlockState(), Properties.ofFullCopy(CRYING_OBSIDIAN_BRICKS.get()))).transform(ObsidianRegistration.obsidianAlikeStairs("crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianStairsProperties()).register();
-    public static final BlockEntry<WallBlock> CRYING_OBSIDIAN_BRICKS_WALL = CCB_REGISTRATE.block("crying_obsidian_bricks_wall", properties -> new WallBlock(Properties.ofFullCopy(CRYING_OBSIDIAN_BRICKS.get()).forceSolidOn())).transform(ObsidianRegistration.obsidianAlikeWall("crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianWallProperties()).register();
+    public static final BlockEntry<SlabBlock> CRYING_OBSIDIAN_BRICKS_SLAB = CCB_REGISTRATE.block("crying_obsidian_bricks_slab", SlabBlock::new).transform(ObsidianRegistration.obsidianAlikeSlabs("crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianSlabProperties(CRYING_OBSIDIAN_BRICKS::get)).register();
+    public static final BlockEntry<StairBlock> CRYING_OBSIDIAN_BRICKS_STAIRS = CCB_REGISTRATE.block("crying_obsidian_bricks_stairs", properties -> new StairBlock(CRYING_OBSIDIAN_BRICKS.get().defaultBlockState(), properties)).transform(ObsidianRegistration.obsidianAlikeStairs("crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianStairsProperties(CRYING_OBSIDIAN_BRICKS::get)).register();
+    public static final BlockEntry<WallBlock> CRYING_OBSIDIAN_BRICKS_WALL = CCB_REGISTRATE.block("crying_obsidian_bricks_wall", WallBlock::new).transform(ObsidianRegistration.obsidianAlikeWall("crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianWallProperties(CRYING_OBSIDIAN_BRICKS::get)).register();
     public static final BlockEntry<Block> CHISELED_CRYING_OBSIDIAN_BRICKS = CCB_REGISTRATE.block("chiseled_crying_obsidian_bricks", Block::new).transform(ObsidianRegistration.cryingObsidianAlikeBlocks("chiseled_crying_obsidian_bricks")).transform(ObsidianRegistration.cryingObsidianBlockProperties()).register();
     public static final BlockEntry<Block> SMOOTH_CRYING_OBSIDIAN_BRICKS = CCB_REGISTRATE.block("smooth_crying_obsidian_bricks", Block::new).transform(ObsidianRegistration.cryingObsidianAlikeBlocks("smooth_crying_obsidian_bricks")).transform(ObsidianRegistration.cryingObsidianBlockProperties()).register();
-    public static final BlockEntry<SlabBlock> SMOOTH_CRYING_OBSIDIAN_BRICKS_SLAB = CCB_REGISTRATE.block("smooth_crying_obsidian_bricks_slab", properties -> new SlabBlock(Properties.ofFullCopy(SMOOTH_CRYING_OBSIDIAN_BRICKS.get()))).transform(ObsidianRegistration.obsidianAlikeSlabs("smooth_crying_obsidian_bricks_slab", "smooth_crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianSlabProperties()).register();
-    public static final BlockEntry<StairBlock> SMOOTH_CRYING_OBSIDIAN_BRICKS_STAIRS = CCB_REGISTRATE.block("smooth_crying_obsidian_bricks_stairs", properties -> new StairBlock(SMOOTH_CRYING_OBSIDIAN_BRICKS.get().defaultBlockState(), Properties.ofFullCopy(SMOOTH_CRYING_OBSIDIAN_BRICKS.get()))).transform(ObsidianRegistration.obsidianAlikeStairs("smooth_crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianStairsProperties()).register();
-    public static final BlockEntry<WallBlock> SMOOTH_CRYING_OBSIDIAN_BRICKS_WALL = CCB_REGISTRATE.block("smooth_crying_obsidian_bricks_wall", properties -> new WallBlock(Properties.ofFullCopy(SMOOTH_CRYING_OBSIDIAN_BRICKS.get()).forceSolidOn())).transform(ObsidianRegistration.obsidianAlikeWall("smooth_crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianWallProperties()).register();
+    public static final BlockEntry<SlabBlock> SMOOTH_CRYING_OBSIDIAN_BRICKS_SLAB = CCB_REGISTRATE.block("smooth_crying_obsidian_bricks_slab", SlabBlock::new).transform(ObsidianRegistration.obsidianAlikeSlabs("smooth_crying_obsidian_bricks_slab", "smooth_crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianSlabProperties(SMOOTH_CRYING_OBSIDIAN_BRICKS::get)).register();
+    public static final BlockEntry<StairBlock> SMOOTH_CRYING_OBSIDIAN_BRICKS_STAIRS = CCB_REGISTRATE.block("smooth_crying_obsidian_bricks_stairs", properties -> new StairBlock(SMOOTH_CRYING_OBSIDIAN_BRICKS.get().defaultBlockState(), properties)).transform(ObsidianRegistration.obsidianAlikeStairs("smooth_crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianStairsProperties(SMOOTH_CRYING_OBSIDIAN_BRICKS::get)).register();
+    public static final BlockEntry<WallBlock> SMOOTH_CRYING_OBSIDIAN_BRICKS_WALL = CCB_REGISTRATE.block("smooth_crying_obsidian_bricks_wall", WallBlock::new).transform(ObsidianRegistration.obsidianAlikeWall("smooth_crying_obsidian_bricks")).transform(ObsidianRegistration.obsidianWallProperties(SMOOTH_CRYING_OBSIDIAN_BRICKS::get)).register();
     public static final BlockEntry<Block> CRYING_OBSIDIAN_BRICKS_CONCAVE = CCB_REGISTRATE.block("crying_obsidian_bricks_concave", Block::new).transform(ObsidianRegistration.cryingObsidianAlikeBlocks("crying_obsidian_bricks_concave")).transform(ObsidianRegistration.cryingObsidianBlockProperties()).register();
     public static final BlockEntry<Block> CRYING_OBSIDIAN_BRICKS_CONVEX = CCB_REGISTRATE.block("crying_obsidian_bricks_convex", Block::new).transform(ObsidianRegistration.cryingObsidianAlikeBlocks("crying_obsidian_bricks_convex")).transform(ObsidianRegistration.cryingObsidianBlockProperties()).register();
     public static final BlockEntry<Block> CRYING_OBSIDIAN_BRICKS_A = CCB_REGISTRATE.block("crying_obsidian_bricks_a", Block::new).transform(ObsidianRegistration.cryingObsidianAlikeBlocks("crying_obsidian_bricks_a_letter")).transform(ObsidianRegistration.cryingObsidianLetterProperties()).register();

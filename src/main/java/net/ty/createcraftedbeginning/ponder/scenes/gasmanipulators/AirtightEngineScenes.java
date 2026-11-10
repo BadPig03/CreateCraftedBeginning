@@ -34,17 +34,17 @@ public class AirtightEngineScenes {
 
         BlockPos smallTankBottomPos = util.grid().at(5, 1, 1);
         BlockPos smallTankTopPos = smallTankBottomPos.above(2);
-        BlockPos smallTankChamberPos = smallTankTopPos.above();
+        BlockPos smallTankChamberPos = smallTankBottomPos.above(3);
         BlockPos smallTankEnginePos = smallTankBottomPos.above().west();
-        BlockPos smallTankOutletPos = smallTankTopPos.north();
-        BlockPos smallEngineCogPos = smallTankEnginePos.above().north();
+        BlockPos smallTankOutletPos = smallTankBottomPos.above(2).north();
+        BlockPos smallEngineCogPos = smallTankBottomPos.west().above(2).north();
         BlockPos largeTankBottomPos = smallTankBottomPos.west(2).south(2);
-        BlockPos largeTankTopPos = largeTankBottomPos.above(3).west(2).south(2);
-        BlockPos largeTankChamberLeftPos = largeTankBottomPos.above(4);
-        BlockPos largeTankChamberRightPos = largeTankChamberLeftPos.west(2).south(2);
-        BlockPos largeTankEngineLeftPos = largeTankBottomPos.above(2).west().north();
-        BlockPos largeTankEngineRightPos = largeTankBottomPos.above(3).east();
-        BlockPos largeTankOutletPos = largeTankEngineLeftPos.west(2).south(2);
+        BlockPos largeTankTopPos = smallTankBottomPos.west(4).above(3).south(4);
+        BlockPos largeTankChamberLeftPos = smallTankBottomPos.west(2).above(4).south(2);
+        BlockPos largeTankChamberRightPos = smallTankBottomPos.west(4).above(4).south(4);
+        BlockPos largeTankEngineLeftPos = smallTankBottomPos.west(3).above(2).south();
+        BlockPos largeTankEngineRightPos = smallTankBottomPos.west().above(3).south(2);
+        BlockPos largeTankOutletPos = smallTankBottomPos.west(5).above(2).south(3);
 
         Selection smallTankSelection = util.select().fromTo(smallTankBottomPos, smallTankTopPos);
         Selection smallTankChamberSelection = util.select().position(smallTankChamberPos);
@@ -60,14 +60,16 @@ public class AirtightEngineScenes {
         Vec3 smallTankEngineVec = util.vector().centerOf(smallTankEnginePos);
         Vec3 smallTankTopVec = util.vector().centerOf(smallTankTopPos);
         Vec3 smallEngineCogVec = util.vector().centerOf(smallEngineCogPos);
-        Vec3 largeTankVec = util.vector().centerOf(largeTankBottomPos.above(2));
+        Vec3 largeTankVec = util.vector().centerOf(smallTankBottomPos.west(2).south(2).above(2));
         Vec3 smallTankChamberVec = util.vector().centerOf(smallTankChamberPos);
         Vec3 smallTankOutletVec = util.vector().centerOf(smallTankOutletPos);
 
         AABB smallTankArea = new AABB(util.vector().centerOf(smallTankBottomPos), smallTankTopVec);
         AABB smallTankChamberArea = new AABB(smallTankChamberVec, smallTankChamberVec);
         AABB smallTankOutletArea = new AABB(smallTankOutletVec, smallTankOutletVec);
+        AABB largeTankStartArea = new AABB(largeTankBottomPos);
         AABB largeTankArea = new AABB(util.vector().centerOf(largeTankBottomPos), util.vector().centerOf(largeTankTopPos));
+        AABB largeTankOutlineArea = largeTankArea.inflate(0.5);
 
         Object smallTankObject = new Object();
         Object smallTankChamberObject = new Object();
@@ -77,7 +79,7 @@ public class AirtightEngineScenes {
         scene.idle(20);
         scene.world().showSection(smallTankSelection, Direction.DOWN);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().showSection(smallTankEngineSelection, Direction.EAST);
 
         scene.idle(20);
@@ -91,7 +93,7 @@ public class AirtightEngineScenes {
         scene.idle(80);
         scene.world().showSection(smallTankOutletSelection, Direction.SOUTH);
 
-        scene.idle(15);
+        scene.idle(20);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, smallTankOutletObject, smallTankOutletArea, 3);
 
         scene.idle(3);
@@ -102,7 +104,7 @@ public class AirtightEngineScenes {
         scene.idle(80);
         scene.world().showSection(smallTankChamberSelection, Direction.DOWN);
 
-        scene.idle(7);
+        scene.idle(20);
         setWindLevel(scene, smallTankChamberPos, WindLevel.GALE);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, smallTankChamberObject, smallTankChamberArea, 3);
 
@@ -116,6 +118,8 @@ public class AirtightEngineScenes {
 
         scene.idle(80);
         scene.world().showSection(smallEngineCogSelection, Direction.NORTH);
+
+        scene.idle(20);
         scene.overlay().showText(60).text("Mesh another cogwheel with it to join the kinetic network").colored(PonderPalette.GREEN).pointAt(smallEngineCogVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
@@ -134,14 +138,20 @@ public class AirtightEngineScenes {
         scene.world().showSection(largeTankChamberSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, largeTankObject, largeTankArea.inflate(0.5), 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, largeTankObject, largeTankStartArea, 3);
         scene.overlay().showText(60).text("Larger Airtight Tanks provide more gas storage and more attachment space").colored(PonderPalette.GREEN).pointAt(largeTankVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(80);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, largeTankObject, largeTankArea.inflate(0.5), 60);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, largeTankObject, largeTankOutlineArea, 57);
+
+        scene.idle(77);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, largeTankObject, largeTankStartArea, 3);
         scene.overlay().showText(60).text("Tank size alone does not increase the Driver's output").colored(PonderPalette.RED).pointAt(largeTankVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(60);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, largeTankObject, largeTankOutlineArea, 57);
+
+        scene.idle(57);
         scene.markAsFinished();
     }
 
@@ -156,12 +166,12 @@ public class AirtightEngineScenes {
         BlockPos tankBottomPos = util.grid().at(2, 1, 2);
         BlockPos tankTopPos = tankBottomPos.east(2).above(3).south(2);
         BlockPos innerGasPipePos = tankBottomPos.west();
-        BlockPos outerGasPipePos = innerGasPipePos.west();
+        BlockPos outerGasPipePos = tankBottomPos.west(2);
         BlockPos engineBottomPos = tankBottomPos.north().above().east(2);
-        BlockPos engineTopPos = engineBottomPos.above(2).west();
+        BlockPos engineTopPos = tankBottomPos.east().above(3).north();
         BlockPos outletPos = tankBottomPos.above(2).west();
         BlockPos chamberLeftPos = tankBottomPos.above(4);
-        BlockPos chamberRightPos = chamberLeftPos.south(2).east(2);
+        BlockPos chamberRightPos = tankBottomPos.east(2).above(4).south(2);
 
         Selection tankSelection = util.select().fromTo(tankBottomPos, tankTopPos);
         Selection outletSelection = util.select().position(outletPos);
@@ -174,8 +184,11 @@ public class AirtightEngineScenes {
         Vec3 chamberLeftVec = util.vector().centerOf(chamberLeftPos);
         Vec3 outletVec = util.vector().centerOf(outletPos);
         Vec3 engineTopVec = util.vector().centerOf(engineTopPos);
+        Vec3 engineTopFaceVec = util.vector().topOf(engineTopPos);
 
+        AABB gasSupplyStartArea = new AABB(outerGasPipeVec, outerGasPipeVec).inflate(0.5, 0.375, 0.375);
         AABB gasSupplyArea = new AABB(outerGasPipeVec, outerGasPipeVec);
+        AABB chamberStartArea = new AABB(chamberLeftVec, chamberLeftVec).inflate(0.5);
         AABB chamberArea = new AABB(chamberLeftVec, util.vector().centerOf(chamberRightPos));
         AABB residueArea = new AABB(outletVec, outletVec);
 
@@ -199,10 +212,10 @@ public class AirtightEngineScenes {
         scene.idle(3);
         scene.world().showSection(chamberSelection, Direction.DOWN);
 
-        scene.idle(15);
+        scene.idle(20);
         for (int i = 0; i <= 1; i++) {
             for (int j = 0; j <= 1; j++) {
-                setWindLevel(scene, chamberLeftPos.south(i * 2).east(j * 2), WindLevel.GALE);
+                setWindLevel(scene, tankBottomPos.above(4).south(i * 2).east(j * 2), WindLevel.GALE);
             }
         }
 
@@ -222,35 +235,44 @@ public class AirtightEngineScenes {
         scene.effects().rotationSpeedIndicator(engineBottomPos);
 
         scene.idle(73);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasSupplyObject, gasSupplyArea, 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasSupplyObject, gasSupplyStartArea, 3);
         scene.overlay().showText(60).text("Gas type and pressure determine how much output that supply can sustain").colored(PonderPalette.INPUT).pointAt(outerGasPipeVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(80);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasSupplyObject, gasSupplyArea, 57);
+
+        scene.idle(77);
         chamberArea = chamberArea.inflate(0.5);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, chamberObject, chamberArea, 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, chamberObject, chamberStartArea, 3);
         scene.overlay().showText(60).text("Insufficient wind makes the Driver slow down even with gas available").colored(PonderPalette.RED).pointAt(chamberLeftVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(7);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, chamberObject, chamberArea, 57);
+
+        scene.idle(4);
         for (int i = 0; i <= 1; i++) {
             for (int j = 0; j <= 1; j++) {
                 if (i == 0 && j == 0) {
                     continue;
                 }
 
-                setWindLevel(scene, chamberLeftPos.south(i * 2).east(j * 2), WindLevel.CALM);
+                setWindLevel(scene, tankBottomPos.above(4).south(i * 2).east(j * 2), WindLevel.CALM);
             }
         }
         scene.world().setKineticSpeed(engineBottomSelection, mediumSpeed / 4);
         scene.effects().rotationSpeedIndicator(engineBottomPos);
 
         scene.idle(73);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, chamberObject, chamberArea, 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, chamberObject, chamberStartArea, 3);
         scene.overlay().showText(60).text("Restoring wind lets the Driver recover within its other limits").colored(PonderPalette.GREEN).pointAt(chamberLeftVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(7);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, chamberObject, chamberArea, 57);
+
+        scene.idle(4);
         for (int i = 0; i <= 1; i++) {
             for (int j = 0; j <= 1; j++) {
-                setWindLevel(scene, chamberLeftPos.south(i * 2).east(j * 2), WindLevel.GALE);
+                setWindLevel(scene, tankBottomPos.above(4).south(i * 2).east(j * 2), WindLevel.GALE);
             }
         }
         scene.world().setKineticSpeed(engineBottomSelection, mediumSpeed);
@@ -266,6 +288,8 @@ public class AirtightEngineScenes {
 
         scene.idle(73);
         scene.world().showSection(engineTopSelection, Direction.SOUTH);
+
+        scene.idle(20);
         scene.overlay().showText(60).text("Adding another Airtight Engine adds another output point...").colored(PonderPalette.GREEN).pointAt(engineTopVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
@@ -279,7 +303,7 @@ public class AirtightEngineScenes {
 
         scene.idle(80);
         scene.overlay().showText(60).text("Use a Wrench on an Airtight Engine to reverse its rotation direction").colored(PonderPalette.BLUE).pointAt(engineTopVec).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(util.vector().topOf(engineTopPos), Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
+        scene.overlay().showControls(engineTopFaceVec, Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);
         scene.world().setKineticSpeed(engineTopSelection, -mediumSpeed / 4);

@@ -65,14 +65,17 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberVisual;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerRenderer;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerVisual;
-import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerRenderer;
-import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerVisual;
 import net.ty.createcraftedbeginning.content.fluids.CCBFluidClientExtensions;
 import net.ty.createcraftedbeginning.content.fluids.TintedFluidType;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaRenderer;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelClientExtensions;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelModel;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderRenderer;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderVisual;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderScreen;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorRenderer;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterClientExtensions;
-import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterRenderer;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.beamrender.LaserEmitterRenderer;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberModel;
 import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverClientExtensions;
 import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverRenderer;
@@ -121,6 +124,7 @@ public final class CCBClientRegistrations {
     }
 
     public static void registerMenuScreens(RegisterMenuScreensEvent event) {
+        event.register(CCBMenuTypes.AMETHYST_LOADER_MENU.get(), AmethystLoaderScreen::new);
         event.register(CCBMenuTypes.AIRTIGHT_HELMET_MENU.get(), AirtightHelmetScreen::new);
         event.register(CCBMenuTypes.AIRTIGHT_CHESTPLATE_MENU.get(), AirtightChestplateScreen::new);
         event.register(CCBMenuTypes.AIRTIGHT_LEGGINGS_MENU.get(), AirtightLeggingsScreen::new);
@@ -157,8 +161,10 @@ public final class CCBClientRegistrations {
         event.registerBlockEntityRenderer(CCBBlockEntities.GAS_REPACKAGER.get(), GasRepackagerRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.GAS_FACTORY_GAUGE.get(), GasFactoryGaugeRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.LASER_EMITTER.get(), LaserEmitterRenderer::new);
+        event.registerBlockEntityRenderer(CCBBlockEntities.AMETHYST_MIRROR.get(), AmethystMirrorRenderer::new);
+        event.registerBlockEntityRenderer(CCBBlockEntities.AMETHYST_LOADER.get(), AmethystLoaderRenderer::new);
+        event.registerBlockEntityRenderer(CCBBlockEntities.AMETHYST_ANTENNA.get(), AmethystAntennaRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.PHOTOTHERMAL_RECEIVER.get(), PhotothermalReceiverRenderer::new);
-        event.registerBlockEntityRenderer(CCBBlockEntities.END_SCULK_SILENCER.get(), EndSculkSilencerRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.ANDESITE_CRATE.get(), SmartBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.BRASS_CRATE.get(), SmartBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.STURDY_CRATE.get(), SmartBlockEntityRenderer::new);
@@ -170,6 +176,7 @@ public final class CCBClientRegistrations {
     }
 
     public static void registerVisualizers(FMLClientSetupEvent ignoredEvent) {
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AMETHYST_LOADER.get()).factory(AmethystLoaderVisual::new).skipVanillaRender(loader -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIR_VENT.get()).factory(AirVentVisual::new).skipVanillaRender(vent -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_ENGINE.get()).factory(AirtightEngineVisual::new).skipVanillaRender(engine -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get()).factory(AirtightForgingPressVisual::new).neverSkipVanillaRender().apply();
@@ -179,7 +186,6 @@ public final class CCBClientRegistrations {
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG.get()).factory(AirtightReactorKettleStructuralCogVisual::new).skipVanillaRender(cog -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_CHAMBER.get()).factory(BreezeChamberVisual::new).skipVanillaRender(chamber -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.BREEZE_COOLER.get()).factory(BreezeCoolerVisual::new).skipVanillaRender(cooler -> true).apply();
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.END_SCULK_SILENCER.get()).factory(EndSculkSilencerVisual::new).skipVanillaRender(silencer -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_INJECTION_CHAMBER.get()).factory(GasInjectionChamberVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_PACKAGER.get()).factory(GasPackagerVisual::new).neverSkipVanillaRender().apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.GAS_UNPACKAGER.get()).factory(GasUnpackagerVisual::new).neverSkipVanillaRender().apply();

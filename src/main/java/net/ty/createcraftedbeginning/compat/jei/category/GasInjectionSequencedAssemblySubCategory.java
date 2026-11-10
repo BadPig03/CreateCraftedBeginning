@@ -42,10 +42,13 @@ public class GasInjectionSequencedAssemblySubCategory extends SequencedAssemblyS
 
         chamber.offset = stepIndex;
         poseStack.pushPose();
-        poseStack.translate(-7, 50, 0);
-        poseStack.scale(0.75F, 0.75F, 0.75F);
-        chamber.draw(graphics, getWidth() / 2, 0);
-
-        poseStack.popPose();
+        try {
+            poseStack.translate(-7, 50, 0);
+            poseStack.scale(0.75F, 0.75F, 0.75F);
+            chamber.draw(graphics, getWidth() / 2, 0);
+        }
+        finally {
+            poseStack.popPose();
+        }
     }
 }

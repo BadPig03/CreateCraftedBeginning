@@ -1,0 +1,14 @@
+{
+  "type": "create:splashing",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:chiseled_industrial_iron_block"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:exposed_chiseled_industrial_iron_block",
+      "count": 1
+    }
+  ]
+}

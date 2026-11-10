@@ -33,7 +33,6 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.chamberstates
 import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.ref.WeakReference;
@@ -51,12 +50,15 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     private final BreezeChamberGasProcessor gasProcessor;
     private final BreezeChamberController controller;
     private final BreezeChamberDisplay display;
+    private final BreezeChamberEffects effects;
     private final LerpedFloat headAngle;
 
     WeakReference<ChamberGasTank> source;
     private CCBAdvancementBehaviour advancementBehaviour;
     private SmartGasTankBehaviour tankBehaviour;
     private BaseChamberState currentState;
+    private boolean goggles;
+    private boolean trainHat;
 
     public BreezeChamberBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -69,6 +71,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         gasProcessor = new BreezeChamberGasProcessor(this);
         controller = new BreezeChamberController(this);
         display = new BreezeChamberDisplay(this);
+        effects = new BreezeChamberEffects(this);
         setLazyTickRate(LAZY_TICK_RATE);
     }
 
@@ -85,7 +88,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public static int getOverflowThreshold() {
-        return Math.max(1, getMaxWindCapacity() * 3 / 4);
+        return Math.max(1, (int) (getMaxWindCapacity() * 3L / 4));
     }
 
     public static void setClientTicker(Consumer<BreezeChamberBlockEntity> ticker) {
@@ -182,7 +185,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public void playSound(boolean isIllCharge) {
-        display.playSound(isIllCharge);
+        effects.playSound(isIllCharge);
     }
 
     public void setChamberState(BaseChamberState newState) {
@@ -195,7 +198,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public void spawnParticleBurst(boolean isIllCharge) {
-        display.spawnParticleBurst(isIllCharge);
+        effects.spawnParticleBurst(isIllCharge);
     }
 
     public void SwitchToGaleState() {
@@ -207,11 +210,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     public void tickAnimation(float targetAngle) {
-        display.tickAnimation(targetAngle);
+        BreezeChamberAnimation.tick(this, targetAngle);
     }
 
     public void spawnParticles() {
-        display.spawnParticles();
+        effects.spawnParticles();
     }
 
     public WindLevel getWindLevelFromBlock() {
@@ -226,17 +229,16 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         return headAngle;
     }
 
-    @Internal
-    public SmartGasTankBehaviour getTankBehaviourInternal() {
+    SmartGasTankBehaviour getTankBehaviourInternal() {
         return tankBehaviour;
     }
 
     boolean hasGoggles() {
-        return display.hasGoggles();
+        return goggles;
     }
 
     boolean hasTrainHat() {
-        return display.hasTrainHat();
+        return trainHat;
     }
 
     boolean isControllerActive() {
@@ -252,7 +254,7 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     void setGoggles(boolean hasGoggles) {
-        display.setGoggles(hasGoggles);
+        goggles = hasGoggles;
     }
 
     WindLevel getWindLevel() {
@@ -271,10 +273,6 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
         return gasProcessor;
     }
 
-    LerpedFloat getHeadAnimationInternal() {
-        return headAnimation;
-    }
-
     void runClientTicker() {
         clientTicker.accept(this);
     }
@@ -284,11 +282,11 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
     }
 
     void setGogglesFromSerialization(boolean hasGoggles) {
-        display.setGoggles(hasGoggles);
+        goggles = hasGoggles;
     }
 
     void setTrainHatFromSerialization(boolean hasTrainHat) {
-        display.setTrainHat(hasTrainHat);
+        trainHat = hasTrainHat;
     }
 
     public enum ChargerType {
@@ -310,11 +308,12 @@ public class BreezeChamberBlockEntity extends SmartBlockEntity implements IHaveG
             }
 
             int chargerTypeOrdinal = compoundTag.getInt(key);
-            if (chargerTypeOrdinal < 0 || chargerTypeOrdinal >= values().length) {
+            ChargerType[] chargerTypes = values();
+            if (chargerTypeOrdinal < 0 || chargerTypeOrdinal >= chargerTypes.length) {
                 return NONE;
             }
 
-            return values()[chargerTypeOrdinal];
+            return chargerTypes[chargerTypeOrdinal];
         }
     }
 }

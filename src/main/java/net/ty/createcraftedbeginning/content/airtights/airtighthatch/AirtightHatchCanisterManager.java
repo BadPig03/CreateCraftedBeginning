@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthatch;
 
+import net.createmod.catnip.components.ComponentProcessors;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -9,11 +10,16 @@ import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.api.canister.AirtightHatchCanister;
 import net.ty.createcraftedbeginning.api.canister.AirtightHatchCanister.HatchCanisterType;
 import net.ty.createcraftedbeginning.api.canister.AirtightHatchCanisters;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseCause;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
 import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
 import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
+import net.ty.createcraftedbeginning.gas.storage.GasTankMutationResult;
 import net.ty.createcraftedbeginning.gas.storage.GasTankState;
 import net.ty.createcraftedbeginning.gas.storage.SmartGasTank;
 
@@ -118,11 +124,6 @@ final class AirtightHatchCanisterManager {
                     canister = canister.copyWithCount(1);
                     canisterStackChanged = true;
                 }
-
-                AirtightHatchCanister hatchCanister = AirtightHatchCanisters.of(canister);
-                if (hatchCanister != null) {
-                    gasTankChanged = gasTank.tryReconfigure(getCanisterLimits(hatchCanister)).changed();
-                }
             }
 
             if (hatchState.getValue(AirtightHatchBlock.CANISTER_TYPE) != expectedCanisterType) {
@@ -136,32 +137,38 @@ final class AirtightHatchCanisterManager {
         if (canisterStackChanged || blockStateChanged || gasTankChanged) {
             hatch.setChanged();
         }
-        if (!gasTankChanged) {
+        if (gasTankChanged) {
+            tankBehaviour.sendDataImmediately();
+        }
+
+        if (expectedCanisterType == CanisterType.EMPTY) {
             return;
         }
 
-        tankBehaviour.sendDataImmediately();
+        updateTankLimits();
     }
 
     ItemStack createCanisterItemStack() {
-        ItemStack canisterStack = canister.copyWithCount(1);
+        return createCanisterItemStack(hatch.getHatchGasContent());
+    }
+
+    ItemStack createSchematicCanisterItemStack() {
+        ItemStack canisterStack = new ItemStack(canister.getItem());
+        canisterStack.applyComponents(canister.getComponentsPatch().forget(ComponentProcessors::isUnsafeItemComponent));
         AirtightHatchCanister hatchCanister = AirtightHatchCanisters.of(canisterStack);
-        if (hatchCanister == null) {
-            return ItemStack.EMPTY;
-        }
-
-        GasStack gasSnapshot = hatch.getHatchGasContent();
-        if (!hatchCanister.setAirtightHatchContents(gasSnapshot)) {
-            return ItemStack.EMPTY;
-        }
-
-        hatchCanister.save();
-        AirtightHatchCanister savedCanister = AirtightHatchCanisters.of(canisterStack);
-        if (savedCanister == null || !isSameSnapshot(gasSnapshot, savedCanister.getAirtightHatchContents())) {
+        if (hatchCanister == null || !hatchCanister.getAirtightHatchContents().isEmpty()) {
             return ItemStack.EMPTY;
         }
 
         return canisterStack;
+    }
+
+    boolean prepareForRemoval() {
+        if (isEmpty()) {
+            return true;
+        }
+
+        return updateTankLimits() && !createCanisterItemStack().isEmpty();
     }
 
     boolean giveCanisterToPlayer(Player player) {
@@ -246,28 +253,47 @@ final class AirtightHatchCanisterManager {
         }
     }
 
-    void updateTankLimits() {
+    boolean updateTankLimits() {
+        Level level = hatch.getLevel();
+        if (level == null || level.isClientSide) {
+            return false;
+        }
+
         AirtightHatchCanister hatchCanister = AirtightHatchCanisters.of(canister);
         if (hatchCanister == null) {
-            return;
+            return false;
         }
 
         SmartGasTank gasTank = hatch.getGasTankBehaviour().getPrimaryHandler();
-        if (!gasTank.tryReconfigure(getCanisterLimits(hatchCanister)).changed()) {
-            return;
+        GasTankLimits limits = getCanisterLimits(hatchCanister);
+        if (gasTank.getLimits().equals(limits)) {
+            return true;
         }
 
-        Level level = hatch.getLevel();
-        if (level == null || level.isClientSide) {
-            return;
+        GasStack gasSnapshot = gasTank.getGasStack();
+        long retainedAmount = Math.min(gasSnapshot.getAmount(), limits.maxAmount());
+        GasStack retainedGas = gasSnapshot.copyWithAmount(retainedAmount);
+        if (createCanisterItemStack(retainedGas).isEmpty()) {
+            return false;
+        }
+
+        GasTankMutationResult result = gasTank.tryApplyState(new GasTankState(limits, retainedGas));
+        if (!result.accepted()) {
+            return false;
         }
 
         hatch.getGasTankBehaviour().sendDataImmediately();
+        long excessAmount = gasSnapshot.getAmount() - retainedAmount;
+        if (excessAmount > 0) {
+            long sourcePressurePa = GasPressure.pressure(gasSnapshot.getAmount(), limits.volumeLiters());
+            GasReleaseService.release(level, GasReleaseRequest.radial(gasSnapshot.copyWithAmount(excessAmount), hatch.getBlockPos(), GasReleaseCause.OVERFLOW, sourcePressurePa));
+        }
+        return true;
     }
 
     ItemStack removeCanister() {
         Level level = hatch.getLevel();
-        if (level == null || level.isClientSide || hatch.isEmpty()) {
+        if (level == null || level.isClientSide || hatch.isEmpty() || !prepareForRemoval()) {
             return ItemStack.EMPTY;
         }
 
@@ -308,6 +334,22 @@ final class AirtightHatchCanisterManager {
                 tankBehaviour.sendDataImmediately();
             }
         }
+    }
+
+    private ItemStack createCanisterItemStack(GasStack gasSnapshot) {
+        ItemStack canisterStack = canister.copyWithCount(1);
+        AirtightHatchCanister hatchCanister = AirtightHatchCanisters.of(canisterStack);
+        if (hatchCanister == null || !hatchCanister.setAirtightHatchContents(gasSnapshot)) {
+            return ItemStack.EMPTY;
+        }
+
+        hatchCanister.save();
+        AirtightHatchCanister savedCanister = AirtightHatchCanisters.of(canisterStack);
+        if (savedCanister == null || !isSameSnapshot(gasSnapshot, savedCanister.getAirtightHatchContents())) {
+            return ItemStack.EMPTY;
+        }
+
+        return canisterStack;
     }
 
     private boolean updateCanisterBlockState(Level level, BlockState hatchState, CanisterType canisterType) {

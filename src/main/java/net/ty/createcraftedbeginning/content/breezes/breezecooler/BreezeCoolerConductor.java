@@ -12,7 +12,7 @@ public class BreezeCoolerConductor {
     private BreezeCoolerConductor() {
     }
 
-    public static class BreezeChamber extends ConductorBlockInteractionBehavior {
+    public static class BreezeCooler extends ConductorBlockInteractionBehavior {
         @Override
         public boolean isValidConductor(BlockState state) {
             return true;

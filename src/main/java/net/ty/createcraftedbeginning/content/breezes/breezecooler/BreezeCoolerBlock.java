@@ -263,10 +263,7 @@ public class BreezeCoolerBlock extends HorizontalDirectionalBlock implements IBE
 
         @Contract(pure = true)
         String getTranslatable() {
-            return switch (this) {
-                case RIMING -> "gui.breeze_cooler.riming";
-                case CHILLED -> "gui.breeze_cooler.chilled";
-            };
+            return "gui.breeze_cooler." + getSerializedName();
         }
 
         ChatFormatting getChatFormatting() {

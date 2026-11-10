@@ -33,15 +33,15 @@ public class AirtightPumpScenes {
         BlockPos leftTankBottomPos = util.grid().at(5, 1, 5);
         BlockPos leftTankTopPos = leftTankBottomPos.above();
         BlockPos pipeFirstPos = leftTankBottomPos.north();
-        BlockPos pipeSecondPos = pipeFirstPos.north(2);
-        BlockPos encasedPos = pipeSecondPos.north();
-        BlockPos pipeLeftPos = encasedPos.west();
-        BlockPos pumpPos = pipeLeftPos.west();
-        BlockPos cogPos = pumpPos.south();
-        BlockPos motorPos = cogPos.east();
-        BlockPos pipeRightPos = pumpPos.west();
-        BlockPos rightTankBottomPos = pipeRightPos.west();
-        BlockPos rightTankTopPos = rightTankBottomPos.above();
+        BlockPos pipeSecondPos = leftTankBottomPos.north(3);
+        BlockPos encasedPos = leftTankBottomPos.north(4);
+        BlockPos pipeLeftPos = leftTankBottomPos.west().north(4);
+        BlockPos pumpPos = leftTankBottomPos.west(2).north(4);
+        BlockPos cogPos = leftTankBottomPos.west(2).north(3);
+        BlockPos motorPos = leftTankBottomPos.west().north(3);
+        BlockPos pipeRightPos = leftTankBottomPos.west(3).north(4);
+        BlockPos rightTankBottomPos = leftTankBottomPos.west(4).north(4);
+        BlockPos rightTankTopPos = leftTankBottomPos.west(4).above().north(4);
 
         Selection leftTankSelection = util.select().fromTo(leftTankBottomPos, leftTankTopPos);
         Selection rightTankSelection = util.select().fromTo(rightTankBottomPos, rightTankTopPos);
@@ -55,6 +55,8 @@ public class AirtightPumpScenes {
         Vec3 pipeFirstVec = util.vector().centerOf(pipeFirstPos);
         Vec3 inputFlowStartVec = util.vector().blockSurface(pipeRightPos, Direction.WEST);
         Vec3 backpressureFrontStartVec = util.vector().blockSurface(encasedPos, Direction.WEST);
+        Vec3 pumpTopVec = util.vector().topOf(pumpPos);
+        Vec3 pumpOutputVec = util.vector().blockSurface(pumpPos, Direction.EAST);
 
         float slowSpeed = SpeedLevel.SLOW.getSpeedValue();
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
@@ -104,6 +106,8 @@ public class AirtightPumpScenes {
         scene.world().setKineticSpeed(cogSelection, slowSpeed);
         scene.world().setKineticSpeed(pumpSelection, -slowSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
+
+        scene.idle(5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, pumpStatusObject, pumpStatusArea, 3);
 
         scene.idle(3);
@@ -163,9 +167,9 @@ public class AirtightPumpScenes {
         scene.idle(3);
         backpressureFrontArea = backpressureFrontArea.expandTowards(-1.5, 0, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, backpressureFrontObject, backpressureFrontArea, 60);
-        scene.overlay().showText(60).text("Opposing pressure reduces flow; at the pump's maximum boost, flow stops").colored(PonderPalette.RED).pointAt(util.vector().blockSurface(pumpPos, Direction.EAST)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Opposing pressure reduces flow; at the pump's maximum boost, flow stops").colored(PonderPalette.RED).pointAt(pumpOutputVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(75);
+        scene.idle(77);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, reversedInputConnectionObject, connectionArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, reversedOutputConnectionObject, connectionArea, 3);
 
@@ -179,7 +183,7 @@ public class AirtightPumpScenes {
         scene.world().setKineticSpeed(pumpSelection, fastSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
 
-        scene.idle(53);
+        scene.idle(70);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, wrenchInputConnectionObject, connectionArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, wrenchOutputConnectionObject, connectionArea, 3);
 
@@ -187,7 +191,7 @@ public class AirtightPumpScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, wrenchInputConnectionObject, connectionArea.move(-0.5, 0, 0), 7);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, wrenchOutputConnectionObject, connectionArea.move(0.5, 0, 0), 7);
         scene.overlay().showText(60).text("Use a Wrench to swap the inlet and outlet sides").colored(PonderPalette.BLUE).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(util.vector().topOf(pumpPos), Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
+        scene.overlay().showControls(pumpTopVec, Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);
         scene.world().modifyBlock(pumpPos, state -> state.setValue(AirtightPumpBlock.FACING, Direction.WEST), false);

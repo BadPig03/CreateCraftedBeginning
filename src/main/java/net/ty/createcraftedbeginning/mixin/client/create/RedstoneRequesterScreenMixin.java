@@ -47,7 +47,7 @@ public abstract class RedstoneRequesterScreenMixin extends AbstractSimiContainer
     }
 
     @ModifyArgs(method = "renderForeground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;renderItemDecorations(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V"))
-    private void ccb$renderForeground(Args args) {
+    private void ccb$renderForeground$renderItemDecorations(Args args) {
         ItemStack stack = args.get(1);
         if (!VirtualGasItems.isVirtualItem(stack)) {
             return;
@@ -62,7 +62,7 @@ public abstract class RedstoneRequesterScreenMixin extends AbstractSimiContainer
     }
 
     @Inject(method = "renderForeground", at = @At("TAIL"))
-    private void ccb$renderForeground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, CallbackInfo callback) {
+    private void ccb$renderForeground$tail(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, CallbackInfo callback) {
         if (!(hoveredSlot instanceof SorterProofSlot)) {
             return;
         }

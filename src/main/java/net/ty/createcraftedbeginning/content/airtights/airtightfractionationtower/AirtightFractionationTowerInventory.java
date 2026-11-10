@@ -31,6 +31,7 @@ import net.ty.createcraftedbeginning.recipe.FractionationTowerOutput;
 import net.ty.createcraftedbeginning.recipe.transaction.MachineResourceSnapshots;
 import net.ty.createcraftedbeginning.recipe.transaction.MachineResourceSnapshots.FluidTankSnapshot;
 import net.ty.createcraftedbeginning.recipe.transaction.MachineResourceSnapshots.GasTankSnapshot;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -39,19 +40,31 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightFractionationTowerInventory extends BlockEntityBehaviour {
+@Internal
+public final class AirtightFractionationTowerInventory extends BlockEntityBehaviour {
+    @Internal
+    public static final String COMPOUND_KEY_LAYER_FLUID_TANKS = "LayerFluidTanks";
+    @Internal
+    public static final String COMPOUND_KEY_LAYER_GAS_TANKS = "LayerGasTanks";
     private static final int MAX_SAVED_SLOTS = 64;
 
     private static final BehaviourType<AirtightFractionationTowerInventory> TYPE = new BehaviourType<>();
     private static final BehaviourType<SmartFluidTankBehaviour> FLUID_TYPE = new BehaviourType<>("LayerFluid");
     private static final BehaviourType<SmartGasTankBehaviour> GAS_TYPE = new BehaviourType<>("LayerGas");
-    private static final String COMPOUND_KEY_INVENTORY = "LayerInventory";
-    private static final String COMPOUND_KEY_ITEMS = "Items";
-    private static final String COMPOUND_KEY_ITEM_SLOTS = "ItemSlots";
-    private static final String COMPOUND_KEY_FLUID_TANKS = "FluidTanks";
-    private static final String COMPOUND_KEY_GAS_TANKS = "GasTanks";
-    private static final String COMPOUND_KEY_FLUID_CAPACITY = "FluidCapacity";
-    private static final String COMPOUND_KEY_GAS_VOLUME = "GasVolume";
+    @Internal
+    public static final String COMPOUND_KEY_INVENTORY = "LayerInventory";
+    @Internal
+    public static final String COMPOUND_KEY_ITEMS = "Items";
+    @Internal
+    public static final String COMPOUND_KEY_ITEM_SLOTS = "ItemSlots";
+    @Internal
+    public static final String COMPOUND_KEY_FLUID_TANKS = "FluidTanks";
+    @Internal
+    public static final String COMPOUND_KEY_GAS_TANKS = "GasTanks";
+    @Internal
+    public static final String COMPOUND_KEY_FLUID_CAPACITY = "FluidCapacity";
+    @Internal
+    public static final String COMPOUND_KEY_GAS_VOLUME = "GasVolume";
 
     private final AirtightFractionationTowerBlockEntity owner;
     private @Nullable StorageSize size;

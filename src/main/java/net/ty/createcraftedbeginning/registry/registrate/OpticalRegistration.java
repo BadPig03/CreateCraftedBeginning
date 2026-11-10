@@ -1,27 +1,45 @@
 package net.ty.createcraftedbeginning.registry.registrate;
 
+import com.simibubi.create.AllItems;
+import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.api.boiler.BoilerHeater;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.tterrag.registrate.builders.BlockBuilder;
+import com.tterrag.registrate.util.nullness.NonNullSupplier;
 import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.AxisDirection;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.storage.loot.entries.LootItem;
+import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
+import net.minecraft.world.level.storage.loot.functions.CopyComponentsFunction;
+import net.minecraft.world.level.storage.loot.functions.CopyComponentsFunction.Source;
+import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.neoforged.neoforge.client.model.generators.BlockModelProvider;
+import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
+import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder;
 import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder.PartBuilder;
 import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder.PartBuilder.ConditionGroup;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaBlockItem;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlockItem;
 import net.ty.createcraftedbeginning.foundation.block.CCBSharedProperties;
+import net.ty.createcraftedbeginning.registry.CCBDataComponents;
+import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -83,12 +101,12 @@ public final class OpticalRegistration {
                 }
                 straight.end();
             }
-        }).item().transform(ModelGen.customItemModel("optical_fiber", "item"));
+        }).item(OpticalFiberBlockItem::new).transform(ModelGen.customItemModel("optical_fiber", "item"));
     }
 
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> amethystCollectorPanel() {
-        return builder -> builder.properties(Properties::dynamicShape).blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), AssetLookup.partialBaseModel(context, provider))).item().transform(ModelGen.customItemModel("amethyst_collector_panel", "item"));
+        return builder -> builder.tag(CCBBlockTags.AMETHYST_COLLECTOR_SKY_OCCLUDERS.tag).properties(Properties::dynamicShape).blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), AssetLookup.partialBaseModel(context, provider))).item().transform(ModelGen.customItemModel("amethyst_collector_panel", "item"));
     }
 
     @Contract(pure = true)
@@ -97,8 +115,81 @@ public final class OpticalRegistration {
     }
 
     @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> amethystMirror() {
+        return builder -> builder.properties(Properties::dynamicShape).blockstate((context, provider) -> provider.directionalBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/amethyst_mirror/block")))).item().transform(ModelGen.customItemModel("amethyst_mirror", "item"));
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> amethystLens() {
+        return builder -> builder.properties(Properties::dynamicShape).blockstate((context, provider) -> {
+            ModelFile model = provider.models().getExistingFile(provider.modLoc("block/" + context.getName() + "/block"));
+            provider.getVariantBuilder(context.getEntry()).forAllStates(state -> {
+                Direction facing = state.getValue(DirectionalBlock.FACING);
+                int xRotation = 0;
+                int yRotation = 0;
+                if (facing == Direction.UP) {
+                    xRotation = 270;
+                }
+                else if (facing == Direction.DOWN) {
+                    xRotation = 90;
+                }
+                else {
+                    yRotation = ((int) facing.toYRot() + 180) % 360;
+                }
+                return ConfiguredModel.builder().modelFile(model).rotationX(xRotation).rotationY(yRotation).build();
+            });
+        }).item().model((context, provider) -> {
+            String name = context.getName();
+            provider.withExistingParent(name, provider.modLoc("block/" + name + "/item"));
+        }).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> amethystSoundSuppressor() {
+        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/amethyst_sound_suppressor/block")))).item().tag(AllItemTags.CONTRAPTION_CONTROLLED.tag).transform(ModelGen.customItemModel("amethyst_sound_suppressor", "item"));
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> amethystLoader() {
+        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/amethyst_loader/block")))).item().transform(ModelGen.customItemModel("amethyst_loader", "item"));
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> amethystAntenna() {
+        return builder -> builder.blockstate((context, provider) -> {
+            ModelFile model = provider.models().getExistingFile(provider.modLoc("block/amethyst_antenna/block"));
+            provider.getVariantBuilder(context.getEntry()).forAllStates(state -> {
+                Direction facing = state.getValue(DirectionalBlock.FACING);
+                int x = 270;
+                int y = (int) facing.toYRot();
+                if (facing == Direction.UP) {
+                    x = 0;
+                    y = 0;
+                }
+                else if (facing == Direction.DOWN) {
+                    x = 180;
+                    y = 0;
+                }
+                return ConfiguredModel.builder().modelFile(model).rotationX(x).rotationY(y).build();
+            });
+        }).loot((loot, block) -> loot.add(block, loot.createSingleItemTable(block).apply(CopyComponentsFunction.copyComponents(Source.BLOCK_ENTITY).include(CCBDataComponents.LOADING_NETWORK)))).item(AmethystAntennaBlockItem::new).transform(ModelGen.customItemModel("amethyst_antenna", "item"));
+    }
+
+    @Contract(pure = true)
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> experienceCrystal(NonNullSupplier<? extends Block> reference, boolean mature) {
+        return builder -> builder.initialProperties(reference).properties(properties -> properties.mapColor(MapColor.COLOR_LIGHT_GREEN)).tag(BlockTags.MINEABLE_WITH_PICKAXE).blockstate((context, provider) -> provider.directionalBlock(context.getEntry(), provider.models().cross(context.getName(), provider.modLoc("block/experience_crystal/" + context.getName())).renderType("minecraft:cutout"))).loot((loot, block) -> {
+            if (!mature) {
+                loot.dropWhenSilkTouch(block);
+                return;
+            }
+
+            loot.add(block, loot.createSilkTouchDispatchTable(block, loot.applyExplosionDecay(block, LootItem.lootTableItem(AllItems.EXP_NUGGET.get()).apply(SetItemCountFunction.setCount(ConstantValue.exactly(4))).apply(ApplyBonusCount.addOreBonusCount(loot.getRegistries().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.FORTUNE))))));
+        }).item().model((context, provider) -> provider.generated(context, provider.modLoc("block/experience_crystal/" + context.getName()))).build();
+    }
+
+    @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> photothermalReceiver() {
-        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/photothermal_receiver/block")))).item().transform(ModelGen.customItemModel("photothermal_receiver", "item"));
+        return builder -> builder.properties(Properties::dynamicShape).blockstate((context, provider) -> provider.horizontalBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/photothermal_receiver/block")))).item().transform(ModelGen.customItemModel("photothermal_receiver", "item"));
     }
 
     @Contract(pure = true)

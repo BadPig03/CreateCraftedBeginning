@@ -28,37 +28,39 @@ public class AnimatedAirtightReactorKettle extends AnimatedKinetics {
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
+        try {
+            poseStack.translate(xOffset, yOffset, 192);
+            poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    for (int k = -1; k <= 1; k++) {
+                        if (i == 0 && j == 0 && k == 0) {
+                            blockElement(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_MIXER).rotateBlock(0, getCurrentAngle() * 2, 0).atLocal(0, 0.5, 0).scale(SCALE).render(graphics);
+                            continue;
+                        }
 
-        poseStack.translate(xOffset, yOffset, 192);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                for (int k = -1; k <= 1; k++) {
-                    if (i == 0 && j == 0 && k == 0) {
-                        blockElement(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_MIXER).rotateBlock(0, getCurrentAngle() * 2, 0).atLocal(0, 0.5, 0).scale(SCALE).render(graphics);
-                        continue;
+                        AirtightReactorKettleStructuralPosition position = AirtightReactorKettleStructuralPosition.fromOffset(i, j, k);
+                        if (position.isCog()) {
+                            blockElement(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION, position)).atLocal(i, -j, k).scale(SCALE).render(graphics);
+                            blockElement(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_COGS).rotateBlock(0, getCurrentAngle() * 2, 0).atLocal(i, -j, k).scale(SCALE).render(graphics);
+                            continue;
+                        }
+
+                        blockElement(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION, position)).atLocal(i, -j, k).scale(SCALE).render(graphics);
                     }
-
-                    AirtightReactorKettleStructuralPosition position = AirtightReactorKettleStructuralPosition.fromOffset(i, j, k);
-                    if (position.isCog()) {
-                        blockElement(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_COG_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralCogBlock.STRUCTURAL_POSITION, position)).atLocal(i, -j, k).scale(SCALE).render(graphics);
-                        blockElement(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_COGS).rotateBlock(0, getCurrentAngle() * 2, 0).atLocal(i, -j, k).scale(SCALE).render(graphics);
-                        continue;
-                    }
-
-                    blockElement(CCBBlocks.AIRTIGHT_REACTOR_KETTLE_STRUCTURAL_BLOCK.getDefaultState().setValue(AirtightReactorKettleStructuralBlock.STRUCTURAL_POSITION, position)).atLocal(i, -j, k).scale(SCALE).render(graphics);
                 }
             }
-        }
 
-        if (closed) {
-            blockElement(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_WINDOW_CLOSED).scale(SCALE).render(graphics);
+            if (closed) {
+                blockElement(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_WINDOW_CLOSED).scale(SCALE).render(graphics);
+            }
+            else {
+                blockElement(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_WINDOW_OPENED).scale(SCALE).render(graphics);
+            }
         }
-        else {
-            blockElement(CCBPartialModels.AIRTIGHT_REACTOR_KETTLE_WINDOW_OPENED).scale(SCALE).render(graphics);
+        finally {
+            poseStack.popPose();
         }
-
-        poseStack.popPose();
     }
 }

@@ -66,7 +66,7 @@ public final class GasInjectionChamberBasinProcessor {
     @Internal
     public boolean executeCurrentState() {
         Level level = chamber.getLevel();
-        if (level == null) {
+        if (level == null || !operation.isRecipeCurrent(level.getRecipeManager())) {
             return false;
         }
 
@@ -105,6 +105,11 @@ public final class GasInjectionChamberBasinProcessor {
     }
 
     void tryStartOperation() {
+        Level level = chamber.getLevel();
+        if (level == null) {
+            return;
+        }
+
         Optional<BasinBlockEntity> basinOptional = getBasin();
         if (basinOptional.isEmpty()) {
             return;
@@ -120,7 +125,7 @@ public final class GasInjectionChamberBasinProcessor {
             return;
         }
 
-        operation.startProcessing(BASIN_RECIPE, GasRecipePressureSpeed.multiplier(plan.gasPlan()), plan.recipe());
+        operation.startProcessing(BASIN_RECIPE, GasRecipePressureSpeed.multiplier(plan.gasPlan()), plan.recipe(), level.getRecipeManager());
         chamber.setChanged();
         chamber.notifyUpdate();
     }

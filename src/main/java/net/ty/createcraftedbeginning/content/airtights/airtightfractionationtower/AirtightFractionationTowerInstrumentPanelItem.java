@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerStructure.AssemblyFailure;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Objects;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -38,7 +39,8 @@ public final class AirtightFractionationTowerInstrumentPanelItem extends Item {
             }
 
             if (player instanceof ServerPlayer serverPlayer) {
-                CatnipServices.NETWORK.sendToClient(serverPlayer, new AirtightFractionationTowerFailurePacket(failure.min(), failure.max(), failure.reason()));
+                String reason = Objects.requireNonNull(failure.reason(), "Airtight fractionation tower assembly failure must provide a warning reason.");
+                CatnipServices.NETWORK.sendToClient(serverPlayer, new AirtightFractionationTowerFailurePacket(failure.min(), failure.max(), reason));
             }
             return InteractionResult.FAIL;
         }

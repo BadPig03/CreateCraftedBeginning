@@ -13,6 +13,7 @@ import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightTurbineHandler
 import net.ty.createcraftedbeginning.compat.kubejs.events.AirtightUpgradeMaterialsEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.AtmosphereProviderEvent;
 import net.ty.createcraftedbeginning.compat.kubejs.events.GasReleaseHandlerEvent;
+import net.ty.createcraftedbeginning.compat.kubejs.events.WeatherFlareHandlerEvent;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -33,4 +34,5 @@ public interface CCBEvents {
     EventHandler AIRTIGHT_TURBINE_HANDLER = GROUP.startup("airtightTurbineHandler", () -> AirtightTurbineHandlerEvent.class);
     EventHandler AIRTIGHT_UPGRADE_MATERIALS = GROUP.startup("airtightUpgradeMaterials", () -> AirtightUpgradeMaterialsEvent.class);
     EventHandler GAS_RELEASE_HANDLER = GROUP.startup("gasReleaseHandler", () -> GasReleaseHandlerEvent.class);
+    EventHandler WEATHER_FLARE_HANDLER = GROUP.startup("weatherFlareHandler", () -> WeatherFlareHandlerEvent.class);
 }

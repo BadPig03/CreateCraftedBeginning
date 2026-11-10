@@ -47,6 +47,7 @@ public class GasInjectionChamberFilterItem extends Item {
         ResourceLocation typeId = CreateBuiltInRegistries.FAN_PROCESSING_TYPE.getKey(type);
         if (typeId == null) {
             filterStack.remove(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_FAN_PROCESSING_TYPE);
+            filterStack.remove(CCBDataComponents.GAS_INJECTION_CHAMBER_FILTER_COLOR);
             return filterStack;
         }
 

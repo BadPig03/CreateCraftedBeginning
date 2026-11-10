@@ -85,12 +85,14 @@ public class GasCanisterPackScreen extends AbstractSimiContainerScreen<GasCanist
 
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-        renderPlayerInventory(graphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()), topPos + BACKGROUND.getHeight() + 4);
+        int backgroundHeight = BACKGROUND.getHeight();
+        renderPlayerInventory(graphics, getLeftOfCentered(PLAYER_INVENTORY.getWidth()), topPos + backgroundHeight + 4);
         BACKGROUND.render(graphics, leftPos, topPos);
 
         Component packName = pack.getHoverName();
-        graphics.drawString(font, packName, leftPos + (BACKGROUND.getWidth() - 8) / 2 - font.width(packName) / 2, topPos + 4, 0xFFFFFF, false);
-        GuiGameElement.of(pack).scale(4).at(leftPos + BACKGROUND.getWidth() + 11, topPos + BACKGROUND.getHeight() - 48, -200).render(graphics);
+        int backgroundWidth = BACKGROUND.getWidth();
+        graphics.drawString(font, packName, leftPos + (backgroundWidth - 8) / 2 - font.width(packName) / 2, topPos + 4, 0xFFFFFF, false);
+        GuiGameElement.of(pack).scale(4).at(leftPos + backgroundWidth + 11, topPos + backgroundHeight - 48, -200).render(graphics);
     }
 
     private void initButtons() {

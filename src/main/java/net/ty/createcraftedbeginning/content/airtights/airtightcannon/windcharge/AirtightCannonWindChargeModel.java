@@ -95,10 +95,10 @@ class AirtightCannonWindChargeModel extends HierarchicalModel<AbstractWindCharge
         core.xRot = 0;
         core.yRot = 0;
         core.zRot = 0;
-        windOuter.xRot = 0;
+        windOuter.xRot = windOuter.getInitialPose().xRot;
         windOuter.yRot = 0;
         windOuter.zRot = 0;
-        windInner.xRot = 0;
+        windInner.xRot = windInner.getInitialPose().xRot;
         windInner.yRot = 0;
         windInner.zRot = 0;
     }

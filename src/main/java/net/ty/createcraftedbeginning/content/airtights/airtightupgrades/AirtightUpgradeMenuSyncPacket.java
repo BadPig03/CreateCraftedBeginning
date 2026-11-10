@@ -7,6 +7,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -17,8 +18,8 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record AirtightUpgradeMenuSyncPacket(int containerId, List<AirtightUpgradeStatus> statuses, ItemStack upgradeStack) implements ClientboundPacketPayload {
-    public static final StreamCodec<RegistryFriendlyByteBuf, AirtightUpgradeMenuSyncPacket> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.VAR_INT, AirtightUpgradeMenuSyncPacket::containerId, CatnipStreamCodecBuilders.list(AirtightUpgradeStatus.STREAM_CODEC), AirtightUpgradeMenuSyncPacket::statuses, ItemStack.OPTIONAL_STREAM_CODEC, AirtightUpgradeMenuSyncPacket::upgradeStack, AirtightUpgradeMenuSyncPacket::new);
+public record AirtightUpgradeMenuSyncPacket(int containerId, ResourceLocation upgradeId, List<AirtightUpgradeStatus> statuses, ItemStack upgradeStack) implements ClientboundPacketPayload {
+    public static final StreamCodec<RegistryFriendlyByteBuf, AirtightUpgradeMenuSyncPacket> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.VAR_INT, AirtightUpgradeMenuSyncPacket::containerId, ResourceLocation.STREAM_CODEC, AirtightUpgradeMenuSyncPacket::upgradeId, CatnipStreamCodecBuilders.list(AirtightUpgradeStatus.STREAM_CODEC), AirtightUpgradeMenuSyncPacket::statuses, ItemStack.OPTIONAL_STREAM_CODEC, AirtightUpgradeMenuSyncPacket::upgradeStack, AirtightUpgradeMenuSyncPacket::new);
 
     @Override
     @OnlyIn(Dist.CLIENT)
@@ -27,7 +28,7 @@ public record AirtightUpgradeMenuSyncPacket(int containerId, List<AirtightUpgrad
             return;
         }
 
-        menu.applyServerState(statuses, upgradeStack);
+        menu.applyServerState(upgradeId, statuses, upgradeStack);
     }
 
     @Override

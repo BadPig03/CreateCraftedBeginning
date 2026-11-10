@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.opticalpower.laseremitter;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -15,20 +14,29 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.LaserBehaviour;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserDisplayPacket.Mode;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerConsumerBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetworkManager;
-import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.BooleanSupplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class LaserEmitterBlockEntity extends SmartBlockEntity implements OpticalPowerConsumerBlockEntity, IHaveGoggleInformation {
+    private static final int MAX_PONDER_FLUX_LM = 48;
+
+    private final LaserEmitterDisplayState displayState = new LaserEmitterDisplayState();
     private LaserBehaviour laserBehaviour;
     private LaserEmitterRangeBehaviour rangeBehaviour;
     private final LaserEmitterController controller;
+    private double ponderFluxLm;
 
     public LaserEmitterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -36,10 +44,12 @@ public class LaserEmitterBlockEntity extends SmartBlockEntity implements Optical
     }
 
     @Override
+    @SuppressWarnings("Convert2MethodRef")
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         rangeBehaviour = new LaserEmitterRangeBehaviour(this);
         behaviours.add(rangeBehaviour);
-        laserBehaviour = new LaserBehaviour(this, this::getLaserDirection, this::isLaserActive, this::getLaserRange);
+
+        laserBehaviour = new LaserBehaviour(this, () -> Vec3.atCenterOf(worldPosition).add(Vec3.atLowerCornerOf(getLaserDirection().getNormal()).scale(0.5)), () -> Vec3.atLowerCornerOf(getLaserDirection().getNormal()), () -> controller.getAllocatedFluxLm(), this::getLaserRange);
         behaviours.add(laserBehaviour);
     }
 
@@ -54,69 +64,123 @@ public class LaserEmitterBlockEntity extends SmartBlockEntity implements Optical
     }
 
     @Override
-    public void tick() {
-        super.tick();
-        controller.tickServer(laserBehaviour);
-    }
-
-    @Override
     public void lazyTick() {
         super.lazyTick();
         if (level == null || level.isClientSide) {
             return;
         }
 
-        OpticalPowerNetworkManager.ensureConsumer(level, worldPosition);
+        OpticalPowerNetworkManager.requestConsumerRebuildIfUnassigned(level, worldPosition);
     }
 
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        controller.write(compoundTag, clientPacket);
+        LaserEmitterSerialization.write(compoundTag, clientPacket, controller, displayState);
     }
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.read(compoundTag, provider, clientPacket);
-        controller.read(compoundTag, clientPacket);
+        LaserEmitterSerialization.read(compoundTag, clientPacket, controller, displayState);
     }
 
     @Override
-    public void applyOpticalPowerAllocation(int powerLp) {
-        controller.applyAllocation(powerLp);
+    public void applyNetworkAllocation(double fluxLm, BooleanSupplier allocationValidity) {
+        controller.applyAllocation(fluxLm, allocationValidity);
     }
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        CCBLang.translate("gui.laser_emitter.header").forGoggles(tooltip);
-        CCBLang.translate("gui.laser_emitter.power").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(controller.getAllocatedPowerLp()).translate("gui.unit.optical_power").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
+        LaserEmitterDisplay.appendGoggleTooltip(tooltip, controller.getAllocatedFluxLm());
         return true;
     }
 
     @Override
     public AABB getRenderBoundingBox() {
-        Vec3 extension = Vec3.atLowerCornerOf(getLaserDirection().getNormal()).scale(getLaserRange());
-        return new AABB(worldPosition).expandTowards(extension).inflate(0.125);
+        return new AABB(worldPosition).inflate(getLaserRange() + 0.0625);
     }
 
+    @Internal
+    public void applyOpticalFluxAllocation(double fluxLm) {
+        controller.applyAllocation(fluxLm, null);
+    }
+
+    @Internal
     public boolean isLaserActive() {
-        return controller.getAllocatedPowerLp() > 0;
+        return getBeamFluxLm() > 0;
     }
 
-    public float getBeamLength() {
-        if (laserBehaviour == null) {
-            return 0;
+    public void setPonderFlux(double fluxLm) {
+        if (!isVirtual()) {
+            return;
         }
 
-        return laserBehaviour.getBeamLength();
+        if (!Double.isFinite(fluxLm)) {
+            throw new IllegalArgumentException("Ponder luminous flux must be finite; got " + fluxLm + " lm.");
+        }
+
+        ponderFluxLm = Math.clamp(fluxLm, 0, MAX_PONDER_FLUX_LM);
     }
 
-    public Direction getLaserDirection() {
+    @Internal
+    public @Nullable BeamPropagation getBeamPropagation() {
+        if (laserBehaviour == null) {
+            return null;
+        }
+
+        return laserBehaviour.getPropagation();
+    }
+
+    @Internal
+    public BeamState createBeamSource() {
+        Vec3 direction = Vec3.atLowerCornerOf(getLaserDirection().getNormal());
+        Vec3 origin = Vec3.atCenterOf(worldPosition).add(direction.scale(0.5));
+        return LaserBehaviour.createSource(origin, direction, getBeamFluxLm());
+    }
+
+    @Internal
+    public int getLaserRange() {
+        return rangeBehaviour.getValue();
+    }
+
+    @Internal
+    public @Nullable LaserDisplaySnapshot getDisplaySnapshot() {
+        return displayState.snapshot();
+    }
+
+    @Internal
+    public UUID getDisplayInstance() {
+        return displayState.instance();
+    }
+
+    @Internal
+    public boolean isDisplayOff() {
+        LaserDisplayPacket packet = getDisplayPacket();
+        return packet != null && packet.mode() == Mode.OFF;
+    }
+
+    @Nullable LaserDisplayPacket getDisplayPacket() {
+        return displayState.packet();
+    }
+
+    void acceptDisplay(LaserDisplayPacket packet) {
+        if (level == null || !level.isClientSide || isRemoved() || !packet.pos().equals(worldPosition) || !packet.dimension().equals(level.dimension().location())) {
+            return;
+        }
+
+        displayState.accept(packet);
+    }
+
+    private Direction getLaserDirection() {
         return getBlockState().getValue(DirectionalBlock.FACING);
     }
 
-    public int getLaserRange() {
-        return rangeBehaviour.getValue();
+    private double getBeamFluxLm() {
+        if (isVirtual()) {
+            return ponderFluxLm;
+        }
+
+        return controller.getAllocatedFluxLm();
     }
 }

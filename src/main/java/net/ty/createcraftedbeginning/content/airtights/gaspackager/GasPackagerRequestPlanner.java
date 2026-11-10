@@ -5,22 +5,19 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.VirtualGasItems;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasPackagerRequestPlanner {
+final class GasPackagerRequestPlanner {
 
     private GasPackagerRequestPlanner() {
     }
 
-    @Internal
-    public static GasRequestPlan planGasRequestBatch(List<PackagingRequest> queuedRequests, long maxAmount) {
+    static GasRequestPlan planGasRequestBatch(List<PackagingRequest> queuedRequests, long maxAmount) {
         if (queuedRequests.isEmpty() || maxAmount <= 0) {
             return GasRequestPlan.EMPTY;
         }
@@ -77,11 +74,9 @@ public final class GasPackagerRequestPlanner {
         return request.getCount() > 0 && VirtualGasItems.isVirtualItem(request.item()) && !VirtualGasItems.readGasSample(request.item()).isEmpty();
     }
 
-    @Internal
-    public record PlannedGasRequest(PackagingRequest request, ItemStack token, GasStack gasType, long amount) {}
+    record PlannedGasRequest(PackagingRequest request, ItemStack token, GasStack gasType, long amount) {}
 
-    @Internal
-    public record GasRequestPlan(List<PlannedGasRequest> requests) {
+    record GasRequestPlan(List<PlannedGasRequest> requests) {
         static final GasRequestPlan EMPTY = new GasRequestPlan(List.of());
 
         boolean isEmpty() {

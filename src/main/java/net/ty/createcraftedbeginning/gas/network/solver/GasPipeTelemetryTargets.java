@@ -7,7 +7,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology.Snapshot;
 import net.ty.createcraftedbeginning.gas.telemetry.GasFlowTelemetryTarget;
 import net.ty.createcraftedbeginning.gas.telemetry.GasPressureTelemetryTarget;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -19,8 +18,7 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Internal
-public final class GasPipeTelemetryTargets {
+final class GasPipeTelemetryTargets {
     private static final Object CACHE_KEY = new Object();
 
     private final List<BlockPos> pressureTargetPositions;
@@ -33,7 +31,7 @@ public final class GasPipeTelemetryTargets {
         this.flowTargetPositions = flowTargetPositions;
     }
 
-    public static GasPipeTelemetryTargets get(Level level, Snapshot topology) {
+    static GasPipeTelemetryTargets get(Level level, Snapshot topology) {
         return topology.cachedArtifact(CACHE_KEY, () -> discover(level, topology));
     }
 

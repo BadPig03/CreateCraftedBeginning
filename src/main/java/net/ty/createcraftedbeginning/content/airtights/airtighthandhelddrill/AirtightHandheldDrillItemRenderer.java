@@ -8,8 +8,6 @@ import com.simibubi.create.foundation.item.render.PartialItemModelRenderer;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -23,15 +21,11 @@ import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Map;
-import java.util.WeakHashMap;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
 final class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRenderer {
-    private final Map<ItemStack, Float> rotationAngles = new WeakHashMap<>();
-
     private AirtightHandheldDrillItemRenderer() {
     }
 
@@ -43,19 +37,8 @@ final class AirtightHandheldDrillItemRenderer extends CustomRenderedItemModelRen
     @Override
     protected void render(ItemStack drill, CustomRenderedItemModel model, PartialItemModelRenderer renderer, ItemDisplayContext transformType, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
         renderer.render(model.getOriginalModel(), light);
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) {
-            return;
-        }
-
         BakedModel drillFront = CCBPartialModels.AIRTIGHT_HANDHELD_DRILL_FRONT.get();
-        float rotationAngle = rotationAngles.getOrDefault(drill, 0.0F);
-        boolean isDrillHeld = player.getMainHandItem() == drill || player.getOffhandItem() == drill;
-        if (isDrillHeld) {
-            float rotationSpeed = AirtightHandheldDrillRenderHandler.INSTANCE.getAnimation(AnimationTickHolder.getPartialTicks());
-            rotationAngle = (rotationAngle + rotationSpeed) % 360;
-            rotationAngles.put(drill, rotationAngle);
-        }
+        float rotationAngle = AirtightHandheldDrillRenderHandler.INSTANCE.getRotationAngle(drill, AnimationTickHolder.getPartialTicks());
 
         poseStack.pushPose();
 

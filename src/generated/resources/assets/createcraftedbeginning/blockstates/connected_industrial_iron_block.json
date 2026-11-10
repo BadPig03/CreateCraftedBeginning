@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "createcraftedbeginning:block/connected_industrial_iron_block"
+    }
+  }
+}

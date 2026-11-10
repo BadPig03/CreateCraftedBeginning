@@ -11,6 +11,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.GasUnits;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.gas.telemetry.GasFlowTelemetryTarget;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.Flow;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadoutSource;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -18,11 +20,11 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEntity implements GasFlowTelemetryTarget {
+public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEntity implements GasFlowTelemetryTarget, GasPipeReadoutSource {
     private static final long MAX_FLOW_RATE = 16000;
     private static final float NEEDLE_MIN_ANGLE = -85;
     private static final float NEEDLE_MAX_ANGLE = 85;
-    private static final String FLOW_RATE_KEY = "MeterFlowRate";
+    private static final String COMPOUND_KEY_FLOW_RATE = "MeterFlowRate";
 
     private final AirtightFlowmeterDisplay display;
     private long flowRate;
@@ -56,6 +58,11 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
         }
 
         return quotient;
+    }
+
+    @Override
+    public Flow getGasPipeReadout() {
+        return new Flow(getFlowRate());
     }
 
     @Override
@@ -98,7 +105,7 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
             return;
         }
 
-        compoundTag.putLong(FLOW_RATE_KEY, flowRate);
+        compoundTag.putLong(COMPOUND_KEY_FLOW_RATE, flowRate);
     }
 
     @Override
@@ -108,7 +115,7 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
             return;
         }
 
-        flowRate = Math.max(0, NbtValues.getLongOrDefault(compoundTag, FLOW_RATE_KEY, 0));
+        flowRate = Math.max(0, NbtValues.getLongOrDefault(compoundTag, COMPOUND_KEY_FLOW_RATE, 0));
     }
 
     public long getFlowRate() {

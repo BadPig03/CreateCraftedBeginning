@@ -147,7 +147,7 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
     }
 
     @Inject(method = "renderItemEntry", at = @At("HEAD"))
-    private void ccb$renderItemEntryHead(GuiGraphics graphics, float scale, BigItemStack entry, boolean isStackHovered, boolean isRenderingOrders, CallbackInfo callback) {
+    private void ccb$renderItemEntry$head(GuiGraphics graphics, float scale, BigItemStack entry, boolean isStackHovered, boolean isRenderingOrders, CallbackInfo callback) {
         ccb$renderingGasVirtualItem = VirtualGasItems.isVirtualItem(entry.stack);
     }
 
@@ -162,7 +162,7 @@ public abstract class StockKeeperRequestScreenMixin extends AbstractSimiContaine
     }
 
     @Inject(method = "renderItemEntry", at = @At("RETURN"))
-    private void ccb$renderItemEntryReturn(GuiGraphics graphics, float scale, BigItemStack entry, boolean isStackHovered, boolean isRenderingOrders, CallbackInfo callback) {
+    private void ccb$renderItemEntry$return(GuiGraphics graphics, float scale, BigItemStack entry, boolean isStackHovered, boolean isRenderingOrders, CallbackInfo callback) {
         ccb$renderingGasVirtualItem = false;
     }
 

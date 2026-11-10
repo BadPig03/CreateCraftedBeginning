@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.content.crates;
 
-import com.simibubi.create.content.logistics.filter.FilterItem;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -41,8 +40,7 @@ final class CrateFilterController {
             return true;
         }
 
-        ItemStack filterItem = filteringBehaviour.getFilter();
-        return filterItem.isEmpty() || FilterItem.testDirect(filterItem, stack, false);
+        return filteringBehaviour.test(stack);
     }
 
     void addBehaviour(FilteredCrateBlockEntity blockEntity, List<BlockEntityBehaviour> behaviours) {

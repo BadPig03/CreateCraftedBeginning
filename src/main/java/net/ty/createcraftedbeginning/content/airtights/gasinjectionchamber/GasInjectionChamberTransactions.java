@@ -15,12 +15,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasInjectionChamberTransactions {
+final class GasInjectionChamberTransactions {
     private GasInjectionChamberTransactions() {
-    }
-
-    public static boolean pressureProfileMatches(long currentPressurePa, long sourcePressurePa) {
-        return sourcePressurePa < 0 || GameplayPressureProfiles.resolve(currentPressurePa).equals(GameplayPressureProfiles.resolve(sourcePressurePa));
     }
 
     static TransactionParticipant<GasTankSnapshot> gasParticipant(GasInjectionChamberBlockEntity chamber, GasConsumptionPlan plan) {
@@ -34,5 +30,9 @@ public final class GasInjectionChamberTransactions {
     static TransactionParticipant<GasTankSnapshot> gasParticipant(GasInjectionChamberBlockEntity chamber, GasStack request, long sourcePressurePa) {
         GasPressureCompartment gasTank = chamber.getGasTank();
         return ResourceTransaction.participant(() -> pressureProfileMatches(gasTank.getPressurePa(), sourcePressurePa) && !request.isEmpty() && GasStack.matches(gasTank.drain(request, GasAction.SIMULATE), request), () -> MachineResourceSnapshots.snapshotGasTanks(chamber.getGasTankBehaviour()), () -> pressureProfileMatches(gasTank.getPressurePa(), sourcePressurePa) && !request.isEmpty() && GasStack.matches(gasTank.drain(request, GasAction.EXECUTE), request), snapshot -> MachineResourceSnapshots.restoreGasTanks(snapshot, chamber.getGasTankBehaviour()));
+    }
+
+    private static boolean pressureProfileMatches(long currentPressurePa, long sourcePressurePa) {
+        return sourcePressurePa < 0 || GameplayPressureProfiles.resolve(currentPressurePa).equals(GameplayPressureProfiles.resolve(sourcePressurePa));
     }
 }

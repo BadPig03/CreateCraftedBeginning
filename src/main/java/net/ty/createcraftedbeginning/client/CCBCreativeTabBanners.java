@@ -42,20 +42,27 @@ public final class CCBCreativeTabBanners {
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
-        poseStack.translate(0, 0, 1);
+        try {
+            poseStack.translate(0, 0, 1);
 
-        Matrix4f poseMatrix = poseStack.last().pose();
-        Vector3f topLeft = poseMatrix.transformPosition(new Vector3f(13, bannerY + 5, 0));
-        Vector3f bottomRight = poseMatrix.transformPosition(new Vector3f(13 + font.width(title), bannerY + 5 + font.lineHeight / 1.8F, 0));
-        float guiScale = (float) window.getGuiScale();
-        topLeft.mul(guiScale);
-        bottomRight.mul(guiScale);
+            Matrix4f poseMatrix = poseStack.last().pose();
+            Vector3f topLeft = poseMatrix.transformPosition(new Vector3f(13, bannerY + 5, 0));
+            Vector3f bottomRight = poseMatrix.transformPosition(new Vector3f(13 + font.width(title), bannerY + 5 + font.lineHeight / 1.8F, 0));
+            float guiScale = (float) window.getGuiScale();
+            topLeft.mul(guiScale);
+            bottomRight.mul(guiScale);
 
-        RenderSystem.enableScissor((int) topLeft.x, window.getHeight() - (int) topLeft.y - Math.max(1, (int) (bottomRight.y - topLeft.y)), Math.max(1, (int) (bottomRight.x - topLeft.x)), Math.max(1, (int) (bottomRight.y - topLeft.y)));
-        graphics.drawString(font, title, 13, bannerY + 5, banner.color(), false);
-        RenderSystem.disableScissor();
-
-        poseStack.popPose();
+            RenderSystem.enableScissor((int) topLeft.x, window.getHeight() - (int) topLeft.y - Math.max(1, (int) (bottomRight.y - topLeft.y)), Math.max(1, (int) (bottomRight.x - topLeft.x)), Math.max(1, (int) (bottomRight.y - topLeft.y)));
+            try {
+                graphics.drawString(font, title, 13, bannerY + 5, banner.color(), false);
+            }
+            finally {
+                RenderSystem.disableScissor();
+            }
+        }
+        finally {
+            poseStack.popPose();
+        }
     }
 
     public static BannerLayout getBanner(CCBCreativeTabSection section) {

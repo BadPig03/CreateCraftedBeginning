@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.breezes.breezechamber;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.ty.createcraftedbeginning.api.CCBAPI;
@@ -13,7 +14,6 @@ import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 import net.ty.createcraftedbeginning.recipe.gas.ingredient.DataComponentGasIngredient;
 import net.ty.createcraftedbeginning.recipe.gas.ingredient.GasIngredient;
 import net.ty.createcraftedbeginning.recipe.gas.ingredient.SingleGasIngredient;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -60,10 +60,8 @@ public final class BreezeChamberRecipeIndex {
         }
     }
 
-    @Internal
-    public record GasConversion(GasRecipeRequirement input, GasStack output) {
-        @Internal
-        public GasConversion {
+    record GasConversion(GasRecipeRequirement input, GasStack output) {
+        GasConversion {
             output = output.copy();
         }
 
@@ -108,11 +106,12 @@ public final class BreezeChamberRecipeIndex {
                     continue;
                 }
 
+                ResourceLocation recipeId = holder.id();
                 try {
-                    addRecipe(energization, holder.id().toString(), recipe.getGasRequirements().getFirst(), recipe.getGasResult());
+                    addRecipe(energization, recipeId.toString(), recipe.getGasRequirements().getFirst(), recipe.getGasResult());
                 }
                 catch (RuntimeException exception) {
-                    CCBAPI.LOGGER.error("Failed to index breeze chamber energization recipe '{}'.", holder.id(), exception);
+                    CCBAPI.LOGGER.error("Failed to index breeze chamber energization recipe '{}'.", recipeId, exception);
                 }
             }
 
@@ -122,11 +121,12 @@ public final class BreezeChamberRecipeIndex {
                     continue;
                 }
 
+                ResourceLocation recipeId = holder.id();
                 try {
-                    addRecipe(dissipation, holder.id().toString(), recipe.getGasRequirements().getFirst(), recipe.getGasResult());
+                    addRecipe(dissipation, recipeId.toString(), recipe.getGasRequirements().getFirst(), recipe.getGasResult());
                 }
                 catch (RuntimeException exception) {
-                    CCBAPI.LOGGER.error("Failed to index breeze chamber dissipation recipe '{}'.", holder.id(), exception);
+                    CCBAPI.LOGGER.error("Failed to index breeze chamber dissipation recipe '{}'.", recipeId, exception);
                 }
             }
 
@@ -170,7 +170,8 @@ public final class BreezeChamberRecipeIndex {
         private void add(String recipeId, GasConversion conversion) {
             IndexedConversion indexedConversion = new IndexedConversion(recipeId, conversion);
             Set<Gas> indexedGases = Collections.newSetFromMap(new IdentityHashMap<>());
-            for (GasStack candidateStack : conversion.input().getGases()) {
+            GasRecipeRequirement input = conversion.input();
+            for (GasStack candidateStack : input.getGases()) {
                 if (candidateStack.isEmpty()) {
                     continue;
                 }
@@ -183,7 +184,7 @@ public final class BreezeChamberRecipeIndex {
                 byGas.computeIfAbsent(candidateGas, ignored -> new ArrayList<>()).add(indexedConversion);
             }
 
-            if (!indexedGases.isEmpty() && conversion.input().ingredient().isSimple()) {
+            if (!indexedGases.isEmpty() && input.ingredient().isSimple()) {
                 return;
             }
 

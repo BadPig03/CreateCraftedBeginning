@@ -1,6 +1,8 @@
 package net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators;
 
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.content.fluids.tank.CreativeFluidTankBlockEntity;
+import com.simibubi.create.content.fluids.tank.CreativeFluidTankBlockEntity.CreativeSmartFluidTank;
 import com.simibubi.create.content.kinetics.base.IRotate.SpeedLevel;
 import com.simibubi.create.content.kinetics.motor.CreativeMotorBlock;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
@@ -13,8 +15,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LeverBlock;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidType;
 import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
@@ -23,6 +28,7 @@ import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletBlock;
 import net.ty.createcraftedbeginning.content.airtights.boilersteamoutlet.BoilerSteamOutletBlockEntity;
+import net.ty.createcraftedbeginning.gas.storage.GasTank;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -35,23 +41,26 @@ public class BoilerSteamOutletScenes {
 
         scene.title("boiler_steam_outlet", "Extracting Steam from Boilers");
         scene.configureBasePlate(0, 0, 7);
+        scene.scaleSceneView(0.9F);
+        scene.setSceneOffsetY(-1);
         scene.showBasePlate();
 
         BlockPos basePos = util.grid().at(1, 1, 3);
         BlockPos tankPos = basePos.above();
-        BlockPos innerPipePos = tankPos.east();
-        BlockPos outerPipePos = innerPipePos.east();
-        BlockPos outletPos = outerPipePos.east();
-        BlockPos boilerTankPos = outletPos.east();
-        BlockPos tankTopPos = boilerTankPos.east().south().above();
-        BlockPos burnerPos = boilerTankPos.below();
-        BlockPos burnerRightPos = burnerPos.east().south();
-        BlockPos enginePos = boilerTankPos.north().above();
-        BlockPos redstonePos = outletPos.below();
-        BlockPos fluidPipePos = enginePos.above().south(2);
-        BlockPos fluidPumpPos = fluidPipePos.above(2);
-        BlockPos fluidCogPos = fluidPumpPos.west();
-        BlockPos fluidMotorPos = fluidCogPos.below();
+        BlockPos innerPipePos = basePos.east().above();
+        BlockPos outerPipePos = basePos.east(2).above();
+        BlockPos outletPos = basePos.east(3).above();
+        BlockPos boilerTankPos = basePos.east(4).above();
+        BlockPos tankTopPos = basePos.east(5).above(2).south();
+        BlockPos burnerPos = basePos.east(4);
+        BlockPos burnerRightPos = basePos.east(5).south();
+        BlockPos enginePos = basePos.east(4).above(2).north();
+        BlockPos redstonePos = basePos.east(3);
+        BlockPos fluidPipePos = basePos.east(4).above(3).south();
+        BlockPos fluidPumpPos = basePos.east(4).above(5).south();
+        BlockPos fluidCogPos = basePos.east(3).above(5).south();
+        BlockPos fluidMotorPos = basePos.east(3).above(4).south();
+        BlockPos waterSourcePos = basePos.east(4).above(6).south();
 
         Selection boilerSelection = util.select().fromTo(boilerTankPos, tankTopPos);
         Selection burnerSelection = util.select().fromTo(burnerPos, burnerRightPos);
@@ -62,6 +71,7 @@ public class BoilerSteamOutletScenes {
         Selection redstoneSelection = util.select().position(redstonePos);
         Selection fluidPumpSelection = util.select().fromTo(fluidPipePos, fluidPumpPos);
         Selection fluidSourceSelection = util.select().fromTo(fluidCogPos, fluidMotorPos);
+        Selection waterSourceSelection = util.select().position(waterSourcePos);
 
         Vec3 outletVec = util.vector().centerOf(outletPos);
         Vec3 boilerVec = util.vector().centerOf(boilerTankPos);
@@ -72,7 +82,9 @@ public class BoilerSteamOutletScenes {
         AABB outletArea = new AABB(outletVec, outletVec);
         AABB engineArea = new AABB(engineVec, engineVec);
         AABB gasPathArea = new AABB(outletVec, outletVec);
+        AABB receivingTankStartArea = new AABB(basePos);
         AABB receivingTankArea = new AABB(util.vector().centerOf(basePos), util.vector().centerOf(tankPos));
+        AABB receivingTankOutlineArea = receivingTankArea.inflate(0.5);
 
         Object outletObject = new Object();
         Object engineObject = new Object();
@@ -83,6 +95,7 @@ public class BoilerSteamOutletScenes {
         Object releasedCapacityObject = new Object();
 
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
+        FluidStack water = new FluidStack(Fluids.WATER, FluidType.BUCKET_VOLUME);
 
         scene.idle(20);
         scene.world().showSection(burnerSelection, Direction.WEST);
@@ -92,6 +105,16 @@ public class BoilerSteamOutletScenes {
 
         scene.idle(3);
         scene.world().showSection(outletSelection, Direction.EAST);
+
+        scene.idle(3);
+        scene.world().modifyBlockEntity(waterSourcePos, CreativeFluidTankBlockEntity.class, tank -> {
+            if (!(tank.getTankInventory() instanceof CreativeSmartFluidTank inventory)) {
+                return;
+            }
+
+            inventory.setContainedFluid(water.copy());
+        });
+        scene.world().showSection(waterSourceSelection, Direction.DOWN);
 
         scene.idle(3);
         scene.world().showSection(fluidPumpSelection, Direction.DOWN);
@@ -104,7 +127,7 @@ public class BoilerSteamOutletScenes {
         scene.world().setKineticSpeed(fluidSourceSelection, mediumSpeed);
         scene.world().setKineticSpeed(fluidPumpSelection, -mediumSpeed);
 
-        scene.idle(20);
+        scene.idle(5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, outletObject, outletArea, 3);
 
         scene.idle(3);
@@ -121,7 +144,7 @@ public class BoilerSteamOutletScenes {
         scene.idle(55);
         scene.world().showSection(engineSelection, Direction.SOUTH);
 
-        scene.idle(10);
+        scene.idle(20);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, engineObject, engineArea, 3);
 
         scene.idle(3);
@@ -136,7 +159,7 @@ public class BoilerSteamOutletScenes {
         scene.idle(80);
         scene.world().showSection(tankSelection, Direction.DOWN);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().showSection(pipeSelection, Direction.NORTH);
 
         scene.idle(20);
@@ -151,21 +174,33 @@ public class BoilerSteamOutletScenes {
         scene.overlay().showText(60).text("Only the outward face can connect to a gas network...").colored(PonderPalette.OUTPUT).pointAt(outletOutputVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, receivingNetworkObject, receivingTankArea.inflate(0.5), 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, receivingNetworkObject, receivingTankStartArea, 3);
         scene.overlay().showText(60).text("...and Steam only flows out when the connected network is at lower pressure").colored(PonderPalette.RED).pointAt(gasNetworkVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(27);
-        scene.world().modifyBlockEntity(basePos, AirtightTankBlockEntity.class, tank -> tank.getTankInventory().tryReplaceContents(new GasStack(CCBGases.STEAM.get(), Math.min(1000, tank.getTankInventory().getMaxAmount()))).requireAccepted());
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, receivingNetworkObject, receivingTankOutlineArea, 57);
+
+        scene.idle(24);
+        scene.world().modifyBlockEntity(basePos, AirtightTankBlockEntity.class, tank -> {
+            GasTank inventory = tank.getTankInventory();
+            inventory.tryReplaceContents(new GasStack(CCBGases.STEAM.get(), Math.min(1000, inventory.getMaxAmount()))).requireAccepted();
+        });
         scene.world().modifyBlockEntity(outletPos, BoilerSteamOutletBlockEntity.class, outlet -> setOutletSteam(outlet, 0));
 
         scene.idle(68);
-        scene.world().modifyBlockEntity(basePos, AirtightTankBlockEntity.class, tank -> tank.getTankInventory().tryReplaceContents(new GasStack(CCBGases.STEAM.get(), tank.getTankInventory().getMaxAmount())).requireAccepted());
+        scene.world().modifyBlockEntity(basePos, AirtightTankBlockEntity.class, tank -> {
+            GasTank inventory = tank.getTankInventory();
+            inventory.tryReplaceContents(new GasStack(CCBGases.STEAM.get(), inventory.getMaxAmount())).requireAccepted();
+        });
         scene.world().modifyBlockEntity(outletPos, BoilerSteamOutletBlockEntity.class, outlet -> setOutletSteam(outlet, Long.MAX_VALUE));
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, blockedNetworkObject, receivingTankArea.inflate(0.5), 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, blockedNetworkObject, receivingTankStartArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, disabledOutletObject, outletArea, 60);
         scene.overlay().showText(60).text("When Steam cannot flow out, the Outlet only buffers a small amount...").colored(PonderPalette.RED).pointAt(outletVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(80);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, blockedNetworkObject, receivingTankOutlineArea, 57);
+
+        scene.idle(77);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, disabledOutletObject, outletArea, 60);
         scene.overlay().showText(60).text("...once the buffer is full, any further Steam produced is lost").colored(PonderPalette.RED).pointAt(outletVec).placeNearTarget().attachKeyFrame();
 

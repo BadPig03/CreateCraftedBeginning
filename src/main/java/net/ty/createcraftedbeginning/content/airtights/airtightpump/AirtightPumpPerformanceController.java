@@ -19,12 +19,20 @@ final class AirtightPumpPerformanceController {
         this.pump = pump;
     }
 
-    private static boolean isSideAccessible(BlockState state, Direction direction) {
+    static boolean isSideAccessible(BlockState state, Direction direction) {
         return state.getBlock() instanceof AirtightPumpBlock && state.getValue(AirtightPumpBlock.FACING).getAxis() == direction.getAxis();
     }
 
+    static Direction getPumpInletDirection(BlockState state) {
+        return getPumpOutletDirection(state).getOpposite();
+    }
+
+    static Direction getPumpOutletDirection(BlockState state) {
+        return state.getValue(AirtightPumpBlock.FACING);
+    }
+
     boolean allowsGasTransport(BlockState state, Direction direction) {
-        return isPumpRunning() && isSideAccessible(state, direction) && direction == getPumpInletDirection();
+        return isPumpRunning() && isSideAccessible(state, direction) && direction == getPumpInletDirection(state);
     }
 
     long getPumpMaxPressureBoostPa() {
@@ -49,28 +57,17 @@ final class AirtightPumpPerformanceController {
         return Math.max(1, Math.round(configuredMaximum * getSpeedProgress()));
     }
 
-    boolean isSideAccessible(Direction direction) {
-        return isSideAccessible(pump.getBlockState(), direction);
-    }
-
-    Direction getPumpInletDirection() {
-        return getFront().getOpposite();
-    }
-
-    Direction getPumpOutletDirection() {
-        return getFront();
-    }
-
     private boolean isPumpRunning() {
-        return pump.getLevel() != null && !pump.isRemoved() && pump.getBlockState().getBlock() instanceof AirtightPumpBlock block && Mth.abs(pump.getSpeed()) >= block.getMinimumRequiredSpeedLevel().getSpeedValue();
+        if (pump.getLevel() == null || pump.isRemoved() || !(pump.getBlockState().getBlock() instanceof AirtightPumpBlock block)) {
+            return false;
+        }
+
+        float absoluteSpeed = Mth.abs(pump.getSpeed());
+        return absoluteSpeed > 0 && absoluteSpeed >= block.getMinimumRequiredSpeedLevel().getSpeedValue();
     }
 
     private double getSpeedProgress() {
         double maximumSpeed = Math.max(1, AllConfigs.server().kinetics.maxRotationSpeed.get());
         return Mth.clamp(Mth.abs(pump.getSpeed()) / maximumSpeed, 0, 1);
-    }
-
-    private Direction getFront() {
-        return pump.getBlockState().getValue(AirtightPumpBlock.FACING);
     }
 }

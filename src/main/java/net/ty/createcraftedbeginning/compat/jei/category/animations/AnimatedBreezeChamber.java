@@ -26,22 +26,24 @@ public class AnimatedBreezeChamber extends AnimatedKinetics {
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
-
-        poseStack.translate(xOffset, yOffset, 192);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
-        blockElement(CCBBlocks.BREEZE_CHAMBER_BLOCK.getDefaultState()).atLocal(0, 1, 0).scale(SCALE).render(graphics);
-        if (illState.isDefault()) {
-            blockElement(CCBPartialModels.BREEZE_CALM).rotateBlock(0, 180, 0).atLocal(0, 1.125, 0).scale(SCALE).render(graphics);
+        try {
+            poseStack.translate(xOffset, yOffset, 192);
+            poseStack.mulPose(Axis.XP.rotationDegrees(-15.5F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
+            blockElement(CCBBlocks.BREEZE_CHAMBER_BLOCK.getDefaultState()).atLocal(0, 1, 0).scale(SCALE).render(graphics);
+            if (illState.isDefault()) {
+                blockElement(CCBPartialModels.BREEZE_CALM).rotateBlock(0, 180, 0).atLocal(0, 1.125, 0).scale(SCALE).render(graphics);
+            }
+            else if (illState.isTrue()) {
+                blockElement(CCBPartialModels.BREEZE_ILL).rotateBlock(0, 180, 0).atLocal(0, 1.125, 0).scale(SCALE).render(graphics);
+            }
+            else {
+                blockElement(CCBPartialModels.BREEZE_CHAMBER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, 1.125, 0).scale(SCALE).render(graphics);
+                blockElement(CCBPartialModels.BREEZE_GALE_ACTIVE).rotateBlock(0, 180, 0).atLocal(0, 1.125, 0).scale(SCALE).render(graphics);
+            }
         }
-        else if (illState.isTrue()) {
-            blockElement(CCBPartialModels.BREEZE_ILL).rotateBlock(0, 180, 0).atLocal(0, 1.125, 0).scale(SCALE).render(graphics);
+        finally {
+            poseStack.popPose();
         }
-        else {
-            blockElement(CCBPartialModels.BREEZE_CHAMBER_WIND).rotateBlock(0, getCurrentAngle() * 4, 0).atLocal(0, 1.125, 0).scale(SCALE).render(graphics);
-            blockElement(CCBPartialModels.BREEZE_GALE_ACTIVE).rotateBlock(0, 180, 0).atLocal(0, 1.125, 0).scale(SCALE).render(graphics);
-        }
-
-        poseStack.popPose();
     }
 }

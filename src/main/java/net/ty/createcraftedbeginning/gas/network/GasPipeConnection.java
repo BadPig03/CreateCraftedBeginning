@@ -15,6 +15,7 @@ import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver.AdjacentC
 import net.ty.createcraftedbeginning.gas.network.endpoint.AtmosphericGasEndpoint;
 import net.ty.createcraftedbeginning.gas.network.endpoint.ExternalGasEndpoint;
 import net.ty.createcraftedbeginning.gas.network.endpoint.GasConnectionEndpoint;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -23,7 +24,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class GasPipeConnection {
     private static final String COMPOUND_KEY_ATMOSPHERIC_ENDPOINT = "AtmosphericEndpoint";
-    private static final String COMPOUND_KEY_SIDE = "Side";
+    @Internal
+    public static final String COMPOUND_KEY_SIDE = "Side";
 
     private final Direction side;
     private final GasPendingTransfer pendingTransfer;
@@ -85,12 +87,13 @@ public final class GasPipeConnection {
             return clearFlowState();
         }
 
-        FlowState nextState = new FlowState(gas, inbound ? FlowDirection.INBOUND : FlowDirection.OUTBOUND, flowRate);
-        if (nextState.equals(flowState)) {
+        FlowDirection direction = inbound ? FlowDirection.INBOUND : FlowDirection.OUTBOUND;
+        FlowState current = flowState;
+        if (current != null && current.direction == direction && current.flowRate == flowRate && GasStack.isSameGasSameComponents(current.gas, gas)) {
             return false;
         }
 
-        flowState = nextState;
+        flowState = new FlowState(gas, direction, flowRate);
         return true;
     }
 

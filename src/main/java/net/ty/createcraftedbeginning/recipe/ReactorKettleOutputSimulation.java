@@ -30,9 +30,10 @@ final class ReactorKettleOutputSimulation {
             return true;
         }
 
-        FluidStack[] simulatedFluidTanks = new FluidStack[outputTank.getTanks()];
-        int outputOffset = availableFluids.getTanks() - outputTank.getTanks();
-        for (int tankIndex = 0; tankIndex < outputTank.getTanks(); tankIndex++) {
+        int outputTankCount = outputTank.getTanks();
+        FluidStack[] simulatedFluidTanks = new FluidStack[outputTankCount];
+        int outputOffset = availableFluids.getTanks() - outputTankCount;
+        for (int tankIndex = 0; tankIndex < outputTankCount; tankIndex++) {
             FluidStack simulatedFluid = outputTank.getFluidInTank(tankIndex).copy();
             int combinedTankIndex = outputOffset + tankIndex;
             if (combinedTankIndex >= 0 && combinedTankIndex < extractedFluidsFromTank.length && extractedFluidsFromTank[combinedTankIndex] > 0) {
@@ -56,20 +57,22 @@ final class ReactorKettleOutputSimulation {
             return true;
         }
 
+        int inputAmount = fluidStack.getAmount();
         for (int tankIndex = 0; tankIndex < simulatedTanks.length; tankIndex++) {
             FluidStack tankStack = simulatedTanks[tankIndex];
             if (tankStack.isEmpty() || !FluidStack.isSameFluidSameComponents(tankStack, fluidStack) || !targetTank.isFluidValid(tankIndex, fluidStack)) {
                 continue;
             }
 
-            int insertedAmount = Math.min(fluidStack.getAmount(), targetTank.getTankCapacity(tankIndex) - tankStack.getAmount());
+            int storedAmount = tankStack.getAmount();
+            int insertedAmount = Math.min(inputAmount, targetTank.getTankCapacity(tankIndex) - storedAmount);
             if (insertedAmount > 0) {
-                tankStack.setAmount(tankStack.getAmount() + insertedAmount);
+                tankStack.setAmount(storedAmount + insertedAmount);
             }
-            return insertedAmount == fluidStack.getAmount();
+            return insertedAmount == inputAmount;
         }
 
-        int remainingAmount = fluidStack.getAmount();
+        int remainingAmount = inputAmount;
         for (int tankIndex = 0; tankIndex < simulatedTanks.length; tankIndex++) {
             if (remainingAmount <= 0) {
                 return true;
@@ -98,9 +101,10 @@ final class ReactorKettleOutputSimulation {
             return true;
         }
 
-        GasStack[] simulatedGasTanks = new GasStack[outputTank.getTanks()];
-        int outputOffset = availableGases.getTanks() - outputTank.getTanks();
-        for (int tankIndex = 0; tankIndex < outputTank.getTanks(); tankIndex++) {
+        int outputTankCount = outputTank.getTanks();
+        GasStack[] simulatedGasTanks = new GasStack[outputTankCount];
+        int outputOffset = availableGases.getTanks() - outputTankCount;
+        for (int tankIndex = 0; tankIndex < outputTankCount; tankIndex++) {
             GasStack simulatedGas = outputTank.getGasInTank(tankIndex).copy();
             int combinedTankIndex = outputOffset + tankIndex;
             if (combinedTankIndex >= 0 && combinedTankIndex < extractedGasesFromTank.length && extractedGasesFromTank[combinedTankIndex] > 0) {
@@ -128,20 +132,22 @@ final class ReactorKettleOutputSimulation {
             return false;
         }
 
+        long inputAmount = gasStack.getAmount();
         for (int tankIndex = 0; tankIndex < simulatedTanks.length; tankIndex++) {
             GasStack tankStack = simulatedTanks[tankIndex];
             if (tankStack.isEmpty() || !GasStack.isSameGasSameComponents(tankStack, gasStack) || !targetTank.isGasValid(tankIndex, gasStack)) {
                 continue;
             }
 
-            long insertedAmount = Math.min(gasStack.getAmount(), pressurizedTarget.getTankMaxAmount(tankIndex) - tankStack.getAmount());
+            long storedAmount = tankStack.getAmount();
+            long insertedAmount = Math.min(inputAmount, pressurizedTarget.getTankMaxAmount(tankIndex) - storedAmount);
             if (insertedAmount > 0) {
-                tankStack.setAmount(tankStack.getAmount() + insertedAmount);
+                tankStack.setAmount(storedAmount + insertedAmount);
             }
-            return insertedAmount == gasStack.getAmount();
+            return insertedAmount == inputAmount;
         }
 
-        long remainingAmount = gasStack.getAmount();
+        long remainingAmount = inputAmount;
         for (int tankIndex = 0; tankIndex < simulatedTanks.length; tankIndex++) {
             if (remainingAmount <= 0) {
                 return true;
@@ -210,9 +216,10 @@ final class ReactorKettleOutputSimulation {
             return true;
         }
 
-        IItemHandlerModifiable simulatedInventory = createItemOutputSimulation(outputInventory.getSlots());
-        int outputOffset = availableItems.getSlots() - outputInventory.getSlots();
-        for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
+        int outputSlotCount = outputInventory.getSlots();
+        IItemHandlerModifiable simulatedInventory = createItemOutputSimulation(outputSlotCount);
+        int outputOffset = availableItems.getSlots() - outputSlotCount;
+        for (int slot = 0; slot < outputSlotCount; slot++) {
             ItemStack simulatedStack = outputInventory.getStackInSlot(slot).copy();
             int combinedSlot = outputOffset + slot;
             if (combinedSlot >= 0 && combinedSlot < extractedItemsFromSlot.length && extractedItemsFromSlot[combinedSlot] > 0) {

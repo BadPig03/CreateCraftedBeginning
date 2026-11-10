@@ -12,7 +12,6 @@ import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 import snownee.jade.api.ui.IElement;
 
@@ -20,15 +19,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasStorageView {
+final class GasStorageView {
     static final long NO_PRESSURE_READING = -1;
-    private static final String STORAGE_GAS_KEY = "gas";
-    private static final String STORAGE_MAX_AMOUNT_KEY = "max_amount";
-    private static final String STORAGE_PRESSURE_KEY = "pressure_pa";
-    private static final String STORAGE_CREATIVE_KEY = "creative";
+    static final String COMPOUND_KEY_STORAGE_GAS = "gas";
+    private static final String COMPOUND_KEY_STORAGE_MAX_AMOUNT = "max_amount";
+    private static final String COMPOUND_KEY_STORAGE_PRESSURE = "pressure_pa";
+    static final String COMPOUND_KEY_STORAGE_CREATIVE = "creative";
 
     final IElement overlay;
     final String currentAmountText;
@@ -43,9 +41,10 @@ public final class GasStorageView {
     final boolean creative;
 
     private GasStorageView(GasStorageEntry gas, String maxAmountText, boolean hasCapacity, float ratio, long pressurePa, @Nullable Component overrideText, boolean creative) {
-        GasStack stack = new GasStack(gas.gasType(), gas.amount(), gas.components());
+        long amount = gas.amount();
+        GasStack stack = new GasStack(gas.gasType(), amount, gas.components());
         overlay = new GasStorageElement(stack);
-        currentAmountText = GasUnitFormat.formatPrecise(gas.amount());
+        currentAmountText = GasUnitFormat.formatPrecise(amount);
         this.maxAmountText = maxAmountText;
         this.hasCapacity = hasCapacity;
         this.ratio = ratio;
@@ -56,38 +55,37 @@ public final class GasStorageView {
         this.creative = creative;
     }
 
-    @Internal
-    public static CompoundTag writeAmountOnly(GasStorageEntry storageEntry, boolean creative) {
+    static CompoundTag writeAmountOnly(GasStorageEntry storageEntry, boolean creative) {
         CompoundTag viewData = new CompoundTag();
         DataResult<Tag> encodedEntry = GasStorageEntry.CODEC.encodeStart(NbtOps.INSTANCE, storageEntry);
-        viewData.put(STORAGE_GAS_KEY, encodedEntry.result().orElseThrow(() -> new NoSuchElementException("Failed to encode Jade gas storage entry: " + encodedEntry.error().map(Error::message).orElse("No encoded value was returned."))));
+        viewData.put(COMPOUND_KEY_STORAGE_GAS, encodedEntry.result().orElseThrow(() -> new NoSuchElementException("Failed to encode Jade gas storage entry: " + encodedEntry.error().map(Error::message).orElse("No encoded value was returned."))));
         if (creative) {
-            viewData.putBoolean(STORAGE_CREATIVE_KEY, true);
+            viewData.putBoolean(COMPOUND_KEY_STORAGE_CREATIVE, true);
         }
         return viewData;
     }
 
     @Nullable
     static GasStorageView readDefault(CompoundTag compoundTag, boolean includeCapacity, boolean includePressure) {
-        boolean hasCapacity = includeCapacity && compoundTag.contains(STORAGE_MAX_AMOUNT_KEY);
-        long maxAmount = hasCapacity ? compoundTag.getLong(STORAGE_MAX_AMOUNT_KEY) : 0;
+        boolean hasCapacity = includeCapacity && compoundTag.contains(COMPOUND_KEY_STORAGE_MAX_AMOUNT);
+        long maxAmount = hasCapacity ? compoundTag.getLong(COMPOUND_KEY_STORAGE_MAX_AMOUNT) : 0;
         if (hasCapacity && maxAmount <= 0) {
             return null;
         }
 
-        GasStorageEntry gas = GasStorageEntry.CODEC.parse(NbtOps.INSTANCE, compoundTag.get(STORAGE_GAS_KEY)).result().orElse(null);
+        GasStorageEntry gas = GasStorageEntry.CODEC.parse(NbtOps.INSTANCE, compoundTag.get(COMPOUND_KEY_STORAGE_GAS)).result().orElse(null);
         if (gas == null) {
             return null;
         }
 
-        boolean creative = compoundTag.getBoolean(STORAGE_CREATIVE_KEY);
+        boolean creative = compoundTag.getBoolean(COMPOUND_KEY_STORAGE_CREATIVE);
         boolean empty = gas.isEmpty();
         String maxAmountText = hasCapacity ? GasUnitFormat.formatPrecise(maxAmount) : "";
         float ratio = empty ? 0 : 1;
         if (hasCapacity && !creative) {
             ratio = (float) gas.amount() / maxAmount;
         }
-        long pressurePa = includePressure ? Math.max(NO_PRESSURE_READING, NbtValues.getLongOrDefault(compoundTag, STORAGE_PRESSURE_KEY, NO_PRESSURE_READING)) : NO_PRESSURE_READING;
+        long pressurePa = includePressure ? Math.max(NO_PRESSURE_READING, NbtValues.getLongOrDefault(compoundTag, COMPOUND_KEY_STORAGE_PRESSURE, NO_PRESSURE_READING)) : NO_PRESSURE_READING;
         if (!empty) {
             return new GasStorageView(gas, maxAmountText, hasCapacity, ratio, pressurePa, null, creative);
         }
@@ -108,10 +106,10 @@ public final class GasStorageView {
     static CompoundTag writeObserved(GasStorageEntry storageEntry, long maxAmount, boolean creative, long pressurePa, boolean includeCapacity, boolean includePressure) {
         CompoundTag viewData = writeAmountOnly(storageEntry, creative);
         if (includeCapacity && maxAmount > 0) {
-            viewData.putLong(STORAGE_MAX_AMOUNT_KEY, maxAmount);
+            viewData.putLong(COMPOUND_KEY_STORAGE_MAX_AMOUNT, maxAmount);
         }
         if (includePressure && pressurePa >= GasPressure.VACUUM_PA) {
-            viewData.putLong(STORAGE_PRESSURE_KEY, pressurePa);
+            viewData.putLong(COMPOUND_KEY_STORAGE_PRESSURE, pressurePa);
         }
         return viewData;
     }

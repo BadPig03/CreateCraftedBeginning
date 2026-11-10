@@ -16,9 +16,11 @@ import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasIn
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType;
 import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
 import net.ty.createcraftedbeginning.recipe.transaction.MachineResourceSnapshots;
 import net.ty.createcraftedbeginning.recipe.transaction.MachineResourceSnapshots.GasTankSnapshot;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -30,9 +32,10 @@ import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessing
 import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType.FAN_PROCESSING;
 import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState.OperationType.NONE;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasInjectionChamberBeltProcessor {
+public final class GasInjectionChamberBeltProcessor {
     private final GasInjectionChamberBlockEntity chamber;
     private final GasInjectionChamberOperationState operation;
     private final GasInjectionChamberFilterState filter;
@@ -45,6 +48,33 @@ final class GasInjectionChamberBeltProcessor {
         this.filter = filter;
         this.visual = visual;
         this.planner = planner;
+    }
+
+    @Internal
+    public static boolean executeItemPlan(GasInjectionChamberBlockEntity chamber, GasInjectionChamberFilterState filter, BeltPlan plan, TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
+        if (chamber.getLevel() == null || !matchesPlanInput(plan, transported.stack)) {
+            return false;
+        }
+
+        Optional<List<ItemStack>> resultStacksOptional = new GasInjectionChamberBeltOutputs(chamber, filter).createResults(plan);
+        if (resultStacksOptional.isEmpty()) {
+            return false;
+        }
+
+        List<ItemStack> resultStacks = resultStacksOptional.get();
+        ResourceTransaction transaction = new ResourceTransaction();
+        GasConsumptionPlan recipeGasPlan = plan.recipeGasPlan();
+        if (recipeGasPlan != null) {
+            transaction.add(GasInjectionChamberTransactions.gasParticipant(chamber, recipeGasPlan));
+        }
+        else {
+            GasStack gasRequest = plan.gasRequest();
+            if (!gasRequest.isEmpty()) {
+                transaction.add(plan.type() == FAN_PROCESSING ? GasInjectionChamberTransactions.gasParticipant(chamber, gasRequest, plan.sourcePressurePa()) : GasInjectionChamberTransactions.gasParticipant(chamber, gasRequest));
+            }
+        }
+        transaction.add(ResourceTransaction.participant(() -> matchesPlanInput(plan, transported.stack), () -> transported.stack.copy(), () -> replaceTransportedStack(plan, resultStacks, transported, handler), snapshot -> transported.stack = snapshot.copy()));
+        return transaction.commit();
     }
 
     private static boolean replaceTransportedStack(BeltPlan plan, List<ItemStack> resultStacks, TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
@@ -99,11 +129,18 @@ final class GasInjectionChamberBeltProcessor {
     }
 
     ProcessingResult onItemHeld(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        if (handler.blockEntity.isVirtual() || chamber.getLevel() == null) {
+        Level level = chamber.getLevel();
+        if (handler.blockEntity.isVirtual() || level == null) {
             return PASS;
         }
 
         if (operation.isRunning()) {
+            if (!operation.hasAttemptedExecution() && !operation.isRecipeCurrent(level.getRecipeManager())) {
+                chamber.clearOperationState();
+                chamber.notifyUpdate();
+                return HOLD;
+            }
+
             if (operation.type == NONE || operation.hasAttemptedExecution() || operation.getProcessingTicks() > GasInjectionChamberBlockEntity.INJECTION_EXECUTION_TICK) {
                 return HOLD;
             }
@@ -127,14 +164,15 @@ final class GasInjectionChamberBeltProcessor {
             return HOLD;
         }
 
-        operation.startProcessing(plan.type(), plan.pressureSpeedMultiplier(), plan.recipe());
+        operation.startProcessing(plan.type(), plan.pressureSpeedMultiplier(), plan.recipe(), level.getRecipeManager());
         chamber.setChanged();
         chamber.notifyUpdate();
         return HOLD;
     }
 
     private void executeCurrentState(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        if (chamber.getLevel() == null) {
+        Level level = chamber.getLevel();
+        if (level == null || !operation.isRecipeCurrent(level.getRecipeManager())) {
             return;
         }
 
@@ -166,14 +204,13 @@ final class GasInjectionChamberBeltProcessor {
 
         visual.queueCloud(cloudColor);
         tankBehaviour.sendDataImmediately();
-        Level level = chamber.getLevel();
         CCBSoundEvents.INJECTING.playOnServer(level, chamber.getBlockPos(), 0.75F, 0.9F + 0.2F * level.random.nextFloat());
     }
 
     private boolean executePlan(BeltPlan plan, TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         return switch (plan.type()) {
             case CANISTER -> executeCanisterPlan(plan, transported);
-            case ITEM_RECIPE, FAN_PROCESSING -> executeItemPlan(plan, transported, handler);
+            case ITEM_RECIPE, FAN_PROCESSING -> executeItemPlan(chamber, filter, plan, transported, handler);
             case BASIN_RECIPE, NONE -> false;
         };
     }
@@ -197,31 +234,6 @@ final class GasInjectionChamberBeltProcessor {
             MachineResourceSnapshots.restoreGasTanks(snapshot.gasTankSnapshot(), chamber.getGasTankBehaviour());
             transported.stack = snapshot.itemStack().copy();
         }));
-        return transaction.commit();
-    }
-
-    private boolean executeItemPlan(BeltPlan plan, TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
-        if (chamber.getLevel() == null || !matchesPlanInput(plan, transported.stack)) {
-            return false;
-        }
-
-        Optional<List<ItemStack>> resultStacksOptional = new GasInjectionChamberBeltOutputs(chamber, filter).createResults(plan);
-        if (resultStacksOptional.isEmpty()) {
-            return false;
-        }
-
-        List<ItemStack> resultStacks = resultStacksOptional.get();
-        ResourceTransaction transaction = new ResourceTransaction();
-        if (plan.recipeGasPlan() != null) {
-            transaction.add(GasInjectionChamberTransactions.gasParticipant(chamber, plan.recipeGasPlan()));
-        }
-        else {
-            GasStack gasRequest = plan.gasRequest();
-            if (!gasRequest.isEmpty()) {
-                transaction.add(plan.type() == FAN_PROCESSING ? GasInjectionChamberTransactions.gasParticipant(chamber, gasRequest, plan.sourcePressurePa()) : GasInjectionChamberTransactions.gasParticipant(chamber, gasRequest));
-            }
-        }
-        transaction.add(ResourceTransaction.participant(() -> matchesPlanInput(plan, transported.stack), () -> transported.stack.copy(), () -> replaceTransportedStack(plan, resultStacks, transported, handler), snapshot -> transported.stack = snapshot.copy()));
         return transaction.commit();
     }
 

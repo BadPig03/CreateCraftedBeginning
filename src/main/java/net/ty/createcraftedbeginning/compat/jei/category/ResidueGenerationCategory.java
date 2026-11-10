@@ -6,12 +6,13 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
+import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.fluids.FluidType;
+import net.neoforged.neoforge.fluids.FluidStack;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
@@ -50,18 +51,27 @@ public class ResidueGenerationCategory extends CCBRecipeCategory<ResidueGenerati
     @Override
     protected void setRecipe(IRecipeLayoutBuilder builder, ResidueGenerationRecipe recipe, IFocusGroup focuses) {
         GasRecipeRequirement gasRequirement = recipe.getGasRequirement();
-        List<GasStack> gasStacks = Arrays.stream(gasRequirement.getGases()).map(GasStack::copy).toList();
-        builder.addSlot(RecipeIngredientRole.INPUT, 27, 74).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> addGasRequirementTooltip(tooltip, gasRequirement));
+        List<GasStack> gasStacks = Arrays.stream(gasRequirement.getGases()).map(stack -> stack.copyWithAmount(1)).toList();
+        builder.addSlot(RecipeIngredientRole.INPUT, 27, 74).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gasStacks).addRichTooltipCallback((view, tooltip) -> tooltip.add(Component.translatable("createcraftedbeginning.recipe.residue_generation.gas_mapping").withStyle(ChatFormatting.GRAY)));
         IRecipeSlotBuilder outputSlot = builder.addSlot(RecipeIngredientRole.OUTPUT, 132, 74).setBackground(getRenderedSlot(), -1, -1);
         if (!recipe.hasResidueOutput()) {
             return;
         }
 
         if (recipe.getFluidResults().isEmpty()) {
-            outputSlot.addItemStack(getResultItem(recipe));
+            outputSlot.addItemStack(getResultItem(recipe).copyWithCount(1)).addRichTooltipCallback((view, tooltip) -> {
+                tooltip.add(Component.translatable("createcraftedbeginning.recipe.residue_generation.output_mapping").withStyle(ChatFormatting.GRAY));
+                tooltip.add(Component.translatable("createcraftedbeginning.recipe.residue_generation.production").withStyle(ChatFormatting.GRAY));
+            });
             return;
         }
 
-        outputSlot.addIngredient(NeoForgeTypes.FLUID_STACK, recipe.getFluidResults().getFirst()).setFluidRenderer(FluidType.BUCKET_VOLUME, false, 16, 16);
+        FluidStack fluid = recipe.getFluidResults().getFirst().copyWithAmount(1);
+        outputSlot.addIngredient(NeoForgeTypes.FLUID_STACK, fluid).setFluidRenderer(1, false, 16, 16).addRichTooltipCallback((view, tooltip) -> {
+            tooltip.clear();
+            tooltip.add(fluid.getHoverName());
+            tooltip.add(Component.translatable("createcraftedbeginning.recipe.residue_generation.output_mapping").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("createcraftedbeginning.recipe.residue_generation.production").withStyle(ChatFormatting.GRAY));
+        });
     }
 }

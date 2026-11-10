@@ -6,6 +6,7 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment.PressureModel;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressurePrediction;
 import net.ty.createcraftedbeginning.gas.storage.GasPressureCompartmentView;
 import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
 import net.ty.createcraftedbeginning.gas.storage.GasTankState;
@@ -344,9 +345,15 @@ public final class GasDrawerHandler implements GasStorageHandler {
         }
 
         @Override
+        public Object getPredictionGroup() {
+            return GasDrawerHandler.this;
+        }
+
+        @Override
         public @Nullable PredictedTransferLimits predictTransferLimits(GasStack gas, long storedAmount) {
             PredictedTransferLimits limits = tanks[tankIndex].predictTransferLimits(gas, storedAmount);
-            if (limits.drainLimit() <= 0 && limits.fillLimit() <= 0) {
+            long fillLimit = limits.fillLimit();
+            if (limits.drainLimit() <= 0 && fillLimit <= 0) {
                 return limits;
             }
 
@@ -367,8 +374,8 @@ public final class GasDrawerHandler implements GasStorageHandler {
 
             for (int index = 0; index < tanks.length; index++) {
                 if (index == tankIndex) {
-                    if (limits.fillLimit() > 0) {
-                        return new PredictedTransferLimits(0, limits.fillLimit());
+                    if (fillLimit > 0) {
+                        return new PredictedTransferLimits(0, fillLimit);
                     }
 
                     continue;
@@ -377,6 +384,53 @@ public final class GasDrawerHandler implements GasStorageHandler {
                 if (tanks[index].getStoredStack().isEmpty() && tanks[index].fill(gas.copyWithAmount(1), GasAction.SIMULATE) > 0) {
                     return blockedProjection(gas, amount);
                 }
+            }
+            return new PredictedTransferLimits(0, 0);
+        }
+
+        @Override
+        public @Nullable PredictedTransferLimits predictTransferLimits(GasStack gas, GasPressurePrediction prediction) {
+            PredictedTransferLimits limits = tanks[tankIndex].predictTransferLimits(gas, prediction);
+            if (limits == null) {
+                return null;
+            }
+
+            long fillLimit = limits.fillLimit();
+            if (limits.drainLimit() <= 0 && fillLimit <= 0) {
+                return limits;
+            }
+
+            for (int index = 0; index < tanks.length; index++) {
+                GasStack contents = prediction.getGas(tanks[index]);
+                if (contents.isEmpty() || !GasStack.isSameGasSameComponents(contents, gas)) {
+                    continue;
+                }
+
+                if (index != tankIndex) {
+                    return new PredictedTransferLimits(0, 0);
+                }
+
+                return limits;
+            }
+            for (int index = 0; index < tanks.length; index++) {
+                if (!prediction.getGas(tanks[index]).isEmpty()) {
+                    continue;
+                }
+
+                PredictedTransferLimits candidate = tanks[index].predictTransferLimits(gas, prediction);
+                if (candidate == null) {
+                    return null;
+                }
+
+                if (candidate.fillLimit() <= 0) {
+                    continue;
+                }
+
+                if (index != tankIndex) {
+                    return new PredictedTransferLimits(0, 0);
+                }
+
+                return new PredictedTransferLimits(0, fillLimit);
             }
             return new PredictedTransferLimits(0, 0);
         }

@@ -11,31 +11,33 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex.GasConversion;
 import net.ty.createcraftedbeginning.gas.atmosphere.AtmosphereStateResolver;
 import net.ty.createcraftedbeginning.gas.storage.GasTank;
+import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
 import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlanner;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Optional;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class BreezeChamberConversionPlanner {
+final class BreezeChamberConversionPlanner {
     private final BreezeChamberBlockEntity chamber;
 
-    @Internal
-    public BreezeChamberConversionPlanner(BreezeChamberBlockEntity chamber) {
+    BreezeChamberConversionPlanner(BreezeChamberBlockEntity chamber) {
         this.chamber = chamber;
     }
 
     static boolean canAcceptOutputPhysically(GasTank outputTank, GasStack outputStack) {
-        return !outputStack.isEmpty() && outputStack.getAmount() > 0 && (outputTank.isEmpty() || GasStack.isSameGasSameComponents(outputTank.getGasStack(), outputStack)) && outputTank.getRemainingAmount() >= outputStack.getAmount();
+        if (outputStack.isEmpty()) {
+            return false;
+        }
+
+        long outputAmount = outputStack.getAmount();
+        return outputAmount > 0 && (outputTank.isEmpty() || GasStack.isSameGasSameComponents(outputTank.getGasStack(), outputStack)) && outputTank.getRemainingAmount() >= outputAmount;
     }
 
-    @Internal
-    public int getProcessingAmount(int windTime) {
+    int getProcessingAmount(int windTime) {
         if (windTime == 0 || chamber.getLevel() == null) {
             return 0;
         }
@@ -58,9 +60,9 @@ public final class BreezeChamberConversionPlanner {
         return Mth.clamp((int) Math.round(maxProcessingRate * pressureStrength), 1, maxProcessingRate);
     }
 
-    @Internal
-    public Optional<GasConversionPlan> planConversion(GasConversion conversion, GasPressureCompartment inputTank, GasTank outputTank, long processingBudget) {
-        long inputAmount = conversion.input().amount();
+    Optional<GasConversionPlan> planConversion(GasConversion conversion, GasPressureCompartment inputTank, GasTank outputTank, long processingBudget) {
+        GasRecipeRequirement input = conversion.input();
+        long inputAmount = input.amount();
         GasStack outputPerBatch = conversion.output();
         long outputAmount = outputPerBatch.getAmount();
         if (processingBudget < inputAmount || !canAcceptProcessingOutput(outputTank, outputPerBatch)) {
@@ -69,12 +71,12 @@ public final class BreezeChamberConversionPlanner {
 
         long outputHeadroom = getProcessingOutputHeadroom(outputTank);
         long maximumBatchCount = Math.min(processingBudget / inputAmount, outputHeadroom / outputAmount);
-        long batchCount = GasConsumptionPlanner.findMaximumMultiplier(conversion.input(), inputTank, maximumBatchCount);
+        long batchCount = GasConsumptionPlanner.findMaximumMultiplier(input, inputTank, maximumBatchCount);
         if (batchCount <= 0) {
             return Optional.empty();
         }
 
-        Optional<GasConsumptionPlan> inputPlan = GasConsumptionPlanner.plan(conversion.input(), inputTank, batchCount);
+        Optional<GasConsumptionPlan> inputPlan = GasConsumptionPlanner.plan(input, inputTank, batchCount);
         return inputPlan.map(plan -> new GasConversionPlan(conversion, plan, batchCount));
     }
 
@@ -112,8 +114,7 @@ public final class BreezeChamberConversionPlanner {
         };
     }
 
-    @Internal
-    public record GasConversionPlan(GasConversion conversion, GasConsumptionPlan inputPlan, long batchCount) {}
+    record GasConversionPlan(GasConversion conversion, GasConsumptionPlan inputPlan, long batchCount) {}
 
     private boolean canAcceptProcessingOutput(GasTank outputTank, GasStack outputStack) {
         return canAcceptOutputPhysically(outputTank, outputStack) && getProcessingOutputHeadroom(outputTank) >= outputStack.getAmount();

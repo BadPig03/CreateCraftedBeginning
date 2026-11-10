@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
+import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -33,7 +34,10 @@ public class TeslaTurbineRenderer extends KineticBlockEntityRenderer<TeslaTurbin
 
     @Override
     protected void renderSafe(TeslaTurbineBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        super.renderSafe(blockEntity, partialTicks, poseStack, buffer, light, overlay);
+        if (VisualizationManager.supportsVisualization(blockEntity.getLevel())) {
+            return;
+        }
+
         BlockState blockState = blockEntity.getBlockState();
         Axis rotationAxis = blockState.getValue(TeslaTurbineBlock.AXIS);
         SuperByteBuffer shaft = rotateToAxis(getRotatedModel(blockEntity, blockState), rotationAxis);

@@ -10,29 +10,6 @@ final class AmethystCollectorPanelTextureMapping {
     private AmethystCollectorPanelTextureMapping() {
     }
 
-    static int stripStart(int tiles) {
-        if (tiles >= 3) {
-            return 0;
-        }
-
-        if (tiles == 2) {
-            return 48;
-        }
-
-        return 80;
-    }
-
-    static double tileCoordinate(int index, int length, int sourceTiles, double local) {
-        int tile = 1;
-        if (index == 0) {
-            tile = 0;
-        }
-        else if (index == length - 1) {
-            tile = sourceTiles - 1;
-        }
-        return tile * 16 + local;
-    }
-
     static double topU(int x, int width, int depth, double localX) {
         if (width == 1 && depth > 1) {
             if (depth == 2) {
@@ -112,5 +89,28 @@ final class AmethystCollectorPanelTextureMapping {
 
         int tiles = Math.min(3, Math.max(width, depth));
         return 64 + tileCoordinate(z, depth, tiles, localZ);
+    }
+
+    private static int stripStart(int tiles) {
+        if (tiles >= 3) {
+            return 0;
+        }
+
+        if (tiles == 2) {
+            return 48;
+        }
+
+        return 80;
+    }
+
+    private static double tileCoordinate(int index, int length, int sourceTiles, double local) {
+        int tile = 1;
+        if (index == 0) {
+            tile = 0;
+        }
+        else if (index == length - 1) {
+            tile = sourceTiles - 1;
+        }
+        return tile * 16 + local;
     }
 }

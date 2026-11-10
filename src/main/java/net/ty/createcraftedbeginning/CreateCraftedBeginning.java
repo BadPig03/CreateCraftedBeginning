@@ -28,7 +28,6 @@ import net.ty.createcraftedbeginning.content.airtights.airtightarmors.airtightle
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.AirtightHandheldDrillUpgradeRegistry;
 import net.ty.createcraftedbeginning.content.airtights.handlers.CCBBuiltInAirtightHandlers;
 import net.ty.createcraftedbeginning.content.airtights.handlers.atmosphere.CCBBuiltInAtmosphereProviders;
-import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.datagen.CCBDataGen;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.recipe.gas.ingredient.GasIngredientTypes;
@@ -61,9 +60,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Mod(CreateCraftedBeginning.MOD_ID)
+@Mod(CCBAPI.MOD_ID)
 public class CreateCraftedBeginning {
-    public static final String MOD_ID = CCBAPI.MOD_ID;
     public static final Logger LOGGER = CCBAPI.LOGGER;
 
     private static final CreateRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
@@ -99,7 +97,6 @@ public class CreateCraftedBeginning {
     public static void init(FMLCommonSetupEvent event) {
         CCBCompatBootstrap.commonSetup(event);
         CCBFluids.registerFluidInteractions();
-        EndCasingBlock.registerPlacementHelpers();
 
         AirtightHelmetUpgradeRegistry.registerUpgrades();
         AirtightChestplateUpgradeRegistry.registerUpgrades();
@@ -151,5 +148,4 @@ public class CreateCraftedBeginning {
         event.register(GasRegistries.GAS_REGISTRY);
         event.register(GasIngredientTypes.REGISTRY);
     }
-
 }

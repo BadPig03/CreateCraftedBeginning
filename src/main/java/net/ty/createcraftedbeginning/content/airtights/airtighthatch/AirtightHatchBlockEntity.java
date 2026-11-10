@@ -22,9 +22,9 @@ import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlock.CanisterType;
-import net.ty.createcraftedbeginning.content.airtights.creativeairtighttank.CreativeGasContainer;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
+import net.ty.createcraftedbeginning.gas.visual.CreativeGasContainer;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -85,6 +85,12 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
     public void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         serialization.write(compoundTag, provider, clientPacket);
+    }
+
+    @Override
+    public void writeSafe(CompoundTag compoundTag, Provider provider) {
+        super.writeSafe(compoundTag, provider);
+        serialization.writeSafe(compoundTag, provider);
     }
 
     @Override
@@ -177,6 +183,14 @@ public class AirtightHatchBlockEntity extends SmartBlockEntity implements IHaveG
 
     boolean giveCanisterToPlayer(Player player) {
         return canisterManager.giveCanisterToPlayer(player);
+    }
+
+    ItemStack createSchematicCanisterItemStack() {
+        return canisterManager.createSchematicCanisterItemStack();
+    }
+
+    boolean prepareForRemoval() {
+        return canisterManager.prepareForRemoval();
     }
 
     boolean isCreative() {

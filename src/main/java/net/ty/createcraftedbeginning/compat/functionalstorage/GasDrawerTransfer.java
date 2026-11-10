@@ -17,6 +17,7 @@ import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.gas.transfer.GasPressureTransferEndpoint;
 import net.ty.createcraftedbeginning.gas.transfer.GasPressureTransferResult;
 import net.ty.createcraftedbeginning.gas.transfer.GasPressureTransferService;
+import net.ty.createcraftedbeginning.gas.transfer.GasPressureTransferService.EquilibriumPolicy;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -53,6 +54,7 @@ public final class GasDrawerTransfer {
             GasPressureTransferEndpoint.compartment(source),
             GasPressureTransferEndpoint.canister(canister, targetTank),
             maxAmount,
+            EquilibriumPolicy.BOUNDED_FINAL_UNIT,
             GasAction.EXECUTE
         );
         return result.sourceNetLoss();
@@ -190,7 +192,8 @@ public final class GasDrawerTransfer {
             return 0;
         }
 
-        GasPressureTransferResult result = GasPressureTransferService.transferPassive(source, target, transferLimit, GasAction.EXECUTE);
+        EquilibriumPolicy policy = voidTarget != null && voidTarget.canVoid(gas) ? EquilibriumPolicy.STRICT : EquilibriumPolicy.BOUNDED_FINAL_UNIT;
+        GasPressureTransferResult result = GasPressureTransferService.transferPassive(source, target, transferLimit, policy, GasAction.EXECUTE);
         long sourceLoss = Math.min(transferLimit, result.sourceNetLoss());
         if (!result.fullyRecovered()) {
             return sourceLoss;

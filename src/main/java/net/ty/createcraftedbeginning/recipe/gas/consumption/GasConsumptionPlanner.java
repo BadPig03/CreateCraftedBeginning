@@ -36,11 +36,12 @@ public final class GasConsumptionPlanner {
             return Optional.empty();
         }
 
-        List<Source> sources = new ArrayList<>(storage.getTanks());
-        for (int tankIndex = 0; tankIndex < storage.getTanks(); tankIndex++) {
+        int tankCount = storage.getTanks();
+        List<Source> sources = new ArrayList<>(tankCount);
+        for (int tankIndex = 0; tankIndex < tankCount; tankIndex++) {
             sources.add(new Source(tankIndex, storage.getPressureCompartment(tankIndex)));
         }
-        return planScaled(requirements, sources, storage.getTanks(), multiplier);
+        return planScaled(requirements, sources, tankCount, multiplier);
     }
 
     public static Optional<GasConsumptionPlan> plan(GasRecipeRequirement requirement, GasPressureCompartment compartment) {

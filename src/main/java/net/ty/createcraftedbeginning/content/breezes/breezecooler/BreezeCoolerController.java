@@ -4,6 +4,7 @@ import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
@@ -175,8 +176,9 @@ public final class BreezeCoolerController {
             return;
         }
 
-        level.setBlockAndUpdate(cooler.getBlockPos(), currentState.setValue(BreezeCoolerBlock.FROST_LEVEL, frostLevel));
-        if (level.isClientSide || !(level.getBlockEntity(cooler.getBlockPos().above()) instanceof BasinBlockEntity basin)) {
+        BlockPos pos = cooler.getBlockPos();
+        level.setBlockAndUpdate(pos, currentState.setValue(BreezeCoolerBlock.FROST_LEVEL, frostLevel));
+        if (level.isClientSide || !(level.getBlockEntity(pos.above()) instanceof BasinBlockEntity basin)) {
             return;
         }
 

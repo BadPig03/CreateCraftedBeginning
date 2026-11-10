@@ -43,7 +43,7 @@ public abstract class ThresholdSwitchBlockEntityMixin extends SmartBlockEntity {
     protected abstract BlockPos getTargetPos();
 
     @Inject(method = "addBehaviours", at = @At("TAIL"))
-    private void ccb$addGasBehaviour(List<BlockEntityBehaviour> behaviours, CallbackInfo callback) {
+    private void ccb$addBehaviours(List<BlockEntityBehaviour> behaviours, CallbackInfo callback) {
         ccb$observedGasTank = new GasManipulationBehaviour(this, (level, pos, state) -> new BlockFace(pos, DirectedDirectionalBlock.getTargetDirection(state))).bypassSidedness();
         behaviours.add(ccb$observedGasTank);
     }

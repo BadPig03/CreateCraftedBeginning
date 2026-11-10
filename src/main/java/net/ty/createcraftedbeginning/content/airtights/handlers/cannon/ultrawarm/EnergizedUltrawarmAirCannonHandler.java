@@ -60,8 +60,8 @@ public class EnergizedUltrawarmAirCannonHandler extends UltrawarmAirCannonHandle
     }
 
     @Override
-    public float getGasConsumptionMultiplier() {
-        return super.getGasConsumptionMultiplier() * 0.75F;
+    public double getGasConsumptionMultiplier() {
+        return super.getGasConsumptionMultiplier() * 0.75;
     }
 
     @Override

@@ -31,6 +31,7 @@ import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBl
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasunpackager.GasUnpackagerBlock;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasunpackager.GasUnpackagerBlockEntity;
+import net.ty.createcraftedbeginning.gas.storage.GasTank;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 
@@ -48,24 +49,24 @@ public class GasPackagerScenes {
 
         BlockPos centerPos = util.grid().at(3, 1, 3);
         BlockPos sourceTankPos = centerPos.east(2).south();
-        BlockPos sourcePackagerPos = sourceTankPos.above().north();
-        BlockPos leverPos = sourcePackagerPos.above();
-        BlockPos sourceFunnelPos = sourcePackagerPos.north();
-        BlockPos sourceBeltPos = sourceFunnelPos.below();
+        BlockPos sourcePackagerPos = centerPos.east(2).above();
+        BlockPos leverPos = centerPos.east(2).above(2);
+        BlockPos sourceFunnelPos = centerPos.east(2).above().north();
+        BlockPos sourceBeltPos = centerPos.east(2).north();
         BlockPos targetPackagerPos = centerPos.west(2).above();
-        BlockPos targetFunnelPos = targetPackagerPos.north();
-        BlockPos targetBeltPos = targetFunnelPos.below();
-        BlockPos targetTankPos = targetPackagerPos.below().south();
-        BlockPos motorPos = sourceBeltPos.east().north();
+        BlockPos targetFunnelPos = centerPos.west(2).above().north();
+        BlockPos targetBeltPos = centerPos.west(2).north();
+        BlockPos targetTankPos = centerPos.west(2).south();
+        BlockPos motorPos = centerPos.east(3).north(2);
 
-        Selection sourceTankSelection = util.select().fromTo(sourceTankPos, sourceTankPos.above());
-        Selection sourcePackagerSelection = util.select().fromTo(sourcePackagerPos, sourcePackagerPos.below());
+        Selection sourceTankSelection = util.select().fromTo(sourceTankPos, centerPos.east(2).south().above());
+        Selection sourcePackagerSelection = util.select().fromTo(sourcePackagerPos, centerPos.east(2));
         Selection leverSelection = util.select().position(leverPos);
         Selection sourceFunnelSelection = util.select().position(sourceFunnelPos);
-        Selection beltSelection = util.select().fromTo(sourceBeltPos.east(), targetBeltPos.west());
+        Selection beltSelection = util.select().fromTo(centerPos.east(3).north(), centerPos.west(3).north());
         Selection targetFunnelSelection = util.select().position(targetFunnelPos);
-        Selection targetPackagerSelection = util.select().fromTo(targetPackagerPos, targetPackagerPos.below());
-        Selection targetTankSelection = util.select().fromTo(targetTankPos, targetTankPos.above());
+        Selection targetPackagerSelection = util.select().fromTo(targetPackagerPos, centerPos.west(2));
+        Selection targetTankSelection = util.select().fromTo(targetTankPos, centerPos.west(2).south().above());
         Selection motorSelection = util.select().position(motorPos);
 
         Vec3 sourcePackagerVec = util.vector().centerOf(sourcePackagerPos);
@@ -78,7 +79,9 @@ public class GasPackagerScenes {
         Vec3 targetTankVec = util.vector().centerOf(targetTankPos);
 
         AABB sourceConnectionArea = new AABB(sourceBackVec, sourceBackVec);
+        AABB targetTankStartArea = new AABB(targetTankVec, targetTankVec).inflate(0.5);
         AABB targetTankArea = new AABB(targetTankVec, targetTankVec);
+        AABB targetTankOutlineArea = targetTankArea.inflate(0.5).expandTowards(0, 1, 0);
 
         Object sourceConnectionObject = new Object();
         Object targetTankObject = new Object();
@@ -131,6 +134,8 @@ public class GasPackagerScenes {
         scene.world().setKineticSpeed(beltSelection, slowSpeed);
         scene.world().setKineticSpeed(motorSelection, slowSpeed);
         scene.effects().rotationSpeedIndicator(motorPos);
+
+        scene.idle(5);
         scene.world().modifyBlockEntity(targetTankPos, AirtightTankBlockEntity.class, tank -> prepareTargetTank(tank, targetPackagerPos, demoBalloonAmount));
         scene.world().showSection(targetPackagerSelection, Direction.SOUTH);
         scene.world().showSection(targetTankSelection, Direction.NORTH);
@@ -163,11 +168,14 @@ public class GasPackagerScenes {
         scene.overlay().showText(60).text("The target must be able to accept the whole balloon at local atmospheric pressure").colored(PonderPalette.RED).pointAt(targetTankVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, targetTankObject, targetTankArea.inflate(0.5).expandTowards(0, 1, 0), 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, targetTankObject, targetTankStartArea, 3);
         scene.overlay().showControls(targetFrontVec, Pointing.DOWN, 60).rightClick().withItem(demoBalloon.copy());
         scene.overlay().showText(60).text("If the whole balloon cannot be accepted, no gas is transferred and the balloon stays intact").colored(PonderPalette.RED).pointAt(targetTankVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(20);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, targetTankObject, targetTankOutlineArea, 57);
+
+        scene.idle(17);
         scene.world().flapFunnel(targetFunnelPos, false);
         scene.world().removeItemsFromBelt(targetBeltPos);
         scene.world().modifyBlockEntity(targetPackagerPos, GasPackagerBlockEntity.class, packager -> packager.unwrapBox(demoBalloon.copy(), false));
@@ -176,7 +184,7 @@ public class GasPackagerScenes {
         scene.idle(40);
         scene.world().setBlock(targetPackagerPos, CCBBlocks.GAS_UNPACKAGER_BLOCK.getDefaultState().setValue(GasUnpackagerBlock.FACING, Direction.NORTH), true);
 
-        scene.idle(15);
+        scene.idle(20);
         scene.overlay().showText(60).text("The Gas Unpackager instead transfers as much gas as the target can accept").colored(PonderPalette.GREEN).pointAt(targetPackagerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(40);
@@ -227,11 +235,12 @@ public class GasPackagerScenes {
         }
 
         long ambientPressurePa = BalloonPressureSemantics.ambientPressurePa(level, packagerPos);
-        long amountAtAmbientPressure = Math.min(GasPressure.amount(targetTank.getTankInventory().getVolume(), ambientPressurePa), targetTank.getTankInventory().getMaxAmount());
+        GasTank inventory = targetTank.getTankInventory();
+        long amountAtAmbientPressure = Math.min(GasPressure.amount(inventory.getVolume(), ambientPressurePa), inventory.getMaxAmount());
         long partialTransferAmount = Math.max(1, balloonAmount / 2);
         long requiredHeadroom = balloonAmount + partialTransferAmount;
         long initialAmount = Math.max(0, amountAtAmbientPressure - requiredHeadroom);
         GasStack initialGas = initialAmount > 0 ? new GasStack(CCBGases.NATURAL_AIR.get(), initialAmount) : GasStack.EMPTY;
-        targetTank.getTankInventory().tryReplaceContents(initialGas).requireAccepted();
+        inventory.tryReplaceContents(initialGas).requireAccepted();
     }
 }

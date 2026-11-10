@@ -50,7 +50,8 @@ public final class GasInjectionChamberOperationPlanner {
         return Optional.ofNullable(createRecipePlan(itemStack, tankGas, recipe));
     }
 
-    Optional<BeltPlan> createPlan(ItemStack itemStack) {
+    @Internal
+    public Optional<BeltPlan> createPlan(ItemStack itemStack) {
         if (chamber.getLevel() == null || itemStack.isEmpty()) {
             return Optional.empty();
         }
@@ -134,11 +135,8 @@ public final class GasInjectionChamberOperationPlanner {
 
         long sourcePressurePa = chamber.getGasTank().getPressurePa();
         int desiredCount = Math.min(itemStack.getCount(), itemStack.getMaxStackSize());
-        int batchSize = GasInjectionFanCost.getMaxFanProcessingBatchSize(tankGas, sourcePressurePa, desiredCount, chamber.getGasTank().getMaxAmount());
-        if (batchSize <= 0) {
-            return null;
-        }
-
+        int affordableCount = GasInjectionFanCost.getMaxFanProcessingBatchSize(tankGas, sourcePressurePa, desiredCount);
+        int batchSize = Math.max(1, affordableCount);
         long gasCost = GasInjectionFanCost.getFanProcessingGasCost(tankGas, sourcePressurePa, batchSize);
         return new BeltPlan(FAN_PROCESSING, itemStack.copyWithCount(batchSize), tankGas.copy(), gasCost, sourcePressurePa, null, null, fanProcessingTypeId.get());
     }

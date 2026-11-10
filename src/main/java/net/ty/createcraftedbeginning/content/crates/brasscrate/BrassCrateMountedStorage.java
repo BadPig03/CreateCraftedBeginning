@@ -26,6 +26,8 @@ public class BrassCrateMountedStorage extends FilteredCrateMountedItemStorage<Br
     }
 
     public static BrassCrateMountedStorage fromBlockEntity(BrassCrateBlockEntity crate) {
-        return new BrassCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount(), crate.getFilterItem());
+        BrassCrateMountedStorage storage = new BrassCrateMountedStorage(crate.getStoredItem(), crate.getStoredCount(), crate.getFilterItem());
+        storage.setLevel(crate.getLevel());
+        return storage;
     }
 }

@@ -251,7 +251,7 @@ public final class GasTankMultiblockConnectivity {
                         continue;
                     }
 
-                    extraData = tankPart.modifyExtraData(extraData);
+                    extraData = tankPart.mergeExtraData(extraData, part);
                     splitMultiblock(part, cache, null, false);
                     mergeOverpressureStress(tankPart, part);
                     tankPart.mergeTankStateFrom(part);

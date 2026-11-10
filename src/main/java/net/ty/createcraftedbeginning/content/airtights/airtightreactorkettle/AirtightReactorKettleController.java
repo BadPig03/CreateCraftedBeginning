@@ -10,10 +10,13 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads.Generation;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleCraftPlanner;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleMixingRecipe;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Optional;
@@ -45,8 +48,8 @@ public final class AirtightReactorKettleController {
     private int processingCycle;
     private CraftingRecipe currentCraftingRecipe;
     private ReactorKettleRecipe currentRecipe;
-    private long observedRecipeCacheVersion;
-    private long operationRecipeCacheVersion;
+    private @Nullable Generation observedRecipeGeneration;
+    private @Nullable Generation operationRecipeGeneration;
 
     @Internal
     public AirtightReactorKettleController(AirtightReactorKettleBlockEntity kettle, AirtightReactorKettleAnimationState animationState) {
@@ -55,7 +58,6 @@ public final class AirtightReactorKettleController {
         observedAutomaticShapelessEnabled = CCBConfig.server().machines.airtightReactorKettle.enableAutomaticShapelessRecipes.get();
         observedAutomaticMixingEnabled = CCBConfig.server().machines.airtightReactorKettle.enableAutomaticMixingRecipes.get();
         observedAutomaticBrewingEnabled = CCBConfig.server().machines.airtightReactorKettle.enableAutomaticBrewingRecipes.get();
-        observedRecipeCacheVersion = AirtightReactorKettleRecipeLookup.getRecipeCacheVersion();
     }
 
     private static float sanitizeKineticSpeed(float speed) {
@@ -96,15 +98,15 @@ public final class AirtightReactorKettleController {
             return;
         }
 
-        long recipeCacheVersion = AirtightReactorKettleRecipeLookup.getRecipeCacheVersion();
+        Generation recipeGeneration = CCBRecipeReloads.getGeneration(level.getRecipeManager());
         boolean automaticShapelessEnabled = CCBConfig.server().machines.airtightReactorKettle.enableAutomaticShapelessRecipes.get();
         boolean automaticMixingEnabled = CCBConfig.server().machines.airtightReactorKettle.enableAutomaticMixingRecipes.get();
         boolean automaticBrewingEnabled = CCBConfig.server().machines.airtightReactorKettle.enableAutomaticBrewingRecipes.get();
-        if (observedRecipeCacheVersion == recipeCacheVersion && observedAutomaticShapelessEnabled == automaticShapelessEnabled && observedAutomaticMixingEnabled == automaticMixingEnabled && observedAutomaticBrewingEnabled == automaticBrewingEnabled) {
+        if (observedRecipeGeneration == recipeGeneration && observedAutomaticShapelessEnabled == automaticShapelessEnabled && observedAutomaticMixingEnabled == automaticMixingEnabled && observedAutomaticBrewingEnabled == automaticBrewingEnabled) {
             return;
         }
 
-        observedRecipeCacheVersion = recipeCacheVersion;
+        observedRecipeGeneration = recipeGeneration;
         observedAutomaticShapelessEnabled = automaticShapelessEnabled;
         observedAutomaticMixingEnabled = automaticMixingEnabled;
         observedAutomaticBrewingEnabled = automaticBrewingEnabled;
@@ -113,7 +115,6 @@ public final class AirtightReactorKettleController {
 
     @Internal
     public boolean updateReactorKettle() {
-        observedRecipeCacheVersion = AirtightReactorKettleRecipeLookup.getRecipeCacheVersion();
         Level level = kettle.getLevel();
         if (level == null) {
             return false;
@@ -129,6 +130,7 @@ public final class AirtightReactorKettleController {
             return true;
         }
 
+        observedRecipeGeneration = CCBRecipeReloads.getGeneration(level.getRecipeManager());
         ponderProcessRequested = false;
         Optional<ReactorKettleRecipe> reactorRecipe = AirtightReactorKettleRecipeLookup.getMatchingRecipe(kettle);
         if (reactorRecipe.isEmpty()) {
@@ -142,7 +144,7 @@ public final class AirtightReactorKettleController {
         if (reactorRecipe.isPresent()) {
             currentRecipe = reactorRecipe.get();
             currentCraftingRecipe = null;
-            startOperation();
+            startOperation(level);
             return true;
         }
 
@@ -159,7 +161,7 @@ public final class AirtightReactorKettleController {
 
         currentRecipe = null;
         currentCraftingRecipe = craftingRecipeHolder.get().value();
-        startOperation();
+        startOperation(level);
         return true;
     }
 
@@ -308,9 +310,14 @@ public final class AirtightReactorKettleController {
             return;
         }
 
+        if (!isClientSide && operatingTicks <= PROCESSING_STARTED && operationRecipeGeneration != CCBRecipeReloads.getGeneration(level.getRecipeManager())) {
+            update(true);
+            return;
+        }
+
         if (!isClientSide && currentRecipe instanceof ReactorKettleMixingRecipe mixingRecipe) {
             boolean enabled = mixingRecipe.isBrewing() ? CCBConfig.server().machines.airtightReactorKettle.enableAutomaticBrewingRecipes.get() : CCBConfig.server().machines.airtightReactorKettle.enableAutomaticMixingRecipes.get();
-            if (!enabled || operationRecipeCacheVersion != AirtightReactorKettleRecipeLookup.getRecipeCacheVersion()) {
+            if (!enabled) {
                 update(true);
                 return;
             }
@@ -409,8 +416,8 @@ public final class AirtightReactorKettleController {
         return getProcessingSpeed() >= SpeedLevel.FAST.getSpeedValue();
     }
 
-    private void startOperation() {
-        operationRecipeCacheVersion = AirtightReactorKettleRecipeLookup.getRecipeCacheVersion();
+    private void startOperation(Level level) {
+        operationRecipeGeneration = CCBRecipeReloads.getGeneration(level.getRecipeManager());
         operationKineticSpeed = sanitizeKineticSpeed(getCurrentKineticSpeed());
         processingKineticSpeed = 0;
         pressureSpeedMultiplier = 1;
@@ -507,6 +514,7 @@ public final class AirtightReactorKettleController {
         operationKineticSpeed = 0;
         processingKineticSpeed = 0;
         pressureSpeedMultiplier = 1;
+        operationRecipeGeneration = null;
         clearRecipes();
     }
 

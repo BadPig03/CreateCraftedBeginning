@@ -5,21 +5,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CrateUnpacking {
+final class CrateUnpacking {
 
     private CrateUnpacking() {
     }
 
-    @Internal
-    public static boolean defaultUnpack(Level level, BlockPos pos, List<ItemStack> items, boolean simulate) {
+    static boolean defaultUnpack(Level level, BlockPos pos, List<ItemStack> items, boolean simulate) {
         if (!(level.getBlockEntity(pos) instanceof CratesBlockEntity crate)) {
             return false;
         }

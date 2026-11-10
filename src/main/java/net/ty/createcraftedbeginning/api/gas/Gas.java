@@ -50,7 +50,8 @@ public class Gas {
         tint = builder.getTint();
         alpha = builder.getAlpha();
         usableInEquipment = builder.isUsableInEquipment();
-        tags = builder.getTags() != null ? Set.copyOf(builder.getTags()) : Collections.emptySet();
+        Set<TagKey<Gas>> builderTags = builder.getTags();
+        tags = builderTags != null ? Set.copyOf(builderTags) : Collections.emptySet();
     }
 
     @SuppressWarnings("unused")

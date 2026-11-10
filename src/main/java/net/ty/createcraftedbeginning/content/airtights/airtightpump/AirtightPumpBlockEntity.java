@@ -1,11 +1,13 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpump;
 
+import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -13,6 +15,8 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasTransportNode;
 import net.ty.createcraftedbeginning.gas.telemetry.GasPressureTelemetryTarget;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.PumpConfiguration;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadoutSource;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -20,7 +24,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightPumpBlockEntity extends KineticBlockEntity implements GasTransportNode, GasPressureTelemetryTarget {
+public class AirtightPumpBlockEntity extends KineticBlockEntity implements GasTransportNode, GasPressureTelemetryTarget, GasPipeReadoutSource {
     private final AirtightPumpPerformanceController performanceController;
     private final AirtightPumpDisplay display;
     private CCBAdvancementBehaviour advancementBehaviour;
@@ -29,6 +33,11 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements GasTr
         super(type, pos, state);
         performanceController = new AirtightPumpPerformanceController(this);
         display = new AirtightPumpDisplay(this);
+    }
+
+    @Override
+    public PumpConfiguration getGasPipeReadout() {
+        return new PumpConfiguration(getPumpMaxPressureBoostPa());
     }
 
     @Override
@@ -56,12 +65,18 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements GasTr
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        boolean added = display.addToGoggleTooltip(tooltip);
-        if (!added) {
-            return false;
+        display.appendGoggleTooltip(tooltip);
+
+        if (!StressImpact.isEnabled()) {
+            return true;
         }
 
-        addStressImpactStats(tooltip, calculateStressApplied());
+        float stressAtBase = calculateStressApplied();
+        if (Mth.equal(stressAtBase, 0)) {
+            return true;
+        }
+
+        addStressImpactStats(tooltip, stressAtBase);
         return true;
     }
 
@@ -81,10 +96,6 @@ public class AirtightPumpBlockEntity extends KineticBlockEntity implements GasTr
 
     public long getPumpFlowRateLimit() {
         return performanceController.getPumpFlowRateLimit();
-    }
-
-    AirtightPumpPerformanceController getPerformanceController() {
-        return performanceController;
     }
 
     private GasTransportBehaviour createTransportBehaviour() {

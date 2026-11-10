@@ -34,7 +34,9 @@ public final class GasEndpointTransferPlanner {
         double fraction = remainingTickFraction;
         for (EndpointFlow solved : solution.endpointFlows()) {
             GasNetworkPressureEndpoint endpoint = solved.endpoint();
-            double rate = solved.drainFlowRate() > GasFlowMath.FLOW_RATE_EPSILON ? solved.drainFlowRate() : solved.fillFlowRate();
+            double drainFlowRate = solved.drainFlowRate();
+            boolean draining = drainFlowRate > GasFlowMath.FLOW_RATE_EPSILON;
+            double rate = draining ? drainFlowRate : solved.fillFlowRate();
             if (rate <= GasFlowMath.FLOW_RATE_EPSILON) {
                 continue;
             }
@@ -44,7 +46,7 @@ public final class GasEndpointTransferPlanner {
                 continue;
             }
 
-            double targetPressure = solved.drainFlowRate() > GasFlowMath.FLOW_RATE_EPSILON ? GasPressureLimits.clampToHardLimit(solved.manifoldPressurePa()) : Mth.clamp(solved.manifoldPressurePa(), GasPressure.VACUUM_PA, pressureState.maxPressurePa());
+            double targetPressure = draining ? GasPressureLimits.clampToHardLimit(solved.manifoldPressurePa()) : Mth.clamp(solved.manifoldPressurePa(), GasPressure.VACUUM_PA, pressureState.maxPressurePa());
             double pressureDistance = Math.abs(pressureState.pressurePa() - targetPressure);
             double amountToManifold = GasPressure.amount(pressureState.volume(), pressureDistance);
             if (amountToManifold <= GasFlowMath.FLOW_RATE_EPSILON) {
@@ -78,6 +80,10 @@ public final class GasEndpointTransferPlanner {
     }
 
     public static GasTransferPlan plan(Level level, GasStack gas, TransferComponent component, double substepFraction, int substepIndex) {
+        return plan(level, gas, component, substepFraction, substepIndex, new GasFlowIntegration());
+    }
+
+    public static GasTransferPlan plan(Level level, GasStack gas, TransferComponent component, double substepFraction, int substepIndex, GasFlowIntegration integration) {
         List<EndpointFlow> drains = new ArrayList<>();
         List<EndpointFlow> fills = new ArrayList<>();
         for (EndpointFlow endpointFlow : component.endpointFlows()) {
@@ -100,7 +106,7 @@ public final class GasEndpointTransferPlanner {
         long[] drainWeights = new long[drains.size()];
         for (int index = 0; index < drains.size(); index++) {
             EndpointFlow solved = drains.get(index);
-            long flowBudget = GasFlowMath.amountForTickFraction(solved.drainFlowRate(), substepFraction);
+            long flowBudget = integration.available(solved.endpoint(), solved.drainFlowRate(), substepFraction, true);
             long safeAmountLimit = solved.endpoint().maxSafeDrainAmount(gas, solved.manifoldPressurePa(), flowBudget);
             drainLimits[index] = safeAmountLimit;
             drainWeights[index] = safeAmountLimit <= 0 ? 0 : Mth.clamp(flowBudget, 1, safeAmountLimit);
@@ -111,21 +117,21 @@ public final class GasEndpointTransferPlanner {
         long[] fillWeights = new long[fills.size()];
         for (int index = 0; index < fills.size(); index++) {
             EndpointFlow solved = fills.get(index);
-            long flowBudget = GasFlowMath.amountForTickFraction(solved.fillFlowRate(), substepFraction);
+            long flowBudget = integration.available(solved.endpoint(), solved.fillFlowRate(), substepFraction, false);
             long safeAmountLimit = solved.endpoint().maxSafeFillAmount(gas, solved.manifoldPressurePa(), flowBudget);
             fillLimits[index] = safeAmountLimit;
             fillWeights[index] = safeAmountLimit <= 0 ? 0 : Mth.clamp(flowBudget, 1, safeAmountLimit);
         }
 
         long totalFillLimit = BoundedMath.sumNonNegative(fillLimits);
-        long referenceAmount = GasFlowMath.amountForTickFraction(component.referenceFlowRate(), substepFraction);
-        long plannedAmount = Math.min(referenceAmount, Math.min(totalDrainLimit, totalFillLimit));
+        long plannedAmount = Math.min(integration.available(component, substepFraction), Math.min(totalDrainLimit, totalFillLimit));
         if (plannedAmount <= 0) {
             return GasTransferPlan.EMPTY;
         }
 
-        int drainCursor = Math.floorMod(level.getGameTime() + substepIndex, drains.size());
-        int fillCursor = Math.floorMod(level.getGameTime() + substepIndex, fills.size());
+        long gameTime = level.getGameTime();
+        int drainCursor = Math.floorMod(gameTime + substepIndex, drains.size());
+        int fillCursor = Math.floorMod(gameTime + substepIndex, fills.size());
         long[] drainAllocations = GasAmountDistribution.allocateByWeight(plannedAmount, drainLimits, drainWeights, drainCursor);
         long[] fillAllocations = GasAmountDistribution.allocateByWeight(plannedAmount, fillLimits, fillWeights, fillCursor);
         long allocatedDrain = BoundedMath.sumNonNegative(drainAllocations);

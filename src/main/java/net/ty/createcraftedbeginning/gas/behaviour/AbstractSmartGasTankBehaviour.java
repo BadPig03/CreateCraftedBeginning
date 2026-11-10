@@ -100,11 +100,12 @@ abstract class AbstractSmartGasTankBehaviour extends BlockEntityBehaviour {
         MutableInt tankIndex = new MutableInt(0);
         ListTag tankData = compoundTag.getList(getTankDataKey(), Tag.TAG_COMPOUND);
         NBTHelper.iterateCompoundList(tankData, tankTag -> {
-            if (tankIndex.intValue() >= tankSegments.length) {
+            int index = tankIndex.intValue();
+            if (index >= tankSegments.length) {
                 return;
             }
 
-            tankSegments[tankIndex.intValue()].read(tankTag, provider, recoverOverflow);
+            tankSegments[index].read(tankTag, provider, recoverOverflow);
             tankIndex.increment();
         });
     }

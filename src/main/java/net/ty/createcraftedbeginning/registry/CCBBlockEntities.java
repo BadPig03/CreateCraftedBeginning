@@ -4,7 +4,6 @@ import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightengine.AirtightEngineBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlockEntity;
@@ -43,9 +42,12 @@ import net.ty.createcraftedbeginning.content.crates.andesitecrate.AndesiteCrateB
 import net.ty.createcraftedbeginning.content.crates.brasscrate.BrassCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.cardboardcrate.CardboardCrateBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlockEntity;
-import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerBlockEntity;
-import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerStructuralBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystlens.AmethystLensBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverBlockEntity;
 import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
@@ -60,7 +62,6 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<AirtightPipeBlockEntity> AIRTIGHT_PIPE = CCB_REGISTRATE.blockEntity("airtight_pipe", AirtightPipeBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_PIPE_BLOCK).register();
     public static final BlockEntityEntry<AirtightFlowmeterBlockEntity> AIRTIGHT_FLOWMETER = CCB_REGISTRATE.blockEntity("airtight_flowmeter", AirtightFlowmeterBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_FLOWMETER_BLOCK).register();
     public static final BlockEntityEntry<AirtightManometerBlockEntity> AIRTIGHT_MANOMETER = CCB_REGISTRATE.blockEntity("airtight_manometer", AirtightManometerBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_MANOMETER_BLOCK).register();
-    public static final BlockEntityEntry<AirtightEncasedPipeBlockEntity> AIRTIGHT_ENCASED_PIPE = CCB_REGISTRATE.blockEntity("airtight_encased_pipe", AirtightEncasedPipeBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK).register();
     public static final BlockEntityEntry<AirtightCheckValveBlockEntity> AIRTIGHT_CHECK_VALVE = CCB_REGISTRATE.blockEntity("airtight_check_valve", AirtightCheckValveBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_CHECK_VALVE_BLOCK).register();
     public static final BlockEntityEntry<SmartAirtightPipeBlockEntity> SMART_AIRTIGHT_PIPE = CCB_REGISTRATE.blockEntity("smart_airtight_pipe", SmartAirtightPipeBlockEntity::new).validBlock(CCBBlocks.SMART_AIRTIGHT_PIPE_BLOCK).register();
     public static final BlockEntityEntry<AirtightPumpBlockEntity> AIRTIGHT_PUMP = CCB_REGISTRATE.blockEntity("airtight_pump", AirtightPumpBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_PUMP_BLOCK).register();
@@ -104,10 +105,13 @@ public class CCBBlockEntities {
 
     public static final BlockEntityEntry<AmethystCollectorPanelBlockEntity> AMETHYST_COLLECTOR_PANEL = CCB_REGISTRATE.blockEntity("amethyst_collector_panel", AmethystCollectorPanelBlockEntity::new).validBlock(CCBBlocks.AMETHYST_COLLECTOR_PANEL_BLOCK).register();
     public static final BlockEntityEntry<LaserEmitterBlockEntity> LASER_EMITTER = CCB_REGISTRATE.blockEntity("laser_emitter", LaserEmitterBlockEntity::new).validBlock(CCBBlocks.LASER_EMITTER_BLOCK).register();
+    public static final BlockEntityEntry<AmethystMirrorBlockEntity> AMETHYST_MIRROR = CCB_REGISTRATE.blockEntity("amethyst_mirror", AmethystMirrorBlockEntity::new).validBlock(CCBBlocks.AMETHYST_MIRROR_BLOCK).register();
+    public static final BlockEntityEntry<AmethystLensBlockEntity> AMETHYST_LENS = CCB_REGISTRATE.blockEntity("amethyst_lens", AmethystLensBlockEntity::new).validBlocks(CCBBlocks.AMETHYST_CONVEX_LENS_BLOCK, CCBBlocks.AMETHYST_CONCAVE_LENS_BLOCK).register();
     public static final BlockEntityEntry<PhotothermalReceiverBlockEntity> PHOTOTHERMAL_RECEIVER = CCB_REGISTRATE.blockEntity("photothermal_receiver", PhotothermalReceiverBlockEntity::new).validBlock(CCBBlocks.PHOTOTHERMAL_RECEIVER_BLOCK).register();
 
-    public static final BlockEntityEntry<EndSculkSilencerBlockEntity> END_SCULK_SILENCER = CCB_REGISTRATE.blockEntity("end_sculk_silencer", EndSculkSilencerBlockEntity::new).validBlock(CCBBlocks.END_SCULK_SILENCER_BLOCK).register();
-    public static final BlockEntityEntry<EndSculkSilencerStructuralBlockEntity> END_SCULK_SILENCER_STRUCTURAL = CCB_REGISTRATE.blockEntity("end_sculk_silencer_structural", EndSculkSilencerStructuralBlockEntity::new).validBlock(CCBBlocks.END_SCULK_SILENCER_STRUCTURAL_BLOCK).register();
+    public static final BlockEntityEntry<AmethystLoaderBlockEntity> AMETHYST_LOADER = CCB_REGISTRATE.blockEntity("amethyst_loader", AmethystLoaderBlockEntity::new).validBlock(CCBBlocks.AMETHYST_LOADER_BLOCK).register();
+    public static final BlockEntityEntry<AmethystAntennaBlockEntity> AMETHYST_ANTENNA = CCB_REGISTRATE.blockEntity("amethyst_antenna", AmethystAntennaBlockEntity::new).validBlock(CCBBlocks.AMETHYST_ANTENNA_BLOCK).register();
+    public static final BlockEntityEntry<AmethystSoundSuppressorBlockEntity> AMETHYST_SOUND_SUPPRESSOR = CCB_REGISTRATE.blockEntity("amethyst_sound_suppressor", AmethystSoundSuppressorBlockEntity::new).validBlock(CCBBlocks.AMETHYST_SOUND_SUPPRESSOR_BLOCK).register();
 
     public static final BlockEntityEntry<AndesiteCrateBlockEntity> ANDESITE_CRATE = CCB_REGISTRATE.blockEntity("andesite_crate", AndesiteCrateBlockEntity::new).validBlock(CCBBlocks.ANDESITE_CRATE_BLOCK).register();
     public static final BlockEntityEntry<BrassCrateBlockEntity> BRASS_CRATE = CCB_REGISTRATE.blockEntity("brass_crate", BrassCrateBlockEntity::new).validBlock(CCBBlocks.BRASS_CRATE_BLOCK).register();

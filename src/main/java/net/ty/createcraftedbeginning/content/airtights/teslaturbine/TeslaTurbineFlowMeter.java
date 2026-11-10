@@ -14,13 +14,15 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-class TeslaTurbineFlowMeter {
+@Internal
+public class TeslaTurbineFlowMeter {
     private static final float MIN_GAS_SUPPLY_THRESHOLD = 0.01F;
     private static final int FLOW_SAMPLE_COUNT = 10;
     private static final int FLOW_SAMPLE_RATE = 5;
@@ -32,7 +34,8 @@ class TeslaTurbineFlowMeter {
     private static final String COMPOUND_KEY_TICKS_UNTIL_NEXT_SAMPLE = "TicksUntilNextSample";
     private static final String COMPOUND_KEY_GATHERED_CLOCKWISE = "GatheredClockwise";
     private static final String COMPOUND_KEY_GATHERED_COUNTER_CLOCKWISE = "GatheredCounterClockwise";
-    private static final String COMPOUND_KEY_GATHERED_WEIGHTED_LEVELS = "GatheredWeightedLevels";
+    @Internal
+    public static final String COMPOUND_KEY_GATHERED_WEIGHTED_LEVELS = "GatheredWeightedLevels";
     private static final String COMPOUND_KEY_HAS_MIXED_GASES = "HasMixedGases";
     private static final String COMPOUND_KEY_NET_SAMPLES = "NetSamples";
     private static final String COMPOUND_KEY_ABSOLUTE_SAMPLES = "AbsoluteSamples";

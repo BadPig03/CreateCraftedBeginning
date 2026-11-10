@@ -6,7 +6,10 @@ import com.simibubi.create.content.decoration.bracket.BracketBlock;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeConnections;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -18,7 +21,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public abstract class BracketBlockMixin {
     @SuppressWarnings("MethodMayBeStatic")
     @WrapOperation(method = "getSuitableBracket(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;)Ljava/util/Optional;", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/fluids/FluidPropagator;getStraightPipeAxis(Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/core/Direction$Axis;"))
-    private Axis ccb$getSuitableBracket(BlockState state, Operation<Axis> original) {
+    private @Nullable Axis ccb$getSuitableBracket(BlockState state, Operation<Axis> original) {
+        if (state.getBlock() instanceof AirtightPipeBlock) {
+            if (state.getValue(AirtightPipeBlock.CASED)) {
+                return null;
+            }
+
+            return AirtightPipeConnections.straightAxis(state);
+        }
+
         if (!(state.getBlock() instanceof AxisGasPipeBlock)) {
             return original.call(state);
         }

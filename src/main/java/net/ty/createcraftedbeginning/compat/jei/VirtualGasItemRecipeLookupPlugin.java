@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.compat.jei;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipe;
 import mezz.jei.api.helpers.IJeiHelpers;
 import mezz.jei.api.recipe.IFocus;
+import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.advanced.IRecipeManagerPlugin;
@@ -44,8 +45,9 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
     }
 
     private static boolean gasRecipeMatches(GasAwareRecipe recipe, GasFocus focus) {
-        boolean gasInputMatches = recipe.getGasRequirements().stream().anyMatch(requirement -> requirement.ingredient().test(focus.gas().copyWithAmount(Math.max(1, requirement.amount()))));
-        boolean gasOutputMatches = recipe.getGasRecipeData().results().stream().anyMatch(gasResult -> GasStack.isSameGasSameComponents(gasResult, focus.gas()));
+        GasStack gas = focus.gas();
+        boolean gasInputMatches = recipe.getGasRequirements().stream().anyMatch(requirement -> requirement.ingredient().test(gas.copyWithAmount(Math.max(1, requirement.amount()))));
+        boolean gasOutputMatches = recipe.getGasRecipeData().results().stream().anyMatch(gasResult -> GasStack.isSameGasSameComponents(gasResult, gas));
         return switch (focus.role()) {
             case INPUT -> gasInputMatches;
             case OUTPUT -> gasOutputMatches;
@@ -92,14 +94,16 @@ public class VirtualGasItemRecipeLookupPlugin implements IRecipeManagerPlugin {
             return List.of();
         }
 
+        IRecipeManager recipeManager = runtime.getRecipeManager();
         List<RecipeType<?>> matchingTypes = new ArrayList<>();
-        runtime.getRecipeManager().createRecipeCategoryLookup().get().forEach(category -> {
-            boolean hasMatchingRecipe = runtime.getRecipeManager().createRecipeLookup(category.getRecipeType()).get().anyMatch(recipe -> recipeMatches(recipe, gasFocus));
+        recipeManager.createRecipeCategoryLookup().get().forEach(category -> {
+            RecipeType<?> recipeType = category.getRecipeType();
+            boolean hasMatchingRecipe = recipeManager.createRecipeLookup(recipeType).get().anyMatch(recipe -> recipeMatches(recipe, gasFocus));
             if (!hasMatchingRecipe) {
                 return;
             }
 
-            matchingTypes.add(category.getRecipeType());
+            matchingTypes.add(recipeType);
         });
 
         return matchingTypes;

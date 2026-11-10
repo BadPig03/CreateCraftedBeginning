@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,7 +71,7 @@ public abstract class BaseTemplate {
         return new int[]{0, 0, 0};
     }
 
-    public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level, BlockState baseState, Direction miningDirection) {
+    public Set<BlockPos> getTargetPositions(ItemStack drill, BlockPos basePos, Level level, BlockState baseState, Direction miningDirection, BiPredicate<BlockPos, BlockState> canTraverse) {
         int[] miningSize = AirtightHandheldDrillSettings.getMiningSizeParams(drill);
         int[] relativePosition = AirtightHandheldDrillSettings.getRelativePositionParams(drill);
         BlockPos relativeOffset = getRelativeOffset(miningDirection, relativePosition);

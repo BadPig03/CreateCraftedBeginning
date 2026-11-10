@@ -20,7 +20,7 @@ import java.util.List;
 public interface AirtightCannonHandler {
     void explode(Level level, Vec3 pos, AirtightCannonShotContext context);
 
-    float getGasConsumptionMultiplier();
+    double getGasConsumptionMultiplier();
 
     void appendHoverText(ItemStack cannon, TooltipContext context, List<Component> tooltip, TooltipFlag flag);
 

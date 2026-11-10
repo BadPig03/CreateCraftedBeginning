@@ -485,9 +485,10 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
 
     private void renderAddressBoxTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
         List<Component> tooltips = new ArrayList<>();
-        if (!addressBox.getValue().isBlank()) {
+        String address = addressBox.getValue();
+        if (!address.isBlank()) {
             tooltips.add(CCBLang.translate(restocker ? "gui.gas_factory_gauge.restocker_address_given" : "gui.gas_factory_gauge.recipe_address_given").color(ScrollInput.HEADER_RGB).component());
-            tooltips.add(CCBLang.text('\'' + addressBox.getValue() + '\'').style(ChatFormatting.GRAY).component());
+            tooltips.add(CCBLang.text('\'' + address + '\'').style(ChatFormatting.GRAY).component());
             graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
             return;
         }

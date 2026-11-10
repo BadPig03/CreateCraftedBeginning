@@ -5,8 +5,8 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
-import net.ty.createcraftedbeginning.content.airtights.AirtightTelemetryVisibility;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.Pressure;
 import net.ty.createcraftedbeginning.platform.client.GoggleTooltip;
 import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
 
@@ -23,28 +23,25 @@ final class AirtightManometerDisplay {
     }
 
     boolean addToGoggleTooltip(List<Component> tooltip) {
-        if (!AirtightTelemetryVisibility.canReadPipePressure(manometer)) {
-            return false;
-        }
-
         if (!GoggleTooltip.isVisible(tooltip, Section.PIPE_TELEMETRY)) {
             return false;
         }
 
+        Pressure readout = manometer.getGasPipeReadout();
         CCBLang.translate("gui.airtight_manometer").forGoggles(tooltip);
         CCBLang.translate("gui.airtight_manometer.max_pressure").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        if (!manometer.hasPressureReading()) {
+        if (!readout.hasReading()) {
             CCBLang.text("--").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
             CCBLang.translate("gui.gas_pipe.pressure_difference").style(ChatFormatting.GRAY).forGoggles(tooltip);
             CCBLang.text("--").style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
             return true;
         }
 
-        long maxPressurePa = manometer.getMaxPressurePa();
+        long maxPressurePa = readout.maxPressurePa();
         ChatFormatting pressureColor = GasPressureLimits.isOverpressure(maxPressurePa) ? ChatFormatting.RED : ChatFormatting.GOLD;
         CCBLang.text(GasPressure.formatAtm(maxPressurePa)).style(pressureColor).forGoggles(tooltip, 1);
         CCBLang.translate("gui.gas_pipe.pressure_difference").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.text(GasPressure.formatAtm(manometer.getPressureDifferencePa())).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+        CCBLang.text(GasPressure.formatAtm(readout.differencePa())).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         return true;
     }
 }

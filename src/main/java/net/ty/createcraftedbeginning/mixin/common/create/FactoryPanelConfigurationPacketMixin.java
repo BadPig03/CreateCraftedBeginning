@@ -29,17 +29,17 @@ public abstract class FactoryPanelConfigurationPacketMixin {
     private FactoryPanelPosition position;
 
     @Inject(method = "applySettings", at = @At("HEAD"))
-    private void ccb$applySettingsHead(ServerPlayer player, FactoryPanelBlockEntity blockEntity, CallbackInfo callback) {
+    private void ccb$applySettings$head(ServerPlayer player, FactoryPanelBlockEntity blockEntity, CallbackInfo callback) {
         GasFactoryGaugeConfiguration.sanitizeInputs(blockEntity, inputAmounts);
     }
 
     @ModifyExpressionValue(method = "applySettings", at = @At(value = "FIELD", target = "Lcom/simibubi/create/content/logistics/factoryBoard/FactoryPanelConfigurationPacket;outputAmount:I"))
-    private int ccb$applySettings(int outputAmount, ServerPlayer player, FactoryPanelBlockEntity blockEntity) {
+    private int ccb$applySettings$outputAmount(int outputAmount, ServerPlayer player, FactoryPanelBlockEntity blockEntity) {
         return GasFactoryGaugeConfiguration.getOutputAmount(blockEntity, position, outputAmount);
     }
 
     @Inject(method = "applySettings", at = @At("TAIL"))
-    private void ccb$applySettingsTail(ServerPlayer player, FactoryPanelBlockEntity blockEntity, CallbackInfo callback) {
+    private void ccb$applySettings$tail(ServerPlayer player, FactoryPanelBlockEntity blockEntity, CallbackInfo callback) {
         GasFactoryGaugeConfiguration.finish(blockEntity, position);
     }
 }

@@ -7,6 +7,7 @@ import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasStorageHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasTransferSnapshot;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.gas.transfer.GasPressureFillService;
@@ -60,6 +61,23 @@ public class GasTank implements GasStorageHandler, GasPressureCompartment {
 
     private static long getExcessAmount(GasTankLimits candidateLimits, GasStack contents) {
         return Math.max(0, contents.getAmount() - candidateLimits.maxAmount());
+    }
+
+    @Override
+    public GasTransferSnapshot captureTransferSnapshot() {
+        GasTankState state = snapshot();
+        return new GasTransferSnapshot() {
+            @Override
+            public void restore() {
+                limits = state.limits();
+                gas = state.contents();
+            }
+
+            @Override
+            public void afterRestore() {
+                onStateChanged();
+            }
+        };
     }
 
     @Override

@@ -134,8 +134,9 @@ public class GasFactoryGaugeBlock extends FactoryPanelBlock {
             return false;
         }
 
-        FactoryPanelBlockEntity blockEntity = getBlockEntity(context.getLevel(), context.getClickedPos());
-        PanelSlot targetedSlot = getTargetedSlot(context.getClickedPos(), state, context.getClickLocation());
+        BlockPos pos = context.getClickedPos();
+        FactoryPanelBlockEntity blockEntity = getBlockEntity(context.getLevel(), pos);
+        PanelSlot targetedSlot = getTargetedSlot(pos, state, context.getClickLocation());
         return blockEntity != null && !blockEntity.panels.get(targetedSlot).isActive();
     }
 

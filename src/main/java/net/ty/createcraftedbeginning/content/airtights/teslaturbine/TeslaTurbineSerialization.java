@@ -3,13 +3,16 @@ package net.ty.createcraftedbeginning.content.airtights.teslaturbine;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class TeslaTurbineSerialization {
-    private static final String COMPOUND_KEY_FLOW_METER = "FlowMeter";
+@Internal
+public final class TeslaTurbineSerialization {
+    @Internal
+    public static final String COMPOUND_KEY_FLOW_METER = "FlowMeter";
     private static final String COMPOUND_KEY_LEVEL_CALCULATOR = "LevelCalculator";
     private static final String COMPOUND_KEY_STRUCTURE_MANAGER = "StructureManager";
 

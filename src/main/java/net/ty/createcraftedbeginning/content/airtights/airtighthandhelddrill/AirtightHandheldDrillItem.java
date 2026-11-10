@@ -160,12 +160,7 @@ public class AirtightHandheldDrillItem extends PickaxeItem implements MenuProvid
 
     @Override
     public boolean mineBlock(ItemStack drill, Level level, BlockState state, BlockPos pos, LivingEntity miningEntity) {
-        if (!(miningEntity instanceof Player player) || !(level instanceof ServerLevel serverLevel)) {
-            return false;
-        }
-
-        AirtightHandheldDrillMining.mineAreaBlocks(drill, serverLevel, state, pos, player);
-        return true;
+        return miningEntity instanceof Player && level instanceof ServerLevel;
     }
 
     @Override

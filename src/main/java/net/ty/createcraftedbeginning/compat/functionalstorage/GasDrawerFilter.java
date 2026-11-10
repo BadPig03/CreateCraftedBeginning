@@ -12,6 +12,8 @@ import java.util.Arrays;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasDrawerFilter implements INBTSerializable<CompoundTag> {
+    static final String COMPOUND_KEY_FILTER = "gasFilter";
+
     private final GasStack[] filters;
 
     public GasDrawerFilter(int slots) {

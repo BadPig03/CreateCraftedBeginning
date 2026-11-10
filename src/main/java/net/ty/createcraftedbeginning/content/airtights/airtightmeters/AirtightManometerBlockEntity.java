@@ -9,8 +9,11 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.gas.telemetry.GasPressureTelemetryTarget;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.Pressure;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadoutSource;
 import net.ty.createcraftedbeginning.gas.visual.GasPressureDisplayScale;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
@@ -19,13 +22,13 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEntity implements GasPressureTelemetryTarget {
+public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEntity implements GasPressureTelemetryTarget, GasPipeReadoutSource {
     private static final float NEEDLE_MIN_ANGLE = -85;
     private static final float NEEDLE_MAX_ANGLE = 85;
     private static final long NO_PRESSURE_READING = -1;
     private static final long PRESSURE_DISPLAY_STEP_PA = GasPressure.REFERENCE_PRESSURE_PA / 100;
-    private static final String MIN_PRESSURE_KEY = "MeterMinPressure";
-    private static final String MAX_PRESSURE_KEY = "MeterMaxPressure";
+    private static final String COMPOUND_KEY_MIN_PRESSURE = "MeterMinPressure";
+    private static final String COMPOUND_KEY_MAX_PRESSURE = "MeterMaxPressure";
 
     private final AirtightManometerDisplay display;
     private long minPressurePa = NO_PRESSURE_READING;
@@ -63,6 +66,11 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
     }
 
     @Override
+    public Pressure getGasPipeReadout() {
+        return new Pressure(getMinPressurePa(), getMaxPressurePa());
+    }
+
+    @Override
     protected float getNeedleTargetAngle() {
         return Mth.lerp(getPressureProgress(), NEEDLE_MIN_ANGLE, NEEDLE_MAX_ANGLE);
     }
@@ -86,11 +94,16 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
         }
 
         boolean hadReading = hasPressureReading();
+        boolean wasOverpressure = GasPressureLimits.isOverpressure(this.maxPressurePa);
         long previousMinDisplay = pressureDisplayBucket(this.minPressurePa);
         long previousMaxDisplay = pressureDisplayBucket(this.maxPressurePa);
         long previousDifferenceDisplay = pressureDifferenceDisplayBucket(this.minPressurePa, this.maxPressurePa);
         this.minPressurePa = nextMinPressure;
         this.maxPressurePa = nextMaxPressure;
+        if (wasOverpressure != GasPressureLimits.isOverpressure(nextMaxPressure)) {
+            markTelemetryDirty(true);
+        }
+
         if (!(previousMinDisplay != pressureDisplayBucket(nextMinPressure) || previousMaxDisplay != pressureDisplayBucket(nextMaxPressure) || previousDifferenceDisplay != pressureDifferenceDisplayBucket(nextMinPressure, nextMaxPressure))) {
             return;
         }
@@ -117,8 +130,8 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
             return;
         }
 
-        compoundTag.putLong(MIN_PRESSURE_KEY, minPressurePa);
-        compoundTag.putLong(MAX_PRESSURE_KEY, maxPressurePa);
+        compoundTag.putLong(COMPOUND_KEY_MIN_PRESSURE, minPressurePa);
+        compoundTag.putLong(COMPOUND_KEY_MAX_PRESSURE, maxPressurePa);
     }
 
     @Override
@@ -128,8 +141,8 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
             return;
         }
 
-        long readMinPressure = NbtValues.getLongOrDefault(compoundTag, MIN_PRESSURE_KEY, NO_PRESSURE_READING);
-        long readMaxPressure = NbtValues.getLongOrDefault(compoundTag, MAX_PRESSURE_KEY, NO_PRESSURE_READING);
+        long readMinPressure = NbtValues.getLongOrDefault(compoundTag, COMPOUND_KEY_MIN_PRESSURE, NO_PRESSURE_READING);
+        long readMaxPressure = NbtValues.getLongOrDefault(compoundTag, COMPOUND_KEY_MAX_PRESSURE, NO_PRESSURE_READING);
         if (readMinPressure < GasPressure.VACUUM_PA || readMaxPressure < readMinPressure) {
             minPressurePa = NO_PRESSURE_READING;
             maxPressurePa = NO_PRESSURE_READING;

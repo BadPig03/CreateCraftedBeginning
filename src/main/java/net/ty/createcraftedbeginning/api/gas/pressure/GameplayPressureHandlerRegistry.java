@@ -44,7 +44,7 @@ public final class GameplayPressureHandlerRegistry<H> {
         }
 
         for (int i = requestedIndex; i >= 0; i--) {
-            H handler = getExact(gasType, orderedProfiles.get(i));
+            H handler = findExact(gasType, orderedProfiles.get(i));
             if (handler == null) {
                 continue;
             }
@@ -56,7 +56,7 @@ public final class GameplayPressureHandlerRegistry<H> {
 
     public boolean containsExact(Gas gasType, GameplayPressureProfile profile) {
         requireKnownProfile(profile);
-        return getExact(gasType, profile) != null;
+        return findExact(gasType, profile) != null;
     }
 
     public void register(Gas gasType, GameplayPressureProfile profile, H handler) {
@@ -68,8 +68,21 @@ public final class GameplayPressureHandlerRegistry<H> {
         handlers.computeIfAbsent(profile, ignored -> new IdentityHashMap<>()).put(gasType, handler);
     }
 
+    /** Replaces only an exact registration; a lower-profile fallback is not a target. */
+    public void replaceExact(Gas gasType, GameplayPressureProfile profile, H handler) {
+        requireKnownProfile(profile);
+        Map<Gas, H> profileHandlers = handlers.get(profile);
+        if (profileHandlers == null || !profileHandlers.containsKey(gasType)) {
+            throw new IllegalStateException("No gameplay pressure handler is registered for gas '" + gasType + "' and profile '" + profile.id() + "'.");
+        }
+
+        profileHandlers.put(gasType, handler);
+    }
+
+    /** Finds only the requested registration, without applying pressure fallback. */
     @Nullable
-    private H getExact(Gas gasType, GameplayPressureProfile profile) {
+    public H findExact(Gas gasType, GameplayPressureProfile profile) {
+        requireKnownProfile(profile);
         Map<Gas, H> profileHandlers = handlers.get(profile);
         if (profileHandlers == null) {
             return null;

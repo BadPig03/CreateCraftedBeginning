@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.gaspackager;
 
 import com.simibubi.create.api.packager.InventoryIdentifier;
+import com.simibubi.create.compat.computercraft.FallbackComputerBehaviour;
 import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
@@ -27,7 +28,6 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.advancement.GasPackagingAdvancements;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifiers;
-import net.ty.createcraftedbeginning.compat.computercraft.ComputerCraftPackagerCompat;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceBlockEntity;
 import net.ty.createcraftedbeginning.gas.behaviour.GasManipulationBehaviour;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
@@ -65,7 +65,8 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         behaviours.add(targetInventory);
 
         behaviours.add(new CCBAdvancementBehaviour(this, CCBAdvancements.ALVEOLI));
-        ComputerCraftPackagerCompat.addBehaviour(this, behaviours);
+        computerBehaviour = new FallbackComputerBehaviour(this);
+        behaviours.add(computerBehaviour);
     }
 
     @Override
@@ -167,6 +168,14 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         return new IdentifiedInventory(identifier, EMPTY_GAS_INVENTORY_HANDLER);
     }
 
+    void targetChanged(BlockPos neighborPos) {
+        if (gasInventory == null) {
+            return;
+        }
+
+        gasInventory.onNeighborChanged(neighborPos);
+    }
+
     @Nullable GasHandler gasHandlerForController() {
         if (gasInventory == null) {
             return null;
@@ -189,10 +198,6 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
         animationTicks = CYCLE;
     }
 
-    void emitGasPackageReceivedEvent(ItemStack box) {
-        ComputerCraftPackagerCompat.emitPackageReceived(this, box);
-    }
-
     void enqueueCreatedGasBalloon(ItemStack balloon) {
         if (balloon.isEmpty()) {
             return;
@@ -200,7 +205,6 @@ public class GasPackagerBlockEntity extends PackagerBlockEntity implements Clear
 
         getBehaviour(CCBAdvancementBehaviour.TYPE).awardPlayer(CCBAdvancements.ALVEOLI);
         GasPackagingAdvancements.onBalloonCreated();
-        ComputerCraftPackagerCompat.emitPackageCreated(this, balloon);
         if (!heldBox.isEmpty() || animationTicks != 0) {
             queuedExitingPackages.add(new BigItemStack(balloon, 1));
             return;

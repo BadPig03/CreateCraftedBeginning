@@ -31,85 +31,80 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerBlockEntity> {
-    private static final String COMPOUND_KEY_GOGGLES = "Goggles";
-    private static final String COMPOUND_KEY_TRAIN_HAT = "TrainHat";
+    static final float ACTIVE_MODEL_THRESHOLD = 0.125F;
 
     public BreezeCoolerRenderer(Context context) {
         super(context);
     }
 
     public static void renderShared(PoseStack poseStack, @Nullable PoseStack modelTransform, MultiBufferSource bufferSource, Level level, BlockState blockState, FrostLevel frostLevel, float animation, float horizontalAngle, boolean shouldDrawGoggles, @Nullable PartialModel hatModel, boolean shouldDrawWind, float windSpeed, int animationSeed, int light, @Nullable Matrix4f matrixWorld) {
+        boolean active = frostLevel.isAtLeast(FrostLevel.CHILLED);
         float renderTime = AnimationTickHolder.getRenderTime(level);
-        float headY = Mth.sin((renderTime + animationSeed % 13 * 16) / 16 % Mth.TWO_PI) / (frostLevel.isAtLeast(FrostLevel.CHILLED) ? 64 : 16) - animation * 0.75F;
+        float headY = Mth.sin((renderTime + animationSeed % 13 * 16) / 16 % Mth.TWO_PI) / (active ? 64 : 16) - animation * 0.75F;
 
         poseStack.pushPose();
-
-        PartialModel breezeModel = getBreezeModel(frostLevel, animation > 0.125F);
-        SuperByteBuffer breezeBuffer = CachedBuffers.partial(breezeModel, blockState);
-        if (modelTransform != null) {
-            breezeBuffer.transform(modelTransform);
-        }
-        breezeBuffer.translate(0, headY, 0);
-        breezeBuffer.rotateCentered(horizontalAngle, Direction.UP).light(light).renderInto(poseStack, bufferSource.getBuffer(RenderType.cutoutMipped()));
-        if (matrixWorld != null) {
-            breezeBuffer.useLevelLight(level, matrixWorld);
-        }
-
-        if (shouldDrawGoggles) {
-            SuperByteBuffer gogglesBuffer = CachedBuffers.partial(frostLevel.isAtLeast(FrostLevel.CHILLED) ? CCBPartialModels.BREEZE_COOLER_GOGGLES : CCBPartialModels.BREEZE_COOLER_GOGGLES_SMALL, blockState);
+        try {
+            PartialModel breezeModel = getBreezeModel(frostLevel, animation > ACTIVE_MODEL_THRESHOLD);
+            RenderType cutoutMipped = RenderType.cutoutMipped();
+            SuperByteBuffer breezeBuffer = CachedBuffers.partial(breezeModel, blockState);
             if (modelTransform != null) {
-                gogglesBuffer.transform(modelTransform);
+                breezeBuffer.transform(modelTransform);
             }
-            gogglesBuffer.translate(0, headY + 0.5, 0);
-            gogglesBuffer.rotateCentered(horizontalAngle, Direction.UP).light(light).renderInto(poseStack, bufferSource.getBuffer(RenderType.solid()));
-            if (matrixWorld != null) {
-                gogglesBuffer.useLevelLight(level, matrixWorld);
+            breezeBuffer.translate(0, headY, 0);
+            breezeBuffer.rotateCentered(horizontalAngle, Direction.UP);
+            renderBuffer(breezeBuffer, poseStack, bufferSource, cutoutMipped, level, light, matrixWorld);
+
+            if (shouldDrawGoggles) {
+                SuperByteBuffer gogglesBuffer = CachedBuffers.partial(active ? CCBPartialModels.BREEZE_COOLER_GOGGLES : CCBPartialModels.BREEZE_COOLER_GOGGLES_SMALL, blockState);
+                if (modelTransform != null) {
+                    gogglesBuffer.transform(modelTransform);
+                }
+                gogglesBuffer.translate(0, headY + 0.5, 0);
+                gogglesBuffer.rotateCentered(horizontalAngle, Direction.UP);
+                renderBuffer(gogglesBuffer, poseStack, bufferSource, RenderType.solid(), level, light, matrixWorld);
+            }
+
+            if (hatModel != null) {
+                SuperByteBuffer hatBuffer = CachedBuffers.partial(hatModel, blockState);
+                if (modelTransform != null) {
+                    hatBuffer.transform(modelTransform);
+                }
+                hatBuffer.translate(0, headY, 0);
+                if (breezeModel == CCBPartialModels.BREEZE_RIMING) {
+                    hatBuffer.translateY(0.5F).center().scale(0.75F).uncenter();
+                }
+                else {
+                    hatBuffer.translateY(0.75F);
+                }
+                hatBuffer.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5, 0, 0.5);
+                renderBuffer(hatBuffer, poseStack, bufferSource, cutoutMipped, level, light, matrixWorld);
+            }
+
+            if (shouldDrawWind) {
+                SuperByteBuffer windBuffer = CachedBuffers.partial(CCBPartialModels.BREEZE_COOLER_WIND, blockState);
+                if (modelTransform != null) {
+                    windBuffer.transform(modelTransform);
+                }
+                windBuffer.translate(0, headY, 0);
+                windBuffer.translate(0.5, 0.5, 0.5).rotateY(horizontalAngle + AngleHelper.rad(renderTime * windSpeed % 360)).translate(-0.5, -0.5, -0.5);
+                renderBuffer(windBuffer, poseStack, bufferSource, RenderType.cutout(), level, light, matrixWorld);
             }
         }
-
-        if (hatModel != null) {
-            SuperByteBuffer hatBuffer = CachedBuffers.partial(hatModel, blockState);
-            if (modelTransform != null) {
-                hatBuffer.transform(modelTransform);
-            }
-            hatBuffer.translate(0, headY, 0);
-            if (breezeModel == CCBPartialModels.BREEZE_RIMING) {
-                hatBuffer.translateY(0.5F).center().scale(0.75F).uncenter();
-            }
-            else {
-                hatBuffer.translateY(0.75F);
-            }
-            hatBuffer.rotateCentered(horizontalAngle + Mth.PI, Direction.UP).translate(0.5, 0, 0.5).light(light).renderInto(poseStack, bufferSource.getBuffer(RenderType.cutoutMipped()));
-            if (matrixWorld != null) {
-                hatBuffer.useLevelLight(level, matrixWorld);
-            }
+        finally {
+            poseStack.popPose();
         }
-
-        if (shouldDrawWind) {
-            SuperByteBuffer windBuffer = CachedBuffers.partial(CCBPartialModels.BREEZE_COOLER_WIND, blockState);
-            if (modelTransform != null) {
-                windBuffer.transform(modelTransform);
-            }
-            windBuffer.translate(0, headY, 0);
-            windBuffer.translate(0.5, 0.5, 0.5).rotateY(horizontalAngle + AngleHelper.rad(renderTime * windSpeed % 360)).translate(-0.5, -0.5, -0.5).light(light).renderInto(poseStack, bufferSource.getBuffer(RenderType.cutout()));
-            if (matrixWorld != null) {
-                windBuffer.useLevelLight(level, matrixWorld);
-            }
-        }
-
-        poseStack.popPose();
     }
 
     static void renderInContraption(MovementContext context, ContraptionMatrices matrices, MultiBufferSource bufferSource, LerpedFloat headAngle, boolean isConductor, VirtualRenderWorld renderWorld) {
         Level level = context.world;
-        boolean shouldDrawGoggles = NbtValues.getBooleanOrDefault(context.blockEntityData, COMPOUND_KEY_GOGGLES, false);
-        boolean shouldDrawHat = isConductor || NbtValues.getBooleanOrDefault(context.blockEntityData, COMPOUND_KEY_TRAIN_HAT, false);
+        boolean shouldDrawGoggles = NbtValues.getBooleanOrDefault(context.blockEntityData, BreezeCoolerSerialization.COMPOUND_KEY_GOGGLES, false);
+        boolean shouldDrawHat = isConductor || NbtValues.getBooleanOrDefault(context.blockEntityData, BreezeCoolerSerialization.COMPOUND_KEY_TRAIN_HAT, false);
         renderShared(matrices.getViewProjection(), matrices.getModel(), bufferSource, level, context.state, FrostLevel.CHILLED, 0, AngleHelper.rad(headAngle.getValue(AnimationTickHolder.getPartialTicks(level))), shouldDrawGoggles, shouldDrawHat ? CCBPartialModels.BREEZE_TRAIN_HAT : null, false, 0, context.hashCode(), LevelRenderer.getLightColor(renderWorld, context.localPos), matrices.getWorld());
     }
 
-    static PartialModel getBreezeModel(FrostLevel frostLevel, boolean hasBlockAbove) {
+    static PartialModel getBreezeModel(FrostLevel frostLevel, boolean useActiveModel) {
         if (frostLevel.isAtLeast(FrostLevel.CHILLED)) {
-            if (hasBlockAbove) {
+            if (useActiveModel) {
                 return CCBPartialModels.BREEZE_CHILLED_ACTIVE;
             }
 
@@ -117,6 +112,18 @@ public class BreezeCoolerRenderer extends SmartBlockEntityRenderer<BreezeCoolerB
         }
 
         return CCBPartialModels.BREEZE_RIMING;
+    }
+
+    private static void renderBuffer(SuperByteBuffer buffer, PoseStack poseStack, MultiBufferSource bufferSource, RenderType renderType, Level level, int light, @Nullable Matrix4f matrixWorld) {
+        try {
+            if (matrixWorld != null) {
+                buffer.useLevelLight(level, matrixWorld);
+            }
+            buffer.light(light).renderInto(poseStack, bufferSource.getBuffer(renderType));
+        }
+        finally {
+            buffer.reset();
+        }
     }
 
     @Override

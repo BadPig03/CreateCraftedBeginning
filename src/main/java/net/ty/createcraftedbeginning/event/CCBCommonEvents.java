@@ -8,7 +8,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.Unit;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -20,17 +19,14 @@ import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.compat.CCBCompatBootstrap;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressRecipeLookup;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressStructuralShaftBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerRecipeLookup;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillMenu;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.DrillMiningDirection;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.AirtightHandheldDrillMiningTemplates;
 import net.ty.createcraftedbeginning.content.airtights.airtighthatch.AirtightHatchBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlockEntity;
-import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleRecipeLookup;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.HorizontalAirtightTankBlockEntity;
@@ -52,12 +48,9 @@ import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.Port
 import net.ty.createcraftedbeginning.content.airtights.residueoutlet.ResidueOutletBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlockEntity;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberBlockEntity;
-import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberRecipeIndex;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockEntity;
 import net.ty.createcraftedbeginning.content.crates.CratesBlockEntity;
-import net.ty.createcraftedbeginning.recipe.GasInjectionRecipeLookup;
-import net.ty.createcraftedbeginning.recipe.ResidueRecipeLookup;
-import net.ty.createcraftedbeginning.recipe.trie.AirtightRecipeTrieFinder;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -106,20 +99,7 @@ public class CCBCommonEvents {
     @SubscribeEvent
     public static void onDatapackSync(OnDatapackSyncEvent event) {
         RecipeManager recipeManager = event.getPlayerList().getServer().getRecipeManager();
-        Player player = event.getPlayer();
-        if (player == null || !BreezeChamberRecipeIndex.isIndexed(recipeManager)) {
-            BreezeChamberRecipeIndex.rebuild(recipeManager);
-        }
-        if (player != null) {
-            return;
-        }
-
-        ResidueRecipeLookup.invalidateCaches();
-        GasInjectionRecipeLookup.invalidateRecipeCaches();
-        AirtightRecipeTrieFinder.invalidateCaches();
-        AirtightReactorKettleRecipeLookup.invalidateRecipeCaches();
-        AirtightForgingPressRecipeLookup.invalidateRecipeCaches();
-        AirtightFractionationTowerRecipeLookup.invalidateRecipeCaches();
+        CCBRecipeReloads.onDatapackSync(recipeManager, event.getPlayer() != null);
     }
 
     @SubscribeEvent

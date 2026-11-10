@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.api.packager.InventoryIdentifier.MultiFace;
 import com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour;
@@ -35,6 +36,11 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.gas.behaviour.OverpressureBehaviour;
 import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.gas.overpressure.PressureRuptureService;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadout;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadoutSource;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureReadoutSource;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips.Snapshot;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
@@ -47,7 +53,7 @@ import static net.ty.createcraftedbeginning.content.airtights.gasinjectionchambe
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, ThresholdSwitchObservable, GasInventoryIdentifierProvider {
+public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, ThresholdSwitchObservable, GasInventoryIdentifierProvider, GasStorageReadoutSource, OverpressureReadoutSource {
     static final int NOZZLE_TIME = 15;
     static final int NOZZLE_PART_TIME = 15;
     static final int NOZZLE_IDLE_TIME = 5;
@@ -80,6 +86,26 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(GasCapabilities.BLOCK, CCBBlockEntities.GAS_INJECTION_CHAMBER.get(), (blockEntity, direction) -> direction == Direction.UP ? blockEntity.exposedGasHandler : null);
+    }
+
+    @Override
+    public @Nullable Snapshot getOverpressureReadout() {
+        OverpressureBehaviour overpressure = BlockEntityBehaviour.get(this, OverpressureBehaviour.TYPE);
+        if (overpressure == null) {
+            return null;
+        }
+
+        SmartGasTankBehaviour tank = BlockEntityBehaviour.get(this, SmartGasTankBehaviour.TYPE);
+        if (tank == null) {
+            return null;
+        }
+
+        return OverpressureTooltips.snapshot(overpressure, tank.getCapability());
+    }
+
+    @Override
+    public GasStorageReadout getGasStorageReadout() {
+        return GasStorageReadout.PRESSURE_ONLY;
     }
 
     @Override
@@ -143,6 +169,11 @@ public class GasInjectionChamberBlockEntity extends SmartBlockEntity implements 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         return display.addToGoggleTooltip(tooltip);
+    }
+
+    @Override
+    public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        return display.addToTooltip(tooltip);
     }
 
     @Override

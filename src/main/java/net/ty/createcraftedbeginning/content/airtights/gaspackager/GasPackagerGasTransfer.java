@@ -21,17 +21,21 @@ final class GasPackagerGasTransfer {
     private GasPackagerGasTransfer() {
     }
 
-    static GasStack drainGas(GasHandler handler, long maxAmount) {
+    static GasStack simulateGasForPackaging(GasHandler handler, long maxAmount, List<GasStack> excludedGasTypes) {
         if (maxAmount <= 0) {
             return GasStack.EMPTY;
         }
 
         GasStack selectedGas = GasStack.EMPTY;
-        long drainedAmount = 0;
+        long availableAmount = 0;
         int tankCount = Math.max(0, handler.getTanks());
-        for (int tankIndex = 0; tankIndex < tankCount && drainedAmount < maxAmount; tankIndex++) {
+        for (int tankIndex = 0; tankIndex < tankCount && availableAmount < maxAmount; tankIndex++) {
             GasStack tankGas = handler.getGasInTank(tankIndex);
             if (tankGas.isEmpty()) {
+                continue;
+            }
+
+            if (excludedGasTypes.stream().anyMatch(excludedGas -> GasStack.isSameGasSameComponents(excludedGas, tankGas))) {
                 continue;
             }
 
@@ -45,29 +49,24 @@ final class GasPackagerGasTransfer {
             }
 
             GasPressureTransferEndpoint source = endpoint.get();
-            long remainingAmount = maxAmount - drainedAmount;
+            long remainingAmount = maxAmount - availableAmount;
             long requestedAmount = Math.min(remainingAmount, tankGas.getAmount());
             long simulatedAmount = source.simulateDrainAmount(tankGas, requestedAmount);
             if (simulatedAmount <= 0) {
                 continue;
             }
 
-            GasStack drainedGas = source.executeDrain(tankGas, Math.min(requestedAmount, simulatedAmount));
-            if (drainedGas.isEmpty() || !GasStack.isSameGasSameComponents(drainedGas, tankGas)) {
-                continue;
-            }
-
             if (selectedGas.isEmpty()) {
-                selectedGas = drainedGas.copyWithAmount(1);
+                selectedGas = tankGas.copyWithAmount(1);
             }
-            drainedAmount = BoundedMath.saturatedAdd(drainedAmount, drainedGas.getAmount());
+            availableAmount = BoundedMath.saturatedAdd(availableAmount, Math.min(requestedAmount, simulatedAmount));
         }
 
-        if (selectedGas.isEmpty() || drainedAmount <= 0) {
+        if (selectedGas.isEmpty() || availableAmount <= 0) {
             return GasStack.EMPTY;
         }
 
-        return selectedGas.copyWithAmount(Math.min(maxAmount, drainedAmount));
+        return selectedGas.copyWithAmount(Math.min(maxAmount, availableAmount));
     }
 
     static GasStack drainGasForPackaging(GasHandler handler, GasStack requestedGas, long maxAmount) {

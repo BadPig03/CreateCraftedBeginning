@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_amethyst_crystal_sheet": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "#c:plates/amethyst_crystal"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "createcraftedbeginning:crafting/opticalpower/amethyst_concave_lens"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_amethyst_crystal_sheet",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "createcraftedbeginning:crafting/opticalpower/amethyst_concave_lens"
+    ]
+  }
+}

@@ -37,7 +37,7 @@ public class AirtightMeterScenes {
         BlockPos eastTankBottomPos = meterPos.east(2);
         BlockPos invalidPipePos = meterPos.south();
         BlockPos comparatorPos = meterPos.north();
-        BlockPos nearRedstonePos = comparatorPos.north();
+        BlockPos nearRedstonePos = meterPos.north(2);
         BlockPos displayLinkPos = meterPos.above();
 
         Selection westTankSelection = util.select().fromTo(westTankBottomPos, westTankBottomPos.above());
@@ -52,6 +52,9 @@ public class AirtightMeterScenes {
         Vec3 invalidPipeVec = util.vector().centerOf(invalidPipePos);
         Vec3 westFlowVec = util.vector().blockSurface(westTankBottomPos, Direction.EAST);
         Vec3 eastFlowVec = util.vector().blockSurface(eastTankBottomPos, Direction.WEST);
+        Vec3 meterTopVec = util.vector().topOf(meterPos);
+        Vec3 comparatorVec = util.vector().centerOf(comparatorPos);
+        Vec3 displayLinkVec = util.vector().centerOf(displayLinkPos);
 
         AABB invalidPipeArea = new AABB(invalidPipeVec, invalidPipeVec);
         AABB westFlowArea = new AABB(westFlowVec, westFlowVec);
@@ -79,6 +82,8 @@ public class AirtightMeterScenes {
 
         scene.idle(20);
         scene.world().showSection(invalidPipeSelection, Direction.NORTH);
+
+        scene.idle(20);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, invalidPipeObject, invalidPipeArea, 3);
 
         scene.idle(3);
@@ -97,7 +102,7 @@ public class AirtightMeterScenes {
 
         scene.idle(3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, westFlowObject, westFlowArea.inflate(0, 0.3125, 0.3125).expandTowards(1.5, 0, 0), 60);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, eastFlowObject, eastFlowArea.inflate(0, 0.3125, 0.3125).expandTowards(1.5, 0, 0), 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, eastFlowObject, eastFlowArea.inflate(0, 0.3125, 0.3125).expandTowards(-1.5, 0, 0), 60);
 
         scene.idle(80);
         scene.overlay().showText(60).text("Its needle follows the highest pressure at the meter").pointAt(meterVec).placeNearTarget().attachKeyFrame();
@@ -106,7 +111,7 @@ public class AirtightMeterScenes {
         scene.world().modifyBlockEntity(meterPos, AirtightManometerBlockEntity.class, manometer -> manometer.acceptPressureTelemetry(minimumPressurePa, raisedMaximumPressurePa));
 
         scene.idle(60);
-        scene.overlay().showControls(util.vector().topOf(meterPos), Pointing.DOWN, 60).withItem(gogglesItem.copy());
+        scene.overlay().showControls(meterTopVec, Pointing.DOWN, 60).withItem(gogglesItem.copy());
         scene.overlay().showText(60).text("Engineer's Goggles show the exact Maximum Pressure and Pressure Difference").colored(PonderPalette.BLUE).pointAt(meterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
@@ -114,18 +119,16 @@ public class AirtightMeterScenes {
         scene.world().showSection(redstoneSelection, Direction.SOUTH);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Comparators convert Maximum Pressure into a Redstone Signal from 0 to 15").colored(PonderPalette.BLUE).pointAt(util.vector().centerOf(comparatorPos)).placeNearTarget().attachKeyFrame();
-
-        scene.idle(20);
+        scene.overlay().showText(60).text("Comparators convert Maximum Pressure into a Redstone Signal from 0 to 15").colored(PonderPalette.BLUE).pointAt(comparatorVec).placeNearTarget().attachKeyFrame();
         scene.world().toggleRedstonePower(comparatorSelection);
         scene.world().modifyBlock(nearRedstonePos, state -> state.setValue(RedStoneWireBlock.POWER, comparatorSignal), false);
         scene.effects().indicateRedstone(comparatorPos);
 
-        scene.idle(60);
+        scene.idle(80);
         scene.world().showSection(displayLinkSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Display Links can report either Maximum Pressure or Pressure Difference").colored(PonderPalette.BLUE).pointAt(util.vector().centerOf(displayLinkPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Display Links can report either Maximum Pressure or Pressure Difference").colored(PonderPalette.BLUE).pointAt(displayLinkVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();
@@ -145,7 +148,7 @@ public class AirtightMeterScenes {
         BlockPos eastTankBottomPos = meterPos.east(2);
         BlockPos invalidPipePos = meterPos.south();
         BlockPos comparatorPos = meterPos.north();
-        BlockPos nearRedstonePos = comparatorPos.north();
+        BlockPos nearRedstonePos = meterPos.north(2);
         BlockPos displayLinkPos = meterPos.above();
 
         Selection westTankSelection = util.select().fromTo(westTankBottomPos, westTankBottomPos.above());
@@ -160,6 +163,9 @@ public class AirtightMeterScenes {
         Vec3 invalidPipeVec = util.vector().centerOf(invalidPipePos);
         Vec3 westFlowVec = util.vector().blockSurface(westTankBottomPos, Direction.EAST);
         Vec3 eastFlowVec = util.vector().blockSurface(eastTankBottomPos, Direction.WEST);
+        Vec3 meterTopVec = util.vector().topOf(meterPos);
+        Vec3 comparatorVec = util.vector().centerOf(comparatorPos);
+        Vec3 displayLinkVec = util.vector().centerOf(displayLinkPos);
 
         AABB invalidPipeArea = new AABB(invalidPipeVec, invalidPipeVec);
         AABB westFlowArea = new AABB(westFlowVec, westFlowVec);
@@ -185,6 +191,8 @@ public class AirtightMeterScenes {
 
         scene.idle(20);
         scene.world().showSection(invalidPipeSelection, Direction.NORTH);
+
+        scene.idle(20);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, invalidPipeObject, invalidPipeArea, 3);
 
         scene.idle(3);
@@ -203,7 +211,7 @@ public class AirtightMeterScenes {
 
         scene.idle(3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, westFlowObject, westFlowArea.inflate(0, 0.3125, 0.3125).expandTowards(1.5, 0, 0), 60);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, eastFlowObject, eastFlowArea.inflate(0, 0.3125, 0.3125).expandTowards(1.5, 0, 0), 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, eastFlowObject, eastFlowArea.inflate(0, 0.3125, 0.3125).expandTowards(-1.5, 0, 0), 60);
 
         scene.idle(80);
         scene.overlay().showText(60).text("Flow Rate is measured by magnitude, regardless of direction").pointAt(meterVec).placeNearTarget().attachKeyFrame();
@@ -212,7 +220,7 @@ public class AirtightMeterScenes {
         scene.world().modifyBlockEntity(meterPos, AirtightFlowmeterBlockEntity.class, flowmeter -> flowmeter.acceptFlowTelemetry(demonstrationFlowRate));
 
         scene.idle(60);
-        scene.overlay().showControls(util.vector().topOf(meterPos), Pointing.DOWN, 60).withItem(gogglesItem.copy());
+        scene.overlay().showControls(meterTopVec, Pointing.DOWN, 60).withItem(gogglesItem.copy());
         scene.overlay().showText(60).text("Engineer's Goggles show the exact Flow Rate in GU/t").colored(PonderPalette.BLUE).pointAt(meterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
@@ -220,18 +228,16 @@ public class AirtightMeterScenes {
         scene.world().showSection(redstoneSelection, Direction.SOUTH);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Comparators convert Flow Rate into a Redstone Signal from 0 to 15").colored(PonderPalette.BLUE).pointAt(util.vector().centerOf(comparatorPos)).placeNearTarget().attachKeyFrame();
-
-        scene.idle(20);
+        scene.overlay().showText(60).text("Comparators convert Flow Rate into a Redstone Signal from 0 to 15").colored(PonderPalette.BLUE).pointAt(comparatorVec).placeNearTarget().attachKeyFrame();
         scene.world().toggleRedstonePower(comparatorSelection);
         scene.world().modifyBlock(nearRedstonePos, state -> state.setValue(RedStoneWireBlock.POWER, comparatorSignal), false);
         scene.effects().indicateRedstone(comparatorPos);
 
-        scene.idle(60);
+        scene.idle(80);
         scene.world().showSection(displayLinkSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Display Links can report the exact Flow Rate numerically").colored(PonderPalette.BLUE).pointAt(util.vector().centerOf(displayLinkPos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Display Links can report the exact Flow Rate numerically").colored(PonderPalette.BLUE).pointAt(displayLinkVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();

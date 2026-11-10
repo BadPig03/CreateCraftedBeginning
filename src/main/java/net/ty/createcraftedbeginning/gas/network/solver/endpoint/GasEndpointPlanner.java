@@ -29,7 +29,6 @@ import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPress
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.TransferAccess;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.TransferLimits;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferExecutor;
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -56,8 +55,7 @@ public final class GasEndpointPlanner {
         return prepare(GasEndpointDiscovery.discover(level, topology));
     }
 
-    @Internal
-    public static GasEndpointPlanner prepare(DiscoveredEndpoints discovered) {
+    static GasEndpointPlanner prepare(DiscoveredEndpoints discovered) {
         return new GasEndpointPlanner(groupStorageEndpoints(discovered.storageAccesses()), groupPressureBoundaries(discovered.pressureBoundaryAccesses()), discovered.atmosphericAccesses());
     }
 
@@ -162,9 +160,13 @@ public final class GasEndpointPlanner {
     }
 
     public @Unmodifiable List<GasNetworkPressureEndpoint> planPressureEndpoints(Level level, GasStack gas) {
+        return planPressureEndpoints(level, gas, false);
+    }
+
+    public @Unmodifiable List<GasNetworkPressureEndpoint> planPressureEndpoints(Level level, GasStack gas, boolean includeInactive) {
         List<GasNetworkPressureEndpoint> endpoints = new ArrayList<>();
         for (StorageEndpointGroup endpoint : storageEndpoints) {
-            GasNetworkPressureEndpoint pressureEndpoint = endpoint.createPressureEndpoint(level, gas);
+            GasNetworkPressureEndpoint pressureEndpoint = endpoint.createPressureEndpoint(level, gas, includeInactive);
             if (pressureEndpoint == null) {
                 continue;
             }
@@ -237,7 +239,7 @@ public final class GasEndpointPlanner {
         }
 
         @Nullable
-        private GasNetworkPressureEndpoint createPressureEndpoint(Level level, GasStack gas) {
+        private GasNetworkPressureEndpoint createPressureEndpoint(Level level, GasStack gas, boolean includeInactive) {
             List<StorageAccess> usableAccesses = new ArrayList<>();
             for (StorageAccess access : accesses) {
                 BlockFace pipeFace = access.pipeFace();
@@ -300,13 +302,13 @@ public final class GasEndpointPlanner {
                 bestFillAccess = access;
             }
 
-            if (drainFaces.isEmpty() && fillFaces.isEmpty()) {
+            if (!includeInactive && drainFaces.isEmpty() && fillFaces.isEmpty()) {
                 return null;
             }
 
             StorageAccess physicalAccess = bestDrainAccess != null ? bestDrainAccess : bestFillAccess;
             if (physicalAccess == null) {
-                return null;
+                physicalAccess = usableAccesses.getFirst();
             }
 
             physicalCompartment = physicalAccess.compartment();

@@ -316,6 +316,11 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
                     continue;
                 }
 
+                Direction candidateFacing = port.getOutwardDirection(axis);
+                if (TeslaTurbineNozzleBlock.isInvalidPlacement(level, candidateFacing.getOpposite(), candidatePos)) {
+                    continue;
+                }
+
                 double distanceSqr = candidatePos.distToCenterSqr(hitLocation);
                 if (!(distanceSqr < nearestDistanceSqr)) {
                     continue;
@@ -330,10 +335,6 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
             }
 
             Direction nozzleFacing = nearestPort.getOutwardDirection(axis);
-            if (TeslaTurbineNozzleBlock.isInvalidPlacement(level, nozzleFacing.getOpposite(), nearestNozzlePos)) {
-                return PlacementOffset.fail();
-            }
-
             boolean isClockwise = nearestPort.clockwise();
             return PlacementOffset.success(nearestNozzlePos, ignoredState -> CCBBlocks.TESLA_TURBINE_NOZZLE_BLOCK.get().defaultBlockState().setValue(TeslaTurbineNozzleBlock.FACING, nozzleFacing).setValue(TeslaTurbineNozzleBlock.CLOCKWISE, isClockwise));
         }

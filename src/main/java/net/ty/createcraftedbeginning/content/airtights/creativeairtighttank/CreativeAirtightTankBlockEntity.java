@@ -22,6 +22,9 @@ import net.ty.createcraftedbeginning.content.airtights.airtighttank.AbstractAirt
 import net.ty.createcraftedbeginning.content.airtights.airtighttank.ChamberGasTank;
 import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockPart;
 import net.ty.createcraftedbeginning.gas.storage.CreativeGasReservoir;
+import net.ty.createcraftedbeginning.gas.visual.CreativeGasContainer;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadout;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadoutSource;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +33,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEntity implements IHaveGoggleInformation, ChamberGasTank, CreativeGasContainer, ThresholdSwitchObservable {
+public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEntity implements IHaveGoggleInformation, ChamberGasTank, CreativeGasContainer, ThresholdSwitchObservable, GasStorageReadoutSource {
     private final CreativeAirtightTankStorageController storageController;
     private final CreativeAirtightTankDisplay display;
     private final CreativeAirtightTankSerialization serialization;
@@ -50,6 +53,11 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
 
     static long getVolumePerBlock() {
         return Integer.MAX_VALUE * GasUnits.LITERS_PER_KILOLITER;
+    }
+
+    @Override
+    public GasStorageReadout getGasStorageReadout() {
+        return GasStorageReadout.PRESSURE_ONLY;
     }
 
     @Override
@@ -143,6 +151,12 @@ public class CreativeAirtightTankBlockEntity extends AbstractAirtightTankBlockEn
     @Override
     public void mergeTankStateFrom(GasTankMultiblockPart source) {
         storageController.mergeTankStateFrom(source);
+    }
+
+    @Override
+    @Nullable
+    public Object mergeExtraData(@Nullable Object data, GasTankMultiblockPart source) {
+        return storageController.mergeExtraData(data, source);
     }
 
     @Override

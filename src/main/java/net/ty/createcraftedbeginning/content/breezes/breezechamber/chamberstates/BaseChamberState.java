@@ -14,14 +14,17 @@ import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipeLookup.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class BaseChamberState {
-    private static final String COMPOUND_KEY_REMAINING_TIME = "RemainingTime";
-    private static final String COMPOUND_KEY_IS_CREATIVE = "isCreative";
+    @Internal
+    public static final String COMPOUND_KEY_REMAINING_TIME = "RemainingTime";
+    @Internal
+    public static final String COMPOUND_KEY_IS_CREATIVE = "isCreative";
 
     protected final boolean isCreative;
 
@@ -109,11 +112,12 @@ public abstract class BaseChamberState {
             return InteractionResult.FAIL;
         }
 
-        if (isCreative && chargingData.action() != WindChargingAction.CYCLE_CREATIVE) {
+        WindChargingAction action = chargingData.action();
+        if (isCreative && action != WindChargingAction.CYCLE_CREATIVE) {
             return InteractionResult.PASS;
         }
 
-        return switch (chargingData.action()) {
+        return switch (action) {
             case CHARGE -> insertCharge(chamber, stack, chargingData.time(), forceOverflow, simulate);
             case CLEAR_ILL -> clearIll(chamber, stack, simulate);
             case CYCLE_CREATIVE -> {

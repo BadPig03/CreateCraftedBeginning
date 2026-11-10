@@ -1,16 +1,19 @@
 package net.ty.createcraftedbeginning.content.crates.sturdycrate;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.ChatFormatting;
+import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Containers;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -19,11 +22,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootParams.Builder;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.HitResult;
-import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.ty.createcraftedbeginning.content.crates.CrateBlock;
-import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
-import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -89,20 +91,49 @@ public class SturdyCrateBlock extends CrateBlock<SturdyCrateBlockEntity> {
     }
 
     @Override
-    public void appendHoverText(ItemStack crateStack, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
-        SturdyCrateContents storedContents = crateStack.getOrDefault(CCBDataComponents.STURDY_CRATE_CONTENTS, SturdyCrateContents.empty());
-        ItemStack storedItem = storedContents.content();
-        int storedCount = storedContents.count();
-        if (!storedItem.isEmpty()) {
-            tooltips.add(CCBLang.translate("gui.sturdy_crate.item").add(CCBLang.itemName(storedItem)).style(ChatFormatting.GRAY).component());
+    public InteractionResult onSneakWrenched(BlockState state, UseOnContext context) {
+        Player player = context.getPlayer();
+        if (player == null || !player.isCreative()) {
+            return super.onSneakWrenched(state, context);
         }
 
-        tooltips.add(CCBLang.translate("gui.sturdy_crate.capacity").style(ChatFormatting.GRAY).add(CCBLang.number(storedCount).style(ChatFormatting.GOLD)).add(CCBLang.text(" / ").style(ChatFormatting.GRAY)).add(CCBLang.number(CCBConfig.server().storage.sturdyCrate.itemCapacity.get()).style(ChatFormatting.DARK_GRAY)).component());
+        Level level = context.getLevel();
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return InteractionResult.SUCCESS;
+        }
+
+        BlockPos pos = context.getClickedPos();
+        BreakEvent breakEvent = new BreakEvent(level, pos, state, player);
+        NeoForge.EVENT_BUS.post(breakEvent);
+        if (breakEvent.isCanceled() || level.getBlockState(pos) != state) {
+            return InteractionResult.SUCCESS;
+        }
+
+        ItemStack crateItem = ItemStack.EMPTY;
+        if (level.getBlockEntity(pos) instanceof SturdyCrateBlockEntity crate && crate.hasStoredData()) {
+            crateItem = new ItemStack(this);
+            crate.saveToItem(crateItem);
+        }
+        state.spawnAfterBreak(serverLevel, pos, ItemStack.EMPTY, true);
+        if (!level.destroyBlock(pos, false)) {
+            return InteractionResult.SUCCESS;
+        }
+
+        if (!crateItem.isEmpty()) {
+            player.getInventory().placeItemBackInInventory(crateItem);
+        }
+        IWrenchable.playRemoveSound(level, pos);
+        return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    public void appendHoverText(ItemStack crateStack, TooltipContext context, List<Component> tooltips, TooltipFlag flag) {
+        SturdyCrateTooltip.append(crateStack, tooltips);
     }
 
     @Override
     public List<ItemStack> getDrops(BlockState state, Builder params) {
-        if (!(params.getParameter(LootContextParams.BLOCK_ENTITY) instanceof SturdyCrateBlockEntity crate)) {
+        if (!(params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof SturdyCrateBlockEntity crate)) {
             return super.getDrops(state, params);
         }
 

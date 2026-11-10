@@ -29,13 +29,12 @@ public class AirtightCheckValveScenes {
 
         BlockPos encasedPipePos = util.grid().at(5, 1, 5);
         BlockPos secondPipePos = encasedPipePos.north();
-        BlockPos middlePipePos = secondPipePos.north();
-        BlockPos firstPipePos = middlePipePos.north();
-        BlockPos firstTankPos = firstPipePos.north();
+        BlockPos firstPipePos = encasedPipePos.north(3);
+        BlockPos firstTankPos = encasedPipePos.north(4);
         BlockPos thirdPipePos = encasedPipePos.west();
-        BlockPos valvePos = thirdPipePos.west();
-        BlockPos fourthPipePos = valvePos.west();
-        BlockPos secondTankPos = fourthPipePos.west();
+        BlockPos valvePos = encasedPipePos.west(2);
+        BlockPos fourthPipePos = encasedPipePos.west(3);
+        BlockPos secondTankPos = encasedPipePos.west(4);
 
         Selection firstTankSelection = util.select().fromTo(firstTankPos, firstTankPos.above());
         Selection secondTankSelection = util.select().fromTo(secondTankPos, secondTankPos.above());
@@ -45,6 +44,7 @@ public class AirtightCheckValveScenes {
 
         Vec3 valveVec = util.vector().centerOf(valvePos);
         Vec3 encasedVec = util.vector().centerOf(encasedPipePos);
+        Vec3 valveTopVec = util.vector().topOf(valvePos);
 
         AABB connectionArea = new AABB(valveVec, valveVec).inflate(0.3125);
         AABB blockedArea = new AABB(encasedVec, encasedVec);
@@ -104,7 +104,7 @@ public class AirtightCheckValveScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, reversedOutputConnectionObject, connectionArea.move(0.5, 0, 0), 7);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, reversedInputConnectionObject, connectionArea.move(-0.5, 0, 0), 7);
         scene.overlay().showText(60).text("Use a Wrench to swap the input and output sides").colored(PonderPalette.BLUE).pointAt(valveVec).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(util.vector().topOf(valvePos), Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
+        scene.overlay().showControls(valveTopVec, Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);
         scene.world().modifyBlock(valvePos, state -> state.setValue(AirtightCheckValveBlock.INVERTED, false), false);

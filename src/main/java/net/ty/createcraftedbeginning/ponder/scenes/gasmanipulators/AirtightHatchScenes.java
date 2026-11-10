@@ -28,6 +28,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightHatchScenes {
+    private static final String COMPOUND_KEY_HELD_ITEM = "HeldItem";
+
     public static void exchange(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
@@ -48,6 +50,7 @@ public class AirtightHatchScenes {
         Vec3 tankTopFaceVec = util.vector().topOf(tankTopPos);
         Vec3 tankNorthFaceVec = util.vector().blockSurface(tankPos, Direction.NORTH);
         Vec3 targetPressurePanelVec = hatchVec.add(0.21875, 0, 0.1875);
+        Vec3 hatchNorthScrollVec = util.vector().blockSurface(hatchPos, Direction.NORTH).add(0, 0, 0.325);
 
         AABB invalidTopArea = new AABB(tankTopFaceVec, tankTopFaceVec);
         AABB validSideArea = new AABB(tankNorthFaceVec, tankNorthFaceVec);
@@ -69,7 +72,7 @@ public class AirtightHatchScenes {
         scene.idle(3);
         scene.world().showSection(hatchSelection, Direction.SOUTH);
 
-        scene.idle(15);
+        scene.idle(20);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, invalidTopObject, invalidTopArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, validSideObject, validSideArea, 3);
 
@@ -83,7 +86,7 @@ public class AirtightHatchScenes {
         scene.idle(80);
         scene.overlay().showText(60).text("Airtight Hatches can attach to compatible side faces instead").colored(PonderPalette.GREEN).pointAt(tankNorthFaceVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(73);
+        scene.idle(80);
         scene.overlay().showText(60).text("Right-click the hatch with a compatible Gas Canister to insert it").colored(PonderPalette.BLUE).pointAt(hatchVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(hatchTopVec, Pointing.DOWN, 60).rightClick().withItem(gasCanisterItem.copy());
 
@@ -140,7 +143,7 @@ public class AirtightHatchScenes {
         scene.overlay().showText(60).text("\"Target Pressure\" automatically fills or drains a normal canister toward a selected pressure").colored(PonderPalette.GREEN).pointAt(hatchVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showScrollInput(util.vector().blockSurface(hatchPos, Direction.NORTH).add(0, 0, 0.325), Direction.NORTH, 60);
+        scene.overlay().showScrollInput(hatchNorthScrollVec, Direction.NORTH, 60);
         scene.overlay().showControls(targetPressurePanelVec, Pointing.RIGHT, 60).scroll();
         scene.overlay().showText(60).text("With \"Target Pressure\" selected, scroll an exposed side panel to set the pressure").colored(PonderPalette.BLUE).pointAt(targetPressurePanelVec).placeNearTarget().attachKeyFrame();
 
@@ -161,12 +164,12 @@ public class AirtightHatchScenes {
 
         BlockPos tankPos = util.grid().at(3, 1, 3);
         BlockPos hatchPos = tankPos.north();
-        BlockPos armPos = hatchPos.west(2).south();
-        BlockPos armCogPos = hatchPos.west(3);
-        BlockPos armMotorPos = armCogPos.above();
-        BlockPos newArmPos = armPos.north(2);
-        BlockPos deployerPos = hatchPos.east(2);
-        BlockPos deployerMotorPos = deployerPos.north();
+        BlockPos armPos = tankPos.west(2);
+        BlockPos armCogPos = tankPos.west(3).north();
+        BlockPos armMotorPos = tankPos.west(3).above().north();
+        BlockPos newArmPos = tankPos.west(2).north(2);
+        BlockPos deployerPos = tankPos.east(2).north();
+        BlockPos deployerMotorPos = tankPos.east(2).north(2);
 
         Selection tankSelection = util.select().fromTo(tankPos, tankPos.above());
         Selection hatchSelection = util.select().position(hatchPos);
@@ -182,6 +185,7 @@ public class AirtightHatchScenes {
         Vec3 hatchTopVec = util.vector().topOf(hatchPos);
         Vec3 armVec = util.vector().centerOf(armPos);
         Vec3 newArmVec = util.vector().centerOf(newArmPos);
+        Vec3 deployerVec = util.vector().centerOf(deployerPos);
 
         ItemStack wrenchItem = new ItemStack(AllItems.WRENCH.asItem());
         ItemStack gasCanisterItem = new ItemStack(CCBItems.GAS_CANISTER.asItem());
@@ -245,20 +249,22 @@ public class AirtightHatchScenes {
         scene.idle(15);
         scene.world().setKineticSpeed(deployerMotorSelection, mediumSpeed);
         scene.world().setKineticSpeed(deployerSelection, mediumSpeed);
-        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", gasCanisterItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
-        scene.overlay().showText(60).text("Deployers can insert canisters, or remove them while holding a Wrench").colored(PonderPalette.BLUE).pointAt(util.vector().centerOf(deployerPos)).placeNearTarget().attachKeyFrame();
+
+        scene.idle(5);
+        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put(COMPOUND_KEY_HELD_ITEM, gasCanisterItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
+        scene.overlay().showText(60).text("Deployers can insert canisters, or remove them while holding a Wrench").colored(PonderPalette.BLUE).pointAt(deployerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(20);
         scene.world().moveDeployer(deployerPos, 1, 20);
 
         scene.idle(21);
-        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", ItemStack.EMPTY.saveOptional(scene.world().getHolderLookupProvider())));
+        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put(COMPOUND_KEY_HELD_ITEM, ItemStack.EMPTY.saveOptional(scene.world().getHolderLookupProvider())));
         scene.world().modifyBlock(hatchPos, state -> state.setValue(AirtightHatchBlock.CANISTER_TYPE, CanisterType.NORMAL), false);
         scene.effects().indicateSuccess(hatchPos);
         scene.world().moveDeployer(deployerPos, -1, 20);
 
         scene.idle(21);
-        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", wrenchItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
+        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put(COMPOUND_KEY_HELD_ITEM, wrenchItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
         scene.world().moveDeployer(deployerPos, 1, 20);
 
         scene.idle(21);

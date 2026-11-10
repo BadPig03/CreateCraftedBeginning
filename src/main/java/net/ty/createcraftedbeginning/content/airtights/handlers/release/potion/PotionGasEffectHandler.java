@@ -82,7 +82,7 @@ public final class PotionGasEffectHandler implements GasReleaseHandler {
             return;
         }
 
-        List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, context.effectBounds(), entity -> entity.isAlive() && !entity.isSpectator() && entity.isAffectedByPotions());
+        List<LivingEntity> targets = context.findEntities(LivingEntity.class, entity -> entity.isAlive() && !entity.isSpectator() && entity.isAffectedByPotions());
         if (source.getEffect().value().isInstantenous()) {
             applyInstantEffects(level, targets, source);
             return;

@@ -67,12 +67,29 @@ public interface GasPressureCompartment extends GasHandler {
     long getStoredAmount();
 
     /**
+     * Compartments whose permissions depend on each other's inventory share this
+     * identity across every access view. Independent compartments use their own identity.
+     */
+    default Object getPredictionGroup() {
+        return getCompartmentIdentity();
+    }
+
+    /**
      * Predicts transfer permissions and limits after this compartment contains the given
      * amount of gas, without changing live storage. Return null when that state cannot
      * be predicted reliably; zero limits mean a known, blocked direction.
      */
     default @Nullable PredictedTransferLimits predictTransferLimits(GasStack gas, long storedAmount) {
         return null;
+    }
+
+    /**
+     * Predicts this access view against a shared candidate inventory, including
+     * related slots. Unknown permissions remain null; implementations must not
+     * mutate live storage. The local prediction contract remains available separately.
+     */
+    default @Nullable PredictedTransferLimits predictTransferLimits(GasStack gas, GasPressurePrediction prediction) {
+        return predictTransferLimits(gas, prediction.getGas(this).getAmount());
     }
 
     record PredictedTransferLimits(long drainLimit, long fillLimit) {}

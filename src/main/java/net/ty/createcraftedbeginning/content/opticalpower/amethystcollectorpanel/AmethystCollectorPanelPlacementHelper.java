@@ -10,35 +10,35 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.phys.BlockHitResult;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.function.Predicate;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class AmethystCollectorPanelPlacementHelper implements IPlacementHelper {
-    public static boolean canExtendArray(Level level, BlockPos origin, BlockPos placementPos) {
-        if (origin.getY() != placementPos.getY() || origin.distManhattan(placementPos) != 1 || !level.isLoaded(origin) || !level.isLoaded(placementPos) || !level.getWorldBorder().isWithinBounds(placementPos) || level.isOutsideBuildHeight(placementPos) || !(level.getBlockState(origin).getBlock() instanceof AmethystCollectorPanelBlock) || !level.getBlockState(placementPos).canBeReplaced()) {
+final class AmethystCollectorPanelPlacementHelper implements IPlacementHelper {
+    static boolean canExtendArray(Level level, BlockPos origin, BlockPos placementPos) {
+        int y = origin.getY();
+        if (y != placementPos.getY() || origin.distManhattan(placementPos) != 1 || !level.isLoaded(origin) || !level.isLoaded(placementPos)) {
             return false;
         }
 
-        AmethystCollectorPanelGeometry geometry = AmethystCollectorPanelGeometry.withPlacement(level, origin, placementPos);
-        if (!geometry.topologyValid()) {
+        WorldBorder worldBorder = level.getWorldBorder();
+        if (!worldBorder.isWithinBounds(placementPos) || level.isOutsideBuildHeight(placementPos) || !(level.getBlockState(origin).getBlock() instanceof AmethystCollectorPanelBlock) || !level.getBlockState(placementPos).canBeReplaced()) {
             return false;
         }
 
-        AmethystCollectorPanelRectangle bounds = AmethystCollectorPanelGeometry.rectangleFromKnownValidDependencies(geometry.dependencies());
+        AmethystCollectorPanelRectangle bounds = AmethystCollectorPanelGeometry.findPlacementBounds(level, origin, placementPos);
         if (bounds == null) {
             return false;
         }
 
-        for (BlockPos pos : BlockPos.betweenClosed(new BlockPos(bounds.minX(), origin.getY(), bounds.minZ()), new BlockPos(bounds.maxX(), origin.getY(), bounds.maxZ()))) {
-            if (!level.isLoaded(pos) || !level.getWorldBorder().isWithinBounds(pos)) {
+        for (BlockPos pos : BlockPos.betweenClosed(new BlockPos(bounds.minX(), y, bounds.minZ()), new BlockPos(bounds.maxX(), y, bounds.maxZ()))) {
+            if (!level.isLoaded(pos) || !worldBorder.isWithinBounds(pos)) {
                 return false;
             }
 

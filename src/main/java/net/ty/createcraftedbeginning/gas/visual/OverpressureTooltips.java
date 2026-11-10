@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.gas.visual;
 
+import net.createmod.catnip.lang.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.CommonComponents;
@@ -27,17 +28,44 @@ public final class OverpressureTooltips {
             return false;
         }
 
-        Snapshot snapshot = snapshot(overpressure, gasHandler);
-        if (snapshot == null) {
+        return addStatus(tooltip, snapshot(overpressure, gasHandler));
+    }
+
+    public static boolean addStatus(List<Component> tooltip, @Nullable Snapshot snapshot) {
+        if (!GoggleTooltip.isVisible(tooltip, Section.OVERPRESSURE) || snapshot == null) {
             return false;
         }
 
         tooltip.add(CommonComponents.EMPTY);
         CCBLang.translate("gui.overpressure.structural_stress").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.text(String.valueOf(snapshot.stressPercent()) + '%').style(snapshot.stressColor()).forGoggles(tooltip, 1);
+        Status status = snapshot.status();
+        if (status != Status.RECOVERING) {
+            return true;
+        }
 
         CCBLang.translate("gui.overpressure.status").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.translate(snapshot.status().translationKey()).style(snapshot.status().color()).forGoggles(tooltip, 1);
+        CCBLang.translate(status.translationKey()).style(status.color()).forGoggles(tooltip, 1);
+        return true;
+    }
+
+    public static boolean addWarning(List<Component> tooltip, OverpressureBehaviour overpressure, GasStorageHandler gasHandler) {
+        return addWarning(tooltip, snapshot(overpressure, gasHandler));
+    }
+
+    public static boolean addWarning(List<Component> tooltip, @Nullable Snapshot snapshot) {
+        if (snapshot == null) {
+            return false;
+        }
+
+        Status status = snapshot.status();
+        if (status == Status.RECOVERING) {
+            return false;
+        }
+
+        String warningKey = status == Status.CRITICAL ? "gui.overpressure.warning.critical" : "gui.overpressure.warning.overpressure";
+        CCBLang.translate("gui.overpressure.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
+        CCBLang.addToGoggles(tooltip, warningKey);
         return true;
     }
 
@@ -70,20 +98,18 @@ public final class OverpressureTooltips {
     }
 
     public enum Status {
-        CRITICAL("gui.overpressure.status.critical", ChatFormatting.DARK_RED),
-        OVERPRESSURE("gui.overpressure.status.overpressure", ChatFormatting.RED),
-        RECOVERING("gui.overpressure.status.recovering", ChatFormatting.GREEN);
+        CRITICAL(ChatFormatting.DARK_RED),
+        OVERPRESSURE(ChatFormatting.RED),
+        RECOVERING(ChatFormatting.GREEN);
 
-        private final String translationKey;
         private final ChatFormatting color;
 
-        Status(String translationKey, ChatFormatting color) {
-            this.translationKey = translationKey;
+        Status(ChatFormatting color) {
             this.color = color;
         }
 
         public String translationKey() {
-            return translationKey;
+            return "gui.overpressure.status." + Lang.asId(name());
         }
 
         public ChatFormatting color() {

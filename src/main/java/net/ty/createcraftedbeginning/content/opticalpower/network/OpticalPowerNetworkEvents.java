@@ -20,17 +20,47 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
-public final class OpticalPowerNetworkEvents {
+final class OpticalPowerNetworkEvents {
     private OpticalPowerNetworkEvents() {
     }
 
     @SubscribeEvent
-    public static void onServerStarting(ServerStartingEvent event) {
+    static void onChunkLoad(Load event) {
+        if (!(event.getLevel() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        OpticalPowerNetworkManager.markNetworksNearChunkForInvalidation(serverLevel, event.getChunk().getPos());
+    }
+
+    @SubscribeEvent
+    static void onChunkTicketLevelUpdated(ChunkTicketLevelUpdatedEvent event) {
+        int accessibleLevel = ChunkLevel.byStatus(ChunkStatus.FULL);
+        boolean wasAccessible = event.getOldTicketLevel() <= accessibleLevel;
+        boolean isAccessible = event.getNewTicketLevel() <= accessibleLevel;
+        if (wasAccessible == isAccessible) {
+            return;
+        }
+
+        OpticalPowerNetworkManager.markNetworksNearChunkForInvalidation(event.getLevel(), new ChunkPos(event.getChunkPos()));
+    }
+
+    @SubscribeEvent
+    static void onChunkUnload(ChunkEvent.Unload event) {
+        if (!(event.getLevel() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        OpticalPowerNetworkManager.markNetworksNearChunkForInvalidation(serverLevel, event.getChunk().getPos());
+    }
+
+    @SubscribeEvent
+    private static void onServerStarting(ServerStartingEvent event) {
         OpticalPowerNetworkManager.clear();
     }
 
     @SubscribeEvent
-    public static void onLevelTick(Post event) {
+    private static void onLevelTick(Post event) {
         if (!(event.getLevel() instanceof ServerLevel serverLevel)) {
             return;
         }
@@ -39,37 +69,7 @@ public final class OpticalPowerNetworkEvents {
     }
 
     @SubscribeEvent
-    public static void onChunkLoad(Load event) {
-        if (!(event.getLevel() instanceof ServerLevel serverLevel)) {
-            return;
-        }
-
-        OpticalPowerNetworkManager.onChunkAccessibilityChanged(serverLevel, event.getChunk().getPos());
-    }
-
-    @SubscribeEvent
-    public static void onChunkTicketLevelUpdated(ChunkTicketLevelUpdatedEvent event) {
-        int accessibleLevel = ChunkLevel.byStatus(ChunkStatus.FULL);
-        boolean wasAccessible = event.getOldTicketLevel() <= accessibleLevel;
-        boolean isAccessible = event.getNewTicketLevel() <= accessibleLevel;
-        if (wasAccessible == isAccessible) {
-            return;
-        }
-
-        OpticalPowerNetworkManager.queueChunkAccessibilityChange(event.getLevel(), new ChunkPos(event.getChunkPos()));
-    }
-
-    @SubscribeEvent
-    public static void onChunkUnload(ChunkEvent.Unload event) {
-        if (!(event.getLevel() instanceof ServerLevel serverLevel)) {
-            return;
-        }
-
-        OpticalPowerNetworkManager.onChunkAccessibilityChanged(serverLevel, event.getChunk().getPos());
-    }
-
-    @SubscribeEvent
-    public static void onLevelUnload(Unload event) {
+    private static void onLevelUnload(Unload event) {
         if (!(event.getLevel() instanceof ServerLevel serverLevel)) {
             return;
         }

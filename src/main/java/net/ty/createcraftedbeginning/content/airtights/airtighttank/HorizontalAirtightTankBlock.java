@@ -3,8 +3,10 @@ package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -34,6 +36,11 @@ public class HorizontalAirtightTankBlock extends AirtightTankBlock {
     @Override
     public BlockEntityType<? extends AirtightTankBlockEntity> getBlockEntityType() {
         return CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get();
+    }
+
+    @Override
+    public InteractionResult onWrenched(BlockState state, UseOnContext context) {
+        return InteractionResult.PASS;
     }
 
     @Override

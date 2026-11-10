@@ -127,8 +127,8 @@ public final class GlobalAirtightUpgradesConsumptionManager {
             return false;
         }
 
-        long expirationTime = expirationByUpgradeId.getOrDefault(upgrade.getID(), 0L);
-        return expirationTime >= player.level().getGameTime();
+        Long expirationTime = expirationByUpgradeId.get(upgrade.getID());
+        return expirationTime != null && expirationTime >= player.level().getGameTime();
     }
 
     static void acceptClientSync(Player player, List<ResourceLocation> poweredUpgradeIds) {

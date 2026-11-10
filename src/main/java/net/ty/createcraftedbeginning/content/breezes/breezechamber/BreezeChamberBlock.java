@@ -294,11 +294,7 @@ public class BreezeChamberBlock extends HorizontalDirectionalBlock implements IB
 
         @Contract(pure = true)
         String getTranslatable() {
-            return switch (this) {
-                case ILL -> "gui.breeze_chamber.ill";
-                case CALM -> "gui.breeze_chamber.calm";
-                case GALE -> "gui.breeze_chamber.gale";
-            };
+            return "gui.breeze_chamber." + getSerializedName();
         }
 
         ChatFormatting getChatFormatting() {

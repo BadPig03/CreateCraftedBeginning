@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column_horizontal",
+  "textures": {
+    "end": "createcraftedbeginning:block/industrial_iron/industrial_iron_pillar/top",
+    "side": "createcraftedbeginning:block/industrial_iron/industrial_iron_pillar/single"
+  }
+}

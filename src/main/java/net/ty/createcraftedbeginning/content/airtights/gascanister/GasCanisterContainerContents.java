@@ -14,6 +14,7 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.GasUnits;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.VirtualGasItems;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBEnchantments;
 import org.jetbrains.annotations.Unmodifiable;
@@ -27,13 +28,14 @@ public class GasCanisterContainerContents implements AirtightHatchCanister {
     public static final int ECONOMIZE_MAX_LEVEL = 3;
     private static final int ECONOMIZE_MINIMUM_DRAIN_LEVEL = 5;
     private final ItemStack canister;
+    private GasStack recoveryContents = GasStack.EMPTY;
 
     protected GasStack gas;
 
     protected GasCanisterContainerContents(ItemStack canister) {
         this.canister = canister;
         GasStack storedGas = canister.getOrDefault(CCBDataComponents.CANISTER_CONTAINER_CONTENTS, GasStack.EMPTY).copy();
-        gas = canContain(storedGas) ? storedGas : GasStack.EMPTY;
+        gas = storedGas.isEmpty() || isGasValid(0, storedGas) ? storedGas : GasStack.EMPTY;
     }
 
     public static long getEconomizedDrainAmount(long logicalAmount, ItemStack itemStack) {
@@ -41,7 +43,7 @@ public class GasCanisterContainerContents implements AirtightHatchCanister {
             return 0;
         }
 
-        return Math.max(1, (logicalAmount * getEconomizeCostPercent(itemStack) + 99) / 100);
+        return Math.max(1, BoundedMath.saturatedMultiplyDivideCeilNonNegative(logicalAmount, getEconomizeCostPercent(itemStack), 100));
     }
 
     public static long getLogicalAmountFromEconomizedDrain(long physicalDrain, ItemStack itemStack) {
@@ -54,7 +56,21 @@ public class GasCanisterContainerContents implements AirtightHatchCanister {
             return Long.MAX_VALUE;
         }
 
-        return physicalDrain * 100 / costPercent;
+        return BoundedMath.saturatedMultiplyDivideNonNegative(physicalDrain, 100, costPercent);
+    }
+
+    public static int getEconomizeCostPercent(ItemStack itemStack) {
+        int economizeLevel = 0;
+        for (Entry<Holder<Enchantment>> entry : itemStack.getTagEnchantments().entrySet()) {
+            if (!entry.getKey().is(CCBEnchantments.ECONOMIZE)) {
+                continue;
+            }
+
+            economizeLevel = entry.getIntValue();
+            break;
+        }
+
+        return 100 - Mth.clamp(economizeLevel, 0, ECONOMIZE_MINIMUM_DRAIN_LEVEL) * 20;
     }
 
     public static long getDefaultVolume() {
@@ -81,20 +97,6 @@ public class GasCanisterContainerContents implements AirtightHatchCanister {
         }
 
         return getDefaultVolume() * (1 + capacityLevel);
-    }
-
-    private static int getEconomizeCostPercent(ItemStack itemStack) {
-        int economizeLevel = 0;
-        for (Entry<Holder<Enchantment>> entry : itemStack.getTagEnchantments().entrySet()) {
-            if (!entry.getKey().is(CCBEnchantments.ECONOMIZE)) {
-                continue;
-            }
-
-            economizeLevel = entry.getIntValue();
-            break;
-        }
-
-        return 100 - Mth.clamp(economizeLevel, 0, ECONOMIZE_MINIMUM_DRAIN_LEVEL) * 20;
     }
 
     @Override
@@ -134,6 +136,7 @@ public class GasCanisterContainerContents implements AirtightHatchCanister {
             return drainedGas;
         }
 
+        recoveryContents = storedGas.getAmount() > getTankMaxAmount(tankIndex) ? storedGas : GasStack.EMPTY;
         gas.shrink(drainAmount);
         saveContents();
         return drainedGas;
@@ -212,6 +215,28 @@ public class GasCanisterContainerContents implements AirtightHatchCanister {
     @Override
     public boolean supportsExactDrainRecovery(int tankIndex) {
         return !isInvalidTank(tankIndex);
+    }
+
+    @Override
+    public long restoreDrainedGas(int tankIndex, GasStack resource, GasAction action) {
+        if (isInvalidTank(tankIndex) || resource.isEmpty()) {
+            return 0;
+        }
+
+        if (recoveryContents.getAmount() <= getTankMaxAmount(tankIndex) || !GasStack.isSameGasSameComponents(recoveryContents, resource)) {
+            return fill(tankIndex, resource, action);
+        }
+
+        if (!gas.isEmpty() && !GasStack.isSameGasSameComponents(gas, resource)) {
+            return 0;
+        }
+
+        long restoredAmount = Math.min(resource.getAmount(), Math.max(0, recoveryContents.getAmount() - gas.getAmount()));
+        if (action.execute() && restoredAmount > 0) {
+            gas = resource.copyWithAmount(gas.getAmount() + restoredAmount);
+            saveContents();
+        }
+        return restoredAmount;
     }
 
     @Override

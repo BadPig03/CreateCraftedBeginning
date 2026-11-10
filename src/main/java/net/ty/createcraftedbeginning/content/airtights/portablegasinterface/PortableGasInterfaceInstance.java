@@ -22,8 +22,8 @@ class PortableGasInterfaceInstance {
     private final float xRotation;
     private final float yRotation;
 
-    TransformedInstance middle;
-    TransformedInstance top;
+    final TransformedInstance middle;
+    final TransformedInstance top;
 
     private boolean lit;
 

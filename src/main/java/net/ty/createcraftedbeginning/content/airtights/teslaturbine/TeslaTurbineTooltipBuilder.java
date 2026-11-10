@@ -97,18 +97,27 @@ class TeslaTurbineTooltipBuilder {
         addKineticInfo(tooltip);
     }
 
+    boolean addToTooltip(List<Component> tooltip) {
+        if (!core.getStructureManager().hasMissingNozzles()) {
+            return false;
+        }
+
+        CCBLang.translate("gui.tesla_turbine.failure").style(ChatFormatting.GOLD).forGoggles(tooltip);
+        CCBLang.addToGoggles(tooltip, "gui.tesla_turbine.failure.no_nozzle");
+        return true;
+    }
+
     private void addDetailedInfo(List<Component> tooltip) {
         tooltip.add(CommonComponents.EMPTY);
         CCBLang.translate("gui.tesla_turbine.gas_type").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.gasName(core.getFlowMeter().getGasType()).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
 
-        tooltip.add(CommonComponents.EMPTY);
         int nozzleCount = core.getStructureManager().getAttachedNozzle();
         if (nozzleCount == 0) {
-            CCBLang.translate("gui.tesla_turbine.via_no_nozzle").style(ChatFormatting.GRAY).forGoggles(tooltip);
             return;
         }
 
+        tooltip.add(CommonComponents.EMPTY);
         if (nozzleCount == 1) {
             CCBLang.translate("gui.tesla_turbine.via_one_nozzle").style(ChatFormatting.GRAY).forGoggles(tooltip);
             return;

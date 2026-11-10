@@ -10,6 +10,7 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment.PressureModel;
 import net.ty.createcraftedbeginning.content.airtights.creativegascanister.CreativeGasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.VirtualGasItems;
 import net.ty.createcraftedbeginning.recipe.gas.ingredient.GasStackLinkedSet;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
@@ -28,32 +29,27 @@ public class GasCanisterPackContainerContents implements GasCanisterContainer {
     public static final int MAX_COUNT = 4;
 
     private final ItemStack pack;
-    private final List<ItemStack> canisters;
+    private final GasCanisterContainerContents[] canisters = new GasCanisterContainerContents[MAX_COUNT];
 
     GasCanisterPackContainerContents(ItemStack pack) {
         this.pack = pack;
-        canisters = normalizeCanisters(pack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_CONTENTS, ItemContainerContents.EMPTY));
+        ItemContainerContents storedContents = pack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_CONTENTS, ItemContainerContents.EMPTY);
+        for (int tankIndex = 0; tankIndex < Math.min(MAX_COUNT, storedContents.getSlots()); tankIndex++) {
+            canisters[tankIndex] = normalizeCanister(storedContents.getStackInSlot(tankIndex));
+        }
     }
 
     private static boolean isInvalidTank(int tankIndex) {
         return tankIndex < 0 || tankIndex >= MAX_COUNT;
     }
 
-    private static List<ItemStack> normalizeCanisters(ItemContainerContents storedContents) {
-        List<ItemStack> normalizedCanisters = new ArrayList<>(MAX_COUNT);
-        for (int tankIndex = 0; tankIndex < MAX_COUNT; tankIndex++) {
-            ItemStack canister = tankIndex < storedContents.getSlots() ? storedContents.getStackInSlot(tankIndex) : ItemStack.EMPTY;
-            normalizedCanisters.add(normalizeCanister(canister));
-        }
-        return normalizedCanisters;
-    }
-
-    private static ItemStack normalizeCanister(ItemStack canister) {
-        if (canister.isEmpty() || !(canister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents)) {
-            return ItemStack.EMPTY;
+    private static @Nullable GasCanisterContainerContents normalizeCanister(ItemStack canister) {
+        ItemStack installedCanister = canister.copyWithCount(1);
+        if (installedCanister.isEmpty() || !(installedCanister.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents contents)) {
+            return null;
         }
 
-        return canister.copyWithCount(1);
+        return contents;
     }
 
     @Override
@@ -262,30 +258,82 @@ public class GasCanisterPackContainerContents implements GasCanisterContainer {
     }
 
     public ItemStack getCanister(int tank) {
-        if (isInvalidTank(tank)) {
+        GasCanisterContainerContents contents = getCanisterContents(tank);
+        if (contents == null) {
             return ItemStack.EMPTY;
         }
 
-        return canisters.get(tank).copy();
+        return contents.getContainer().copy();
+    }
+
+    int findEmptySlot() {
+        for (int canisterSlot = 0; canisterSlot < MAX_COUNT; canisterSlot++) {
+            if (canisters[canisterSlot] != null) {
+                continue;
+            }
+
+            return canisterSlot;
+        }
+        return -1;
+    }
+
+    int findLastOccupiedSlot() {
+        for (int canisterSlot = MAX_COUNT - 1; canisterSlot >= 0; canisterSlot--) {
+            if (canisters[canisterSlot] == null) {
+                continue;
+            }
+
+            return canisterSlot;
+        }
+        return -1;
+    }
+
+    void setCanister(int canisterSlot, ItemStack canister) {
+        canisters[canisterSlot] = normalizeCanister(canister);
+        saveCanisterLayout();
     }
 
     void replaceCanisters(List<ItemStack> storedCanisters) {
         for (int tankIndex = 0; tankIndex < MAX_COUNT; tankIndex++) {
             ItemStack canister = tankIndex < storedCanisters.size() ? storedCanisters.get(tankIndex) : ItemStack.EMPTY;
-            canisters.set(tankIndex, normalizeCanister(canister));
+            canisters[tankIndex] = normalizeCanister(canister);
         }
+        saveCanisterLayout();
+    }
+
+    private void saveCanisterLayout() {
         save();
+        boolean rightDown = hasCanister(0);
+        boolean leftDown = hasCanister(1);
+        boolean rightUp = hasCanister(2);
+        boolean leftUp = hasCanister(3);
+        int occupancyFlags = GasCanisterPackOverrides.calculateFlags(leftUp, rightUp, leftDown, rightDown);
+        if (pack.getOrDefault(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, -1) == occupancyFlags) {
+            return;
+        }
+
+        pack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, occupancyFlags);
+    }
+
+    private boolean hasCanister(int canisterSlot) {
+        GasCanisterContainerContents contents = canisters[canisterSlot];
+        if (contents == null) {
+            return false;
+        }
+
+        ItemStack canister = contents.getContainer();
+        return CanisterContainerSuppliers.isValidGasCanister(canister) || CanisterContainerSuppliers.isValidCreativeGasCanister(canister);
     }
 
     private @Nullable GasCanisterContainerContents getCanisterContents(int tankIndex) {
-        if (isInvalidTank(tankIndex) || !(canisters.get(tankIndex).getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents canisterContents)) {
+        if (isInvalidTank(tankIndex)) {
             return null;
         }
 
-        return canisterContents;
+        return canisters[tankIndex];
     }
 
     private @Unmodifiable List<ItemStack> copyCanisters() {
-        return canisters.stream().map(ItemStack::copy).toList();
+        return IntStream.range(0, MAX_COUNT).mapToObj(this::getCanister).toList();
     }
 }

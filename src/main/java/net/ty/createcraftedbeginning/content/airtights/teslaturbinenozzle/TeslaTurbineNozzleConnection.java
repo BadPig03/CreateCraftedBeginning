@@ -3,13 +3,14 @@ package net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineGeometry.NozzlePort;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
-import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock.TeslaTurbineStructuralPosition;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -18,39 +19,66 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 final class TeslaTurbineNozzleConnection {
     private final TeslaTurbineNozzleBlockEntity nozzle;
-    private TeslaTurbineBlockEntity turbine;
-    private GasHandler gasCapability;
-    private boolean gasCapabilityClockwise;
+    private @Nullable TeslaTurbineBlockEntity turbine;
+    private @Nullable TeslaTurbineNozzleGasHandler gasCapability;
+    private @Nullable NozzlePort gasCapabilityPort;
+    private @Nullable Direction gasCapabilityFacing;
 
     TeslaTurbineNozzleConnection(TeslaTurbineNozzleBlockEntity nozzle) {
         this.nozzle = nozzle;
     }
 
     @Nullable GasHandler getGasCapability(@Nullable Direction accessDirection) {
+        Level level = nozzle.getLevel();
+        BlockPos nozzlePos = nozzle.getBlockPos();
+        if (level == null || nozzle.isRemoved() || !level.isLoaded(nozzlePos) || level.getBlockEntity(nozzlePos) != nozzle) {
+            invalidate();
+            return null;
+        }
+
         BlockState nozzleState = nozzle.getBlockState();
-        if (accessDirection != nozzleState.getValue(TeslaTurbineNozzleBlock.FACING)) {
+        Direction facing = nozzleState.getValue(TeslaTurbineNozzleBlock.FACING);
+        if (accessDirection != facing) {
             return null;
         }
 
-        if (turbine == null || turbine.isRemoved()) {
-            turbine = findTurbine();
-            gasCapability = null;
-        }
-        if (turbine == null) {
+        BlockPos structurePos = nozzlePos.relative(facing.getOpposite());
+        if (!level.isLoaded(structurePos)) {
+            invalidate();
             return null;
         }
 
-        boolean clockwise = nozzleState.getValue(TeslaTurbineNozzleBlock.CLOCKWISE);
-        if (gasCapability == null || gasCapabilityClockwise != clockwise) {
-            gasCapability = turbine.createGasHandler(clockwise);
-            gasCapabilityClockwise = clockwise;
+        NozzlePort port = TeslaTurbineNozzleBlock.findPort(level, facing.getOpposite(), nozzlePos);
+        if (port == null) {
+            invalidate();
+            return null;
+        }
+
+        BlockState structureState = level.getBlockState(structurePos);
+        BlockPos masterPos = TeslaTurbineStructuralBlock.getMaster(structurePos, structureState);
+        if (!level.isLoaded(masterPos) || !(level.getBlockEntity(masterPos) instanceof TeslaTurbineBlockEntity master) || master.isRemoved() || master.getBlockState().getValue(TeslaTurbineBlock.AXIS) != structureState.getValue(TeslaTurbineStructuralBlock.AXIS)) {
+            invalidate();
+            return null;
+        }
+
+        if (gasCapability == null || turbine != master || gasCapabilityPort != port || gasCapabilityFacing != facing) {
+            turbine = master;
+            gasCapabilityPort = port;
+            gasCapabilityFacing = facing;
+            gasCapability = new TeslaTurbineNozzleGasHandler(this, (GasPressureBoundary) master.createGasHandler(port.clockwise()));
         }
         return gasCapability;
+    }
+
+    boolean isCurrent(TeslaTurbineNozzleGasHandler handler) {
+        return gasCapability == handler && getGasCapability(gasCapabilityFacing) == handler;
     }
 
     void invalidate() {
         turbine = null;
         gasCapability = null;
+        gasCapabilityPort = null;
+        gasCapabilityFacing = null;
     }
 
     void scheduleValidation() {
@@ -69,42 +97,5 @@ final class TeslaTurbineNozzleConnection {
         }
 
         level.scheduleTick(nozzlePos, nozzleBlock, 1);
-    }
-
-    private @Nullable TeslaTurbineBlockEntity findTurbine() {
-        Level level = nozzle.getLevel();
-        if (level == null) {
-            return null;
-        }
-
-        BlockState nozzleState = nozzle.getBlockState();
-        Direction inwardDirection = nozzleState.getValue(TeslaTurbineNozzleBlock.FACING).getOpposite();
-        BlockPos nozzlePos = nozzle.getBlockPos();
-        BlockPos structurePos = nozzlePos.relative(inwardDirection);
-        BlockState structureState = level.getBlockState(structurePos);
-        if (!(structureState.getBlock() instanceof TeslaTurbineStructuralBlock)) {
-            return null;
-        }
-
-        Axis structureAxis = structureState.getValue(TeslaTurbineStructuralBlock.AXIS);
-        if (inwardDirection.getAxis() == structureAxis) {
-            return null;
-        }
-
-        TeslaTurbineStructuralPosition structurePosition = structureState.getValue(TeslaTurbineStructuralBlock.STRUCTURAL_POSITION);
-        if (TeslaTurbineStructuralPosition.isMid(structurePosition)) {
-            return null;
-        }
-
-        if (TeslaTurbineNozzleBlock.hasOtherNozzle(level, structurePos, nozzlePos, structureAxis, structurePosition)) {
-            return null;
-        }
-
-        BlockPos masterPos = TeslaTurbineStructuralBlock.getMaster(structurePos, structureState);
-        if (!(level.getBlockEntity(masterPos) instanceof TeslaTurbineBlockEntity master)) {
-            return null;
-        }
-
-        return master;
     }
 }

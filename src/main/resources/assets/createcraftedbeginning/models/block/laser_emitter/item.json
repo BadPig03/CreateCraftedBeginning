@@ -2,6 +2,116 @@
 	"format_version": "1.9.0",
 	"credit": "Made with Blockbench",
 	"parent": "createcraftedbeginning:block/laser_emitter/block",
+	"render_type": "minecraft:cutout_mipped",
+	"texture_size": [64, 64],
+	"textures": {
+		"3": "createcraftedbeginning:block/laser_emitter/outline",
+		"laser": "createcraftedbeginning:block/laser_emitter/texture"
+	},
+	"elements": [
+		{
+			"from": [0, 0, 0],
+			"to": [16, 13, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [8, 9.5, 16, 16], "texture": "#laser"},
+				"east": {"uv": [8, 9.5, 16, 16], "texture": "#laser"},
+				"south": {"uv": [8, 9.5, 16, 16], "texture": "#laser"},
+				"west": {"uv": [8, 9.5, 16, 16], "texture": "#laser"},
+				"up": {"uv": [8, 0, 16, 8], "texture": "#laser"},
+				"down": {"uv": [8, 0, 16, 8], "texture": "#laser"}
+			}
+		},
+		{
+			"from": [1, 13, 1],
+			"to": [15, 16, 15],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"east": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"south": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"west": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"}
+			}
+		},
+		{
+			"from": [15, 13, 1],
+			"to": [1, 16, 15],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"east": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"south": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"},
+				"west": {"uv": [0.5, 8, 7.5, 9.5], "texture": "#laser"}
+			}
+		},
+		{
+			"from": [4, 13, 4],
+			"to": [12, 16, 12],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [2, 14.5, 6, 16], "texture": "#laser"},
+				"east": {"uv": [2, 14.5, 6, 16], "texture": "#laser"},
+				"south": {"uv": [2, 14.5, 6, 16], "texture": "#laser"},
+				"west": {"uv": [2, 14.5, 6, 16], "texture": "#laser"},
+				"up": {"uv": [6, 14, 2, 10], "texture": "#laser"},
+				"down": {"uv": [6, 10, 2, 14], "texture": "#laser"}
+			}
+		},
+		{
+			"from": [12.3, 12.7, 3.7],
+			"to": [12.3, 16.3, 12.3],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"west": {"uv": [0, 0, 16, 16], "texture": "#3"}
+			}
+		},
+		{
+			"from": [3.7, 12.7, 3.7],
+			"to": [3.7, 16.3, 12.3],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"east": {"uv": [0, 0, 16, 16], "texture": "#3"}
+			}
+		},
+		{
+			"from": [3.7, 16.3, 3.7],
+			"to": [12.3, 16.3, 12.3],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"down": {"uv": [0, 0, 16, 16], "texture": "#3"}
+			}
+		},
+		{
+			"from": [3.7, 12.7, 3.7],
+			"to": [12.3, 12.7, 12.3],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"up": {"uv": [0, 0, 16, 16], "texture": "#3"}
+			}
+		},
+		{
+			"from": [3.7, 12.7, 12.3],
+			"to": [12.3, 16.3, 12.3],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#3"}
+			}
+		},
+		{
+			"from": [3.7, 12.7, 3.7],
+			"to": [12.3, 16.3, 3.7],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"south": {"uv": [0, 0, 16, 16], "texture": "#3"}
+			}
+		}
+	],
 	"display": {
 		"thirdperson_righthand": {
 			"rotation": [75, 45, 0],

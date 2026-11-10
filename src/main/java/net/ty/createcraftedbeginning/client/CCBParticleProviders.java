@@ -6,6 +6,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.ty.createcraftedbeginning.content.particles.AirtightJetpackParticle;
+import net.ty.createcraftedbeginning.content.particles.AmethystSoundSuppressorRippleParticle;
+import net.ty.createcraftedbeginning.content.particles.AmethystSoundSuppressorRippleParticleType;
 import net.ty.createcraftedbeginning.content.particles.BreezeCloudParticle;
 import net.ty.createcraftedbeginning.content.particles.BreezeCloudParticle.ColoredProvider;
 import net.ty.createcraftedbeginning.content.particles.BubbleWithoutWaterParticle.Provider;
@@ -26,5 +28,6 @@ public final class CCBParticleProviders {
         event.registerSpriteSet((SimpleParticleType) CCBParticleTypes.BREEZE_CLOUD.get(), BreezeCloudParticle.Provider::new);
         event.registerSpriteSet((ColoredBreezeCloudParticleType) CCBParticleTypes.COLORED_BREEZE_CLOUD.get(), ColoredProvider::new);
         event.registerSpriteSet((SimpleParticleType) CCBParticleTypes.BUBBLE_WITHOUT_WATER.get(), Provider::new);
+        event.registerSpriteSet((AmethystSoundSuppressorRippleParticleType) CCBParticleTypes.AMETHYST_SOUND_SUPPRESSOR_RIPPLE.get(), AmethystSoundSuppressorRippleParticle.Provider::new);
     }
 }

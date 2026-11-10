@@ -50,6 +50,7 @@ import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactor
 import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.VirtualGasItems;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlock;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.GasPackagerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerBlock;
@@ -75,14 +76,11 @@ public class GasFactoryGaugeScenes {
     private static final UUID PONDER_NETWORK = UUID.fromString("7bd66c30-0a7d-4d98-a116-7b4d00b17c33");
     private static final int RESTOCK_ORDER_ID = 7403;
 
-    @SuppressWarnings("ConstantExpression")
     public static void restocking(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("gas_factory_gauge_restocking", "Restocking Gas Storage");
         scene.configureBasePlate(0, 0, 7);
-        scene.scaleSceneView(0.925F);
-        scene.setSceneOffsetY(-0.25F);
         scene.showBasePlate();
 
         BlockPos sourceTankPos = util.grid().at(6, 2, 4);
@@ -113,9 +111,9 @@ public class GasFactoryGaugeScenes {
         Selection beltSelection = util.select().fromTo(beltStartPos, beltEndPos).add(util.select().position(beltMotorPos));
         Selection sourceLeverSelection = util.select().position(sourceLeverPos);
         Selection repackagerLeverSelection = util.select().position(repackagerLeverPos);
-        Selection sourceSelection = util.select().position(sourceTankSupportPos).add(util.select().position(sourceTankPos)).add(util.select().fromTo(sourcePackagerPos, sourcePackagerPos.below())).add(util.select().position(sourceFunnelPos)).add(sourceLeverSelection);
+        Selection sourceSelection = util.select().position(sourceTankSupportPos).add(util.select().position(sourceTankPos)).add(util.select().fromTo(sourcePackagerPos, sourceTankPos.north().below())).add(util.select().position(sourceFunnelPos)).add(sourceLeverSelection);
         Selection repackagerSelection = util.select().position(repackagerPos).add(util.select().position(cachePos)).add(util.select().position(repackagerInputFunnelPos)).add(util.select().position(repackagerOutputFunnelPos)).add(repackagerLeverSelection);
-        Selection targetSelection = util.select().position(targetTankSupportPos).add(util.select().position(targetTankPos)).add(util.select().fromTo(targetPackagerPos, targetPackagerPos.below())).add(util.select().position(targetGaugePos)).add(util.select().position(targetFunnelPos)).add(util.select().position(targetTankPos.above()));
+        Selection targetSelection = util.select().position(targetTankSupportPos).add(util.select().position(targetTankPos)).add(util.select().fromTo(targetPackagerPos, sourceTankPos.west(6).north().below())).add(util.select().position(targetGaugePos)).add(util.select().position(targetFunnelPos)).add(util.select().position(sourceTankPos.west(6).above()));
 
         Vec3 gaugeVec = util.vector().centerOf(targetGaugePos).add(0.25, -0.4375, -0.25);
         Vec3 sourcePackagerVec = util.vector().centerOf(sourcePackagerPos);
@@ -123,6 +121,7 @@ public class GasFactoryGaugeScenes {
         Vec3 targetTankVec = util.vector().centerOf(targetTankPos);
 
         AABB targetGaugeArea = new AABB(gaugeVec, gaugeVec);
+        AABB targetTankStartArea = new AABB(targetTankVec, targetTankVec).inflate(0.5);
         AABB targetTankArea = new AABB(targetTankVec, targetTankVec);
 
         Object targetGaugeObject = new Object();
@@ -140,23 +139,28 @@ public class GasFactoryGaugeScenes {
         ItemStack firstBalloon = BalloonFactory.createOrdered(new GasStack(CCBGases.NATURAL_AIR.get(), firstAmount), "Gas Workshop", RESTOCK_ORDER_ID, 0, true, 0, secondAmount <= 0, null);
         ItemStack secondBalloon = secondAmount <= 0 ? ItemStack.EMPTY : BalloonFactory.createOrdered(new GasStack(CCBGases.NATURAL_AIR.get(), secondAmount), "Gas Workshop", RESTOCK_ORDER_ID, 0, true, 1, true, null);
         ItemStack canisterItem = new ItemStack(CCBItems.GAS_CANISTER.asItem());
+        boolean hasSecondBalloon = !secondBalloon.isEmpty();
 
         List<Candidate> candidates = new ArrayList<>();
         candidates.add(new Candidate(0, firstBalloon, BalloonItem.getGas(firstBalloon)));
-        if (!secondBalloon.isEmpty()) {
+        if (hasSecondBalloon) {
             candidates.add(new Candidate(1, secondBalloon, BalloonItem.getGas(secondBalloon)));
         }
-        List<BigItemStack> rebuilt = GasRepackagerOutputs.createMixedOrderOutput(RESTOCK_ORDER_ID, candidates, GasPressure.REFERENCE_PRESSURE_PA, RandomSource.create(RESTOCK_ORDER_ID));
+        List<BigItemStack> rebuilt = GasRepackagerOutputs.createMixedOrderOutput(RESTOCK_ORDER_ID, candidates, GasPressure.REFERENCE_PRESSURE_PA, RandomSource.create(RESTOCK_ORDER_ID)).packages();
         List<PackagingRequest> requestQueue = new ArrayList<>();
         requestQueue.add(PackagingRequest.create(gasToken.copy(), missingAmount, "Gas Workshop", 0, new MutableBoolean(true), 0, RESTOCK_ORDER_ID, null));
 
         scene.idle(20);
         scene.world().setBlock(beltMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.SOUTH), false);
         scene.world().showSection(beltSelection, Direction.SOUTH);
-        scene.world().showSection(targetSelection, Direction.EAST);
 
         scene.idle(15);
         scene.world().setKineticSpeed(beltSelection, mediumSpeed);
+
+        scene.idle(5);
+        scene.world().showSection(targetSelection, Direction.EAST);
+
+        scene.idle(20);
         scene.world().modifyBlockEntity(targetGaugePos, GasFactoryGaugeBlockEntity.class, gauge -> {
             gauge.addPanel(PanelSlot.TOP_LEFT, PONDER_NETWORK);
             gauge.restocker = true;
@@ -250,10 +254,13 @@ public class GasFactoryGaugeScenes {
         });
 
         scene.idle(73);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, targetTankObject, targetTankArea, 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, targetTankObject, targetTankStartArea, 3);
         scene.overlay().showText(60).text("If stored gas is below the target, the gauge requests only the missing amount").pointAt(targetTankVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(10);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, targetTankObject, targetTankArea, 57);
+
+        scene.idle(7);
         scene.world().modifyBlockEntity(targetGaugePos, GasFactoryGaugeBlockEntity.class, gauge -> {
             FactoryPanelBehaviour panel = gauge.panels.get(PanelSlot.TOP_LEFT);
             panel.restockerPromises.add(new RequestPromise(new BigItemStack(gasToken.copyWithCount(1), missingAmount)));
@@ -300,7 +307,7 @@ public class GasFactoryGaugeScenes {
         scene.world().modifyBlockEntity(cachePos, BlockEntity.class, blockEntity -> insertIntoAttachedInventory(blockEntity, firstBalloon.copy()));
 
         scene.idle(5);
-        if (!secondBalloon.isEmpty()) {
+        if (hasSecondBalloon) {
             scene.idle(10);
             createRequestedBalloon(scene, sourcePackagerPos, sourceLeverPos, sourceLeverSelection, requestQueue, sourceFunnelPos, sourceBeltPos, secondBalloon.copy());
 
@@ -310,6 +317,10 @@ public class GasFactoryGaugeScenes {
             scene.world().modifyBlockEntity(cachePos, BlockEntity.class, blockEntity -> insertIntoAttachedInventory(blockEntity, secondBalloon.copy()));
 
             scene.idle(5);
+        }
+        else {
+
+            scene.idle(15);
         }
         scene.overlay().showText(60).text("A Gas Repackager can rebuild split requests before forwarding them").colored(PonderPalette.GREEN).pointAt(repackagerVec).placeNearTarget().attachKeyFrame();
 
@@ -326,10 +337,13 @@ public class GasFactoryGaugeScenes {
         });
 
         scene.idle(20);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetTankObject, targetTankArea, 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetTankObject, targetTankStartArea, 3);
         scene.overlay().showText(60).text("Each delivered balloon adds gas to the tank and clears its outstanding promise").pointAt(targetTankVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(10);
+        scene.idle(3);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetTankObject, targetTankArea, 57);
+
+        scene.idle(7);
         int rebuiltBalloonCount = 0;
         for (BigItemStack output : rebuilt) {
             rebuiltBalloonCount += Math.max(1, output.count);
@@ -353,7 +367,7 @@ public class GasFactoryGaugeScenes {
                 scene.world().modifyBlockEntity(repackagerPos, GasRepackagerBlockEntity.class, repackager -> repackager.inventory.extractItem(0, 1, false));
                 if (rebuiltBalloonIndex == rebuiltBalloonCount) {
                     scene.world().toggleRedstonePower(repackagerLeverSelection);
-                    scene.effects().indicateRedstone(repackagerPos.above());
+                    scene.effects().indicateRedstone(sourceTankPos.west(3).north(2).above());
                     scene.world().modifyBlock(repackagerPos, state -> state.setValue(GasRepackagerBlock.POWERED, false), false);
                 }
 
@@ -381,6 +395,10 @@ public class GasFactoryGaugeScenes {
             }
         }
 
+        if (rebuiltBalloonCount == 0) {
+            scene.idle(70);
+        }
+
         scene.world().modifyBlockEntity(targetGaugePos, GasFactoryGaugeBlockEntity.class, gauge -> {
             FactoryPanelBehaviour panel = gauge.panels.get(PanelSlot.TOP_LEFT);
             if (panel == null || !panel.isActive()) {
@@ -403,15 +421,12 @@ public class GasFactoryGaugeScenes {
         scene.markAsFinished();
     }
 
-    @SuppressWarnings("ConstantExpression")
     public static void recipes(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
         RandomSource random = RandomSource.create();
 
         scene.title("gas_factory_gauge_recipes", "Gas in Factory Recipes");
         scene.configureBasePlate(0, 0, 7);
-        scene.scaleSceneView(0.925F);
-        scene.setSceneOffsetY(-0.35F);
         scene.showBasePlate();
 
         BlockPos itemSupport = util.grid().at(1, 3, 5);
@@ -428,15 +443,18 @@ public class GasFactoryGaugeScenes {
         BlockPos inputFunnelPos = itemSupport.east(2).below().north(3);
         BlockPos inputBarrelPos = itemSupport.east(3).below().north(3);
         BlockPos inputBarrelSupportPos = itemSupport.east(3).below(2).north(3);
-        BlockPos stockLinkPos = itemSupport.east(4).below().north(3);
+        BlockPos itemPackagerPos = itemSupport.east(3).below().north(2);
+        BlockPos itemPackagerSupportPos = itemSupport.east(3).below(2).north(2);
+        BlockPos stockLinkPos = itemSupport.east(4).below().north(2);
         BlockPos chamberPos = itemSupport.east().north(3);
         BlockPos gasPipePos = itemSupport.east().north(3).above();
 
         Selection gaugeSelection = util.select().fromTo(gaugeBoardMin, gaugeBoardMax).add(util.select().position(itemGauge)).add(util.select().position(gasGauge)).add(util.select().position(outputGauge));
-        Selection inputStorageSelection = util.select().position(inputBarrelSupportPos).add(util.select().position(inputBarrelPos)).add(util.select().position(stockLinkPos));
+        Selection inputStorageSelection = util.select().position(inputBarrelSupportPos).add(util.select().position(inputBarrelPos)).add(util.select().position(itemPackagerSupportPos)).add(util.select().position(itemPackagerPos)).add(util.select().position(stockLinkPos));
         Selection beltSelection = util.select().fromTo(outputBeltPos, inputBeltPos).add(util.select().position(beltMotorPos));
         Selection funnelSelection = util.select().position(inputFunnelPos);
         Selection processorSelection = util.select().position(chamberPos).add(util.select().position(gasPipePos));
+        Selection chamberSelection = util.select().position(chamberPos);
 
         Vec3 itemGaugeVec = util.vector().centerOf(itemGauge).add(0.25, 0.25, 0.4375);
         Vec3 gasGaugeVec = util.vector().centerOf(gasGauge).add(0.25, 0.25, 0.4375);
@@ -536,7 +554,7 @@ public class GasFactoryGaugeScenes {
 
         scene.idle(80);
         scene.overlay().showControls(outputGaugeVec, Pointing.DOWN, 60).showing(AllIcons.I_ADD);
-        addPanelConnection(scene, outputGauge, gasGauge, 500);
+        addPanelConnection(scene, outputGauge, gasGauge, 2000);
         scene.world().modifyBlockEntity(outputGauge, FactoryPanelBlockEntity.class, blockEntity -> {
             FactoryPanelBehaviour panel = blockEntity.panels.get(PanelSlot.TOP_LEFT);
             FactoryPanelConnection connection = panel.targetedBy.get(new FactoryPanelPosition(gasGauge, PanelSlot.TOP_LEFT));
@@ -563,8 +581,10 @@ public class GasFactoryGaugeScenes {
         scene.world().setKineticSpeed(beltSelection, mediumSpeed);
         scene.effects().rotationSpeedIndicator(beltMotorPos);
 
-        scene.idle(20);
+        scene.idle(5);
         scene.world().showSection(processorSelection, Direction.NORTH);
+
+        scene.idle(20);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, inputBarrelObject, inputBarrelArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasPipeObject, gasPipeArea, 3);
 
@@ -581,7 +601,7 @@ public class GasFactoryGaugeScenes {
 
         scene.idle(45);
         scene.world().stallBeltItem(blazePower, true);
-        scene.world().modifyBlockEntityNBT(util.select().position(chamberPos), GasInjectionChamberBlockEntity.class, tag -> tag.putInt("ProcessingTicks", 60));
+        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, tag -> tag.putInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, 60));
 
         scene.idle(35);
         scene.world().modifyBlockEntity(chamberPos, GasInjectionChamberBlockEntity.class, chamber -> {
@@ -652,19 +672,17 @@ public class GasFactoryGaugeScenes {
         scene.markAsFinished();
     }
 
-    @SuppressWarnings("ConstantExpression")
     public static void links(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
         scene.title("gas_factory_gauge_links", "Redstone and Display Links");
         scene.configureBasePlate(0, 0, 7);
-        scene.scaleSceneView(0.925F);
-        scene.setSceneOffsetY(-0.35F);
         scene.showBasePlate();
 
         BlockPos tankPos = util.grid().at(3, 2, 4);
         BlockPos tankSupportPos = tankPos.below();
         BlockPos packagerPos = tankPos.north();
+        BlockPos stockLinkPos = tankPos.west().north();
         BlockPos gaugePos = tankPos.above();
         BlockPos funnelPos = tankPos.north(2);
         BlockPos beltPos = tankPos.north(2).below();
@@ -674,10 +692,10 @@ public class GasFactoryGaugeScenes {
         BlockPos gaugeBoardMax = tankPos.east(2).above().south();
         BlockPos beltStartPos = tankPos.west(3).north(2).below();
         BlockPos beltEndPos = tankPos.east(3).north(2).below();
-        BlockPos motorPos = beltEndPos.north();
+        BlockPos motorPos = tankPos.east(3).below().north(3);
 
         Selection beltSelection = util.select().fromTo(beltStartPos, beltEndPos).add(util.select().position(motorPos));
-        Selection machineSelection = util.select().position(tankSupportPos).add(util.select().fromTo(tankPos, tankPos.west())).add(util.select().fromTo(packagerPos, packagerPos.below())).add(util.select().position(funnelPos));
+        Selection machineSelection = util.select().position(tankSupportPos).add(util.select().position(tankPos)).add(util.select().position(stockLinkPos)).add(util.select().fromTo(packagerPos, tankPos.north().below())).add(util.select().position(funnelPos));
         Selection gaugeSelection = util.select().fromTo(gaugeBoardMin, gaugeBoardMax).add(util.select().position(gaugePos));
         Selection redstoneSelection = util.select().position(redstoneLinkPos);
         Selection displaySelection = util.select().position(displayLinkPos);
@@ -711,7 +729,7 @@ public class GasFactoryGaugeScenes {
         scene.idle(15);
         scene.world().setKineticSpeed(beltSelection, mediumSpeed);
 
-        scene.idle(20);
+        scene.idle(5);
         scene.world().modifyBlockEntity(gaugePos, GasFactoryGaugeBlockEntity.class, gauge -> {
             gauge.addPanel(PanelSlot.TOP_LEFT, PONDER_NETWORK);
             gauge.restocker = true;
@@ -782,11 +800,11 @@ public class GasFactoryGaugeScenes {
             gauge.redraw = true;
             gauge.notifyUpdate();
         });
-        scene.world().toggleRedstonePower(util.select().position(redstoneLinkPos));
+        scene.world().toggleRedstonePower(redstoneSelection);
         scene.effects().indicateRedstone(redstoneLinkPos);
 
         scene.idle(70);
-        scene.world().toggleRedstonePower(util.select().position(redstoneLinkPos));
+        scene.world().toggleRedstonePower(redstoneSelection);
         scene.world().modifyBlockEntity(tankPos, AirtightTankBlockEntity.class, tank -> tank.getTankInventory().tryReplaceContents(new GasStack(CCBGases.NATURAL_AIR.get(), lowAmount)).requireAccepted());
         scene.world().modifyBlockEntity(gaugePos, GasFactoryGaugeBlockEntity.class, gauge -> {
             FactoryPanelBehaviour panel = gauge.panels.get(PanelSlot.TOP_LEFT);
@@ -828,14 +846,14 @@ public class GasFactoryGaugeScenes {
             panel.bulb.setValue(1);
             blockEntity.notifyUpdate();
         });
-        scene.world().toggleRedstonePower(util.select().position(redstoneLinkPos));
+        scene.world().toggleRedstonePower(redstoneSelection);
         scene.effects().indicateRedstone(redstoneLinkPos);
 
         scene.idle(73);
         scene.overlay().showText(60).text("Power only pauses new requests; promised gas already in transit still arrives").colored(PonderPalette.BLUE).pointAt(tankVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(5);
-        scene.world().createItemOnBelt(beltPos.east(2), Direction.EAST, inFlightBalloon.copy());
+        scene.world().createItemOnBelt(tankPos.below().north(2).east(2), Direction.EAST, inFlightBalloon.copy());
 
         scene.idle(25);
         scene.world().removeItemsFromBelt(beltPos);
@@ -927,8 +945,8 @@ public class GasFactoryGaugeScenes {
     private static void addPanelConnection(CreateSceneBuilder scene, BlockPos targetGauge, BlockPos input, int amount) {
         scene.world().modifyBlockEntity(targetGauge, FactoryPanelBlockEntity.class, blockEntity -> {
             FactoryPanelBehaviour panel = blockEntity.panels.get(PanelSlot.TOP_LEFT);
-            panel.addConnection(new FactoryPanelPosition(input, PanelSlot.TOP_LEFT));
             FactoryPanelPosition from = new FactoryPanelPosition(input, PanelSlot.TOP_LEFT);
+            panel.addConnection(from);
             FactoryPanelConnection connection = panel.targetedBy.get(from);
             if (connection == null) {
                 connection = panel.targetedByLinks.get(input);

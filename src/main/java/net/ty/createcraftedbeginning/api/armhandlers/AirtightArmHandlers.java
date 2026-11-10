@@ -95,4 +95,20 @@ public final class AirtightArmHandlers {
         HANDLERS.register(gasType, profile, stats);
     }
 
+    /** Updates an exact registration without changing the arm's immutable-stat contract. */
+    public static void modify(ResourceLocation location, GameplayPressureProfile profile, AirtightArmHandlerPatch patch) {
+        Gas gasType = Gas.findById(location);
+        if (gasType.isEmpty()) {
+            throw new IllegalArgumentException("Gas '" + location + "' does not exist.");
+        }
+
+        AirtightArmHandler original = HANDLERS.findExact(gasType, profile);
+        if (original == null) {
+            throw new IllegalStateException("No airtight arm handler is registered for gas '" + location + "' and gameplay pressure profile '" + profile.id() + "'.");
+        }
+
+        AirtightArmStats modified = patch.applyTo(original);
+        HANDLERS.replaceExact(gasType, profile, modified);
+    }
+
 }

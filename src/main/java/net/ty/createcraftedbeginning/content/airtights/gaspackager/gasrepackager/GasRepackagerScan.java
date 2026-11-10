@@ -7,7 +7,6 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonItem;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -37,7 +36,7 @@ public final class GasRepackagerScan {
     static ScanResult scanPackages(IItemHandler targetInv) {
         List<GasGroupCandidates> simpleGroups = new ArrayList<>();
         Map<Integer, List<Candidate>> orderedPackagesByOrder = new LinkedHashMap<>();
-        Candidate firstPassThroughPackage = null;
+        List<Candidate> passThroughPackages = new ArrayList<>();
         for (int slot = 0; slot < targetInv.getSlots(); slot++) {
             ItemStack simulatedExtraction = targetInv.extractItem(slot, 1, true);
             if (simulatedExtraction.isEmpty()) {
@@ -50,27 +49,23 @@ public final class GasRepackagerScan {
             Candidate candidate = new Candidate(slot, packageStack, gas);
             if (PackageItem.isPackage(packageStack) && PackageItem.hasOrderData(packageStack)) {
                 orderedPackagesByOrder.computeIfAbsent(PackageItem.getOrderId(packageStack), ignored -> new ArrayList<>()).add(candidate);
-                if (isGasBalloon && firstPassThroughPackage == null && isStandaloneFinalOrderPackage(packageStack)) {
-                    firstPassThroughPackage = candidate;
+                if (isGasBalloon && isStandaloneFinalOrderPackage(packageStack)) {
+                    passThroughPackages.add(candidate);
                 }
                 continue;
             }
 
             if (!candidate.isGasPackage()) {
-                if (PackageItem.isPackage(packageStack) && firstPassThroughPackage == null) {
-                    firstPassThroughPackage = candidate;
+                if (PackageItem.isPackage(packageStack)) {
+                    passThroughPackages.add(candidate);
                 }
                 continue;
             }
 
             addToGroup(simpleGroups, candidate, PackageItem.getAddress(packageStack));
-            if (firstPassThroughPackage != null) {
-                continue;
-            }
-
-            firstPassThroughPackage = candidate;
+            passThroughPackages.add(candidate);
         }
-        return new ScanResult(simpleGroups, orderedPackagesByOrder, firstPassThroughPackage);
+        return new ScanResult(simpleGroups, orderedPackagesByOrder, passThroughPackages);
     }
 
     static void addToGroup(List<GasGroupCandidates> groups, Candidate candidate, String address) {
@@ -90,9 +85,10 @@ public final class GasRepackagerScan {
         return PackageItem.hasOrderData(box) && PackageItem.getLinkIndex(box) == 0 && PackageItem.getIndex(box) == 0 && PackageItem.isFinalLink(box) && PackageItem.isFinal(box);
     }
 
-    record ScanResult(List<GasGroupCandidates> simpleGroups, Map<Integer, List<Candidate>> orderedPackagesByOrder, @Nullable Candidate firstPassThroughPackage) {
+    record ScanResult(List<GasGroupCandidates> simpleGroups, Map<Integer, List<Candidate>> orderedPackagesByOrder, List<Candidate> passThroughPackages) {
         ScanResult {
             simpleGroups = List.copyOf(simpleGroups);
+            passThroughPackages = List.copyOf(passThroughPackages);
             Map<Integer, List<Candidate>> immutableOrders = new LinkedHashMap<>();
             orderedPackagesByOrder.forEach((orderId, candidates) -> immutableOrders.put(orderId, List.copyOf(candidates)));
             orderedPackagesByOrder = Collections.unmodifiableMap(immutableOrders);

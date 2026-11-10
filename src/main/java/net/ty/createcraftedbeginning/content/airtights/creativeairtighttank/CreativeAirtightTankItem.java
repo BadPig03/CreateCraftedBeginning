@@ -14,6 +14,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankSerializationSupport;
 import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
@@ -23,10 +24,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeAirtightTankItem extends BlockItem {
-    private static final String COMPOUND_KEY_WIDTH = "Width";
-    private static final String COMPOUND_KEY_HEIGHT = "Height";
-    private static final String COMPOUND_KEY_LAST_KNOWN_POS = "LastKnownPos";
-    private static final String COMPOUND_KEY_CONTROLLER_POS = "Controller";
     private static final int INVALID_PLACEMENT = -1;
 
     public CreativeAirtightTankItem(Block block, Properties properties) {
@@ -56,10 +53,10 @@ public class CreativeAirtightTankItem extends BlockItem {
         }
 
         CompoundTag blockEntityTag = blockEntityData.copyTag();
-        blockEntityTag.remove(COMPOUND_KEY_WIDTH);
-        blockEntityTag.remove(COMPOUND_KEY_HEIGHT);
-        blockEntityTag.remove(COMPOUND_KEY_CONTROLLER_POS);
-        blockEntityTag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
+        blockEntityTag.remove(AirtightTankSerializationSupport.COMPOUND_KEY_WIDTH);
+        blockEntityTag.remove(AirtightTankSerializationSupport.COMPOUND_KEY_HEIGHT);
+        blockEntityTag.remove(AirtightTankSerializationSupport.COMPOUND_KEY_CONTROLLER_POS);
+        blockEntityTag.remove(AirtightTankSerializationSupport.COMPOUND_KEY_LAST_KNOWN_POS);
         itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(blockEntityTag));
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }
@@ -94,7 +91,7 @@ public class CreativeAirtightTankItem extends BlockItem {
         }
 
         int width = controller.getWidth();
-        if (width == 1) {
+        if (width == 1 || controller.getHeight() >= controller.getMaxLength(controller.getMainConnectionAxis(), width)) {
             return;
         }
 

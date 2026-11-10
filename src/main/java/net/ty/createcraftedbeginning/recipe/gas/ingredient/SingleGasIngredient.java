@@ -37,7 +37,7 @@ public class SingleGasIngredient extends GasIngredient {
 
     @Override
     public boolean equals(Object object) {
-        return this == object || object instanceof SingleGasIngredient other && gas.equals(other.gas().value());
+        return this == object || object instanceof SingleGasIngredient other && gas().value() == other.gas().value();
     }
 
     @Override

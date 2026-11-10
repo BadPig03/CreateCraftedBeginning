@@ -73,6 +73,8 @@ public class CCBIcons extends AllIcons {
     public static final CCBIcons I_STEP_HEIGHT = next();
     public static final CCBIcons I_ENVIRONMENTAL_DAMAGE_PROTECTION = next();
     public static final CCBIcons I_FALL_PROTECTION = next();
+    public static final CCBIcons I_LOADER_DETAILS = newRow();
+    public static final CCBIcons I_LOADER_BEAM = next();
 
     private final int iconX;
     private final int iconY;

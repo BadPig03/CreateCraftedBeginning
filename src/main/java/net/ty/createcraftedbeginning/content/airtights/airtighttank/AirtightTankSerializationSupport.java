@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -15,12 +16,17 @@ import java.util.Objects;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class AirtightTankSerializationSupport {
-    public static final String TANK_CONTENT = "TankContent";
-    private static final String UPDATE_CONNECTIVITY = "UpdateConnectivity";
-    private static final String LAST_KNOWN_POS = "LastKnownPos";
-    private static final String CONTROLLER_POS = "Controller";
-    private static final String WIDTH = "Width";
-    private static final String HEIGHT = "Height";
+    @Internal
+    public static final String COMPOUND_KEY_TANK_CONTENT = "TankContent";
+    private static final String COMPOUND_KEY_UPDATE_CONNECTIVITY = "UpdateConnectivity";
+    @Internal
+    public static final String COMPOUND_KEY_LAST_KNOWN_POS = "LastKnownPos";
+    @Internal
+    public static final String COMPOUND_KEY_CONTROLLER_POS = "Controller";
+    @Internal
+    public static final String COMPOUND_KEY_WIDTH = "Width";
+    @Internal
+    public static final String COMPOUND_KEY_HEIGHT = "Height";
 
     private AirtightTankSerializationSupport() {
     }
@@ -28,24 +34,24 @@ public final class AirtightTankSerializationSupport {
     public static void writeMultiblock(AbstractAirtightTankBlockEntity tank, CompoundTag compoundTag, boolean clientPacket) {
         AirtightTankMultiblockController multiblock = tank.multiblockController();
         if (tank.isController()) {
-            compoundTag.putInt(WIDTH, multiblock.getWidth());
-            compoundTag.putInt(HEIGHT, multiblock.getHeight());
+            compoundTag.putInt(COMPOUND_KEY_WIDTH, multiblock.getWidth());
+            compoundTag.putInt(COMPOUND_KEY_HEIGHT, multiblock.getHeight());
         }
         else {
             BlockPos controllerPos = Objects.requireNonNull(multiblock.getControllerPos(), "Airtight tank controller position must not be null.");
-            compoundTag.put(CONTROLLER_POS, NbtUtils.writeBlockPos(controllerPos));
+            compoundTag.put(COMPOUND_KEY_CONTROLLER_POS, NbtUtils.writeBlockPos(controllerPos));
         }
         if (clientPacket) {
             return;
         }
 
-        compoundTag.putBoolean(UPDATE_CONNECTIVITY, multiblock.isUpdateConnectivity());
+        compoundTag.putBoolean(COMPOUND_KEY_UPDATE_CONNECTIVITY, multiblock.isUpdateConnectivity());
         BlockPos lastKnownPos = multiblock.getLastKnownPos();
         if (lastKnownPos == null) {
             return;
         }
 
-        compoundTag.put(LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));
+        compoundTag.put(COMPOUND_KEY_LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));
     }
 
     public static void writeSafeMultiblock(AbstractAirtightTankBlockEntity tank, CompoundTag compoundTag) {
@@ -53,8 +59,8 @@ public final class AirtightTankSerializationSupport {
             return;
         }
 
-        compoundTag.putInt(WIDTH, tank.getWidth());
-        compoundTag.putInt(HEIGHT, tank.getHeight());
+        compoundTag.putInt(COMPOUND_KEY_WIDTH, tank.getWidth());
+        compoundTag.putInt(COMPOUND_KEY_HEIGHT, tank.getHeight());
     }
 
     public static boolean readMultiblock(AbstractAirtightTankBlockEntity tank, CompoundTag compoundTag, boolean clientPacket) {
@@ -63,14 +69,14 @@ public final class AirtightTankSerializationSupport {
         int previousWidth = multiblock.getWidth();
         int previousHeight = multiblock.getHeight();
         if (!clientPacket) {
-            multiblock.setUpdateConnectivity(compoundTag.getBoolean(UPDATE_CONNECTIVITY));
-            multiblock.setLastKnownPos(readOptionalBlockPos(compoundTag, LAST_KNOWN_POS));
+            multiblock.setUpdateConnectivity(compoundTag.getBoolean(COMPOUND_KEY_UPDATE_CONNECTIVITY));
+            multiblock.setLastKnownPos(readOptionalBlockPos(compoundTag, COMPOUND_KEY_LAST_KNOWN_POS));
         }
-        multiblock.setControllerPos(readOptionalBlockPos(compoundTag, CONTROLLER_POS));
+        multiblock.setControllerPos(readOptionalBlockPos(compoundTag, COMPOUND_KEY_CONTROLLER_POS));
 
         if (tank.isController()) {
-            multiblock.setWidth(readDimension(compoundTag, WIDTH, AbstractAirtightTankBlockEntity.configuredMaxWidth()));
-            multiblock.setHeight(readDimension(compoundTag, HEIGHT, AbstractAirtightTankBlockEntity.configuredMaxLength()));
+            multiblock.setWidth(readDimension(compoundTag, COMPOUND_KEY_WIDTH, AbstractAirtightTankBlockEntity.configuredMaxWidth()));
+            multiblock.setHeight(readDimension(compoundTag, COMPOUND_KEY_HEIGHT, AbstractAirtightTankBlockEntity.configuredMaxLength()));
         }
         multiblock.requestCapabilityRefresh();
         return clientPacket && (!Objects.equals(previousControllerPos, multiblock.getControllerPos()) || previousWidth != multiblock.getWidth() || previousHeight != multiblock.getHeight());

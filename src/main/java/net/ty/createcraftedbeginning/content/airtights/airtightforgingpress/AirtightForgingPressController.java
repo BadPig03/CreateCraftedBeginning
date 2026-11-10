@@ -16,6 +16,8 @@ import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads.Generation;
 import net.ty.createcraftedbeginning.recipe.ForgingPressCraftPlanner;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
@@ -51,7 +53,8 @@ public final class AirtightForgingPressController {
     private float pressureSpeedMultiplier = 1;
     private float operationSpeed;
     private int operationCycle;
-    private long observedRecipeCacheVersion;
+    private @Nullable Generation observedRecipeGeneration;
+    private @Nullable Generation operationRecipeGeneration;
 
     @Internal
     public AirtightForgingPressController(AirtightForgingPressBlockEntity press) {
@@ -59,7 +62,6 @@ public final class AirtightForgingPressController {
         observedAutomaticPressingEnabled = CCBConfig.server().machines.airtightForgingPress.enableAutomaticPressingRecipes.get();
         observedAutomaticCrushingEnabled = CCBConfig.server().machines.airtightForgingPress.enableAutomaticCrushingRecipes.get();
         observedAutomaticSmithingEnabled = CCBConfig.server().machines.airtightForgingPress.enableAutomaticSmithingRecipes.get();
-        observedRecipeCacheVersion = AirtightForgingPressRecipeLookup.getRecipeCacheVersion();
     }
 
     private static float sanitizePressureSpeedMultiplier(float multiplier) {
@@ -101,24 +103,29 @@ public final class AirtightForgingPressController {
             return;
         }
 
-        long recipeCacheVersion = AirtightForgingPressRecipeLookup.getRecipeCacheVersion();
+        Generation recipeGeneration = CCBRecipeReloads.getGeneration(level.getRecipeManager());
         boolean automaticPressingEnabled = CCBConfig.server().machines.airtightForgingPress.enableAutomaticPressingRecipes.get();
         boolean automaticCrushingEnabled = CCBConfig.server().machines.airtightForgingPress.enableAutomaticCrushingRecipes.get();
         boolean automaticSmithingEnabled = CCBConfig.server().machines.airtightForgingPress.enableAutomaticSmithingRecipes.get();
-        if (observedRecipeCacheVersion == recipeCacheVersion && observedAutomaticPressingEnabled == automaticPressingEnabled && observedAutomaticCrushingEnabled == automaticCrushingEnabled && observedAutomaticSmithingEnabled == automaticSmithingEnabled) {
+        boolean configurationChanged = observedAutomaticPressingEnabled != automaticPressingEnabled || observedAutomaticCrushingEnabled != automaticCrushingEnabled || observedAutomaticSmithingEnabled != automaticSmithingEnabled;
+        if (observedRecipeGeneration == recipeGeneration && !configurationChanged) {
             return;
         }
 
-        observedRecipeCacheVersion = recipeCacheVersion;
+        observedRecipeGeneration = recipeGeneration;
         observedAutomaticPressingEnabled = automaticPressingEnabled;
         observedAutomaticCrushingEnabled = automaticCrushingEnabled;
         observedAutomaticSmithingEnabled = automaticSmithingEnabled;
-        update(true);
+        if (configurationChanged) {
+            update(true);
+            return;
+        }
+
+        press.scheduleUpdate();
     }
 
     @Internal
     public boolean updateForgingPress() {
-        observedRecipeCacheVersion = AirtightForgingPressRecipeLookup.getRecipeCacheVersion();
         Level level = press.getLevel();
         if (level == null) {
             return false;
@@ -134,6 +141,7 @@ public final class AirtightForgingPressController {
             return true;
         }
 
+        observedRecipeGeneration = CCBRecipeReloads.getGeneration(level.getRecipeManager());
         ponderProcessRequested = false;
         Optional<ForgingPressRecipe> forgingRecipe = AirtightForgingPressRecipeLookup.getMatchingRecipe(press);
         if (forgingRecipe.isPresent()) {
@@ -141,7 +149,7 @@ public final class AirtightForgingPressController {
             currentPressingRecipe = null;
             currentCrushingRecipe = null;
             currentSmithingRecipe = null;
-            startOperation();
+            startOperation(level);
             return true;
         }
 
@@ -152,7 +160,7 @@ public final class AirtightForgingPressController {
                 currentPressingRecipe = pressingRecipe.get();
                 currentCrushingRecipe = null;
                 currentSmithingRecipe = null;
-                startOperation();
+                startOperation(level);
                 return true;
             }
         }
@@ -164,7 +172,7 @@ public final class AirtightForgingPressController {
                 currentPressingRecipe = null;
                 currentCrushingRecipe = crushingRecipe.get();
                 currentSmithingRecipe = null;
-                startOperation();
+                startOperation(level);
                 return true;
             }
         }
@@ -176,7 +184,7 @@ public final class AirtightForgingPressController {
                 currentPressingRecipe = null;
                 currentCrushingRecipe = null;
                 currentSmithingRecipe = smithingRecipe.get().value();
-                startOperation();
+                startOperation(level);
                 return true;
             }
         }
@@ -272,6 +280,12 @@ public final class AirtightForgingPressController {
             return;
         }
 
+        Level level = press.getLevel();
+        if (level != null && !level.isClientSide && operatingTicks < CYCLE_DURATION / 2.0F && operationRecipeGeneration != CCBRecipeReloads.getGeneration(level.getRecipeManager())) {
+            update(true);
+            return;
+        }
+
         float operationSpeed = this.operationSpeed;
 
         if (currentRecipe == null && currentPressingRecipe != null && !CCBConfig.server().machines.airtightForgingPress.enableAutomaticPressingRecipes.get()) {
@@ -291,7 +305,6 @@ public final class AirtightForgingPressController {
 
         float previousOperatingTicks = operatingTicks;
         operatingTicks = Mth.clamp(operatingTicks + operationSpeed, 0.0F, CYCLE_DURATION);
-        Level level = press.getLevel();
         if (level == null || level.isClientSide) {
             return;
         }
@@ -367,7 +380,8 @@ public final class AirtightForgingPressController {
         return Mth.clamp(kineticOperationSpeed * sanitizePressureSpeedMultiplier(startingSpeedMultiplier), 1, 16);
     }
 
-    private void startOperation() {
+    private void startOperation(Level level) {
+        operationRecipeGeneration = CCBRecipeReloads.getGeneration(level.getRecipeManager());
         pressureSpeedMultiplier = getStartingPressureSpeedMultiplier();
         operationSpeed = getStartingOperationSpeed(pressureSpeedMultiplier);
         operationCycle++;
@@ -400,6 +414,7 @@ public final class AirtightForgingPressController {
         operatingTicks = 0;
         pressureSpeedMultiplier = 1;
         operationSpeed = 0;
+        operationRecipeGeneration = null;
         clearRecipes();
     }
 

@@ -21,6 +21,7 @@ public enum FanProcessingFilterSubtypeInterpreter implements ISubtypeInterpreter
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public String getLegacyStringSubtypeInfo(ItemStack ingredient, UidContext context) {
         return GasInjectionChamberFilterItem.getFanProcessingTypeId(ingredient).map(ResourceLocation::toString).orElse("");
     }

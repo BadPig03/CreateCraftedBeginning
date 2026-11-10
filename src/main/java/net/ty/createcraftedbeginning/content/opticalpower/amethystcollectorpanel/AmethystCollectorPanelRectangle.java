@@ -3,18 +3,22 @@ package net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpane
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 record AmethystCollectorPanelRectangle(BlockPos anchor, int minX, int maxX, int minZ, int maxZ) {
+    private static final List<List<Candidate>> CANDIDATES_BY_SIZE = createCandidates();
+
     AmethystCollectorPanelRectangle {
         anchor = anchor.immutable();
     }
 
-    static @Nullable AmethystCollectorPanelRectangle findLargestRectangle(List<BlockPos> dependencies) {
+    static @Nullable AmethystCollectorPanelRectangle findHighestPowerRectangle(List<BlockPos> dependencies) {
         if (dependencies.isEmpty() || dependencies.size() > AmethystCollectorPanelBlock.MAX_AREA) {
             return null;
         }
@@ -40,7 +44,7 @@ record AmethystCollectorPanelRectangle(BlockPos anchor, int minX, int maxX, int 
 
         int width = maxX - minX + 1;
         int depth = maxZ - minZ + 1;
-        if (width > AmethystCollectorPanelBlock.MAX_SIDE || depth > AmethystCollectorPanelBlock.MAX_SIDE) {
+        if (width <= 0 || depth <= 0 || width > AmethystCollectorPanelBlock.MAX_SIDE || depth > AmethystCollectorPanelBlock.MAX_SIDE) {
             return null;
         }
 
@@ -51,84 +55,105 @@ record AmethystCollectorPanelRectangle(BlockPos anchor, int minX, int maxX, int 
             occupiedMask |= 1 << localZ * AmethystCollectorPanelBlock.MAX_SIDE + localX;
         }
 
-        AmethystCollectorPanelRectangle best = null;
-        for (int rectangleMinX = 0; rectangleMinX < width; rectangleMinX++) {
-            for (int rectangleMinZ = 0; rectangleMinZ < depth; rectangleMinZ++) {
-                for (int rectangleMaxX = rectangleMinX; rectangleMaxX < width; rectangleMaxX++) {
-                    for (int rectangleMaxZ = rectangleMinZ; rectangleMaxZ < depth; rectangleMaxZ++) {
-                        if (!isFilledRectangle(occupiedMask, rectangleMinX, rectangleMaxX, rectangleMinZ, rectangleMaxZ)) {
-                            continue;
-                        }
+        List<Candidate> candidates = CANDIDATES_BY_SIZE.get((width - 1) * AmethystCollectorPanelBlock.MAX_SIDE + depth - 1);
+        for (Candidate candidate : candidates) {
+            int mask = candidate.mask();
+            if ((occupiedMask & mask) != mask) {
+                continue;
+            }
 
-                        AmethystCollectorPanelRectangle candidate = new AmethystCollectorPanelRectangle(new BlockPos(minX + rectangleMinX, y, minZ + rectangleMinZ), minX + rectangleMinX, minX + rectangleMaxX, minZ + rectangleMinZ, minZ + rectangleMaxZ);
-                        if (!isBetterRectangle(candidate, best)) {
-                            continue;
-                        }
+            AmethystCollectorPanelRectangle rectangle = candidate.rectangle();
+            int selectedMinX = minX + rectangle.minX();
+            int selectedMinZ = minZ + rectangle.minZ();
+            return new AmethystCollectorPanelRectangle(new BlockPos(selectedMinX, y, selectedMinZ), selectedMinX, minX + rectangle.maxX(), selectedMinZ, minZ + rectangle.maxZ());
+        }
+        return null;
+    }
 
-                        best = candidate;
+    private static @Unmodifiable List<List<Candidate>> createCandidates() {
+        List<Candidate> candidates = new ArrayList<>();
+        for (int minX = 0; minX < AmethystCollectorPanelBlock.MAX_SIDE; minX++) {
+            for (int minZ = 0; minZ < AmethystCollectorPanelBlock.MAX_SIDE; minZ++) {
+                for (int maxX = minX; maxX < AmethystCollectorPanelBlock.MAX_SIDE; maxX++) {
+                    int rowWidth = maxX - minX + 1;
+                    int rowMask = (1 << rowWidth) - 1 << minX;
+                    int mask = 0;
+                    for (int maxZ = minZ; maxZ < AmethystCollectorPanelBlock.MAX_SIDE; maxZ++) {
+                        mask |= rowMask << maxZ * AmethystCollectorPanelBlock.MAX_SIDE;
+                        candidates.add(new Candidate(new AmethystCollectorPanelRectangle(new BlockPos(minX, 0, minZ), minX, maxX, minZ, maxZ), mask));
                     }
                 }
             }
         }
-        return best;
-    }
+        candidates.sort((first, second) -> compareRectangles(first.rectangle(), second.rectangle()));
+        List<List<Candidate>> candidatesBySize = new ArrayList<>(AmethystCollectorPanelBlock.MAX_AREA);
+        for (int width = 1; width <= AmethystCollectorPanelBlock.MAX_SIDE; width++) {
+            for (int depth = 1; depth <= AmethystCollectorPanelBlock.MAX_SIDE; depth++) {
+                List<Candidate> fitting = new ArrayList<>();
+                for (Candidate candidate : candidates) {
+                    AmethystCollectorPanelRectangle rectangle = candidate.rectangle();
+                    if (rectangle.maxX() >= width || rectangle.maxZ() >= depth) {
+                        continue;
+                    }
 
-    private static boolean isFilledRectangle(int occupiedMask, int minX, int maxX, int minZ, int maxZ) {
-        int rowWidth = maxX - minX + 1;
-        int rowMask = (1 << rowWidth) - 1 << minX;
-        for (int z = minZ; z <= maxZ; z++) {
-            int occupiedRow = occupiedMask >>> z * AmethystCollectorPanelBlock.MAX_SIDE;
-            if ((occupiedRow & rowMask) == rowMask) {
-                continue;
+                    fitting.add(candidate);
+                }
+                candidatesBySize.add(List.copyOf(fitting));
             }
-
-            return false;
         }
-        return true;
+        return List.copyOf(candidatesBySize);
     }
 
-    private static boolean isBetterRectangle(AmethystCollectorPanelRectangle candidate, @Nullable AmethystCollectorPanelRectangle currentBest) {
-        int candidateArea = candidate.area();
-        if (currentBest == null) {
-            return true;
+    private static int compareRectangles(AmethystCollectorPanelRectangle first, AmethystCollectorPanelRectangle second) {
+        int powerOrder = Integer.compare(AmethystCollectorPanelPower.getRatedFluxLm(second), AmethystCollectorPanelPower.getRatedFluxLm(first));
+        if (powerOrder != 0) {
+            return powerOrder;
         }
 
-        int bestArea = currentBest.area();
-        if (candidateArea != bestArea) {
-            return candidateArea > bestArea;
+        int areaOrder = Integer.compare(second.area(), first.area());
+        if (areaOrder != 0) {
+            return areaOrder;
         }
 
-        int candidateWidth = candidate.width();
-        int bestWidth = currentBest.width();
-        int candidateDepth = candidate.depth();
-        int bestDepth = currentBest.depth();
-        int candidateShortSide = Math.min(candidateWidth, candidateDepth);
-        int bestShortSide = Math.min(bestWidth, bestDepth);
-        if (candidateShortSide != bestShortSide) {
-            return candidateShortSide > bestShortSide;
+        int firstWidth = first.width();
+        int secondWidth = second.width();
+        int firstDepth = first.depth();
+        int secondDepth = second.depth();
+        int shortSideOrder = Integer.compare(Math.min(secondWidth, secondDepth), Math.min(firstWidth, firstDepth));
+        if (shortSideOrder != 0) {
+            return shortSideOrder;
         }
 
-        int candidateMinX = candidate.minX();
-        int bestMinX = currentBest.minX();
-        if (candidateMinX != bestMinX) {
-            return candidateMinX < bestMinX;
+        int minXOrder = Integer.compare(first.minX(), second.minX());
+        if (minXOrder != 0) {
+            return minXOrder;
         }
 
-        int candidateMinZ = candidate.minZ();
-        int bestMinZ = currentBest.minZ();
-        if (candidateMinZ != bestMinZ) {
-            return candidateMinZ < bestMinZ;
+        int minZOrder = Integer.compare(first.minZ(), second.minZ());
+        if (minZOrder != 0) {
+            return minZOrder;
         }
 
-        if (candidateWidth != bestWidth) {
-            return candidateWidth > bestWidth;
+        int widthOrder = Integer.compare(secondWidth, firstWidth);
+        if (widthOrder != 0) {
+            return widthOrder;
         }
 
-        return candidateDepth > bestDepth;
+        return Integer.compare(secondDepth, firstDepth);
     }
 
     boolean contains(BlockPos pos) {
-        return pos.getY() == anchor.getY() && pos.getX() >= minX && pos.getX() <= maxX && pos.getZ() >= minZ && pos.getZ() <= maxZ;
+        if (pos.getY() != anchor.getY()) {
+            return false;
+        }
+
+        int x = pos.getX();
+        if (x < minX || x > maxX) {
+            return false;
+        }
+
+        int z = pos.getZ();
+        return z >= minZ && z <= maxZ;
     }
 
     int width() {
@@ -141,5 +166,8 @@ record AmethystCollectorPanelRectangle(BlockPos anchor, int minX, int maxX, int 
 
     int area() {
         return width() * depth();
+    }
+
+    private record Candidate(AmethystCollectorPanelRectangle rectangle, int mask) {
     }
 }

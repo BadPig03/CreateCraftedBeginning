@@ -5,6 +5,7 @@ import com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointTyp
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerBlock;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasunpackager.GasUnpackagerBlock;
@@ -21,7 +22,8 @@ public class GasPackagerInteractionPoint extends ArmInteractionPoint {
     public static class GasPackagerType extends ArmInteractionPointType {
         @Override
         public boolean canCreatePoint(Level level, BlockPos pos, BlockState state) {
-            return state.getBlock() instanceof GasPackagerBlock || state.getBlock() instanceof GasRepackagerBlock || state.getBlock() instanceof GasUnpackagerBlock;
+            Block block = state.getBlock();
+            return block instanceof GasPackagerBlock || block instanceof GasRepackagerBlock || block instanceof GasUnpackagerBlock;
         }
 
         @Override

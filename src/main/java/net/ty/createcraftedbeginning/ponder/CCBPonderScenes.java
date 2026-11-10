@@ -14,7 +14,6 @@ import net.ty.createcraftedbeginning.ponder.scenes.crates.AndesiteCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.crates.BrassCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.crates.CardboardCrateScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.crates.SturdyCrateScenes;
-import net.ty.createcraftedbeginning.ponder.scenes.end.EndSculkSilencerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gascontainers.AirtightTankScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gascontainers.CreativeAirtightTankScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.AirtightEngineScenes;
@@ -31,7 +30,6 @@ import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.PortableGasIn
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.ResidueOutletScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gasmanipulators.TeslaTurbineScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightCheckValveScenes;
-import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightEncasedPipeScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightMeterScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightPipeScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightPumpScenes;
@@ -39,6 +37,15 @@ import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightRegulatorPum
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AirtightValveScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AtmosphereExtractionScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.SmartAirtightPipeScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystCollectorPanelScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystLensScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystLoaderScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystLoadingNetworkScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystMirrorScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystSoundSuppressorScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.LaserEmitterScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.OpticalFiberScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.PhotothermalReceiverScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.other.AirVentScenes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -59,8 +66,6 @@ public class CCBPonderScenes {
         entryHelper.forComponents(CCBBlocks.CARDBOARD_CRATE_BLOCK).addStoryBoard("crates_story_board", CardboardCrateScenes::scene, CCBPonderTags.CRATES_TAG_ID);
 
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_PIPE_BLOCK).addStoryBoard("airtight_pipe_connecting_story_board", AirtightPipeScenes::connecting, CCBPonderTags.GAS_PIPES_TAG_ID).addStoryBoard("airtight_pipe_exchange_story_board", AirtightPipeScenes::exchange, CCBPonderTags.GAS_PIPES_TAG_ID);
-        entryHelper.forComponents(CCBBlocks.AIRTIGHT_PIPE_BLOCK, CCBBlocks.AIRTIGHT_PUMP_BLOCK).addStoryBoard("airtight_pipe_exchange_story_board", AtmosphereExtractionScenes::dimensions, CCBPonderTags.GAS_EXTRACTORS_TAG_ID).addStoryBoard("airtight_pipe_exchange_story_board", AtmosphereExtractionScenes::biomes, CCBPonderTags.GAS_EXTRACTORS_TAG_ID).addStoryBoard("airtight_pipe_exchange_story_board", AtmosphereExtractionScenes::bubbleColumns, CCBPonderTags.GAS_EXTRACTORS_TAG_ID);
-        entryHelper.forComponents(CCBBlocks.AIRTIGHT_ENCASED_PIPE_BLOCK).addStoryBoard("airtight_encased_pipe_story_board", AirtightEncasedPipeScenes::scene, CCBPonderTags.GAS_PIPES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_CHECK_VALVE_BLOCK).addStoryBoard("airtight_check_valve_story_board", AirtightCheckValveScenes::scene, CCBPonderTags.GAS_PIPES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_VALVE_BLOCK).addStoryBoard("airtight_valve_story_board", AirtightValveScenes::scene, CCBPonderTags.GAS_PIPES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.SMART_AIRTIGHT_PIPE_BLOCK).addStoryBoard("smart_airtight_pipe_story_board", SmartAirtightPipeScenes::scene, CCBPonderTags.GAS_PIPES_TAG_ID);
@@ -68,6 +73,7 @@ public class CCBPonderScenes {
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_REGULATOR_PUMP_BLOCK).addStoryBoard("airtight_regulator_pump_story_board", AirtightRegulatorPumpScenes::scene, CCBPonderTags.GAS_PIPES_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_MANOMETER_BLOCK).addStoryBoard("airtight_manometer_story_board", AirtightMeterScenes::manometer, CCBPonderTags.GAS_PIPES_TAG_ID, AllCreatePonderTags.DISPLAY_SOURCES);
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_FLOWMETER_BLOCK).addStoryBoard("airtight_flowmeter_story_board", AirtightMeterScenes::flowmeter, CCBPonderTags.GAS_PIPES_TAG_ID, AllCreatePonderTags.DISPLAY_SOURCES);
+        entryHelper.forComponents(CCBBlocks.AIRTIGHT_PIPE_BLOCK, CCBBlocks.AIRTIGHT_CHECK_VALVE_BLOCK, CCBBlocks.AIRTIGHT_VALVE_BLOCK, CCBBlocks.SMART_AIRTIGHT_PIPE_BLOCK, CCBBlocks.AIRTIGHT_PUMP_BLOCK, CCBBlocks.AIRTIGHT_REGULATOR_PUMP_BLOCK, CCBBlocks.AIRTIGHT_FLOWMETER_BLOCK, CCBBlocks.AIRTIGHT_MANOMETER_BLOCK).addStoryBoard("airtight_pipe_exchange_story_board", AtmosphereExtractionScenes::dimensions, CCBPonderTags.GAS_EXTRACTORS_TAG_ID).addStoryBoard("airtight_pipe_exchange_story_board", AtmosphereExtractionScenes::biomes, CCBPonderTags.GAS_EXTRACTORS_TAG_ID).addStoryBoard("airtight_pipe_exchange_story_board", AtmosphereExtractionScenes::bubbleColumns, CCBPonderTags.GAS_EXTRACTORS_TAG_ID);
 
         entryHelper.forComponents(CCBBlocks.AIRTIGHT_TANK_BLOCK).addStoryBoard("airtight_tank_storage_story_board", AirtightTankScenes::storage, CCBPonderTags.GAS_CONTAINERS_TAG_ID).addStoryBoard("airtight_tank_size_story_board", AirtightTankScenes::size, CCBPonderTags.GAS_CONTAINERS_TAG_ID);
         entryHelper.forComponents(CCBBlocks.HORIZONTAL_AIRTIGHT_TANK_BLOCK).addStoryBoard("horizontal_airtight_tank_storage_story_board", AirtightTankScenes::horizontalStorage, CCBPonderTags.GAS_CONTAINERS_TAG_ID).addStoryBoard("horizontal_airtight_tank_size_story_board", AirtightTankScenes::horizontalSize, CCBPonderTags.GAS_CONTAINERS_TAG_ID);
@@ -99,7 +105,15 @@ public class CCBPonderScenes {
 
         entryHelper.forComponents(CCBBlocks.AIR_VENT_BLOCK).addStoryBoard("air_vent_story_board", AirVentScenes::scene);
 
-        entryHelper.forComponents(CCBBlocks.END_SCULK_SILENCER_BLOCK).addStoryBoard("end_sculk_silencer_story_board", EndSculkSilencerScenes::scene, AllCreatePonderTags.KINETIC_APPLIANCES);
+        entryHelper.forComponents(CCBBlocks.OPTICAL_FIBER_BLOCK).addStoryBoard("optical_fiber_story_board", OpticalFiberScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.AMETHYST_COLLECTOR_PANEL_BLOCK).addStoryBoard("amethyst_collector_panel_assembly_story_board", AmethystCollectorPanelScenes::assembly, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_collector_panel_lighting_story_board", AmethystCollectorPanelScenes::lighting, CCBPonderTags.OPTICAL_POWER_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.LASER_EMITTER_BLOCK).addStoryBoard("laser_emitter_story_board", LaserEmitterScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.PHOTOTHERMAL_RECEIVER_BLOCK).addStoryBoard("photothermal_receiver_story_board", PhotothermalReceiverScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.AMETHYST_MIRROR_BLOCK).addStoryBoard("amethyst_mirror_reflecting_story_board", AmethystMirrorScenes::reflecting, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_mirror_targeting_story_board", AmethystMirrorScenes::targeting);
+        entryHelper.forComponents(CCBBlocks.AMETHYST_CONVEX_LENS_BLOCK, CCBBlocks.AMETHYST_CONCAVE_LENS_BLOCK).addStoryBoard("amethyst_lens_story_board", AmethystLensScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.AMETHYST_LOADER_BLOCK).addStoryBoard("amethyst_loader_factory_story_board", AmethystLoaderScenes::factory, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_loader_moving_story_board", AmethystLoaderScenes::moving, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_loader_train_story_board", AmethystLoaderScenes::train, CCBPonderTags.OPTICAL_POWER_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.AMETHYST_ANTENNA_BLOCK, CCBBlocks.AMETHYST_LOADER_BLOCK).addStoryBoard("amethyst_loading_network_story_board", AmethystLoadingNetworkScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.AMETHYST_SOUND_SUPPRESSOR_BLOCK).addStoryBoard("amethyst_sound_suppressor_suppression_story_board", AmethystSoundSuppressorScenes::suppression, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_sound_suppressor_lighting_story_board", AmethystSoundSuppressorScenes::lighting, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_sound_suppressor_growth_story_board", AmethystSoundSuppressorScenes::growth, CCBPonderTags.OPTICAL_POWER_TAG_ID);
     }
 
     @Contract("_ -> new")

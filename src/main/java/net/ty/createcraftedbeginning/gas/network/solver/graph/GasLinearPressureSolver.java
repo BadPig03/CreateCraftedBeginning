@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.gas.network.solver.graph;
 
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
@@ -7,22 +8,17 @@ import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGra
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.FlowEdge;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.PressureNode;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.SolverWork;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import static net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureFlowGraph.ACTIVE_SET_PRESSURE_EPSILON_PA;
 import static net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureResiduals.FLOW_RESIDUAL_ABSOLUTE_TOLERANCE;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasLinearPressureSolver {
+final class GasLinearPressureSolver {
     private static final double CONJUGATE_GRADIENT_BREAKDOWN_EPSILON = 1.0E-30;
     private static final double FOREST_DIRECT_PIVOT_RELATIVE_EPSILON = 1.0E-12;
     private static final double PRESSURE_SOR_FACTOR = 1.5;
@@ -35,18 +31,18 @@ public final class GasLinearPressureSolver {
     private final List<FlowEdge> edges;
     private final List<List<Integer>> incidentEdges;
     private final GasPressureResiduals residuals;
+    private final ConjugateGradientWorkspace conjugateGradient = new ConjugateGradientWorkspace();
+    private final ForestWorkspace forest = new ForestWorkspace();
     private boolean inconsistentLinearization;
     private boolean detectInconsistency;
 
-    @Internal
-    public enum Result {
+    enum Result {
         SOLVED,
         UNRESOLVED,
         INCONSISTENT
     }
 
-    @Internal
-    public GasLinearPressureSolver(GasPressureFlowGraph graph, GasPressureResiduals residuals) {
+    GasLinearPressureSolver(GasPressureFlowGraph graph, GasPressureResiduals residuals) {
         nodes = graph.nodes;
         edges = graph.edges;
         incidentEdges = graph.incidentEdges;
@@ -79,8 +75,7 @@ public final class GasLinearPressureSolver {
         }
     }
 
-    @Internal
-    public Result solve(EdgeFlow[] linearizedFlows, SolverWork work) {
+    Result solve(EdgeFlow[] linearizedFlows, SolverWork work) {
         return solve(linearizedFlows, work, true);
     }
 
@@ -373,8 +368,9 @@ public final class GasLinearPressureSolver {
             return false;
         }
 
-        double[] preconditionedResidual = new double[unknownCount];
-        double[] searchDirection = new double[unknownCount];
+        conjugateGradient.prepare(unknownCount, unknownIndexByNode, edges, linearizedFlows);
+        double[] preconditionedResidual = conjugateGradient.preconditionedResidual;
+        double[] searchDirection = conjugateGradient.searchDirection;
         for (int unknownIndex = 0; unknownIndex < unknownCount; unknownIndex++) {
             if (diagonal[unknownIndex] <= 0) {
                 continue;
@@ -388,11 +384,11 @@ public final class GasLinearPressureSolver {
             return false;
         }
 
-        double[] operatorDirection = new double[unknownCount];
+        double[] operatorDirection = conjugateGradient.operatorDirection;
         int maxIterations = (int) Mth.clamp(unknownCount * 2L, MIN_CONJUGATE_GRADIENT_ITERATIONS, MAX_CONJUGATE_GRADIENT_ITERATIONS);
         for (int iteration = 0; iteration < maxIterations; iteration++) {
             work.conjugateGradientIterations++;
-            applyLinearPressureOperator(searchDirection, operatorDirection, unknownIndexByNode, linearizedFlows);
+            conjugateGradient.apply(searchDirection, operatorDirection);
             double directionDotOperator = dot(searchDirection, operatorDirection);
             if (!Double.isFinite(directionDotOperator) || directionDotOperator <= CONJUGATE_GRADIENT_BREAKDOWN_EPSILON) {
                 return false;
@@ -439,7 +435,7 @@ public final class GasLinearPressureSolver {
     private boolean solveWithForestElimination(EdgeFlow[] linearizedFlows, SolverWork work, int[] unknownIndexByNode, double[] diagonal, double[] rightHandSide) {
         work.forestDirectSolveAttempts++;
         int unknownCount = diagonal.length;
-        Map<Long, double[]> conductanceByPair = new HashMap<>();
+        forest.prepare(unknownCount, edges.size());
         for (int edgeIndex = 0; edgeIndex < edges.size(); edgeIndex++) {
             EdgeFlow flow = linearizedFlows[edgeIndex];
             if (flow.fromPressureConductance() <= 0 && flow.toPressureConductance() <= 0) {
@@ -460,50 +456,58 @@ public final class GasLinearPressureSolver {
             int first = Math.min(fromUnknown, toUnknown);
             int second = Math.max(fromUnknown, toUnknown);
             long pairKey = (long) first << 32 | second & 0xffffffffL;
-            double[] conductances = conductanceByPair.computeIfAbsent(pairKey, ignored -> new double[2]);
-            conductances[0] += fromUnknown == first ? flow.toPressureConductance() : flow.fromPressureConductance();
-            conductances[1] += fromUnknown == first ? flow.fromPressureConductance() : flow.toPressureConductance();
-            if (!Double.isFinite(conductances[0]) || !Double.isFinite(conductances[1])) {
+            int pair = forest.pairIndices.putIfAbsent(pairKey, forest.pairCount);
+            if (pair < 0) {
+                pair = forest.pairCount++;
+                forest.pairKeys[pair] = pairKey;
+                forest.forward[pair] = 0;
+                forest.reverse[pair] = 0;
+            }
+            forest.forward[pair] += fromUnknown == first ? flow.toPressureConductance() : flow.fromPressureConductance();
+            forest.reverse[pair] += fromUnknown == first ? flow.fromPressureConductance() : flow.toPressureConductance();
+            if (!Double.isFinite(forest.forward[pair]) || !Double.isFinite(forest.reverse[pair])) {
                 return false;
             }
         }
 
-        int[] degree = new int[unknownCount];
-        for (long pairKey : conductanceByPair.keySet()) {
+        int[] remainingDegree = forest.degree;
+        for (int pair = 0; pair < forest.pairCount; pair++) {
+            long pairKey = forest.pairKeys[pair];
             int first = (int) (pairKey >>> 32);
             int second = (int) pairKey;
-            degree[first]++;
-            degree[second]++;
+            remainingDegree[first]++;
+            remainingDegree[second]++;
         }
 
-        int[] offsets = new int[unknownCount + 1];
+        int[] offsets = forest.offsets;
         for (int unknownIndex = 0; unknownIndex < unknownCount; unknownIndex++) {
-            offsets[unknownIndex + 1] = offsets[unknownIndex] + degree[unknownIndex];
+            offsets[unknownIndex + 1] = offsets[unknownIndex] + remainingDegree[unknownIndex];
         }
-        int[] cursor = offsets.clone();
-        int[] neighbors = new int[offsets[unknownCount]];
-        double[] neighborConductance = new double[neighbors.length];
-        double[] reverseNeighborConductance = new double[neighbors.length];
-        for (Entry<Long, double[]> entry : conductanceByPair.entrySet()) {
-            long pairKey = entry.getKey();
+        int[] cursor = forest.cursor;
+        System.arraycopy(offsets, 0, cursor, 0, unknownCount + 1);
+        int[] neighbors = forest.neighbors;
+        double[] neighborConductance = forest.neighborConductance;
+        double[] reverseNeighborConductance = forest.reverseNeighborConductance;
+        for (int pair = 0; pair < forest.pairCount; pair++) {
+            long pairKey = forest.pairKeys[pair];
             int first = (int) (pairKey >>> 32);
             int second = (int) pairKey;
-            double[] conductances = entry.getValue();
             int firstSlot = cursor[first]++;
             neighbors[firstSlot] = second;
-            neighborConductance[firstSlot] = conductances[0];
-            reverseNeighborConductance[firstSlot] = conductances[1];
+            neighborConductance[firstSlot] = forest.forward[pair];
+            reverseNeighborConductance[firstSlot] = forest.reverse[pair];
             int secondSlot = cursor[second]++;
             neighbors[secondSlot] = first;
-            neighborConductance[secondSlot] = conductances[1];
-            reverseNeighborConductance[secondSlot] = conductances[0];
+            neighborConductance[secondSlot] = forest.reverse[pair];
+            reverseNeighborConductance[secondSlot] = forest.forward[pair];
         }
 
-        double[] reducedDiagonal = diagonal.clone();
-        double[] reducedRightHandSide = rightHandSide.clone();
-        int[] remainingDegree = degree.clone();
-        boolean[] eliminated = new boolean[unknownCount];
-        int[] pending = new int[unknownCount];
+        double[] reducedDiagonal = forest.reducedDiagonal;
+        double[] reducedRightHandSide = forest.reducedRightHandSide;
+        System.arraycopy(diagonal, 0, reducedDiagonal, 0, unknownCount);
+        System.arraycopy(rightHandSide, 0, reducedRightHandSide, 0, unknownCount);
+        boolean[] eliminated = forest.eliminated;
+        int[] pending = forest.pending;
         int pendingCount = 0;
         for (int unknownIndex = 0; unknownIndex < unknownCount; unknownIndex++) {
             if (remainingDegree[unknownIndex] > 1) {
@@ -513,12 +517,11 @@ public final class GasLinearPressureSolver {
             pending[pendingCount++] = unknownIndex;
         }
 
-        int[] eliminationOrder = new int[unknownCount];
-        int[] parent = new int[unknownCount];
-        Arrays.fill(parent, -1);
-        double[] parentConductance = new double[unknownCount];
-        double[] eliminatedDiagonal = new double[unknownCount];
-        double[] eliminatedRightHandSide = new double[unknownCount];
+        int[] eliminationOrder = forest.eliminationOrder;
+        int[] parent = forest.parent;
+        double[] parentConductance = forest.parentConductance;
+        double[] eliminatedDiagonal = forest.eliminatedDiagonal;
+        double[] eliminatedRightHandSide = forest.eliminatedRightHandSide;
         int eliminatedCount = 0;
         for (int pendingIndex = 0; pendingIndex < pendingCount; pendingIndex++) {
             int unknownIndex = pending[pendingIndex];
@@ -582,7 +585,7 @@ public final class GasLinearPressureSolver {
             return false;
         }
 
-        double[] pressure = new double[unknownCount];
+        double[] pressure = forest.pressure;
         for (int orderIndex = eliminatedCount - 1; orderIndex >= 0; orderIndex--) {
             int unknownIndex = eliminationOrder[orderIndex];
             int parentIndex = parent[unknownIndex];
@@ -722,6 +725,122 @@ public final class GasLinearPressureSolver {
             }
         }
         return new SorRows(offsets, diagonal, adjacentNodes, conductances, constants, outgoing);
+    }
+
+    private static final class ForestWorkspace {
+        private final Long2IntOpenHashMap pairIndices = new Long2IntOpenHashMap();
+        private long[] pairKeys = {};
+        private double[] forward = {};
+        private double[] reverse = {};
+        private int[] degree = {};
+        private int[] offsets = {0};
+        private int[] cursor = {0};
+        private int[] neighbors = {};
+        private double[] neighborConductance = {};
+        private double[] reverseNeighborConductance = {};
+        private double[] reducedDiagonal = {};
+        private double[] reducedRightHandSide = {};
+        private boolean[] eliminated = {};
+        private int[] pending = {};
+        private int[] eliminationOrder = {};
+        private int[] parent = {};
+        private double[] parentConductance = {};
+        private double[] eliminatedDiagonal = {};
+        private double[] eliminatedRightHandSide = {};
+        private double[] pressure = {};
+        private int pairCount;
+
+        private ForestWorkspace() {
+            pairIndices.defaultReturnValue(-1);
+        }
+
+        private void prepare(int unknownCount, int edgeCount) {
+            pairIndices.clear();
+            pairCount = 0;
+            if (pairKeys.length < edgeCount) {
+                pairKeys = new long[edgeCount];
+                forward = new double[edgeCount];
+                reverse = new double[edgeCount];
+                neighbors = new int[edgeCount * 2];
+                neighborConductance = new double[edgeCount * 2];
+                reverseNeighborConductance = new double[edgeCount * 2];
+            }
+            if (degree.length < unknownCount) {
+                degree = new int[unknownCount];
+                offsets = new int[unknownCount + 1];
+                cursor = new int[unknownCount + 1];
+                reducedDiagonal = new double[unknownCount];
+                reducedRightHandSide = new double[unknownCount];
+                eliminated = new boolean[unknownCount];
+                pending = new int[unknownCount];
+                eliminationOrder = new int[unknownCount];
+                parent = new int[unknownCount];
+                parentConductance = new double[unknownCount];
+                eliminatedDiagonal = new double[unknownCount];
+                eliminatedRightHandSide = new double[unknownCount];
+                pressure = new double[unknownCount];
+            }
+            Arrays.fill(degree, 0, unknownCount, 0);
+            Arrays.fill(eliminated, 0, unknownCount, false);
+        }
+    }
+
+    private static final class ConjugateGradientWorkspace {
+        private int[] fromUnknown = new int[0];
+        private int[] toUnknown = new int[0];
+        private double[] conductances = new double[0];
+        private int termCount;
+        private double[] preconditionedResidual = new double[0];
+        private double[] searchDirection = new double[0];
+        private double[] operatorDirection = new double[0];
+
+        private void prepare(int unknownCount, int[] unknownIndexByNode, List<FlowEdge> edges, EdgeFlow[] linearizedFlows) {
+            if (fromUnknown.length < edges.size()) {
+                fromUnknown = new int[edges.size()];
+                toUnknown = new int[edges.size()];
+                conductances = new double[edges.size()];
+            }
+            termCount = 0;
+            for (int edgeIndex = 0; edgeIndex < edges.size(); edgeIndex++) {
+                double conductance = linearizedFlows[edgeIndex].symmetricConductance();
+                if (conductance <= 0) {
+                    continue;
+                }
+
+                FlowEdge edge = edges.get(edgeIndex);
+                fromUnknown[termCount] = unknownIndexByNode[edge.from];
+                toUnknown[termCount] = unknownIndexByNode[edge.to];
+                conductances[termCount++] = conductance;
+            }
+            if (preconditionedResidual.length != unknownCount) {
+                preconditionedResidual = new double[unknownCount];
+                searchDirection = new double[unknownCount];
+                operatorDirection = new double[unknownCount];
+                return;
+            }
+
+            Arrays.fill(preconditionedResidual, 0);
+            Arrays.fill(searchDirection, 0);
+        }
+
+        private void apply(double[] pressure, double[] result) {
+            Arrays.fill(result, 0);
+            for (int term = 0; term < termCount; term++) {
+                int from = fromUnknown[term];
+                int to = toUnknown[term];
+                double fromPressure = from < 0 ? 0 : pressure[from];
+                double toPressure = to < 0 ? 0 : pressure[to];
+                double pressureDifference = conductances[term] * (fromPressure - toPressure);
+                if (from >= 0) {
+                    result[from] += pressureDifference;
+                }
+                if (to < 0) {
+                    continue;
+                }
+
+                result[to] -= pressureDifference;
+            }
+        }
     }
 
     private record SorRows(int[] offsets, double[] diagonal, int[] adjacentNodes, double[] conductances, double[] constants, boolean[] outgoing) {

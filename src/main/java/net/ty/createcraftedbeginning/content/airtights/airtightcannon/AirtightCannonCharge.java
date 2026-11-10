@@ -28,7 +28,7 @@ final class AirtightCannonCharge {
             return OptionalDouble.empty();
         }
 
-        return OptionalDouble.of(Mth.clamp((float) timeCharged / efficientUseTime, 0.0F, 2));
+        return OptionalDouble.of(Mth.clamp((double) timeCharged / efficientUseTime, 0, 2));
     }
 
     static int getEfficientUseTime(ItemStack cannon) {

@@ -1,10 +1,17 @@
 package net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager;
 
+import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.compat.computercraft.FallbackComputerBehaviour;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.packager.repackager.RepackagerBlockEntity;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -13,9 +20,9 @@ import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
-import net.ty.createcraftedbeginning.compat.computercraft.ComputerCraftPackagerCompat;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonItem;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonPressureSemantics;
+import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -23,8 +30,11 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
+public class GasRepackagerBlockEntity extends RepackagerBlockEntity implements IHaveGoggleInformation {
+    private static final String COMPOUND_KEY_OUTPUT_LIMIT_EXCEEDED = "OutputLimitExceeded";
+
     private final GasRepackagerController controller;
+    private boolean outputLimitExceeded;
 
     public GasRepackagerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -36,6 +46,14 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
     }
 
     @Override
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        super.addBehaviours(behaviours);
+        behaviours.remove(computerBehaviour);
+        computerBehaviour = new FallbackComputerBehaviour(this);
+        behaviours.add(computerBehaviour);
+    }
+
+    @Override
     public boolean unwrapBox(ItemStack box, boolean simulate) {
         return PackageItem.isPackage(box) && super.unwrapBox(box, simulate);
     }
@@ -43,6 +61,48 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
     @Override
     protected void attemptToRepackage(IItemHandler targetInv) {
         controller.attemptToRepackage(targetInv);
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        if (!outputLimitExceeded) {
+            return false;
+        }
+
+        CCBLang.translate("gui.gas_repackager.output_limit", GasRepackagerOutputBudget.MAX_OUTPUT_PACKAGES).style(ChatFormatting.RED).forGoggles(tooltip);
+        CCBLang.translate("gui.gas_repackager.reduce_batch").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        return true;
+    }
+
+    @Override
+    public void clearContent() {
+        super.clearContent();
+        setOutputLimitExceeded(false);
+    }
+
+    @Override
+    protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.read(compoundTag, provider, clientPacket);
+        outputLimitExceeded = clientPacket && compoundTag.getBoolean(COMPOUND_KEY_OUTPUT_LIMIT_EXCEEDED);
+    }
+
+    @Override
+    protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
+        super.write(compoundTag, provider, clientPacket);
+        if (!clientPacket) {
+            return;
+        }
+
+        compoundTag.putBoolean(COMPOUND_KEY_OUTPUT_LIMIT_EXCEEDED, outputLimitExceeded);
+    }
+
+    void setOutputLimitExceeded(boolean exceeded) {
+        if (outputLimitExceeded == exceeded) {
+            return;
+        }
+
+        outputLimitExceeded = exceeded;
+        notifyUpdate();
     }
 
     void attemptVanillaItemRepackage(IItemHandler targetInv) {
@@ -111,7 +171,6 @@ public class GasRepackagerBlockEntity extends RepackagerBlockEntity {
             return;
         }
 
-        ComputerCraftPackagerCompat.emitRepackage(this, boxes);
         queuedExitingPackages.addAll(boxes);
         notifyUpdate();
     }

@@ -87,7 +87,12 @@ public class GasInjectionRecipe extends StandardGasProcessingRecipe<SingleRecipe
             errors.add("Fluid gas injection recipe input amount must be greater than zero.");
         }
 
-        if (!(!fluidResults.isEmpty() && (fluidResults.getFirst().isEmpty() || fluidResults.getFirst().getAmount() <= 0))) {
+        if (fluidResults.isEmpty()) {
+            return;
+        }
+
+        FluidStack result = fluidResults.getFirst();
+        if (!result.isEmpty() && result.getAmount() > 0) {
             return;
         }
 
@@ -196,7 +201,7 @@ public class GasInjectionRecipe extends StandardGasProcessingRecipe<SingleRecipe
     }
 
     boolean matchesFluid(IFluidHandler fluids) {
-        if (!isFluidInjection()) {
+        if (hasItemInput() || !hasFluidInput()) {
             return false;
         }
 

@@ -50,17 +50,21 @@ public class ChillingCategory extends CCBRecipeCategory<ChillingRecipe> {
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
-        poseStack.translate(56, 33, 0);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-12.5F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
+        try {
+            poseStack.translate(56, 33, 0);
+            poseStack.mulPose(Axis.XP.rotationDegrees(-12.5F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(22.5F));
 
-        AnimatedKinetics.defaultBlockElement(AllPartialModels.ENCASED_FAN_INNER).rotateBlock(180, 0, AnimatedKinetics.getCurrentAngle() * 16).scale(SCALE).render(graphics);
-        AnimatedKinetics.defaultBlockElement(AllBlocks.ENCASED_FAN.getDefaultState()).rotateBlock(0, 180, 0).atLocal(0, 0, 0).scale(SCALE).render(graphics);
-        AnimatedKinetics.defaultBlockElement(CCBBlocks.BREEZE_COOLER_BLOCK.getDefaultState()).atLocal(0, 0, 2).scale(SCALE).render(graphics);
-        AnimatedKinetics.defaultBlockElement(CCBPartialModels.BREEZE_COOLER_WIND).rotateBlock(0, AnimatedKinetics.getCurrentAngle() * 4, 0).atLocal(0, 0, 2).scale(SCALE).render(graphics);
-        AnimatedKinetics.defaultBlockElement(CCBPartialModels.BREEZE_CHILLED).rotateBlock(0, 180, 0).atLocal(0, 0, 2).scale(SCALE).render(graphics);
-
-        poseStack.popPose();
+            float angle = AnimatedKinetics.getCurrentAngle();
+            AnimatedKinetics.defaultBlockElement(AllPartialModels.ENCASED_FAN_INNER).rotateBlock(180, 0, angle * 16).scale(SCALE).render(graphics);
+            AnimatedKinetics.defaultBlockElement(AllBlocks.ENCASED_FAN.getDefaultState()).rotateBlock(0, 180, 0).atLocal(0, 0, 0).scale(SCALE).render(graphics);
+            AnimatedKinetics.defaultBlockElement(CCBBlocks.BREEZE_COOLER_BLOCK.getDefaultState()).atLocal(0, 0, 2).scale(SCALE).render(graphics);
+            AnimatedKinetics.defaultBlockElement(CCBPartialModels.BREEZE_COOLER_WIND).rotateBlock(0, angle * 4, 0).atLocal(0, 0, 2).scale(SCALE).render(graphics);
+            AnimatedKinetics.defaultBlockElement(CCBPartialModels.BREEZE_CHILLED).rotateBlock(0, 180, 0).atLocal(0, 0, 2).scale(SCALE).render(graphics);
+        }
+        finally {
+            poseStack.popPose();
+        }
     }
 
     @Override

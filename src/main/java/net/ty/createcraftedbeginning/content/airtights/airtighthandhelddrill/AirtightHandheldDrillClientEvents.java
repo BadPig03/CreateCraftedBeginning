@@ -1,16 +1,13 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.HitResult.Type;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingOut;
+import net.neoforged.neoforge.client.event.ClientTickEvent.Post;
+import net.neoforged.neoforge.event.level.LevelEvent.Unload;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -22,31 +19,22 @@ final class AirtightHandheldDrillClientEvents {
     }
 
     @SubscribeEvent
-    private static void onPlayerPreTick(Pre event) {
-        Player player = event.getEntity();
-        AirtightHandheldDrillRenderHandler renderHandler = AirtightHandheldDrillRenderHandler.INSTANCE;
-        ItemStack mainHandDrill = player.getMainHandItem();
-        if (!mainHandDrill.is(CCBItems.AIRTIGHT_HANDHELD_DRILL)) {
-            if (renderHandler.hasHandAnimation()) {
-                renderHandler.stop();
-            }
+    private static void onClientPostTick(Post event) {
+        AirtightHandheldDrillRenderHandler.INSTANCE.tick();
+    }
+
+    @SubscribeEvent
+    private static void onLogout(LoggingOut event) {
+        AirtightHandheldDrillRenderHandler.INSTANCE.reset();
+        AirtightHandheldDrillOutlineRenderer.clear();
+    }
+
+    @SubscribeEvent
+    private static void onLevelUnload(Unload event) {
+        if (!event.getLevel().isClientSide()) {
             return;
         }
 
-        Minecraft minecraft = Minecraft.getInstance();
-        boolean hasHandAnimation = renderHandler.hasHandAnimation();
-        boolean isUsingDrill = player.isUsingItem() && player.getUseItem().is(CCBItems.AIRTIGHT_HANDHELD_DRILL);
-        boolean isTargetingBlock = minecraft.options.keyAttack.isDown() && minecraft.hitResult != null && minecraft.hitResult.getType() == Type.BLOCK;
-        boolean shouldRotate = isUsingDrill || isTargetingBlock;
-        if (shouldRotate && !hasHandAnimation) {
-            renderHandler.start();
-            return;
-        }
-
-        if (shouldRotate || !hasHandAnimation) {
-            return;
-        }
-
-        renderHandler.stop();
+        AirtightHandheldDrillOutlineRenderer.clear();
     }
 }

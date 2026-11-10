@@ -33,6 +33,10 @@ public final class ReactorKettleBrewingRecipes {
         CATALOGS.clear();
     }
 
+    public static synchronized void invalidateCaches(RecipeManager manager) {
+        CATALOGS.values().removeIf(catalog -> catalog.recipeManager() == manager);
+    }
+
     public static List<RecipeHolder<ReactorKettleRecipe>> getRecipes(Level level) {
         return getCatalog(level).recipes();
     }
@@ -65,13 +69,14 @@ public final class ReactorKettleBrewingRecipes {
         List<ReactorKettleRecipe> unindexed = new ArrayList<>();
         for (RecipeHolder<ReactorKettleRecipe> holder : recipes) {
             ReactorKettleRecipe recipe = holder.value();
-            if (recipe.getIngredients().isEmpty() || recipe.getIngredients().stream().anyMatch(ingredient -> !ingredient.isSimple())) {
+            List<Ingredient> ingredients = recipe.getIngredients();
+            if (ingredients.isEmpty() || ingredients.stream().anyMatch(ingredient -> !ingredient.isSimple())) {
                 unindexed.add(recipe);
                 continue;
             }
 
             Set<Item> ingredientItems = new LinkedHashSet<>();
-            for (Ingredient ingredient : recipe.getIngredients()) {
+            for (Ingredient ingredient : ingredients) {
                 for (ItemStack stack : ingredient.getItems()) {
                     ingredientItems.add(stack.getItem());
                 }

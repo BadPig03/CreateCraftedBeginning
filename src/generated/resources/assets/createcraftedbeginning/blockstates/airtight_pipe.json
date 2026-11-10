@@ -1,28 +1,1294 @@
 {
-  "variants": {
-    "axis=x,cased=false": {
-      "model": "createcraftedbeginning:block/airtight_pipe/pipe",
-      "x": 90,
-      "y": 90
+  "multipart": [
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/core_x"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "down": "false",
+            "north": "false",
+            "south": "false",
+            "up": "false"
+          },
+          {
+            "OR": [
+              {
+                "east": "true"
+              },
+              {
+                "west": "true"
+              }
+            ]
+          }
+        ]
+      }
     },
-    "axis=x,cased=true": {
-      "model": "createcraftedbeginning:block/airtight_pipe/casing",
-      "x": 90,
-      "y": 90
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/core_y"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "east": "false",
+            "north": "false",
+            "south": "false",
+            "west": "false"
+          }
+        ]
+      }
     },
-    "axis=y,cased=false": {
-      "model": "createcraftedbeginning:block/airtight_pipe/pipe"
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/core_z"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "down": "false",
+            "east": "false",
+            "up": "false",
+            "west": "false"
+          },
+          {
+            "OR": [
+              {
+                "south": "true"
+              },
+              {
+                "north": "true"
+              }
+            ]
+          }
+        ]
+      }
     },
-    "axis=y,cased=true": {
-      "model": "createcraftedbeginning:block/airtight_pipe/casing"
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/cap_down"
+      },
+      "when": {
+        "cased": "false",
+        "down": "false",
+        "east": "false",
+        "north": "false",
+        "south": "false",
+        "west": "false"
+      }
     },
-    "axis=z,cased=false": {
-      "model": "createcraftedbeginning:block/airtight_pipe/pipe",
-      "x": 90
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/arm_down"
+      },
+      "when": {
+        "cased": "false",
+        "down": "true",
+        "east": "false",
+        "north": "false",
+        "south": "false",
+        "west": "false"
+      }
     },
-    "axis=z,cased=true": {
-      "model": "createcraftedbeginning:block/airtight_pipe/casing",
-      "x": 90
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_arm_down"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "down": "true"
+          },
+          {
+            "OR": [
+              {
+                "north": "true"
+              },
+              {
+                "south": "true"
+              },
+              {
+                "west": "true"
+              },
+              {
+                "east": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_closed_down"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "down": "false"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_closed_down"
+      },
+      "when": {
+        "cased": "true",
+        "down": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_open_down"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "down": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_open_down"
+      },
+      "when": {
+        "cased": "true",
+        "down": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/cap_up"
+      },
+      "when": {
+        "cased": "false",
+        "east": "false",
+        "north": "false",
+        "south": "false",
+        "up": "false",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/arm_up"
+      },
+      "when": {
+        "cased": "false",
+        "east": "false",
+        "north": "false",
+        "south": "false",
+        "up": "true",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_arm_up"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "up": "true"
+          },
+          {
+            "OR": [
+              {
+                "north": "true"
+              },
+              {
+                "south": "true"
+              },
+              {
+                "west": "true"
+              },
+              {
+                "east": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_closed_up"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "up": "false"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_closed_up"
+      },
+      "when": {
+        "cased": "true",
+        "up": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_open_up"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "up": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_open_up"
+      },
+      "when": {
+        "cased": "true",
+        "up": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/cap_north"
+      },
+      "when": {
+        "cased": "false",
+        "down": "false",
+        "east": "false",
+        "north": "false",
+        "south": "true",
+        "up": "false",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/arm_north"
+      },
+      "when": {
+        "cased": "false",
+        "down": "false",
+        "east": "false",
+        "north": "true",
+        "up": "false",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_arm_north"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "north": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true"
+              },
+              {
+                "up": "true"
+              },
+              {
+                "west": "true"
+              },
+              {
+                "east": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_closed_north"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "north": "false"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_closed_north"
+      },
+      "when": {
+        "cased": "true",
+        "north": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_open_north"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "north": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_open_north"
+      },
+      "when": {
+        "cased": "true",
+        "north": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/cap_south"
+      },
+      "when": {
+        "cased": "false",
+        "down": "false",
+        "east": "false",
+        "north": "true",
+        "south": "false",
+        "up": "false",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/arm_south"
+      },
+      "when": {
+        "cased": "false",
+        "down": "false",
+        "east": "false",
+        "south": "true",
+        "up": "false",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_arm_south"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "south": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true"
+              },
+              {
+                "up": "true"
+              },
+              {
+                "west": "true"
+              },
+              {
+                "east": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_closed_south"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "south": "false"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_closed_south"
+      },
+      "when": {
+        "cased": "true",
+        "south": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_open_south"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "south": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_open_south"
+      },
+      "when": {
+        "cased": "true",
+        "south": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/cap_west"
+      },
+      "when": {
+        "cased": "false",
+        "down": "false",
+        "east": "true",
+        "north": "false",
+        "south": "false",
+        "up": "false",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/arm_west"
+      },
+      "when": {
+        "cased": "false",
+        "down": "false",
+        "north": "false",
+        "south": "false",
+        "up": "false",
+        "west": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_arm_west"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "west": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true"
+              },
+              {
+                "up": "true"
+              },
+              {
+                "north": "true"
+              },
+              {
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_closed_west"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "west": "false"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_closed_west"
+      },
+      "when": {
+        "cased": "true",
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_open_west"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "west": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_open_west"
+      },
+      "when": {
+        "cased": "true",
+        "west": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/cap_east"
+      },
+      "when": {
+        "cased": "false",
+        "down": "false",
+        "east": "false",
+        "north": "false",
+        "south": "false",
+        "up": "false",
+        "west": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/arm_east"
+      },
+      "when": {
+        "cased": "false",
+        "down": "false",
+        "east": "true",
+        "north": "false",
+        "south": "false",
+        "up": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_arm_east"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "east": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true"
+              },
+              {
+                "up": "true"
+              },
+              {
+                "north": "true"
+              },
+              {
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_closed_east"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "east": "false"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_closed_east"
+      },
+      "when": {
+        "cased": "true",
+        "east": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/junction_open_east"
+      },
+      "when": {
+        "AND": [
+          {
+            "cased": "false",
+            "east": "true"
+          },
+          {
+            "OR": [
+              {
+                "down": "true",
+                "north": "true"
+              },
+              {
+                "down": "true",
+                "south": "true"
+              },
+              {
+                "down": "true",
+                "west": "true"
+              },
+              {
+                "down": "true",
+                "east": "true"
+              },
+              {
+                "north": "true",
+                "up": "true"
+              },
+              {
+                "south": "true",
+                "up": "true"
+              },
+              {
+                "up": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "up": "true"
+              },
+              {
+                "north": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "north": "true"
+              },
+              {
+                "south": "true",
+                "west": "true"
+              },
+              {
+                "east": "true",
+                "south": "true"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apply": {
+        "model": "createcraftedbeginning:block/airtight_pipe/casing_open_east"
+      },
+      "when": {
+        "cased": "true",
+        "east": "true"
+      }
     }
-  }
+  ]
 }

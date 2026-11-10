@@ -32,7 +32,7 @@ public class GasRepackagerVisual extends AbstractBlockEntityVisual<GasRepackager
         Direction facing = blockState.getValue(PackagerBlock.FACING).getOpposite();
         lastHatchPartial = GasRepackagerRenderer.getHatchModel(blockEntity);
         hatch = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(lastHatchPartial)).createInstance();
-        tray = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(GasRepackagerRenderer.getTrayModel(blockState))).createInstance();
+        tray = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(GasRepackagerRenderer.getTrayModel())).createInstance();
         hatch.setIdentityTransform().translate(getVisualPosition()).translate(Vec3.atLowerCornerOf(facing.getNormal()).scale(0.5)).rotateYCenteredDegrees(AngleHelper.horizontalAngle(facing)).rotateXCenteredDegrees(AngleHelper.verticalAngle(facing)).setChanged();
         animate(partialTick);
     }

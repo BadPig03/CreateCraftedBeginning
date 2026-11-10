@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.content.redstone.thresholdSwitch.ThresholdSwitchObservable;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.animation.LerpedFloat;
@@ -35,8 +36,14 @@ import net.ty.createcraftedbeginning.gas.overpressure.PressureRuptureService;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
 import net.ty.createcraftedbeginning.gas.storage.GasTank;
+import net.ty.createcraftedbeginning.gas.storage.GasTankState;
 import net.ty.createcraftedbeginning.gas.storage.SmartGasTank;
 import net.ty.createcraftedbeginning.gas.visual.GasPressureDisplayScale;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadout;
+import net.ty.createcraftedbeginning.gas.visual.GasStorageReadoutSource;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureReadoutSource;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips;
+import net.ty.createcraftedbeginning.gas.visual.OverpressureTooltips.Snapshot;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +52,7 @@ import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity implements IHaveGoggleInformation, ChamberGasTank, ThresholdSwitchObservable, OverpressureMultiblockPart {
+public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity implements IHaveGoggleInformation, IHaveHoveringInformation, ChamberGasTank, ThresholdSwitchObservable, OverpressureMultiblockPart, GasStorageReadoutSource, OverpressureReadoutSource {
     private static final float TANK_GAUGE_ZERO_PRESSURE_ANGLE = 85;
     private static final float TANK_GAUGE_MAX_PRESSURE_ANGLE = -85;
     private static final float TANK_GAUGE_CHASE_SPEED = 0.2F;
@@ -57,6 +64,7 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     private OverpressureBehaviour overpressureBehaviour;
     private final boolean[] tankGaugeOccluded = new boolean[4];
     private boolean tankGaugeInstalled;
+    private boolean loadingAssemblySnapshot;
 
     public AirtightTankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -93,6 +101,30 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     }
 
     @Override
+    public @Nullable Snapshot getOverpressureReadout() {
+        AirtightTankBlockEntity controller = getControllerBE();
+        if (controller == null) {
+            return null;
+        }
+
+        OverpressureBehaviour overpressure = BlockEntityBehaviour.get(controller, OverpressureBehaviour.TYPE);
+        if (overpressure == null) {
+            return null;
+        }
+
+        return OverpressureTooltips.snapshot(overpressure, controller.getTankInventory());
+    }
+
+    @Override
+    public GasStorageReadout getGasStorageReadout() {
+        if (!hasTankGauge()) {
+            return GasStorageReadout.AMOUNT_ONLY;
+        }
+
+        return GasStorageReadout.PRESSURE_ONLY;
+    }
+
+    @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         super.addBehaviours(behaviours);
         overpressureBehaviour = new OverpressureBehaviour(this, this::isController, this::getCurrentGasPressurePa);
@@ -106,6 +138,7 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
 
     @Override
     public void tick() {
+        releasePendingOverflow();
         super.tick();
         ruptureIfOverstressed();
     }
@@ -200,6 +233,15 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     }
 
     @Override
+    public void notifyUpdate() {
+        if (loadingAssemblySnapshot) {
+            return;
+        }
+
+        super.notifyUpdate();
+    }
+
+    @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
         serialization.write(compoundTag, provider, clientPacket);
@@ -219,6 +261,11 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         return display.addToGoggleTooltip(tooltip);
+    }
+
+    @Override
+    public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        return display.addToTooltip(tooltip);
     }
 
     @Override
@@ -283,6 +330,17 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     @Override
     public Object getExtraData() {
         return tankGaugeInstalled;
+    }
+
+    public void loadForAssemblyRecovery(CompoundTag tag, Provider provider) {
+        boolean previousLoading = loadingAssemblySnapshot;
+        loadingAssemblySnapshot = true;
+        try {
+            loadWithComponents(tag, provider);
+        }
+        finally {
+            loadingAssemblySnapshot = previousLoading;
+        }
     }
 
     public int getTotalTankSize() {
@@ -378,6 +436,14 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
         }
 
         GasReleaseService.release(level, GasReleaseRequest.radial(releasedGas, worldPosition, GasReleaseCause.TANK_REMOVAL, sourcePressurePa));
+    }
+
+    void releasePendingOverflow() {
+        storageController.releasePendingOverflow();
+    }
+
+    void applyMountedState(GasTankState state) {
+        storageController.applyMountedState(state);
     }
 
     void updateTankState() {

@@ -37,7 +37,7 @@ public abstract class SmartObserverBlockEntityMixin extends SmartBlockEntity {
     public abstract void activate();
 
     @Inject(method = "addBehaviours", at = @At("TAIL"))
-    private void ccb$addGasBehaviour(List<BlockEntityBehaviour> behaviours, CallbackInfo callback) {
+    private void ccb$addBehaviours(List<BlockEntityBehaviour> behaviours, CallbackInfo callback) {
         ccb$gasObserver = new GasObserverBehaviour(this);
         behaviours.add(ccb$gasObserver);
     }

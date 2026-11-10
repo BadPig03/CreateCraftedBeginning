@@ -50,7 +50,7 @@ public final class AirtightDrillHandlers {
         return drillHandler;
     }
 
-    public static void register(ResourceLocation location, GameplayPressureProfile profile, int damage, float consumption) {
+    public static void register(ResourceLocation location, GameplayPressureProfile profile, int damage, double consumption) {
         register(location, profile, createHandler(damage, consumption));
     }
 
@@ -66,20 +66,50 @@ public final class AirtightDrillHandlers {
             return;
         }
 
-        if (!GasConsumptionMath.isNonNegative(handler.getDamageAddition())) {
-            CCBAPI.LOGGER.error("Failed to register airtight drill handler for gas '{}': damage addition must be non-negative, got {}.", location, handler.getDamageAddition());
-            return;
-        }
-
-        if (!GasConsumptionMath.isNonNegativeFinite(handler.getConsumptionMultiplier())) {
-            CCBAPI.LOGGER.error("Failed to register airtight drill handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, handler.getConsumptionMultiplier());
+        if (!validateHandler(location, handler, "register")) {
             return;
         }
 
         HANDLERS.register(gasType, profile, handler);
     }
 
-    private static AirtightDrillHandler createHandler(int damage, float consumption) {
+    /** Applies a partial change only after the complete candidate passes validation. */
+    public static void modify(ResourceLocation location, GameplayPressureProfile profile, AirtightDrillHandlerPatch patch) {
+        Gas gasType = Gas.findById(location);
+        if (gasType.isEmpty()) {
+            throw new IllegalArgumentException("Gas '" + location + "' does not exist.");
+        }
+
+        AirtightDrillHandler original = HANDLERS.findExact(gasType, profile);
+        if (original == null) {
+            throw new IllegalStateException("No airtight drill handler is registered for gas '" + location + "' and gameplay pressure profile '" + profile.id() + "'.");
+        }
+
+        AirtightDrillHandler modified = patch.applyTo(original);
+        if (!validateHandler(location, modified, "modify")) {
+            return;
+        }
+
+        HANDLERS.replaceExact(gasType, profile, modified);
+    }
+
+    private static boolean validateHandler(ResourceLocation location, AirtightDrillHandler handler, String operation) {
+        int damageAddition = handler.getDamageAddition();
+        if (!GasConsumptionMath.isNonNegative(damageAddition)) {
+            CCBAPI.LOGGER.error("Failed to {} airtight drill handler for gas '{}': damage addition must be non-negative, got {}.", operation, location, damageAddition);
+            return false;
+        }
+
+        double consumptionMultiplier = handler.getConsumptionMultiplier();
+        if (!GasConsumptionMath.isNonNegativeFinite(consumptionMultiplier)) {
+            CCBAPI.LOGGER.error("Failed to {} airtight drill handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", operation, location, consumptionMultiplier);
+            return false;
+        }
+
+        return true;
+    }
+
+    private static AirtightDrillHandler createHandler(int damage, double consumption) {
         return new AirtightDrillHandler() {
             @Override
             public int getDamageAddition() {
@@ -87,7 +117,7 @@ public final class AirtightDrillHandlers {
             }
 
             @Override
-            public float getConsumptionMultiplier() {
+            public double getConsumptionMultiplier() {
                 return consumption;
             }
         };

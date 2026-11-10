@@ -56,12 +56,14 @@ public abstract class AirtightArmorScreen<T extends AirtightArmorMenu> extends A
         super.initButtons();
         menu.forEachUpgrade(upgrade -> {
             Couple<Integer> offset = upgrade.getOffset();
-            IconButton button = new IconButton(leftPos + offset.getFirst(), topPos + offset.getSecond(), CCBIcons.get(upgrade.getIcon())).withCallback(() -> onUpgradeButtonPressed(upgrade));
+            int offsetX = offset.getFirst();
+            int offsetY = offset.getSecond();
+            IconButton button = new IconButton(leftPos + offsetX, topPos + offsetY, CCBIcons.get(upgrade.getIcon())).withCallback(() -> onUpgradeButtonPressed(upgrade));
             upgradeButtons.put(upgrade, button);
 
             boolean rightAligned = upgrade.isRightIndicator();
-            int indicatorX = leftPos + offset.getFirst() + (rightAligned ? 18 : -6);
-            VerticalIndicator indicator = new VerticalIndicator(indicatorX, topPos + offset.getSecond(), rightAligned);
+            int indicatorX = leftPos + offsetX + (rightAligned ? 18 : -6);
+            VerticalIndicator indicator = new VerticalIndicator(indicatorX, topPos + offsetY, rightAligned);
             upgradeIndicators.put(upgrade, indicator);
 
             ScreenButtonConfig config = new ScreenButtonConfig(button, upgrade.getTitle(), upgrade.getDescription(), () -> button.green, () -> !menu.getStatus(upgrade).isInstalled() && button.active, () -> upgrade.getComponents(menu.player, menu.contentHolder.copy()), () -> upgrade.getUpgradeItem(menu.player.level()));

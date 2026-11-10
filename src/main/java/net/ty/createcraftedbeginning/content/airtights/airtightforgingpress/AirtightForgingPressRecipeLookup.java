@@ -6,7 +6,6 @@ import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.kinetics.crusher.CrushingRecipe;
 import com.simibubi.create.content.kinetics.press.PressingRecipe;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipe;
-import com.simibubi.create.foundation.recipe.RecipeFinder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
@@ -21,6 +20,7 @@ import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.recipe.ForgingPressCraftPlanner;
 import net.ty.createcraftedbeginning.recipe.ForgingPressRecipe;
+import net.ty.createcraftedbeginning.recipe.RecipeCandidateCache;
 import net.ty.createcraftedbeginning.recipe.trie.AbstractVariant;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightRecipeTrie;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightRecipeTrieFinder;
@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -40,14 +39,12 @@ public final class AirtightForgingPressRecipeLookup {
     private static final Object AUTOMATIC_PRESSING_RECIPE_CACHE_KEY = new Object();
     private static final Object AUTOMATIC_CRUSHING_RECIPE_CACHE_KEY = new Object();
     private static final Object AUTOMATIC_SMITHING_RECIPE_CACHE_KEY = new Object();
-    private static final AtomicLong RECIPE_CACHE_VERSION = new AtomicLong();
 
     private AirtightForgingPressRecipeLookup() {
     }
 
     public static void invalidateRecipeCaches() {
         AirtightRecipeTrieFinder.invalidateFailures(FORGING_PRESS_RECIPE_CACHE_KEY);
-        RECIPE_CACHE_VERSION.incrementAndGet();
     }
 
     public static boolean isAllowedAutomaticPressingRecipe(RecipeHolder<? extends Recipe<?>> holder) {
@@ -135,7 +132,7 @@ public final class AirtightForgingPressRecipeLookup {
             return Optional.empty();
         }
 
-        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(AUTOMATIC_PRESSING_RECIPE_CACHE_KEY, level, AirtightForgingPressRecipeLookup::isAllowedAutomaticPressingRecipe)) {
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeCandidateCache.get(AUTOMATIC_PRESSING_RECIPE_CACHE_KEY, level.getRecipeManager(), AirtightForgingPressRecipeLookup::isAllowedAutomaticPressingRecipe)) {
             if (!(holder.value() instanceof PressingRecipe recipe)) {
                 continue;
             }
@@ -158,7 +155,7 @@ public final class AirtightForgingPressRecipeLookup {
             return Optional.empty();
         }
 
-        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(AUTOMATIC_CRUSHING_RECIPE_CACHE_KEY, level, AirtightForgingPressRecipeLookup::isAllowedAutomaticCrushingRecipe)) {
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeCandidateCache.get(AUTOMATIC_CRUSHING_RECIPE_CACHE_KEY, level.getRecipeManager(), AirtightForgingPressRecipeLookup::isAllowedAutomaticCrushingRecipe)) {
             if (!(holder.value() instanceof CrushingRecipe recipe)) {
                 continue;
             }
@@ -173,10 +170,6 @@ public final class AirtightForgingPressRecipeLookup {
         return Optional.empty();
     }
 
-    static long getRecipeCacheVersion() {
-        return RECIPE_CACHE_VERSION.get();
-    }
-
     static Optional<RecipeHolder<SmithingRecipe>> getMatchingSmithingRecipe(AirtightForgingPressBlockEntity press) {
         Level level = press.getLevel();
         if (level == null) {
@@ -188,7 +181,7 @@ public final class AirtightForgingPressRecipeLookup {
             return Optional.empty();
         }
 
-        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(AUTOMATIC_SMITHING_RECIPE_CACHE_KEY, level, AirtightForgingPressRecipeLookup::isAllowedAutomaticSmithingRecipe)) {
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeCandidateCache.get(AUTOMATIC_SMITHING_RECIPE_CACHE_KEY, level.getRecipeManager(), AirtightForgingPressRecipeLookup::isAllowedAutomaticSmithingRecipe)) {
             if (!(holder.value() instanceof SmithingRecipe smithingRecipe) || !AirtightForgingPressAutomationPlanner.canApplySmithingRecipe(press, smithingRecipe, smithingInput)) {
                 continue;
             }
@@ -200,7 +193,7 @@ public final class AirtightForgingPressRecipeLookup {
     }
 
     private static Optional<ForgingPressRecipe> findMatchingLinearRecipe(AirtightForgingPressBlockEntity press, Level level) {
-        for (RecipeHolder<? extends Recipe<?>> holder : RecipeFinder.get(FORGING_PRESS_RECIPE_CACHE_KEY, level, recipeHolder -> recipeHolder.value() instanceof ForgingPressRecipe)) {
+        for (RecipeHolder<? extends Recipe<?>> holder : RecipeCandidateCache.get(FORGING_PRESS_RECIPE_CACHE_KEY, level.getRecipeManager(), recipeHolder -> recipeHolder.value() instanceof ForgingPressRecipe)) {
             if (holder.value() instanceof ForgingPressRecipe forgingRecipe && new ForgingPressCraftPlanner(press, forgingRecipe).matches()) {
                 return Optional.of(forgingRecipe);
             }

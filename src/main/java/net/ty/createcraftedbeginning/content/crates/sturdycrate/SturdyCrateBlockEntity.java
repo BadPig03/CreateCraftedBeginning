@@ -18,6 +18,8 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SturdyCrateBlockEntity extends FilteredCrateBlockEntity {
+    private static final int REQUIRED_LAVA_BUCKET_COUNT = 10000;
+
     private CCBAdvancementBehaviour advancementBehaviour;
 
     public SturdyCrateBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -38,7 +40,7 @@ public class SturdyCrateBlockEntity extends FilteredCrateBlockEntity {
 
     @Override
     protected void onInventoryChanged() {
-        if (advancementBehaviour != null && getStoredItem().is(Items.LAVA_BUCKET) && getStoredCount() >= 10000) {
+        if (advancementBehaviour != null && getStoredItem().is(Items.LAVA_BUCKET) && getStoredCount() >= REQUIRED_LAVA_BUCKET_COUNT) {
             advancementBehaviour.awardPlayer(CCBAdvancements.PORTABLE_LAVA_SEA);
         }
         super.onInventoryChanged();

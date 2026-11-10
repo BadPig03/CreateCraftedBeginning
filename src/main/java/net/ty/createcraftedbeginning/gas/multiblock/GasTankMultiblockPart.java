@@ -9,6 +9,7 @@ import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.logistics.GasInventoryIdentifierProvider;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -23,6 +24,10 @@ public interface GasTankMultiblockPart extends IMultiBlockEntityContainer, GasIn
     GasPressureCompartment getTank(int tank);
 
     void setTankBlockCount(int tank, int blocks);
+
+    default @Nullable Object mergeExtraData(@Nullable Object data, GasTankMultiblockPart source) {
+        return modifyExtraData(data);
+    }
 
     default void mergeTankStateFrom(GasTankMultiblockPart source) {
         if (!hasTank() || !source.hasTank()) {

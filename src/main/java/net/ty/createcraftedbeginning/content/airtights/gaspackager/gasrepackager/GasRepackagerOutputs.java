@@ -9,6 +9,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonFactory;
+import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonItem;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonPackingLimits;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerScan.Candidate;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerScan.GasGroupCandidates;
@@ -23,51 +24,72 @@ public final class GasRepackagerOutputs {
     private GasRepackagerOutputs() {
     }
 
-    public static List<BigItemStack> createBalloons(GasStack inputGas, String address, long ambientPressurePa) {
+    public static OutputResult createBalloons(GasStack inputGas, String address, long ambientPressurePa) {
         long localPackingLimit = BalloonPackingLimits.getLocalPackingLimit(ambientPressurePa);
         if (inputGas.isEmpty() || localPackingLimit <= 0) {
-            return List.of();
+            return OutputResult.EMPTY;
+        }
+
+        if (!new GasRepackagerOutputBudget().reserveGas(inputGas.getAmount(), localPackingLimit)) {
+            return OutputResult.LIMIT_EXCEEDED;
         }
 
         List<BigItemStack> outputPackages = new ArrayList<>();
         long remainingAmount = inputGas.getAmount();
         while (remainingAmount > 0) {
             long packedAmount = Math.min(remainingAmount, localPackingLimit);
-            ItemStack balloon = BalloonFactory.create(inputGas.copyWithAmount(packedAmount), address);
-            if (!balloon.isEmpty()) {
-                outputPackages.add(new BigItemStack(balloon, 1));
+            GasStack packedGas = inputGas.copyWithAmount(packedAmount);
+            ItemStack balloon = BalloonFactory.create(packedGas, address);
+            if (!GasStack.matches(BalloonItem.getGas(balloon), packedGas)) {
+                return OutputResult.EMPTY;
             }
+
+            outputPackages.add(new BigItemStack(balloon, 1));
 
             remainingAmount -= packedAmount;
         }
-        return List.copyOf(outputPackages);
+        return new OutputResult(outputPackages, false);
     }
 
-    public static List<BigItemStack> createMixedOrderOutput(int orderId, List<Candidate> candidates, long ambientPressurePa, RandomSource random) {
+    public static OutputResult createMixedOrderOutput(int orderId, List<Candidate> candidates, long ambientPressurePa, RandomSource random) {
         List<Candidate> sortedCandidates = new ArrayList<>(candidates);
         sortedCandidates.sort(GasRepackagerPlanner.ORDER_POSITION);
         List<Candidate> gasCandidates = sortedCandidates.stream().filter(Candidate::isGasPackage).toList();
         if (gasCandidates.isEmpty()) {
-            return List.of();
+            return OutputResult.EMPTY;
         }
 
         String finalAddress = PackageItem.getAddress(sortedCandidates.getLast().box());
         List<BigItemStack> gasPackages = new ArrayList<>();
         List<GasGroupCandidates> groups = new ArrayList<>();
         gasCandidates.forEach(candidate -> GasRepackagerScan.addToGroup(groups, candidate, finalAddress));
-        for (GasGroupCandidates group : groups) {
-            List<BigItemStack> generatedPackages = createBalloons(group.gas(), group.address(), ambientPressurePa);
-            if (generatedPackages.isEmpty()) {
-                return List.of();
-            }
-
-            gasPackages.addAll(generatedPackages);
+        long packingLimit = BalloonPackingLimits.getLocalPackingLimit(ambientPressurePa);
+        if (packingLimit <= 0) {
+            return OutputResult.EMPTY;
         }
 
+        GasRepackagerOutputBudget budget = new GasRepackagerOutputBudget();
+        for (GasGroupCandidates group : groups) {
+            if (!budget.reserveGas(group.gas().getAmount(), packingLimit)) {
+                return OutputResult.LIMIT_EXCEEDED;
+            }
+        }
         List<Candidate> itemCandidates = sortedCandidates.stream().filter(candidate -> !candidate.isGasPackage()).toList();
         List<Candidate> reversedCandidates = new ArrayList<>(candidates);
         reversedCandidates.sort(GasRepackagerPlanner.ORDER_POSITION.reversed());
         PackageOrderWithCrafts orderContext = reversedCandidates.stream().map(candidate -> PackageItem.getOrderContext(candidate.box())).filter(context -> context != null && !context.isEmpty()).findFirst().orElse(null);
+        if (!itemCandidates.isEmpty() && !budget.reserveItems(itemCandidates, orderContext)) {
+            return OutputResult.LIMIT_EXCEEDED;
+        }
+
+        for (GasGroupCandidates group : groups) {
+            OutputResult generated = createBalloons(group.gas(), group.address(), ambientPressurePa);
+            if (generated.packages().isEmpty()) {
+                return generated;
+            }
+
+            gasPackages.addAll(generated.packages());
+        }
         List<BigItemStack> itemPackages = List.of();
         if (!itemCandidates.isEmpty()) {
             List<Candidate> sortedItemCandidates = new ArrayList<>(itemCandidates);
@@ -96,7 +118,7 @@ public final class GasRepackagerOutputs {
         outputPackages.addAll(itemPackages);
         outputPackages.addAll(gasPackages);
         if (outputPackages.isEmpty()) {
-            return List.of();
+            return OutputResult.EMPTY;
         }
 
         List<ItemStack> outerOrderPackages = new ArrayList<>();
@@ -115,6 +137,15 @@ public final class GasRepackagerOutputs {
             boolean finalPackage = packageIndex == outerOrderPackages.size() - 1;
             PackageItem.setOrder(outputPackage, orderId, 0, true, packageIndex, finalPackage, finalPackage ? orderContext : null);
         }
-        return List.copyOf(outputPackages);
+        return new OutputResult(outputPackages, false);
+    }
+
+    public record OutputResult(List<BigItemStack> packages, boolean limitExceeded) {
+        private static final OutputResult EMPTY = new OutputResult(List.of(), false);
+        private static final OutputResult LIMIT_EXCEEDED = new OutputResult(List.of(), true);
+
+        public OutputResult {
+            packages = List.copyOf(packages);
+        }
     }
 }

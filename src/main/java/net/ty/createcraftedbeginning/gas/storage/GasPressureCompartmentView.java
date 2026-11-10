@@ -3,7 +3,9 @@ package net.ty.createcraftedbeginning.gas.storage;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.handler.GasTransferSnapshot;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -17,8 +19,18 @@ public class GasPressureCompartmentView implements GasPressureCompartment {
     }
 
     @Override
+    public @Nullable GasTransferSnapshot captureTransferSnapshot() {
+        return wrapped.captureTransferSnapshot();
+    }
+
+    @Override
     public Object getCompartmentIdentity() {
         return wrapped.getCompartmentIdentity();
+    }
+
+    @Override
+    public Object getPredictionGroup() {
+        return wrapped.getPredictionGroup();
     }
 
     @Override

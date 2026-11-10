@@ -5,7 +5,7 @@
   ],
   "key": {
     "G": {
-      "tag": "c:glass_blocks"
+      "tag": "c:glass_blocks/tinted"
     },
     "A": {
       "tag": "c:plates/amethyst_crystal"

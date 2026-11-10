@@ -45,7 +45,7 @@ public final class GasPressureFillService {
             for (int tankIndex = 0; tankIndex < target.getTanks() && remainingAmount > 0; tankIndex++) {
                 GasStack storedGas = target.getGasInTank(tankIndex);
                 boolean matching = !storedGas.isEmpty() && GasStack.isSameGasSameComponents(storedGas, resource);
-                if (matchingPass != matching || !matching && !storedGas.isEmpty()) {
+                if (matchingPass != matching) {
                     continue;
                 }
 

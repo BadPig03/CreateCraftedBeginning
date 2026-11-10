@@ -13,7 +13,6 @@ import net.createmod.ponder.api.scene.Selection;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
@@ -23,14 +22,11 @@ import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import static net.ty.createcraftedbeginning.ponder.CCBPonderScenes.generateItemDropVelocity;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SturdyCrateScenes {
     public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
-        RandomSource random = RandomSource.create();
 
         scene.title("sturdy_crate", "Storing Items in Sturdy Crates");
         scene.configureBasePlate(0, 0, 5);
@@ -45,9 +41,11 @@ public class SturdyCrateScenes {
 
         Vec3 crateVec = util.vector().centerOf(cratePos);
         Vec3 itemVec = util.vector().centerOf(itemPos);
-        Vec3 filterVec = util.vector().blockSurface(cratePos, Direction.UP).add(0, -0.0625, 0);
+        Vec3 filterVec = util.vector().topOf(cratePos).add(0, -0.0625, 0);
         Vec3 crateNorthVec = util.vector().blockSurface(cratePos, Direction.NORTH);
-        Vec3 itemDropMotion = util.vector().of(0, -0.1, 0);
+        Vec3 crateTopVec = util.vector().topOf(cratePos);
+        Vec3 crateBottomVec = util.vector().blockSurface(cratePos, Direction.DOWN).add(0, -0.5, 0);
+        Vec3 itemDropMotion = Vec3.ZERO.add(0, -0.1, 0);
 
         ItemStack shulkerBoxItem = new ItemStack(Items.SHULKER_BOX);
         ItemStack diamondItem = new ItemStack(Items.DIAMOND);
@@ -59,7 +57,7 @@ public class SturdyCrateScenes {
         scene.world().showIndependentSection(crateSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Sturdy Crate has eight times the storage capacity of Andesite Crate").colored(PonderPalette.GREEN).pointAt(crateVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("By default, Sturdy Crate has eight times the storage capacity of Andesite Crate").colored(PonderPalette.GREEN).pointAt(crateVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showFilterSlotInput(filterVec, Direction.UP, 60);
@@ -69,20 +67,22 @@ public class SturdyCrateScenes {
         scene.overlay().showText(60).text("Sturdy Crate can't store Shulker Boxes, Toolboxes, or other Sturdy Crates").colored(PonderPalette.RED).pointAt(filterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
-        scene.overlay().showControls(util.vector().blockSurface(cratePos, Direction.UP), Pointing.DOWN, 40).showing(AllIcons.I_MTD_CLOSE).withItem(shulkerBoxItem.copy());
+        scene.overlay().showControls(crateTopVec, Pointing.DOWN, 40).showing(AllIcons.I_MTD_CLOSE).withItem(shulkerBoxItem.copy());
         scene.overlay().showControls(crateNorthVec, Pointing.RIGHT, 40).showing(AllIcons.I_MTD_CLOSE).withItem(toolboxItem.copy());
-        scene.overlay().showControls(util.vector().blockSurface(cratePos, Direction.DOWN).add(0, -0.5, 0), Pointing.UP, 40).showing(AllIcons.I_MTD_CLOSE).withItem(sturdyCrateItem.copy());
+        scene.overlay().showControls(crateBottomVec, Pointing.UP, 40).showing(AllIcons.I_MTD_CLOSE).withItem(sturdyCrateItem.copy());
 
         scene.idle(80);
         scene.world().setBlock(chutePos, AllBlocks.CHUTE.getDefaultState(), false);
         scene.world().showSection(chuteSelection, Direction.DOWN);
+
+        scene.idle(20);
         for (int i = 0; i < 4; i++) {
             scene.idle(10);
-            ElementLink<EntityElement> remove = scene.world().createItemEntity(itemVec, itemDropMotion, diamondItem.copy());
+            ElementLink<EntityElement> diamondEntity = scene.world().createItemEntity(itemVec, itemDropMotion, diamondItem.copy());
 
             scene.idle(2);
             scene.world().createItemOnBeltLike(chutePos, Direction.DOWN, diamondItem.copy());
-            scene.world().modifyEntity(remove, Entity::discard);
+            scene.world().modifyEntity(diamondEntity, Entity::discard);
         }
 
         scene.idle(20);
@@ -94,10 +94,10 @@ public class SturdyCrateScenes {
             scene.idle(3);
             scene.world().incrementBlockBreakingProgress(cratePos);
         }
-        scene.world().createItemEntity(crateVec, generateItemDropVelocity(random), sturdyCrateItem.copy());
+        scene.world().createItemEntity(crateVec, Vec3.ZERO, sturdyCrateItem.copy());
         scene.overlay().showControls(crateNorthVec, Pointing.RIGHT, 30).withItem(diamondItem.copy());
 
-        scene.idle(57);
+        scene.idle(30);
         scene.markAsFinished();
     }
 }

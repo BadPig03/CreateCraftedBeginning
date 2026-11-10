@@ -1,0 +1,102 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": false,
+  "elements": [
+    {
+      "faces": {
+        "up": {
+          "texture": "#detail",
+          "uv": [
+            1.0,
+            11.0,
+            6.0,
+            11.5
+          ]
+        }
+      },
+      "from": [
+        3,
+        13,
+        3
+      ],
+      "to": [
+        13,
+        13,
+        4
+      ]
+    },
+    {
+      "faces": {
+        "up": {
+          "texture": "#detail",
+          "uv": [
+            1.0,
+            15.5,
+            6.0,
+            16.0
+          ]
+        }
+      },
+      "from": [
+        3,
+        13,
+        12
+      ],
+      "to": [
+        13,
+        13,
+        13
+      ]
+    },
+    {
+      "faces": {
+        "up": {
+          "texture": "#detail",
+          "uv": [
+            1.0,
+            11.5,
+            1.5,
+            15.5
+          ]
+        }
+      },
+      "from": [
+        3,
+        13,
+        4
+      ],
+      "to": [
+        4,
+        13,
+        12
+      ]
+    },
+    {
+      "faces": {
+        "up": {
+          "texture": "#detail",
+          "uv": [
+            5.5,
+            11.5,
+            6.0,
+            15.5
+          ]
+        }
+      },
+      "from": [
+        12,
+        13,
+        4
+      ],
+      "to": [
+        13,
+        13,
+        12
+      ]
+    }
+  ],
+  "textures": {
+    "detail": "createcraftedbeginning:block/airtight_pipe/detail",
+    "particle": "createcraftedbeginning:block/airtight_pipe/casing_single"
+  }
+}

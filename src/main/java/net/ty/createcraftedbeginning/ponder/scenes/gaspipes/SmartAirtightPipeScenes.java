@@ -36,13 +36,12 @@ public class SmartAirtightPipeScenes {
 
         BlockPos encasedPipePos = util.grid().at(1, 1, 1);
         BlockPos secondPipePos = encasedPipePos.east();
-        BlockPos smartPos = secondPipePos.east();
-        BlockPos firstPipePos = smartPos.east();
-        BlockPos firstTankPos = firstPipePos.east();
+        BlockPos smartPos = encasedPipePos.east(2);
+        BlockPos firstPipePos = encasedPipePos.east(3);
+        BlockPos firstTankPos = encasedPipePos.east(4);
         BlockPos thirdPipePos = encasedPipePos.south();
-        BlockPos middleSouthPipePos = thirdPipePos.south();
-        BlockPos fourthPipePos = middleSouthPipePos.south();
-        BlockPos secondTankPos = fourthPipePos.south();
+        BlockPos fourthPipePos = encasedPipePos.south(3);
+        BlockPos secondTankPos = encasedPipePos.south(4);
 
         Selection firstTankSelection = util.select().fromTo(firstTankPos, firstTankPos.above());
         Selection secondTankSelection = util.select().fromTo(secondTankPos, secondTankPos.above());
@@ -53,6 +52,7 @@ public class SmartAirtightPipeScenes {
 
         Vec3 smartVec = util.vector().centerOf(smartPos);
         Vec3 blockedStartVec = util.vector().blockSurface(firstPipePos, Direction.EAST);
+        Vec3 smartTopVec = util.vector().topOf(smartPos);
 
         AABB unrestrictedArea = new AABB(smartVec, smartVec);
         AABB matchingArea = new AABB(smartVec, smartVec);
@@ -73,7 +73,7 @@ public class SmartAirtightPipeScenes {
 
         ItemStack configuredGasCanisterPack = new ItemStack(CCBItems.GAS_CANISTER_PACK.asItem());
         configuredGasCanisterPack.set(CCBDataComponents.GAS_CANISTER_PACK_CONTENTS, ItemContainerContents.fromItems(List.of(naturalAirCanister.copy(), ultrawarmAirCanister.copy())));
-        configuredGasCanisterPack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, GasCanisterPackType._0011.getFlags());
+        configuredGasCanisterPack.set(CCBDataComponents.GAS_CANISTER_PACK_FLAGS, GasCanisterPackType._1100.getFlags());
 
         scene.idle(20);
         scene.world().showSection(firstTankSelection, Direction.SOUTH);
@@ -92,7 +92,7 @@ public class SmartAirtightPipeScenes {
 
         scene.idle(20);
         scene.world().setFilterData(smartSingleSelection, SmartAirtightPipeBlockEntity.class, ItemStack.EMPTY);
-        scene.overlay().showFilterSlotInput(util.vector().topOf(smartPos), Direction.UP, 66);
+        scene.overlay().showFilterSlotInput(smartTopVec, Direction.UP, 66);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, unrestrictedObject, unrestrictedArea, 3);
 
         scene.idle(3);
@@ -106,7 +106,7 @@ public class SmartAirtightPipeScenes {
 
         scene.idle(80);
         scene.overlay().showText(60).text("A filled Gas Canister can specify which gas is allowed through").colored(PonderPalette.BLUE).pointAt(smartVec).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(util.vector().topOf(smartPos), Pointing.DOWN, 60).rightClick().withItem(naturalAirCanister.copy());
+        scene.overlay().showControls(smartTopVec, Pointing.DOWN, 60).rightClick().withItem(naturalAirCanister.copy());
 
         scene.idle(7);
         scene.world().setFilterData(smartSingleSelection, SmartAirtightPipeBlockEntity.class, naturalAirCanister.copy());
@@ -125,7 +125,7 @@ public class SmartAirtightPipeScenes {
 
         scene.idle(80);
         scene.overlay().showText(60).text("Changing the filter blocks gases that no longer match").colored(PonderPalette.RED).pointAt(smartVec).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(util.vector().topOf(smartPos), Pointing.DOWN, 60).rightClick().withItem(ultrawarmAirCanister.copy());
+        scene.overlay().showControls(smartTopVec, Pointing.DOWN, 60).rightClick().withItem(ultrawarmAirCanister.copy());
 
         scene.idle(7);
         scene.world().setFilterData(smartSingleSelection, SmartAirtightPipeBlockEntity.class, ultrawarmAirCanister.copy());
@@ -141,14 +141,14 @@ public class SmartAirtightPipeScenes {
 
         scene.idle(67);
         scene.overlay().showText(60).text("Gas Filters can use whitelist or blacklist rules for multiple gases").colored(PonderPalette.BLUE).pointAt(smartVec).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(util.vector().topOf(smartPos), Pointing.DOWN, 60).rightClick().withItem(configuredGasFilter.copy());
+        scene.overlay().showControls(smartTopVec, Pointing.DOWN, 60).rightClick().withItem(configuredGasFilter.copy());
 
         scene.idle(7);
         scene.world().setFilterData(smartSingleSelection, SmartAirtightPipeBlockEntity.class, configuredGasFilter.copy());
 
         scene.idle(73);
         scene.overlay().showText(60).text("Gas Canister Packs can filter for any gas stored inside").colored(PonderPalette.BLUE).pointAt(smartVec).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(util.vector().topOf(smartPos), Pointing.DOWN, 60).rightClick().withItem(configuredGasCanisterPack.copy());
+        scene.overlay().showControls(smartTopVec, Pointing.DOWN, 60).rightClick().withItem(configuredGasCanisterPack.copy());
 
         scene.idle(7);
         scene.world().setFilterData(smartSingleSelection, SmartAirtightPipeBlockEntity.class, configuredGasCanisterPack.copy());

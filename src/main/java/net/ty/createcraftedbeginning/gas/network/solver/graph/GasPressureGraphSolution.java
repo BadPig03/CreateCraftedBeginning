@@ -142,8 +142,9 @@ public record GasPressureGraphSolution(List<TransferComponent> transferComponent
         private int observedCount = -1;
 
         FacePressureSamples(PressureLayout layout, double[] pressureByPort) {
-            if (layout.portCount() != pressureByPort.length) {
-                throw new IllegalArgumentException("Pressure sample count mismatch: expected " + layout.portCount() + ", got " + pressureByPort.length + '.');
+            int portCount = layout.portCount();
+            if (portCount != pressureByPort.length) {
+                throw new IllegalArgumentException("Pressure sample count mismatch: expected " + portCount + ", got " + pressureByPort.length + '.');
             }
 
             this.layout = layout;

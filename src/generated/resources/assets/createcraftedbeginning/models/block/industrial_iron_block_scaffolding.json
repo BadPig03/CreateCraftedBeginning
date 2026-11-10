@@ -1,0 +1,11 @@
+{
+  "parent": "create:block/scaffold/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "casing": "createcraftedbeginning:block/industrial_iron_block_scaffolding/top",
+    "inside": "createcraftedbeginning:block/industrial_iron_block_scaffolding/inside",
+    "particle": "createcraftedbeginning:block/industrial_iron_block_scaffolding/side",
+    "side": "createcraftedbeginning:block/industrial_iron_block_scaffolding/side",
+    "top": "createcraftedbeginning:block/industrial_iron_block_scaffolding/top"
+  }
+}

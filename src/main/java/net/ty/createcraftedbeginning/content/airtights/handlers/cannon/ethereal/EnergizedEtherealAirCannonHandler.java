@@ -61,8 +61,8 @@ public class EnergizedEtherealAirCannonHandler extends EtherealAirCannonHandler 
     }
 
     @Override
-    public float getGasConsumptionMultiplier() {
-        return super.getGasConsumptionMultiplier() * 0.75F;
+    public double getGasConsumptionMultiplier() {
+        return super.getGasConsumptionMultiplier() * 0.75;
     }
 
     @Override

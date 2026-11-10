@@ -1,0 +1,43 @@
+package net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor;
+
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.LongConsumer;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+record AmethystSoundSuppressorInstance(AmethystSoundSuppressorIdentity identity, BlockPos effectCenter, ResourceLocation dimension, short range, @Nullable AmethystSoundSuppressorBlockEntity nativeOwner) {
+    AmethystSoundSuppressorInstance {
+        effectCenter = effectCenter.immutable();
+        if (range <= 0) {
+            throw new IllegalArgumentException("Amethyst sound suppressor range must be positive; got " + range + '.');
+        }
+    }
+
+    static long chunkKey(BlockPos blockPos) {
+        return chunkKey(blockPos.getX() >> 4, blockPos.getZ() >> 4);
+    }
+
+    private static long chunkKey(int chunkX, int chunkZ) {
+        return chunkX & 0xFFFFFFFFL | (long) chunkZ << 32;
+    }
+
+    boolean hasSameCoverage(BlockPos otherEffectCenter, short otherRange) {
+        return range == otherRange && chunkKey(effectCenter) == chunkKey(otherEffectCenter);
+    }
+
+    void forEachCoveredChunk(LongConsumer consumer) {
+        int centerChunkX = effectCenter.getX() >> 4;
+        int centerChunkZ = effectCenter.getZ() >> 4;
+        int chunkRadius = range - 1;
+        for (int chunkX = centerChunkX - chunkRadius; chunkX <= centerChunkX + chunkRadius; chunkX++) {
+            for (int chunkZ = centerChunkZ - chunkRadius; chunkZ <= centerChunkZ + chunkRadius; chunkZ++) {
+                consumer.accept(chunkKey(chunkX, chunkZ));
+            }
+        }
+    }
+}

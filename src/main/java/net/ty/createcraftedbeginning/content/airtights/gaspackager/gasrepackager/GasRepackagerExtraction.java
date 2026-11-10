@@ -4,7 +4,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasrepackager.GasRepackagerScan.Candidate;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -13,16 +12,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class GasRepackagerExtraction {
+final class GasRepackagerExtraction {
 
     private GasRepackagerExtraction() {
     }
 
-    @Internal
-    public static ExtractionResult extractCandidates(IItemHandler targetInv, List<Candidate> candidates) {
+    static ExtractionResult extractCandidates(IItemHandler targetInv, List<Candidate> candidates) {
         Set<Integer> candidateSlots = new HashSet<>();
         for (Candidate candidate : candidates) {
             if (candidate.slot() < 0 || candidate.slot() >= targetInv.getSlots() || !candidateSlots.add(candidate.slot())) {
@@ -73,10 +70,8 @@ public final class GasRepackagerExtraction {
         return new ExtractionResult(true, List.of());
     }
 
-    @Internal
-    public record ExtractionResult(boolean committed, List<ItemStack> rollbackRemainders) {
-        @Internal
-        public ExtractionResult {
+    record ExtractionResult(boolean committed, List<ItemStack> rollbackRemainders) {
+        ExtractionResult {
             rollbackRemainders = rollbackRemainders.stream().map(ItemStack::copy).toList();
         }
 

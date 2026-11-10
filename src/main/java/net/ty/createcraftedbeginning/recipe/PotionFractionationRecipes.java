@@ -73,7 +73,7 @@ public final class PotionFractionationRecipes {
             }
 
             MobEffectInstance normalizedEffect = new MobEffectInstance(effect.getEffect(), NORMALIZED_EFFECT_TICKS, effect.getAmplifier());
-            PotionContents normalizedContents = new PotionContents(Optional.empty(), contents.customColor(), List.of(normalizedEffect));
+            PotionContents normalizedContents = new PotionContents(Optional.empty(), Optional.empty(), List.of(normalizedEffect));
             GasStack gas = CCBGases.POTION_GAS.get().createStack(gasAmount, normalizedContents);
             builder.outputAtLayer(layer++, gas);
         }

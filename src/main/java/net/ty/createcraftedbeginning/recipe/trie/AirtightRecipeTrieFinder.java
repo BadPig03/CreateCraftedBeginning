@@ -2,12 +2,14 @@ package net.ty.createcraftedbeginning.recipe.trie;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.simibubi.create.foundation.recipe.RecipeFinder;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads;
+import net.ty.createcraftedbeginning.recipe.CCBRecipeReloads.Generation;
+import net.ty.createcraftedbeginning.recipe.RecipeCandidateCache;
 import net.ty.createcraftedbeginning.recipe.trie.AirtightRecipeTrie.Builder;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -23,8 +25,9 @@ import java.util.function.Predicate;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightRecipeTrieFinder {
-    private static final Cache<CacheKey, AirtightRecipeTrie<?>> CACHED_TRIES = CacheBuilder.newBuilder().maximumSize(16).build();
-    private static final Map<RecipeManager, Set<Object>> FAILED_TRIES = new WeakHashMap<>();
+    private static final int MAX_CACHED_TRIES = 16;
+    private static final Cache<CacheKey, AirtightRecipeTrie<?>> CACHED_TRIES = CacheBuilder.newBuilder().maximumSize(MAX_CACHED_TRIES).build();
+    private static final Map<Generation, Set<Object>> FAILED_TRIES = new WeakHashMap<>();
 
     private AirtightRecipeTrieFinder() {
     }
@@ -34,10 +37,11 @@ public class AirtightRecipeTrieFinder {
     }
 
     public static AirtightRecipeTrie<?> get(Object cacheKey, Level level, Predicate<RecipeHolder<? extends Recipe<?>>> conditions, Function<RecipeHolder<? extends Recipe<?>>, Recipe<?>> converter) throws ExecutionException {
-        CacheKey scopedKey = new CacheKey(cacheKey, level.getRecipeManager());
+        RecipeManager manager = level.getRecipeManager();
+        CacheKey scopedKey = new CacheKey(cacheKey, CCBRecipeReloads.getGeneration(manager));
         return CACHED_TRIES.get(scopedKey, () -> {
             Builder<Recipe<?>> builder = AirtightRecipeTrie.builder();
-            for (RecipeHolder<? extends Recipe<?>> recipeHolder : RecipeFinder.get(scopedKey, level, conditions)) {
+            for (RecipeHolder<? extends Recipe<?>> recipeHolder : RecipeCandidateCache.get(cacheKey, manager, conditions)) {
                 builder.insert(converter.apply(recipeHolder));
             }
             return builder.build();
@@ -45,17 +49,17 @@ public class AirtightRecipeTrieFinder {
     }
 
     public static boolean hasFailed(Object cacheKey, Level level) {
-        RecipeManager recipeManager = level.getRecipeManager();
+        Generation generation = CCBRecipeReloads.getGeneration(level.getRecipeManager());
         synchronized (FAILED_TRIES) {
-            Set<Object> failedScopes = FAILED_TRIES.get(recipeManager);
+            Set<Object> failedScopes = FAILED_TRIES.get(generation);
             return failedScopes != null && failedScopes.contains(cacheKey);
         }
     }
 
     public static boolean recordFailure(Object cacheKey, Level level) {
-        RecipeManager recipeManager = level.getRecipeManager();
+        Generation generation = CCBRecipeReloads.getGeneration(level.getRecipeManager());
         synchronized (FAILED_TRIES) {
-            return FAILED_TRIES.computeIfAbsent(recipeManager, ignored -> new HashSet<>()).add(cacheKey);
+            return FAILED_TRIES.computeIfAbsent(generation, ignored -> new HashSet<>()).add(cacheKey);
         }
     }
 
@@ -81,5 +85,5 @@ public class AirtightRecipeTrieFinder {
         }
     }
 
-    private record CacheKey(Object scope, RecipeManager recipeManager) {}
+    private record CacheKey(Object scope, Generation generation) {}
 }

@@ -53,8 +53,8 @@ public class CCBShapes {
     public static final VoxelShape CRATE_SHAPE = shape(1, 0, 1, 15, 14, 15).build();
     public static final VoxelShape GAS_CANISTER_SHAPE = shape(4, 0, 4, 12, 12, 12).add(6, 12, 6, 10, 13, 10).build();
     public static final VoxelShape GAS_INJECTION_CHAMBER_SHAPE = shape(1, 1, 1, 15, 15, 15).add(2, 15, 2, 14, 16, 14).build();
-    public static final VoxelShape END_SCULK_SILENCER_SHAPE = shape(0, 0, 0, 16, 8, 16).add(1, 8, 1, 15, 15, 15).build();
-    public static final VoxelShape END_SCULK_SILENCER_COLLISION_SHAPE = shape(0, 0, 0, 16, 8, 16).build();
+    public static final VoxelShape AMETHYST_SOUND_SUPPRESSOR_SHAPE = shape(0, 0, 0, 16, 9, 16).add(1, 9, 1, 15, 15, 15).build();
+    public static final VoxelShape AMETHYST_SOUND_SUPPRESSOR_COLLISION_SHAPE = shape(0, 0, 0, 16, 9, 16).build();
     public static final VoxelShape AIRTIGHT_REACTOR_KETTLE_TOP_CENTER_SHAPE = shape(0, 2, 0, 16, 16, 16).build();
     public static final VoxelShape AIRTIGHT_REACTOR_KETTLE_BOTTOM_CENTER_SHAPE = shape(0, 0, 0, 16, 2, 16).build();
     public static final VoxelShape AIRTIGHT_REACTOR_KETTLE_CENTER_SHAPE = shape(6.5, -0.5, 6.5, 9.5, 18, 9.5).build();
@@ -63,10 +63,11 @@ public class CCBShapes {
     public static final VoxelShape AIRTIGHT_FORGING_PRESS_CENTER_SHAPE = shape(-2, 10, -2, 18, 16, 18).build();
 
     public static final VoxelShaper LASER_EMITTER = shape(0, 0, 0, 16, 13, 16).add(4, 13, 4, 12, 16, 12).forDirectional(Direction.UP);
+    public static final VoxelShaper AMETHYST_ANTENNA = shape(1, 0, 1, 15, 3, 15).add(5, 3, 5, 11, 5, 11).forDirectional(Direction.UP);
     public static final VoxelShaper OPTICAL_FIBER_END = shape(6, 8, 6, 10, 16, 10).add(5, 7, 5, 11, 10, 11).forDirectional(Direction.UP);
     public static final VoxelShaper OPTICAL_FIBER_DEVICE_PORT = shape(5, 14, 5, 11, 17, 11).forDirectional(Direction.UP);
 
-    public static final VoxelShape AMETHYST_COLLECTOR_PANEL_SHAPE = shape(0, 8, 0, 16, 10, 16).add(0, 5, 0, 3, 8, 3).add(0, 5, 13, 3, 8, 16).add(13, 5, 13, 16, 8, 16).add(13, 5, 0, 16, 8, 3).add(0, 0, 0, 2, 5, 2).add(0, 0, 14, 2, 5, 16).add(14, 0, 14, 16, 5, 16).add(14, 0, 0, 16, 5, 2).add(0, 6, 3, 2, 8, 13).add(3, 6, 0, 13, 8, 2).add(14, 6, 3, 16, 8, 13).add(3, 6, 14, 13, 8, 16).build();
+    public static final VoxelShape AMETHYST_MIRROR_COLLISION_SHAPE = shape(1, 1, 1, 15, 15, 15).build();
     public static final VoxelShape PHOTOTHERMAL_RECEIVER = shape(0, 0, 0, 16, 12, 16).add(1, 12, 1, 15, 13, 15).add(0, 13, 0, 16, 15, 16).add(1, 15, 1, 15, 16, 15).build();
     public static final VoxelShape OPTICAL_FIBER_JUNCTION = Block.box(5, 5, 5, 11, 11, 11);
 

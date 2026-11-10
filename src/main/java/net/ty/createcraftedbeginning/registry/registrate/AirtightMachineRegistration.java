@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.neoforged.neoforge.client.model.generators.BlockModelProvider;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressBlockItem;
@@ -49,7 +50,7 @@ public final class AirtightMachineRegistration {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> airtightFractionationTower() {
-        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), AssetLookup.standardModel(context, provider))).onRegister(CreateRegistrate.connectedTextures(AirtightFractionationTowerCTBehaviour::new)).tag(AllBlockTags.NON_MOVABLE.tag).loot((loot, block) -> loot.dropOther(block, CCBBlocks.AIRTIGHT_TANK_BLOCK.get()));
+        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/airtight_fractionation_tower/block")))).onRegister(CreateRegistrate.connectedTextures(AirtightFractionationTowerCTBehaviour::new)).tag(AllBlockTags.NON_MOVABLE.tag).loot((loot, block) -> loot.dropOther(block, CCBBlocks.AIRTIGHT_TANK_BLOCK.get()));
     }
 
     @Contract(pure = true)
@@ -86,15 +87,18 @@ public final class AirtightMachineRegistration {
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> boilerSteamOutlet() {
         return builder -> builder.blockstate((context, provider) -> {
-            ModelFile model = provider.models().getExistingFile(provider.modLoc("block/boiler_steam_outlet/block"));
+            BlockModelProvider models = provider.models();
+            ModelFile poweredModel = models.getExistingFile(provider.modLoc("block/boiler_steam_outlet/block_powered"));
+            ModelFile unpoweredModel = models.getExistingFile(provider.modLoc("block/boiler_steam_outlet/block_unpowered"));
             Block block = context.get();
             provider.getVariantBuilder(block).forAllStatesExcept(state -> {
+                ModelFile model = state.getValue(BoilerSteamOutletBlock.POWERED) ? poweredModel : unpoweredModel;
                 AttachFace face = state.getValue(BoilerSteamOutletBlock.FACE);
                 Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
                 int rotationX = face.ordinal() * 90;
                 int rotationY = ((int) facing.toYRot() + 180 + (face == AttachFace.CEILING ? 180 : 0)) % 360;
                 return ConfiguredModel.builder().modelFile(model).rotationX(rotationX).rotationY(rotationY).build();
-            }, BlockStateProperties.WATERLOGGED, BoilerSteamOutletBlock.POWERED);
+            }, BlockStateProperties.WATERLOGGED);
         }).item().properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).build();
     }
 

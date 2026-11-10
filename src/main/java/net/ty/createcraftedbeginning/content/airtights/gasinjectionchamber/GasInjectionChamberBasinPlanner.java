@@ -15,7 +15,6 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipe;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipeLookup;
-import net.ty.createcraftedbeginning.recipe.GasInjectionRecipeLookup.RecipeMatch;
 import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
 import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlanner;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -217,8 +216,7 @@ public final class GasInjectionChamberBasinPlanner {
 
         IItemHandler inputItems = basin.getInputInventory();
         IFluidHandler inputFluids = basin.inputTank.getCapability();
-        Optional<RecipeMatch> recipeMatch = new GasInjectionRecipeLookup(level, chamber.getGasTank()).findBasinRecipeMatch(inputItems, inputFluids);
-        return recipeMatch.flatMap(match -> createPlan(basin, match.recipe()));
+        return new GasInjectionRecipeLookup(level, chamber.getGasTank()).findBasinResult(inputItems, inputFluids, recipe -> createPlan(basin, recipe));
     }
 
     Optional<BasinInputs> planInputs(BasinBlockEntity basin, @Nullable GasInjectionRecipe recipe) {

@@ -161,10 +161,8 @@ public final class GasEndpointDiscovery {
         return handler;
     }
 
-    @Internal
-    public record DiscoveredEndpoints(List<StorageAccess> storageAccesses, List<PressureBoundaryAccess> pressureBoundaryAccesses, List<AtmosphericAccess> atmosphericAccesses) {
-        @Internal
-        public DiscoveredEndpoints {
+    record DiscoveredEndpoints(List<StorageAccess> storageAccesses, List<PressureBoundaryAccess> pressureBoundaryAccesses, List<AtmosphericAccess> atmosphericAccesses) {
+        DiscoveredEndpoints {
             storageAccesses = List.copyOf(storageAccesses);
             pressureBoundaryAccesses = List.copyOf(pressureBoundaryAccesses);
             atmosphericAccesses = List.copyOf(atmosphericAccesses);
@@ -187,6 +185,5 @@ public final class GasEndpointDiscovery {
         }
     }
 
-    @Internal
-    public record PressureBoundaryAccess(BlockFace pipeFace, GasPressureBoundary handler) {}
+    record PressureBoundaryAccess(BlockFace pipeFace, GasPressureBoundary handler) {}
 }

@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.item.TooltipFlag;
+import net.ty.createcraftedbeginning.api.gas.Gas;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.client.gas.CCBGasClientTextures;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
@@ -57,8 +58,9 @@ public class GasStackRenderer implements IIngredientRenderer<GasStack> {
         }
 
         tooltips.add(stack.getHoverName());
-        tooltips.addAll(stack.getGasType().getTooltip(stack));
-        tooltips.add(CCBLang.text(stack.getGasType().getResourceLocation().toString()).style(ChatFormatting.DARK_GRAY).component());
+        Gas gasType = stack.getGasType();
+        tooltips.addAll(gasType.getTooltip(stack));
+        tooltips.add(CCBLang.text(gasType.getResourceLocation().toString()).style(ChatFormatting.DARK_GRAY).component());
     }
 
     @Override

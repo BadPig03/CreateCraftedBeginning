@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
 
 import dev.engine_room.flywheel.api.instance.Instance;
+import dev.engine_room.flywheel.api.instance.InstancerProvider;
 import dev.engine_room.flywheel.api.visual.DynamicVisual;
 import dev.engine_room.flywheel.api.visual.TickableVisual;
 import dev.engine_room.flywheel.api.visualization.VisualizationContext;
@@ -17,6 +18,7 @@ import dev.engine_room.flywheel.lib.visual.SimpleTickableVisual;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.math.AngleHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
@@ -44,13 +46,13 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
     @Nullable
     private TransformedInstance wind;
 
-    private boolean validBlockAbove;
+    private boolean usesActiveModel;
 
     public BreezeCoolerVisual(VisualizationContext context, BreezeCoolerBlockEntity blockEntity, float partialTick) {
         super(context, blockEntity, partialTick);
         frostLevel = FrostLevel.RIMING;
-        validBlockAbove = false;
-        head = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeCoolerRenderer.getBreezeModel(frostLevel, validBlockAbove))).createInstance();
+        usesActiveModel = false;
+        head = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeCoolerRenderer.getBreezeModel(frostLevel, usesActiveModel))).createInstance();
         animate(partialTick);
     }
 
@@ -95,22 +97,24 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
 
     private void animate(float partialTicks) {
         float animation = blockEntity.getHeadAnimation().getValue(partialTicks) * 0.175F;
-        boolean isActive = animation > 0.125F;
+        boolean isActive = animation > BreezeCoolerRenderer.ACTIVE_MODEL_THRESHOLD;
         FrostLevel currentFrostLevel = blockEntity.getFrostLevelForRender();
-        if (isActive != validBlockAbove || currentFrostLevel != frostLevel) {
-            validBlockAbove = isActive;
-            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeCoolerRenderer.getBreezeModel(currentFrostLevel, isActive))).stealInstance(head);
+        boolean active = currentFrostLevel.isAtLeast(FrostLevel.CHILLED);
+        InstancerProvider instances = instancerProvider();
+        if (isActive != usesActiveModel || currentFrostLevel != frostLevel) {
+            usesActiveModel = isActive;
+            instances.instancer(InstanceTypes.TRANSFORMED, Models.partial(BreezeCoolerRenderer.getBreezeModel(currentFrostLevel, isActive))).stealInstance(head);
             frostLevel = currentFrostLevel;
         }
 
-        PartialModel desiredGogglesModel = currentFrostLevel.isAtLeast(FrostLevel.CHILLED) ? CCBPartialModels.BREEZE_COOLER_GOGGLES : CCBPartialModels.BREEZE_COOLER_GOGGLES_SMALL;
+        PartialModel desiredGogglesModel = active ? CCBPartialModels.BREEZE_COOLER_GOGGLES : CCBPartialModels.BREEZE_COOLER_GOGGLES_SMALL;
         boolean hasGoggles = blockEntity.hasGoggles();
         if (hasGoggles && goggles == null) {
-            goggles = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).createInstance();
+            goggles = instances.instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).createInstance();
             gogglesModel = desiredGogglesModel;
         }
         else if (hasGoggles && gogglesModel != desiredGogglesModel) {
-            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).stealInstance(goggles);
+            instances.instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).stealInstance(goggles);
             gogglesModel = desiredGogglesModel;
         }
         else if (!hasGoggles && goggles != null) {
@@ -127,11 +131,11 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
             desiredHatModel = CCBPartialModels.BREEZE_LOGISTICS_HAT;
         }
         if (desiredHatModel != null && hat == null) {
-            hat = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredHatModel)).createInstance();
+            hat = instances.instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredHatModel)).createInstance();
             hatModel = desiredHatModel;
         }
         else if (desiredHatModel != null && hatModel != desiredHatModel) {
-            instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredHatModel)).stealInstance(hat);
+            instances.instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredHatModel)).stealInstance(hat);
             hatModel = desiredHatModel;
         }
         else if (desiredHatModel == null && hat != null) {
@@ -142,7 +146,7 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
 
         boolean hasWind = blockEntity.getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED);
         if (hasWind && wind == null) {
-            wind = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_COOLER_WIND)).createInstance();
+            wind = instances.instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_COOLER_WIND)).createInstance();
         }
         else if (!hasWind && wind != null) {
             wind.delete();
@@ -150,15 +154,16 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         }
 
         float renderTime = AnimationTickHolder.getRenderTime(level);
-        float headY = Mth.sin((renderTime + blockEntity.hashCode() % 13 * 16) / 16 % Mth.TWO_PI) / (currentFrostLevel.isAtLeast(FrostLevel.CHILLED) ? 64 : 16) - animation * 0.75F;
+        float headY = Mth.sin((renderTime + blockEntity.hashCode() % 13 * 16) / 16 % Mth.TWO_PI) / (active ? 64 : 16) - animation * 0.75F;
+        BlockPos visualPos = getVisualPosition();
         float horizontalAngle = AngleHelper.rad(blockEntity.getHeadAngle().getValue(partialTicks));
-        head.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
+        head.setIdentityTransform().translate(visualPos).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
         if (goggles != null) {
-            goggles.setIdentityTransform().translate(getVisualPosition()).translateY(headY + 0.5F).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
+            goggles.setIdentityTransform().translate(visualPos).translateY(headY + 0.5F).translate(Translate.CENTER).rotateY(horizontalAngle).translateBack(Translate.CENTER).setChanged();
         }
         if (hat != null) {
-            hat.setIdentityTransform().translate(getVisualPosition()).translateY(headY);
-            if (currentFrostLevel.isAtLeast(FrostLevel.CHILLED)) {
+            hat.setIdentityTransform().translate(visualPos).translateY(headY);
+            if (active) {
                 hat.translateY(0.75F);
             }
             else {
@@ -171,6 +176,6 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
             return;
         }
 
-        wind.setIdentityTransform().translate(getVisualPosition()).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24 : 0) % 360)).translateBack(Translate.CENTER).setChanged();
+        wind.setIdentityTransform().translate(visualPos).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24 : 0) % 360)).translateBack(Translate.CENTER).setChanged();
     }
 }

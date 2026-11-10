@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightforgingpress;
 
+import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityVisual;
 import com.simibubi.create.content.kinetics.base.RotatingInstance;
 import com.simibubi.create.foundation.render.AllInstanceTypes;
@@ -9,7 +10,6 @@ import dev.engine_room.flywheel.lib.model.Models;
 import dev.engine_room.flywheel.lib.visual.SimpleTickableVisual;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
-import net.ty.createcraftedbeginning.client.render.CCBPartialModels;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,7 +30,7 @@ public class AirtightForgingPressStructuralShaftVisual extends KineticBlockEntit
         }
 
         Direction shaftDirection = Direction.fromAxisAndDirection(structuralPosition.getAxis(), structuralPosition.getAxisDirection());
-        rotatingModel = instancerProvider().instancer(AllInstanceTypes.ROTATING, Models.partial(CCBPartialModels.SHAFT_HALF_UP)).createInstance().rotateToFace(Direction.UP, shaftDirection).setup(blockEntity).setPosition(getVisualPosition());
+        rotatingModel = instancerProvider().instancer(AllInstanceTypes.ROTATING, Models.partial(AllPartialModels.SHAFT_HALF)).createInstance().rotateToFace(Direction.UP, shaftDirection).rotateToFace(Direction.SOUTH, Direction.UP).setup(blockEntity).setPosition(getVisualPosition());
         rotatingModel.setChanged();
     }
 

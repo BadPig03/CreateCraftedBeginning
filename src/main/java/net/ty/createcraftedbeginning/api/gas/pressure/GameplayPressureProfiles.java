@@ -86,11 +86,13 @@ public final class GameplayPressureProfiles {
         }
 
         RegistryState currentState = state;
-        if (currentState.profilesById().containsKey(id)) {
+        Map<ResourceLocation, GameplayPressureProfile> profilesById = currentState.profilesById();
+        if (profilesById.containsKey(id)) {
             throw new IllegalStateException("Gameplay pressure profile id '" + id + "' is already registered.");
         }
 
-        for (GameplayPressureProfile profile : currentState.orderedProfiles()) {
+        List<GameplayPressureProfile> orderedProfiles = currentState.orderedProfiles();
+        for (GameplayPressureProfile profile : orderedProfiles) {
             if (profile.minimumPressurePa() != minimumPressurePa) {
                 continue;
             }
@@ -99,14 +101,15 @@ public final class GameplayPressureProfiles {
         }
 
         GameplayPressureProfile profile = new GameplayPressureProfile(id, minimumPressurePa);
-        ArrayList<GameplayPressureProfile> nextProfiles = new ArrayList<>(currentState.orderedProfiles());
+        ArrayList<GameplayPressureProfile> nextProfiles = new ArrayList<>(orderedProfiles);
         nextProfiles.add(profile);
         nextProfiles.sort(Comparator.comparingLong(GameplayPressureProfile::minimumPressurePa));
-        if (nextProfiles.getFirst().minimumPressurePa() != GasPressure.VACUUM_PA) {
-            throw new IllegalStateException("Gameplay pressure profiles must start at " + GasPressure.VACUUM_PA + " Pa; got " + nextProfiles.getFirst().minimumPressurePa() + " Pa.");
+        long firstMinimumPressurePa = nextProfiles.getFirst().minimumPressurePa();
+        if (firstMinimumPressurePa != GasPressure.VACUUM_PA) {
+            throw new IllegalStateException("Gameplay pressure profiles must start at " + GasPressure.VACUUM_PA + " Pa; got " + firstMinimumPressurePa + " Pa.");
         }
 
-        HashMap<ResourceLocation, GameplayPressureProfile> nextProfilesById = new HashMap<>(currentState.profilesById());
+        HashMap<ResourceLocation, GameplayPressureProfile> nextProfilesById = new HashMap<>(profilesById);
         nextProfilesById.put(id, profile);
         state = new RegistryState(List.copyOf(nextProfiles), Map.copyOf(nextProfilesById));
         return profile;

@@ -11,7 +11,6 @@ import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureGraphSo
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureGraphSolution.FacePressureSamples;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureGraphSolution.PressureLayout;
 import net.ty.createcraftedbeginning.gas.telemetry.GasPressureTelemetryTarget;
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -21,8 +20,7 @@ import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Internal
-public final class GasPipePressureAccumulator {
+final class GasPipePressureAccumulator {
     private static final int FACE_COUNT = Direction.values().length;
     private static final long NO_PRESSURE_READING = Long.MIN_VALUE;
     private final List<BlockPos> targetPositions;
@@ -37,12 +35,12 @@ public final class GasPipePressureAccumulator {
     private int[] touchedFaceSlots = new int[0];
     private int touchedFaceCount;
 
-    public GasPipePressureAccumulator(GasPipeTelemetryTargets telemetryTargets) {
+    GasPipePressureAccumulator(GasPipeTelemetryTargets telemetryTargets) {
         targetPositions = telemetryTargets.pressureTargetPositions();
         targetIndicesByPosition = telemetryTargets.pressureTargetIndicesByPosition();
     }
 
-    public int record(List<FacePressure> pressures) {
+    int record(List<FacePressure> pressures) {
         if (!isEnabled() || pressures.isEmpty()) {
             return 0;
         }
@@ -76,7 +74,7 @@ public final class GasPipePressureAccumulator {
         return collectedSamples;
     }
 
-    public void finishGas() {
+    void finishGas() {
         for (int touchedIndex = 0; touchedIndex < touchedFaceCount; touchedIndex++) {
             int slot = touchedFaceSlots[touchedIndex];
             long pressurePa = currentGasPressureByFace[slot];
@@ -90,7 +88,7 @@ public final class GasPipePressureAccumulator {
         touchedFaceCount = 0;
     }
 
-    public void apply(Level level) {
+    void apply(Level level) {
         if (!isEnabled()) {
             return;
         }
@@ -127,10 +125,11 @@ public final class GasPipePressureAccumulator {
 
         layout = sampleLayout;
         int targetCount = targetPositions.size();
-        targetIndexByPipe = new int[sampleLayout.pipeCount()];
+        int pipeCount = sampleLayout.pipeCount();
+        targetIndexByPipe = new int[pipeCount];
         Arrays.fill(targetIndexByPipe, -1);
         expectedFaceMasks = new int[targetCount];
-        for (int pipeIndex = 0; pipeIndex < sampleLayout.pipeCount(); pipeIndex++) {
+        for (int pipeIndex = 0; pipeIndex < pipeCount; pipeIndex++) {
             Integer targetIndex = targetIndicesByPosition.get(sampleLayout.pipePos(pipeIndex));
             if (targetIndex == null) {
                 continue;

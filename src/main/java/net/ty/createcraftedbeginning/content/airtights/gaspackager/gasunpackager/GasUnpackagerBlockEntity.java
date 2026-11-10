@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.gaspackager.gasunpackager;
 
+import com.simibubi.create.compat.computercraft.FallbackComputerBehaviour;
 import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
@@ -25,7 +26,6 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
-import net.ty.createcraftedbeginning.compat.computercraft.ComputerCraftPackagerCompat;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonItem;
 import net.ty.createcraftedbeginning.content.airtights.balloon.BalloonPressureSemantics;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasunpackager.GasUnpackagerPendingGas.InsertionResult;
@@ -80,7 +80,8 @@ public class GasUnpackagerBlockEntity extends PackagerBlockEntity implements Cle
         behaviours.add(targetInventory);
 
         behaviours.add(new CCBAdvancementBehaviour(this, CCBAdvancements.A_GUIDE_TO_OTHERWORLDLY_LOGISTICS));
-        ComputerCraftPackagerCompat.addBehaviour(this, behaviours);
+        computerBehaviour = new FallbackComputerBehaviour(this);
+        behaviours.add(computerBehaviour);
     }
 
     @Override
@@ -139,7 +140,6 @@ public class GasUnpackagerBlockEntity extends PackagerBlockEntity implements Cle
         previouslyUnwrapped = box.copyWithCount(1);
         animationInward = true;
         animationTicks = CYCLE;
-        ComputerCraftPackagerCompat.emitPackageReceived(this, box);
         notifyUpdate();
         return true;
     }

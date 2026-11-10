@@ -42,7 +42,7 @@ public final class GasInjectionFanCost {
         return baseCost / efficiencyDivisor + 1;
     }
 
-    static int getMaxFanProcessingBatchSize(GasStack gas, long sourcePressurePa, int desiredCount, long gasBudget) {
+    static int getMaxFanProcessingBatchSize(GasStack gas, long sourcePressurePa, int desiredCount) {
         if (gas.isEmpty() || desiredCount <= 0) {
             return 0;
         }
@@ -51,10 +51,7 @@ public final class GasInjectionFanCost {
             return desiredCount;
         }
 
-        if (gasBudget <= 0) {
-            return 0;
-        }
-
+        long gasBudget = gas.getAmount();
         int minimumBatchSize = 0;
         int maximumBatchSize = desiredCount;
         while (minimumBatchSize < maximumBatchSize) {

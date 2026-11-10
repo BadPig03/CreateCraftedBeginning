@@ -76,19 +76,24 @@ final class AirtightArmPower {
     }
 
     static PowerUseResult tryUseBlockPower(Player player, BlockPos blockPos) {
-        return tryUsePower(player, () -> player.canInteractWithBlock(blockPos, 0), () -> AirtightArmAttributes.requiresExtendedBlockRange(player, blockPos));
+        return tryUsePower(player, () -> player.canInteractWithBlock(blockPos, 0), () -> AirtightArmAttributes.requiresExtendedBlockRange(player, blockPos), true);
     }
 
     static PowerUseResult tryUseEntityPower(Player player, Entity targetEntity) {
-        return tryUsePower(player, () -> player.canInteractWithEntity(targetEntity, 0), () -> AirtightArmAttributes.requiresExtendedEntityRange(player, targetEntity));
+        return tryUsePower(player, () -> player.canInteractWithEntity(targetEntity, 0), () -> AirtightArmAttributes.requiresExtendedEntityRange(player, targetEntity), true);
     }
 
     static PowerUseResult tryUseAttackPower(Player player, Entity targetEntity) {
-        return tryUsePower(player, () -> player.canInteractWithEntity(targetEntity, 0), () -> AirtightArmAttributes.requiresPoweredAttack(player, targetEntity));
+        return tryUsePower(player, () -> player.canInteractWithEntity(targetEntity, 0), () -> AirtightArmAttributes.requiresPoweredAttack(player, targetEntity), false);
     }
 
-    private static PowerUseResult tryUsePower(Player player, BooleanSupplier canReachWithCurrentPower, BooleanSupplier requiresCurrentPower) {
-        if (player.level().isClientSide || !isHoldingArms(player)) {
+    private static PowerUseResult tryUsePower(Player player, BooleanSupplier canReachWithCurrentPower, BooleanSupplier requiresCurrentPower, boolean refreshAfterSuccess) {
+        if (player.level().isClientSide) {
+            return PowerUseResult.pass();
+        }
+
+        if (!isHoldingArms(player)) {
+            removeArmModifiers(player);
             return PowerUseResult.pass();
         }
 
@@ -105,7 +110,7 @@ final class AirtightArmPower {
             return PowerUseResult.pass();
         }
 
-        ConsumptionResult consumptionResult = consumeCurrentFuelAndRefresh(player);
+        ConsumptionResult consumptionResult = consumeCurrentFuel(player, refreshAfterSuccess);
         if (!consumptionResult.success()) {
             return PowerUseResult.insufficient(consumptionResult.attemptedGas());
         }
@@ -113,7 +118,7 @@ final class AirtightArmPower {
         return PowerUseResult.consumed();
     }
 
-    private static ConsumptionResult consumeCurrentFuelAndRefresh(Player player) {
+    private static ConsumptionResult consumeCurrentFuel(Player player, boolean refreshAfterSuccess) {
         AffordableFuel selectedFuel = ACTIVE_FUELS.get(player);
         if (selectedFuel == null) {
             return ConsumptionResult.failure(getSelectedGasType(player));
@@ -121,7 +126,10 @@ final class AirtightArmPower {
 
         GasStack attemptedGas = selectedFuel.gasContent().copy();
         boolean fuelConsumed = CanisterContainerConsumers.interactContainer(player, selectedFuel, () -> true, false);
-        refreshArmModifiers(player);
+        if (!fuelConsumed || refreshAfterSuccess) {
+            refreshArmModifiers(player);
+        }
+
         return new ConsumptionResult(fuelConsumed, attemptedGas);
     }
 

@@ -21,14 +21,17 @@ import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipeLookup.CoolingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class BaseCoolerState {
-    private static final String COMPOUND_KEY_REMAINING_TIME = "RemainingTime";
-    private static final String COMPOUND_KEY_IS_CREATIVE = "isCreative";
+    @Internal
+    public static final String COMPOUND_KEY_REMAINING_TIME = "RemainingTime";
+    @Internal
+    public static final String COMPOUND_KEY_IS_CREATIVE = "isCreative";
 
     protected int remainingTime;
     protected boolean isCreative;

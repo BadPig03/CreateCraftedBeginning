@@ -11,12 +11,12 @@ import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection;
-import net.ty.createcraftedbeginning.gas.network.math.GasFlowMath;
-import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureGraphSolution.PipeFlow;
+import net.ty.createcraftedbeginning.gas.network.solver.graph.GasFlowRouting.Route;
+import net.ty.createcraftedbeginning.gas.network.solver.graph.GasFlowRouting.RoutedPlan;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureGraphSolution.PipeSegment;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,8 +27,7 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 final class GasPipeFlowAccumulator {
     private final Set<BlockPos> telemetryTargetPositions;
-    private final Map<BlockPos, GasStack> gasByPipe = new HashMap<>();
-    private final Map<BlockPos, EnumMap<Direction, MutableFaceFlow>> faceFlows = new HashMap<>();
+    private final Map<BlockPos, MutablePipeFlow> pipeFlows = new HashMap<>();
     private final Set<BlockPos> collidedPositions = new HashSet<>();
 
     private boolean collision;
@@ -41,24 +40,26 @@ final class GasPipeFlowAccumulator {
         return collision;
     }
 
-    boolean ensureCompatible(Level level, List<PipeFlow> flows, GasStack gas, double scale) {
-        for (PipeFlow solved : flows) {
-            long amount = GasFlowMath.amountForScale(solved.flowRate(), scale);
+    boolean ensureCompatible(Level level, RoutedPlan plan, GasStack gas) {
+        for (Route route : plan.routes()) {
+            long amount = route.amount();
             if (amount <= 0) {
                 continue;
             }
 
-            PipeSegment segment = solved.segment();
-            GasStack existingGas = gasByPipe.get(segment.pos());
-            if (existingGas == null || existingGas.isEmpty() || GasStack.isSameGasSameComponents(existingGas, gas)) {
-                continue;
-            }
+            for (PipeSegment segment : route.segments()) {
+                MutablePipeFlow pipeFlow = pipeFlows.get(segment.pos());
+                GasStack existingGas = pipeFlow == null ? null : pipeFlow.gas;
+                if (existingGas == null || existingGas.isEmpty() || GasStack.isSameGasSameComponents(existingGas, gas)) {
+                    continue;
+                }
 
-            collision = true;
-            if (collidedPositions.add(segment.pos())) {
-                GasCollisionEvent.handleCollision(level, segment.pos(), existingGas, gas.copyWithAmount(amount));
+                collision = true;
+                if (collidedPositions.add(segment.pos())) {
+                    GasCollisionEvent.handleCollision(level, segment.pos(), existingGas.copyWithAmount(pipeFlow.amount), gas.copyWithAmount(amount));
+                }
+                return false;
             }
-            return false;
         }
         return true;
     }
@@ -68,25 +69,23 @@ final class GasPipeFlowAccumulator {
             return;
         }
 
+        GasStack flowGas = gas.copyWithAmount(1);
         for (PipeSegment segment : segments) {
-            GasStack flowGas = gas.copyWithAmount(amount);
+            MutablePipeFlow pipeFlow = pipeFlows.computeIfAbsent(segment.pos(), ignored -> new MutablePipeFlow());
             Direction entryFace = segment.entryFace();
             Direction exitFace = segment.exitFace();
             if (entryFace != null) {
-                GasStack existingGas = gasByPipe.get(segment.pos());
-                if (existingGas == null) {
-                    gasByPipe.put(segment.pos(), flowGas.copy());
+                if (pipeFlow.gas == null) {
+                    pipeFlow.gas = flowGas;
                 }
-                else {
-                    existingGas.grow(amount);
-                }
-                addMutableFaceFlow(segment.pos(), entryFace, true, flowGas);
+                pipeFlow.amount = BoundedMath.saturatedAdd(pipeFlow.amount, amount);
+                pipeFlow.add(entryFace, true, flowGas, amount);
             }
             if (exitFace == null) {
                 continue;
             }
 
-            addMutableFaceFlow(segment.pos(), exitFace, false, flowGas);
+            pipeFlow.add(exitFace, false, flowGas, amount);
         }
     }
 
@@ -97,7 +96,7 @@ final class GasPipeFlowAccumulator {
                 continue;
             }
 
-            EnumMap<Direction, MutableFaceFlow> byFace = faceFlows.get(pipePos);
+            MutablePipeFlow pipeFlow = pipeFlows.get(pipePos);
             boolean changed = false;
             for (Direction side : Iterate.directions) {
                 GasPipeConnection connection = behaviour.getConnection(side);
@@ -105,7 +104,7 @@ final class GasPipeFlowAccumulator {
                     continue;
                 }
 
-                MutableFaceFlow faceFlow = byFace == null ? null : byFace.get(side);
+                MutableFaceFlow faceFlow = pipeFlow == null ? null : pipeFlow.faces[side.ordinal()];
                 if (faceFlow == null) {
                     changed |= connection.clearFlowState();
                     continue;
@@ -134,10 +133,21 @@ final class GasPipeFlowAccumulator {
         }
     }
 
-    private void addMutableFaceFlow(BlockPos pos, Direction face, boolean inbound, GasStack gas) {
-        EnumMap<Direction, MutableFaceFlow> byFace = faceFlows.computeIfAbsent(pos, ignored -> new EnumMap<>(Direction.class));
-        MutableFaceFlow flow = byFace.computeIfAbsent(face, ignored -> new MutableFaceFlow(gas.copyWithAmount(1)));
-        flow.add(inbound, gas.getAmount());
+    private static final class MutablePipeFlow {
+        private final MutableFaceFlow[] faces = new MutableFaceFlow[Iterate.directions.length];
+        @Nullable
+        private GasStack gas;
+        private long amount;
+
+        private void add(Direction face, boolean inbound, GasStack gas, long flowRate) {
+            int index = face.ordinal();
+            MutableFaceFlow flow = faces[index];
+            if (flow == null) {
+                flow = new MutableFaceFlow(gas);
+                faces[index] = flow;
+            }
+            flow.add(inbound, flowRate);
+        }
     }
 
     private static final class MutableFaceFlow {

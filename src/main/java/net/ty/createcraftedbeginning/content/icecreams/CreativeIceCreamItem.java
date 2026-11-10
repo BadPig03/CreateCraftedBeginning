@@ -19,6 +19,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeIceCreamItem extends Item implements CreativeCoolingSource {
+    private static final int MIN_CREATIVE_PERMISSION_LEVEL = 2;
+
     public CreativeIceCreamItem(Properties properties) {
         super(properties);
     }
@@ -39,7 +41,7 @@ public class CreativeIceCreamItem extends Item implements CreativeCoolingSource 
             return finishedStack;
         }
 
-        if (serverPlayer.server.getProfilePermissions(serverPlayer.getGameProfile()) < 2) {
+        if (serverPlayer.server.getProfilePermissions(serverPlayer.getGameProfile()) < MIN_CREATIVE_PERMISSION_LEVEL) {
             return finishedStack;
         }
 

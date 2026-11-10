@@ -1,19 +1,29 @@
 package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseCause;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockPart;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
+import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
 import net.ty.createcraftedbeginning.gas.storage.GasTank;
 import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
 import net.ty.createcraftedbeginning.gas.storage.GasTankState;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
+import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class AirtightTankStorageController {
     private final AirtightTankBlockEntity owner;
+    private final List<GasReleaseRequest> pendingOverflowReleases = new ArrayList<>();
+    private @Nullable GasReleaseRequest pendingContentsOverflow;
 
     AirtightTankStorageController(AirtightTankBlockEntity owner) {
         this.owner = owner;
@@ -40,6 +50,50 @@ final class AirtightTankStorageController {
 
     GasTankLimits limitsForStructure() {
         return limitsForBlocks(owner.getTankInventory(), owner.getTotalTankSize());
+    }
+
+    List<GasReleaseRequest> getPendingOverflowReleases() {
+        return List.copyOf(pendingOverflowReleases);
+    }
+
+    void setPendingOverflowReleases(List<GasReleaseRequest> releases, @Nullable GasReleaseRequest contentsOverflow) {
+        pendingOverflowReleases.clear();
+        pendingOverflowReleases.addAll(releases);
+        pendingContentsOverflow = contentsOverflow;
+    }
+
+    void applyMountedState(GasTankState state) {
+        GasTankLimits limits = new GasTankLimits(limitsForStructure().volumeLiters(), state.limits().maxPressurePa());
+        GasStack contents = state.contents();
+        long retainedAmount = Math.min(contents.getAmount(), limits.maxAmount());
+        owner.getTankInventory().tryApplyState(new GasTankState(limits, contents.copyWithAmount(retainedAmount))).requireAccepted();
+        if (pendingContentsOverflow != null) {
+            pendingOverflowReleases.removeIf(release -> release == pendingContentsOverflow);
+            pendingContentsOverflow = null;
+        }
+        long excessAmount = contents.getAmount() - retainedAmount;
+        if (excessAmount > 0) {
+            long sourcePressurePa = GasPressure.pressure(contents.getAmount(), limits.volumeLiters());
+            pendingContentsOverflow = GasReleaseRequest.radial(contents.copyWithAmount(excessAmount), owner.getBlockPos(), GasReleaseCause.OVERFLOW, sourcePressurePa);
+            pendingOverflowReleases.add(pendingContentsOverflow);
+        }
+        owner.setChanged();
+    }
+
+    void releasePendingOverflow() {
+        Level level = owner.getLevel();
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        while (!pendingOverflowReleases.isEmpty()) {
+            GasReleaseRequest release = pendingOverflowReleases.removeFirst();
+            if (release == pendingContentsOverflow) {
+                pendingContentsOverflow = null;
+            }
+            owner.setChanged();
+            GasReleaseService.release(level, release);
+        }
     }
 
     void mergeTankStateFrom(GasTankMultiblockPart source) {

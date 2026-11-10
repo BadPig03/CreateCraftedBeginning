@@ -71,11 +71,11 @@ public final class CCBItemModelTransformer {
 
     @Contract(pure = true)
     public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> gasCanister() {
-        return builder -> builder.model((context, provider) -> provider.withExistingParent(context.getName(), provider.modLoc("block/gas_canister")));
+        return builder -> builder.model((context, provider) -> provider.withExistingParent(context.getName(), provider.modLoc("block/gas_canisters/normal")));
     }
 
     @Contract(pure = true)
     public static <T extends Item, P> @NotNull NonNullFunction<ItemBuilder<T, P>, ItemBuilder<T, P>> creativeGasCanister() {
-        return builder -> builder.model((context, provider) -> provider.withExistingParent(context.getName(), provider.modLoc("block/creative_gas_canister")));
+        return builder -> builder.model((context, provider) -> provider.withExistingParent(context.getName(), provider.modLoc("block/gas_canisters/creative")));
     }
 }

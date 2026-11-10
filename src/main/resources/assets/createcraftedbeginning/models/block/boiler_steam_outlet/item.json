@@ -1,10 +1,10 @@
 {
+	"format_version": "1.9.0",
 	"credit": "Made with Blockbench",
 	"parent": "createcraftedbeginning:block/block_135",
 	"texture_size": [32, 32],
 	"textures": {
-		"1": "createcraftedbeginning:block/boiler_steam_outlet/outlet",
-		"particle": "createcraftedbeginning:block/boiler_steam_outlet/particle"
+		"1": "createcraftedbeginning:block/boiler_steam_outlet/outlet"
 	},
 	"elements": [
 		{

@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " C ",
+    "USU",
+    " P "
+  ],
+  "key": {
+    "U": {
+      "item": "minecraft:sculk"
+    },
+    "C": {
+      "item": "minecraft:amethyst_cluster"
+    },
+    "S": {
+      "item": "minecraft:sculk_shrieker"
+    },
+    "P": {
+      "tag": "c:plates/amethyst_crystal"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:amethyst_sound_suppressor"
+  }
+}

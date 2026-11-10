@@ -24,7 +24,7 @@ public class CCBResidueGenerationRecipes extends ResidueGenerationGen {
     private final GeneratedRecipe ETHEREAL = create("ethereal", builder -> builder.require(CCBGases.ETHEREAL_AIR.get(), 1).output(CCBItems.CHORUS_FLOWER_POWDER));
     private final GeneratedRecipe STEAM = create("steam", builder -> builder.require(CCBGases.STEAM.get(), 1));
 
-    private final GeneratedRecipe MOIST = create("moist", builder -> builder.require(CCBGases.MOIST_AIR.get(), 1).output(new FluidStack(Fluids.WATER, 1000)));
+    private final GeneratedRecipe MOIST = create("moist", builder -> builder.require(CCBGases.MOIST_AIR.get(), 1).output(new FluidStack(Fluids.WATER, 1)));
     private final GeneratedRecipe SPORE = create("spore", builder -> builder.require(CCBGases.SPORE_AIR.get(), 1).output(Items.MUSHROOM_STEM));
     private final GeneratedRecipe SCULK = create("sculk", builder -> builder.require(CCBGases.SCULK_AIR.get(), 1).output(Items.SCULK_VEIN));
 

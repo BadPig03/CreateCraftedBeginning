@@ -18,6 +18,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
+import net.ty.createcraftedbeginning.foundation.transaction.TransactionParticipant;
 import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.gas.storage.GasTank;
 import net.ty.createcraftedbeginning.recipe.gas.consumption.GasConsumptionPlan;
@@ -33,10 +34,10 @@ import java.util.Optional;
 @MethodsReturnNonnullByDefault
 final class BreezeChamberGasProcessor {
     private static final int GAS_PROCESSING_INTERVAL = 20;
-    private static final String PENDING_WORK = "PendingWork";
-    private static final String PENDING_TICKS = "PendingTicks";
-    private static final String PENDING_CHARGER_TYPE = "PendingChargerType";
-    private static final String PROCESSING_CREDIT = "ProcessingCredit";
+    private static final String COMPOUND_KEY_PENDING_WORK = "PendingWork";
+    private static final String COMPOUND_KEY_PENDING_TICKS = "PendingTicks";
+    private static final String COMPOUND_KEY_PENDING_CHARGER_TYPE = "PendingChargerType";
+    private static final String COMPOUND_KEY_PROCESSING_CREDIT = "ProcessingCredit";
 
     private final BreezeChamberBlockEntity chamber;
     private final BreezeChamberConversionPlanner planner;
@@ -61,6 +62,31 @@ final class BreezeChamberGasProcessor {
             case ILL -> ChargerType.BAD;
             case CALM -> ChargerType.NONE;
         };
+    }
+
+    private static TransactionParticipant<?> createInputParticipant(GasPressureCompartment sourceTank, GasConsumptionPlan inputPlan) {
+        if (sourceTank instanceof GasTank tank) {
+            return ResourceTransaction.participant(inputPlan::canExecute, tank::snapshot, inputPlan::execute, snapshot -> MachineResourceSnapshots.restoreGas(tank, snapshot));
+        }
+
+        return ResourceTransaction.participant(inputPlan::canExecute, () -> sourceTank.getGasStack().copy(), inputPlan::execute, snapshot -> {
+            GasStack currentGas = sourceTank.getGasStack();
+            if (GasStack.matches(currentGas, snapshot)) {
+                return;
+            }
+
+            long snapshotAmount = snapshot.getAmount();
+            long currentAmount = currentGas.getAmount();
+            long missingAmount = snapshotAmount - currentAmount;
+            if (missingAmount <= 0 || !currentGas.isEmpty() && !GasStack.isSameGasSameComponents(currentGas, snapshot)) {
+                throw new IllegalStateException("Failed to restore breeze chamber source gas: expected " + snapshotAmount + " GU with the original components, got " + currentAmount + " GU.");
+            }
+
+            long restoredAmount = sourceTank.restoreDrainedGas(snapshot.copyWithAmount(missingAmount), GasAction.EXECUTE);
+            if (restoredAmount != missingAmount || !GasStack.matches(sourceTank.getGasStack(), snapshot)) {
+                throw new IllegalStateException("Failed to restore breeze chamber source gas: expected " + missingAmount + " GU, restored " + restoredAmount + " GU.");
+            }
+        });
     }
 
     boolean isControllerActive() {
@@ -172,15 +198,15 @@ final class BreezeChamberGasProcessor {
 
     void writePendingProcessing(CompoundTag compoundTag) {
         if (processingCredit > 0) {
-            compoundTag.putLong(PROCESSING_CREDIT, processingCredit);
+            compoundTag.putLong(COMPOUND_KEY_PROCESSING_CREDIT, processingCredit);
         }
         if (pendingProcessingTicks <= 0 || pendingChargerType == ChargerType.NONE) {
             return;
         }
 
-        compoundTag.putLong(PENDING_WORK, pendingProcessingWork);
-        compoundTag.putInt(PENDING_TICKS, pendingProcessingTicks);
-        compoundTag.putString(PENDING_CHARGER_TYPE, pendingChargerType.name());
+        compoundTag.putLong(COMPOUND_KEY_PENDING_WORK, pendingProcessingWork);
+        compoundTag.putInt(COMPOUND_KEY_PENDING_TICKS, pendingProcessingTicks);
+        compoundTag.putString(COMPOUND_KEY_PENDING_CHARGER_TYPE, pendingChargerType.name());
     }
 
     void readPendingProcessing(CompoundTag compoundTag) {
@@ -190,14 +216,14 @@ final class BreezeChamberGasProcessor {
             return;
         }
 
-        processingCredit = Math.max(0, NbtValues.getLongOrDefault(compoundTag, PROCESSING_CREDIT, 0));
-        ChargerType chargerType = ChargerType.fromTag(compoundTag, PENDING_CHARGER_TYPE);
+        processingCredit = Math.max(0, NbtValues.getLongOrDefault(compoundTag, COMPOUND_KEY_PROCESSING_CREDIT, 0));
+        ChargerType chargerType = ChargerType.fromTag(compoundTag, COMPOUND_KEY_PENDING_CHARGER_TYPE);
         if (chargerType == ChargerType.NONE || chargerType != stateChargerType) {
             return;
         }
 
-        int pendingTicks = Mth.clamp(NbtValues.getIntOrDefault(compoundTag, PENDING_TICKS, 0), 0, GAS_PROCESSING_INTERVAL - 1);
-        long pendingWork = Math.max(0, NbtValues.getLongOrDefault(compoundTag, PENDING_WORK, 0));
+        int pendingTicks = Mth.clamp(NbtValues.getIntOrDefault(compoundTag, COMPOUND_KEY_PENDING_TICKS, 0), 0, GAS_PROCESSING_INTERVAL - 1);
+        long pendingWork = Math.max(0, NbtValues.getLongOrDefault(compoundTag, COMPOUND_KEY_PENDING_WORK, 0));
         if (pendingTicks <= 0 || pendingWork <= 0) {
             return;
         }
@@ -263,23 +289,12 @@ final class BreezeChamberGasProcessor {
 
     private boolean executeGasConversionTransaction(GasPressureCompartment sourceTank, GasConsumptionPlan inputPlan, GasStack outputRequest) {
         long[] plannedAmounts = inputPlan.tankAmounts();
-        if (plannedAmounts.length != 1 || plannedAmounts[0] <= 0) {
+        if (plannedAmounts.length != 1 || plannedAmounts[0] <= 0 || sourceTank.getGasStack().isEmpty()) {
             return false;
         }
 
-        GasStack sourceGas = sourceTank.getGasStack();
-        if (sourceGas.isEmpty()) {
-            return false;
-        }
-
-        GasStack sourceSnapshot = sourceGas.copyWithAmount(plannedAmounts[0]);
         SmartGasTankBehaviour outputBehaviour = chamber.getTankBehaviourInternal();
-        ResourceTransaction conversionTransaction = new ResourceTransaction().add(ResourceTransaction.participant(inputPlan::canExecute, sourceSnapshot::copy, inputPlan::execute, drainedSnapshot -> {
-            long restoredAmount = sourceTank.restoreDrainedGas(drainedSnapshot, GasAction.EXECUTE);
-            if (restoredAmount != drainedSnapshot.getAmount()) {
-                throw new IllegalStateException("Failed to restore breeze chamber source gas: expected " + drainedSnapshot.getAmount() + " GU, restored " + restoredAmount + " GU.");
-            }
-        })).add(ResourceTransaction.participant(() -> outputBehaviour.getInternalGasHandler().forceFill(outputRequest, GasAction.SIMULATE) == outputRequest.getAmount(), () -> MachineResourceSnapshots.snapshotGasTanks(outputBehaviour), () -> outputBehaviour.getInternalGasHandler().forceFill(outputRequest, GasAction.EXECUTE) == outputRequest.getAmount(), outputSnapshot -> MachineResourceSnapshots.restoreGasTanks(outputSnapshot, outputBehaviour)));
+        ResourceTransaction conversionTransaction = new ResourceTransaction().add(createInputParticipant(sourceTank, inputPlan)).add(ResourceTransaction.participant(() -> outputBehaviour.getInternalGasHandler().forceFill(outputRequest, GasAction.SIMULATE) == outputRequest.getAmount(), () -> MachineResourceSnapshots.snapshotGasTanks(outputBehaviour), () -> outputBehaviour.getInternalGasHandler().forceFill(outputRequest, GasAction.EXECUTE) == outputRequest.getAmount(), outputSnapshot -> MachineResourceSnapshots.restoreGasTanks(outputSnapshot, outputBehaviour)));
         return conversionTransaction.commit();
     }
 

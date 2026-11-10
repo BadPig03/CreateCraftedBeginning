@@ -18,7 +18,7 @@ public final class DefaultDrillHandler implements AirtightDrillHandler {
     }
 
     @Override
-    public float getConsumptionMultiplier() {
+    public double getConsumptionMultiplier() {
         return 1;
     }
 }

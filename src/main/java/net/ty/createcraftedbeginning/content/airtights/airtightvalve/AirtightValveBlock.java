@@ -13,6 +13,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -100,7 +101,8 @@ public class AirtightValveBlock extends KineticBlock implements IBE<AirtightValv
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        boolean isSneaking = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
+        Player player = context.getPlayer();
+        boolean isSneaking = player != null && player.isShiftKeyDown();
         Axis gasAxis = isSneaking ? context.getNearestLookingDirection().getAxis() : GasPlacementHelper.chooseAxis(context, GasPlacementHelper.getConnectableAxes(GasPlacementHelper.getConnectableDirections(level, pos)));
         DirectionalFacing panelFacing = DirectionalFacing.getFacingDirection(context.getHorizontalDirection());
         BlockState state = defaultBlockState().setValue(AXIS, gasAxis).setValue(DIRECTIONAL_FACING, panelFacing);

@@ -9,6 +9,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidUtil;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.AirtightHandheldDrillMiningTemplates;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.templates.BaseTemplate;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,7 +40,8 @@ public final class AirtightHandheldDrillSettings {
     }
 
     static boolean isRelativePositionValid(AirtightHandheldDrillMiningTemplates template, int[] miningSize, int[] relativePosition) {
-        return !template.getTemplate().usesSpatialParameters() || template.getTemplate().getOffset(miningSize, Direction.SOUTH, relativePosition).contains(BlockPos.ZERO);
+        BaseTemplate miningTemplate = template.getTemplate();
+        return !miningTemplate.usesSpatialParameters() || miningTemplate.getOffset(miningSize, Direction.SOUTH, relativePosition).contains(BlockPos.ZERO);
     }
 
     static boolean isValidFilter(ItemStack filterStack) {

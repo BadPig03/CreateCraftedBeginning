@@ -3,10 +3,8 @@ package net.ty.createcraftedbeginning.registry.registrate;
 import com.simibubi.create.api.behaviour.display.DisplaySource;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.CreateRegistrate;
-import com.simibubi.create.foundation.data.ModelGen;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
-import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -19,12 +17,8 @@ import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.client.model.generators.BlockModelProvider;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
-import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeBlock;
-import net.ty.createcraftedbeginning.content.airtights.airtightencasedpipe.AirtightEncasedPipeBlockItem;
 import net.ty.createcraftedbeginning.content.airtights.airtightmeters.AirtightMeterCTBehaviour;
-import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeCTBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtightvalve.AirtightValveBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
@@ -53,13 +47,7 @@ public final class GasPipeRegistration {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> airtightPipe() {
-        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> {
-            Axis axis = state.getValue(AirtightPipeBlock.AXIS);
-            int rotationX = axis == Axis.Y ? 0 : 90;
-            int rotationY = axis == Axis.X ? 90 : 0;
-            String modelPath = state.getValue(AirtightPipeBlock.CASED) ? "block/airtight_pipe/casing" : "block/airtight_pipe/pipe";
-            return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(provider.modLoc(modelPath))).uvLock(false).rotationX(rotationX).rotationY(rotationY).build();
-        }, BlockStateProperties.WATERLOGGED)).onRegister(CreateRegistrate.connectedTextures(AirtightPipeCTBehaviour::new)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+        return builder -> builder.blockstate((context, provider) -> new AirtightPipeBlockStateGenerator(provider.models(), provider.getMultipartBuilder(context.getEntry())).generate()).onRegister(CreateRegistrate.connectedTextures(AirtightPipeCTBehaviour::new)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
@@ -75,18 +63,6 @@ public final class GasPipeRegistration {
                 return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationY(rotationY).build();
             }, BlockStateProperties.WATERLOGGED);
         }).onRegister(CreateRegistrate.connectedTextures(AirtightMeterCTBehaviour::new)).item().properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(itemBuilder -> itemBuilder.model(AssetLookup.customGenericItemModel("airtight_meters", modelName + "_item"))).build();
-    }
-
-    @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> airtightEncasedPipe() {
-        return builder -> builder.blockstate((context, provider) -> {
-            BlockModelProvider models = provider.models();
-            MultiPartBlockStateBuilder multipart = provider.getMultipartBuilder(context.getEntry());
-            multipart.part().modelFile(AssetLookup.partialBaseModel(context, provider)).addModel().end();
-            for (Direction direction : Iterate.directions) {
-                multipart.part().modelFile(models.getExistingFile(provider.modLoc("block/airtight_encased_pipe/" + direction.getSerializedName()))).addModel().condition(AirtightEncasedPipeBlock.PROPERTY_BY_DIRECTION.get(direction), false).end();
-            }
-        }).item(AirtightEncasedPipeBlockItem::new).properties(Properties::fireResistant).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).transform(ModelGen.customItemModel("airtight_encased_pipe", "item"));
     }
 
     @Contract(pure = true)

@@ -12,6 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
+import net.ty.createcraftedbeginning.content.crates.FilteredCrateMountedItemStorage;
 import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageAccess;
 import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageState;
 import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageSyncPacket;
@@ -74,13 +75,13 @@ public abstract class MountedStorageManagerMixin implements MountedGasStorageAcc
     }
 
     @Inject(method = "handleSync", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/MountedStorageManager;reset()V", shift = Shift.BEFORE))
-    private void ccb$captureGasesBeforeCreateSync(MountedStorageSyncPacket packet, AbstractContraptionEntity entity, CallbackInfo callback) {
+    private void ccb$handleSync$beforeReset(MountedStorageSyncPacket packet, AbstractContraptionEntity entity, CallbackInfo callback) {
         assertInitialized();
         ccb$gasState.captureBeforeSync();
     }
 
     @Inject(method = "handleSync", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/MountedStorageManager;reset()V", shift = Shift.AFTER))
-    private void ccb$restoreGasesAfterCreateReset(MountedStorageSyncPacket packet, AbstractContraptionEntity entity, CallbackInfo callback) {
+    private void ccb$handleSync$afterReset(MountedStorageSyncPacket packet, AbstractContraptionEntity entity, CallbackInfo callback) {
         ccb$gasState.restoreAfterReset();
     }
 
@@ -95,8 +96,14 @@ public abstract class MountedStorageManagerMixin implements MountedGasStorageAcc
         ccb$gasState.unmount(level, info, globalPos, blockEntity);
     }
 
+    @Inject(method = "tick", at = @At("HEAD"))
+    @SuppressWarnings("DataFlowIssue")
+    private void ccb$tick$head(AbstractContraptionEntity entity, CallbackInfo callback) {
+        FilteredCrateMountedItemStorage.bindLevel((MountedStorageManager) (Object) this, entity.level());
+    }
+
     @Inject(method = "tick", at = @At("RETURN"))
-    private void ccb$tick(AbstractContraptionEntity entity, CallbackInfo callback) {
+    private void ccb$tick$return(AbstractContraptionEntity entity, CallbackInfo callback) {
         if (syncCooldown > 0 || !ccb$gasState.tick(entity)) {
             return;
         }
@@ -111,12 +118,12 @@ public abstract class MountedStorageManagerMixin implements MountedGasStorageAcc
     }
 
     @Inject(method = "read", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/contraptions/MountedStorageManager;initialize()V", shift = Shift.BEFORE))
-    private void ccb$readOnInitialization(CompoundTag nbt, Provider provider, boolean clientPacket, Contraption contraption, CallbackInfo callback) {
+    private void ccb$read$onInitialization(CompoundTag nbt, Provider provider, boolean clientPacket, Contraption contraption, CallbackInfo callback) {
         ccb$gasState.read(nbt);
     }
 
     @Inject(method = "read", at = @At("RETURN"))
-    private void ccb$readAtReturn(CompoundTag nbt, Provider registries, boolean clientPacket, Contraption contraption, CallbackInfo callback) {
+    private void ccb$read$return(CompoundTag nbt, Provider registries, boolean clientPacket, Contraption contraption, CallbackInfo callback) {
         if (!clientPacket) {
             return;
         }

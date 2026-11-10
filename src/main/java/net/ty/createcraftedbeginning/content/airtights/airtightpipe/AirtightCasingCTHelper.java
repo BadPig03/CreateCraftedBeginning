@@ -32,6 +32,10 @@ public final class AirtightCasingCTHelper {
             return false;
         }
 
+        if (state.getBlock() instanceof AirtightPipeBlock) {
+            return !AirtightPipeConnections.isOpen(state, face);
+        }
+
         Axis pipeAxis = state.getValue(BlockStateProperties.AXIS);
         return face.getAxis() != pipeAxis && (!(state.getBlock() instanceof AbstractAirtightMeterBlock) || !AbstractAirtightMeterBlock.isDisplayFace(state, face));
     }
@@ -41,9 +45,8 @@ public final class AirtightCasingCTHelper {
             return false;
         }
 
-        Axis pipeAxis = state.getValue(BlockStateProperties.AXIS);
         for (Direction direction : Iterate.directions) {
-            if (direction.getAxis() != pipeAxis || !hasCasingConnection(level, pos, state, direction, face)) {
+            if (direction.getAxis() == face.getAxis() || !hasCasingConnection(level, pos, state, direction, face)) {
                 continue;
             }
 
@@ -66,7 +69,7 @@ public final class AirtightCasingCTHelper {
             connectionDirection = direction;
             break;
         }
-        return connectionDirection != null && connectionDirection.getAxis() == state.getValue(BlockStateProperties.AXIS) && hasCasingConnection(pos, state, otherPos, other, connectionDirection, face);
+        return connectionDirection != null && connectionDirection.getAxis() != face.getAxis() && hasCasingConnection(pos, state, otherPos, other, connectionDirection, face);
     }
 
     private static boolean hasCasingConnection(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction direction, Direction face) {
@@ -76,7 +79,7 @@ public final class AirtightCasingCTHelper {
     }
 
     private static boolean hasCasingConnection(BlockPos pos, BlockState state, BlockPos otherPos, BlockState otherState, Direction direction, Direction face) {
-        return isCasingSurface(state, face) && isCasingSurface(otherState, face) && direction.getAxis() == state.getValue(BlockStateProperties.AXIS) && canConnectOnFace(pos, state, direction) && canConnectOnFace(otherPos, otherState, direction.getOpposite());
+        return isCasingSurface(state, face) && isCasingSurface(otherState, face) && direction.getAxis() != face.getAxis() && canConnectOnFace(pos, state, direction) && canConnectOnFace(otherPos, otherState, direction.getOpposite());
     }
 
     private static boolean canConnectOnFace(BlockPos pos, BlockState state, Direction face) {

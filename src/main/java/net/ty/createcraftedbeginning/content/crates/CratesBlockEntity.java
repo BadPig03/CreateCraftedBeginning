@@ -15,7 +15,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -122,11 +121,6 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
         storage.setStoredItems(content, count);
     }
 
-    @Internal
-    public final CrateItemStackHandler getHandler() {
-        return storage.handler();
-    }
-
     protected boolean canStoreItem(ItemStack stack) {
         return true;
     }
@@ -136,5 +130,9 @@ public abstract class CratesBlockEntity extends SmartBlockEntity implements IHav
     }
 
     protected void onTrackedItemDiscarded() {
+    }
+
+    final CrateItemStackHandler getHandler() {
+        return storage.handler();
     }
 }

@@ -12,6 +12,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,8 +33,9 @@ public final class BalloonRenderHelper {
     }
 
     public static float getBeltLinearScale(ItemStack stack, BeltBlockEntity belt, TransportedItemStack transported, float partialTicks) {
-        Direction facing = belt.getBlockState().getValue(BlockStateProperties.HORIZONTAL_FACING);
-        BeltSlope slope = belt.getBlockState().getValue(BeltBlock.SLOPE);
+        BlockState state = belt.getBlockState();
+        Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+        BeltSlope slope = state.getValue(BeltBlock.SLOPE);
         float offset = belt.getSpeed() == 0 ? transported.beltPosition : Mth.lerp(partialTicks, transported.prevBeltPosition, transported.beltPosition);
         int verticality = switch (slope) {
             case DOWNWARD -> -1;

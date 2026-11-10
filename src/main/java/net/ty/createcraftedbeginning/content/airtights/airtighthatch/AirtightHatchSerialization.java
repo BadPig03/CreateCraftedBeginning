@@ -42,6 +42,15 @@ final class AirtightHatchSerialization {
         compoundTag.put(COMPOUND_KEY_CANISTER, canisterManager.getStoredCanister().saveOptional(provider));
     }
 
+    void writeSafe(CompoundTag compoundTag, Provider provider) {
+        ItemStack canisterStack = canisterManager.createSchematicCanisterItemStack();
+        if (canisterStack.isEmpty()) {
+            return;
+        }
+
+        compoundTag.put(COMPOUND_KEY_CANISTER, canisterStack.saveOptional(provider));
+    }
+
     void prepareForRead(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         if (clientPacket) {
             if (!compoundTag.contains(COMPOUND_KEY_VOLUME) || !compoundTag.contains(COMPOUND_KEY_MAX_PRESSURE)) {

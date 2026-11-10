@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.common.Tags;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
@@ -27,6 +28,7 @@ import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
+import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -45,6 +47,9 @@ public class CCBRegistrateTags {
 
     private static void genBlockTags(RegistrateTagsProvider<Block> provider) {
         provider.addTag(CCBBlockTags.GAS_SOURCES.tag).addTag(BlockTags.LEAVES);
+        for (int size : List.of(1, 2, 4)) {
+            provider.addTag(BlockTags.MINEABLE_WITH_PICKAXE).addOptional(CCBAPI.asResource("gas_drawer_" + size));
+        }
         Arrays.stream(CCBBlockTags.values()).filter(tag -> tag.alwaysDataGen).map(tag -> tag.tag).forEach(provider::addTag);
     }
 

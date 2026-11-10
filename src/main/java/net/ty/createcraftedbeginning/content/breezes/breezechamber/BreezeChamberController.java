@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.content.breezes.breezechamber;
 
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -53,11 +54,16 @@ final class BreezeChamberController {
         }
 
         BlockState blockState = chamber.getBlockState();
-        if (!(blockState.getBlock() instanceof BreezeChamberBlock block) || block.canSurvive(blockState, level, chamber.getBlockPos())) {
+        if (!(blockState.getBlock() instanceof BreezeChamberBlock block)) {
             return;
         }
 
-        level.destroyBlock(chamber.getBlockPos(), true);
+        BlockPos pos = chamber.getBlockPos();
+        if (block.canSurvive(blockState, level, pos)) {
+            return;
+        }
+
+        level.destroyBlock(pos, true);
     }
 
     void onLoad() {

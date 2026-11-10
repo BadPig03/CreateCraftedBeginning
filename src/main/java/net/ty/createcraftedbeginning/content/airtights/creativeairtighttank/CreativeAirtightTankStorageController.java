@@ -5,6 +5,7 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockPart;
 import net.ty.createcraftedbeginning.gas.storage.CreativeGasReservoir;
 import net.ty.createcraftedbeginning.gas.storage.GasTankLimits;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -40,6 +41,14 @@ final class CreativeAirtightTankStorageController {
 
     void clearTankState() {
         tank().setContainedGas(GasStack.EMPTY);
+    }
+
+    @Nullable Object mergeExtraData(@Nullable Object data, GasTankMultiblockPart source) {
+        if (!(data instanceof Number pressure) || pressure.longValue() != CreativeAirtightTankPressureBehaviour.MAX_PRESSURE_PA || !tank().getGasStack().isEmpty()) {
+            return data;
+        }
+
+        return source.getExtraData();
     }
 
     void applySplitTankState(GasStack state) {

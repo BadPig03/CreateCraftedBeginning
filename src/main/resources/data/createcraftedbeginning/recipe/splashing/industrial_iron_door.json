@@ -1,0 +1,14 @@
+{
+  "type": "create:splashing",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:industrial_iron_door"
+    }
+  ],
+  "results": [
+    {
+      "id": "createcraftedbeginning:weathered_industrial_iron_door",
+      "count": 1
+    }
+  ]
+}

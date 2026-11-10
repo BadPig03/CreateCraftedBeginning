@@ -163,7 +163,7 @@ public class AirtightForgingPressStructuralBlock extends Block implements IBE<Ai
 
     @Override
     protected void entityInside(BlockState blockState, Level level, BlockPos blockPos, Entity entity) {
-        if (!blockState.getValue(STRUCTURAL_POSITION).isLowerStore() || !(entity instanceof ItemEntity itemEntity) || !itemEntity.isAlive() || !itemEntity.onGround()) {
+        if (level.isClientSide || !blockState.getValue(STRUCTURAL_POSITION).isLowerStore() || !(entity instanceof ItemEntity itemEntity) || !itemEntity.isAlive() || !itemEntity.onGround()) {
             return;
         }
 

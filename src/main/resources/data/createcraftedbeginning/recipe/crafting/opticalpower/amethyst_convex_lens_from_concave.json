@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "createcraftedbeginning:amethyst_concave_lens"
+    }
+  ],
+  "result": {
+    "id": "createcraftedbeginning:amethyst_convex_lens",
+    "count": 1
+  }
+}

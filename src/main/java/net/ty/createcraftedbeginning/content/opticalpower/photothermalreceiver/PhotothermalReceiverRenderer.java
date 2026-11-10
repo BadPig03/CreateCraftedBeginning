@@ -29,7 +29,7 @@ public final class PhotothermalReceiverRenderer extends SafeBlockEntityRenderer<
     protected void renderSafe(PhotothermalReceiverBlockEntity receiver, float partialTick, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay) {
         BlockState state = receiver.getBlockState();
         VertexConsumer consumer = buffers.getBuffer(RenderType.cutoutMipped());
-        for (PhotothermalReceiverPort port : PhotothermalReceiverPort.values()) {
+        for (PhotothermalReceiverPort port : PhotothermalReceiverPort.getPorts()) {
             Direction direction = port.getDirection();
             boolean illuminated = receiver.isPortIlluminated(port);
             PartialModel model = CCBPartialModels.PHOTOTHERMAL_RECEIVER_HORIZONTAL_PORT;
@@ -40,31 +40,38 @@ public final class PhotothermalReceiverRenderer extends SafeBlockEntityRenderer<
             }
 
             poseStack.pushPose();
-            if (illuminated) {
-                poseStack.translate(direction.getStepX() * SURFACE_OFFSET, direction.getStepY() * SURFACE_OFFSET, direction.getStepZ() * SURFACE_OFFSET);
-            }
-            if (port == PhotothermalReceiverPort.DOWN) {
-                model = CCBPartialModels.PHOTOTHERMAL_RECEIVER_VERTICAL_PORT;
+            try {
                 if (illuminated) {
-                    model = CCBPartialModels.PHOTOTHERMAL_RECEIVER_VERTICAL_GLOW_PORT;
+                    poseStack.translate(direction.getStepX() * SURFACE_OFFSET, direction.getStepY() * SURFACE_OFFSET, direction.getStepZ() * SURFACE_OFFSET);
+                }
+                if (port == PhotothermalReceiverPort.DOWN) {
+                    model = CCBPartialModels.PHOTOTHERMAL_RECEIVER_VERTICAL_PORT;
+                    if (illuminated) {
+                        model = CCBPartialModels.PHOTOTHERMAL_RECEIVER_VERTICAL_GLOW_PORT;
+                    }
+
+                    poseStack.translate(0, -SURFACE_OFFSET, 0);
+                    poseStack.translate(0.5, 0.5, 0.5);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(180 - state.getValue(PhotothermalReceiverBlock.FACING).toYRot()));
+                    poseStack.translate(-0.5, -0.5, -0.5);
+                }
+                else {
+                    float rotation = switch (direction) {
+                        case WEST -> 90;
+                        case SOUTH -> 180;
+                        case EAST -> 270;
+                        default -> 0;
+                    };
+                    poseStack.translate(0.5, 0.5, 0.5);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(rotation));
+                    poseStack.translate(-0.5, -0.5, -0.5);
                 }
 
-                poseStack.translate(0, -SURFACE_OFFSET, 0);
+                CachedBuffers.partial(model, state).light(portLight).overlay(overlay).renderInto(poseStack, consumer);
             }
-            else {
-                float rotation = switch (direction) {
-                    case WEST -> 90;
-                    case SOUTH -> 180;
-                    case EAST -> 270;
-                    default -> 0;
-                };
-                poseStack.translate(0.5, 0.5, 0.5);
-                poseStack.mulPose(Axis.YP.rotationDegrees(rotation));
-                poseStack.translate(-0.5, -0.5, -0.5);
+            finally {
+                poseStack.popPose();
             }
-
-            CachedBuffers.partial(model, state).light(portLight).overlay(overlay).renderInto(poseStack, consumer);
-            poseStack.popPose();
         }
     }
 }

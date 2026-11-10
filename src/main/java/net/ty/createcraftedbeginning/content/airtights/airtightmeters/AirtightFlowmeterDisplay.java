@@ -3,8 +3,8 @@ package net.ty.createcraftedbeginning.content.airtights.airtightmeters;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
-import net.ty.createcraftedbeginning.content.airtights.AirtightTelemetryVisibility;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.Flow;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 import net.ty.createcraftedbeginning.platform.client.GoggleTooltip;
 import net.ty.createcraftedbeginning.platform.client.GoggleTooltip.Section;
@@ -22,17 +22,14 @@ final class AirtightFlowmeterDisplay {
     }
 
     boolean addToGoggleTooltip(List<Component> tooltip) {
-        if (!AirtightTelemetryVisibility.canReadPipeFlow(flowmeter)) {
-            return false;
-        }
-
         if (!GoggleTooltip.isVisible(tooltip, Section.PIPE_TELEMETRY)) {
             return false;
         }
 
+        Flow readout = flowmeter.getGasPipeReadout();
         CCBLang.translate("gui.airtight_flowmeter").forGoggles(tooltip);
         CCBLang.translate("gui.gas_pipe.flow_rate").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.text(GasUnitFormat.formatRate(flowmeter.getFlowRate())).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
+        CCBLang.text(GasUnitFormat.formatRate(readout.flowRate())).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
         return true;
     }
 }

@@ -20,7 +20,7 @@ import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamber
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.BreezeChamberMovementBehaviour;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlockItem;
-import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerConductor;
+import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerConductor.BreezeCooler;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerMovementBehaviour;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.EmptyBreezeCoolerBlock;
 import net.ty.createcraftedbeginning.foundation.block.CCBSharedProperties;
@@ -77,7 +77,7 @@ public final class BreezeRegistration {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> breezeCoolerProperties() {
-        return builder -> applyBreeze(builder).onRegister(MovementBehaviour.movementBehaviour(new BreezeCoolerMovementBehaviour())).onRegister(MovingInteractionBehaviour.interactionBehaviour(new BreezeCoolerConductor.BreezeChamber()));
+        return builder -> applyBreeze(builder).onRegister(MovementBehaviour.movementBehaviour(new BreezeCoolerMovementBehaviour())).onRegister(MovingInteractionBehaviour.interactionBehaviour(new BreezeCooler()));
     }
 
     @Contract(pure = true)

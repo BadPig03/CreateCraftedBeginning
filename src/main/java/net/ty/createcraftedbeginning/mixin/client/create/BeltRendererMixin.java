@@ -25,7 +25,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public abstract class BeltRendererMixin {
     @SuppressWarnings("MethodMayBeStatic")
     @WrapOperation(method = "renderItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/ItemRenderer;render(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IILnet/minecraft/client/resources/model/BakedModel;)V"))
-    private void ccb$renderItem(ItemRenderer renderer, ItemStack stack, ItemDisplayContext displayContext, boolean leftHand, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay, BakedModel model, Operation<Void> original, @Local(argsOnly = true) BeltBlockEntity belt, @Local(argsOnly = true) float partialTicks, @Local(argsOnly = true) TransportedItemStack transported) {
+    private void ccb$renderItem$render(ItemRenderer renderer, ItemStack stack, ItemDisplayContext displayContext, boolean leftHand, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay, BakedModel model, Operation<Void> original, @Local(argsOnly = true) BeltBlockEntity belt, @Local(argsOnly = true) float partialTicks, @Local(argsOnly = true) TransportedItemStack transported) {
         float scale = BalloonRenderHelper.getBeltLinearScale(stack, belt, transported, partialTicks);
         if (scale == 1) {
             original.call(renderer, stack, displayContext, leftHand, poseStack, buffer, light, overlay, model);
@@ -44,7 +44,7 @@ public abstract class BeltRendererMixin {
 
     @SuppressWarnings("MethodMayBeStatic")
     @WrapOperation(method = "renderItem", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/foundation/render/ShadowRenderHelper;renderShadow(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;FF)V"))
-    private void ccb$renderShadow(PoseStack poseStack, MultiBufferSource buffer, float opacity, float radius, Operation<Void> original, @Local(argsOnly = true) BeltBlockEntity belt, @Local(argsOnly = true) float partialTicks, @Local(argsOnly = true) TransportedItemStack transported) {
+    private void ccb$renderItem$renderShadow(PoseStack poseStack, MultiBufferSource buffer, float opacity, float radius, Operation<Void> original, @Local(argsOnly = true) BeltBlockEntity belt, @Local(argsOnly = true) float partialTicks, @Local(argsOnly = true) TransportedItemStack transported) {
         float scale = BalloonRenderHelper.getBeltLinearScale(transported.stack, belt, transported, partialTicks);
         original.call(poseStack, buffer, opacity, radius * scale);
     }

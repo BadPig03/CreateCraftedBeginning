@@ -123,24 +123,17 @@ neoForge {
     runs {
         client {
             client()
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
         server {
             server()
             programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        }
-
-        gameTestServer {
-            type = "gameTestServer"
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
         data {
             data()
 
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath(), '--existing-mod', 'kubejs'
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath(), '--existing-mod', 'kubejs', '--existing-mod', 'create'
         }
 
         configureEach {
@@ -152,6 +145,7 @@ neoForge {
 
             logLevel = org.slf4j.event.Level.DEBUG
         }
+
     }
 
     mods {
@@ -258,5 +252,22 @@ processResources {
     }
     from(rootProject.file("licenses/Create-LICENSE.md")) {
         into("META-INF/licenses")
+    }
+}
+
+// Private validation is loaded only for an explicitly requested local invocation.
+def internalValidationDir = providers.gradleProperty('internalValidationDir')
+if (internalValidationDir.isPresent()) {
+    File root = file(internalValidationDir.get())
+    File script = new File(root, 'gradle/internal-validation.gradle')
+    if (!root.isDirectory() || !script.isFile()) {
+        throw new GradleException('Internal validation directory or entry script is missing: ' + root)
+    }
+    apply from: script
+} else if (providers.systemProperty('idea.active').map { it.toBoolean() }.getOrElse(false)) {
+    // Explicit, Git-ignored IDE opt-in; ordinary command-line builds never load it.
+    File ideScript = file('.idea/internal-validation.gradle')
+    if (ideScript.isFile()) {
+        apply from: ideScript
     }
 }

@@ -23,9 +23,10 @@ public final class GameplayPressureProfileCompoundTags {
             throw new IllegalArgumentException("Gameplay pressure profile key '" + key + "' must contain a string id; the key is missing or has a different tag type.");
         }
 
-        ResourceLocation id = ResourceLocation.tryParse(tag.getString(key));
+        String value = tag.getString(key);
+        ResourceLocation id = ResourceLocation.tryParse(value);
         if (id == null) {
-            throw new IllegalArgumentException("Gameplay pressure profile key '" + key + "' contains an invalid id '" + tag.getString(key) + "'.");
+            throw new IllegalArgumentException("Gameplay pressure profile key '" + key + "' contains an invalid id '" + value + "'.");
         }
 
         return GameplayPressureProfiles.require(id);

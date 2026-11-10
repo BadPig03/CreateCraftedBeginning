@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.registry;
 
+import net.createmod.catnip.lang.Lang;
 import net.createmod.catnip.net.base.BasePacketPayload;
 import net.createmod.catnip.net.base.BasePacketPayload.PacketTypeProvider;
 import net.createmod.catnip.net.base.CatnipPacketRegistry;
@@ -16,6 +17,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCa
 import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerFailurePacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillGhostItemSubmitPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillParametersPacket;
+import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillSingleBlockPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeMaterialsSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradeMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.airtightupgrades.AirtightUpgradePacket;
@@ -25,14 +27,30 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.container.Can
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterGhostItemSubmitPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreenPacket;
-import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerResetPacket;
-import net.ty.createcraftedbeginning.content.end.endsculksilencer.EndSculkSilencerUpdatePacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderOutlinePacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderStatePacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderBeamPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderColorPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderControlPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderMapPositionPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderMapRequestPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderMapSyncPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderRenamePacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderSyncPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorAimPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorAimReplyPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorRotatePacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorRotateReplyPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystCrystalGrowthPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorResetPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorUpdatePacket;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserDisplayPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserDisplayRequestPacket;
 import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageSyncPacket;
 import net.ty.createcraftedbeginning.gas.visual.GasAreaOutlinePacket;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
-import java.util.Locale;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -41,6 +59,7 @@ public enum CCBPackets implements PacketTypeProvider {
     AIRTIGHT_FRACTIONATION_TOWER_FAILURE(AirtightFractionationTowerFailurePacket.class, AirtightFractionationTowerFailurePacket.STREAM_CODEC),
 
     AIRTIGHT_HANDHELD_DRILL_PARAMETERS(AirtightHandheldDrillParametersPacket.class, AirtightHandheldDrillParametersPacket.STREAM_CODEC),
+    AIRTIGHT_HANDHELD_DRILL_SINGLE_BLOCK(AirtightHandheldDrillSingleBlockPacket.class, AirtightHandheldDrillSingleBlockPacket.STREAM_CODEC),
     AIRTIGHT_HANDHELD_DRILL_GHOST_ITEM_SUBMIT(AirtightHandheldDrillGhostItemSubmitPacket.class, AirtightHandheldDrillGhostItemSubmitPacket.STREAM_CODEC),
 
     AIRTIGHT_BOOST_ELYTRA(AirtightChestplateElytraBoostPacket.class, AirtightChestplateElytraBoostPacket.STREAM_CODEC),
@@ -58,20 +77,41 @@ public enum CCBPackets implements PacketTypeProvider {
     GAS_AREA_OUTLINE(GasAreaOutlinePacket.class, GasAreaOutlinePacket.STREAM_CODEC),
     CANISTER_CONTAINER_CLIENT(CanisterContainerClientPacket.class, CanisterContainerClientPacket.STREAM_CODEC),
 
-    END_SCULK_SILENCER_RESET(EndSculkSilencerResetPacket.class, EndSculkSilencerResetPacket.STREAM_CODEC),
-    END_SCULK_SILENCER_UPDATE(EndSculkSilencerUpdatePacket.class, EndSculkSilencerUpdatePacket.STREAM_CODEC),
+    AMETHYST_LOADER_CONTROL(AmethystLoaderControlPacket.class, AmethystLoaderControlPacket.STREAM_CODEC),
+    AMETHYST_LOADER_RENAME(AmethystLoaderRenamePacket.class, AmethystLoaderRenamePacket.STREAM_CODEC),
+    AMETHYST_LOADER_COLOR(AmethystLoaderColorPacket.class, AmethystLoaderColorPacket.STREAM_CODEC),
+    AMETHYST_LOADER_BEAM(AmethystLoaderBeamPacket.class, AmethystLoaderBeamPacket.STREAM_CODEC),
+    AMETHYST_LOADER_SYNC(AmethystLoaderSyncPacket.class, AmethystLoaderSyncPacket.STREAM_CODEC),
+    AMETHYST_LOADER_MAP_REQUEST(AmethystLoaderMapRequestPacket.class, AmethystLoaderMapRequestPacket.STREAM_CODEC),
+    AMETHYST_LOADER_MAP_POSITION(AmethystLoaderMapPositionPacket.class, AmethystLoaderMapPositionPacket.STREAM_CODEC),
+    AMETHYST_LOADER_MAP_SYNC(AmethystLoaderMapSyncPacket.class, AmethystLoaderMapSyncPacket.STREAM_CODEC),
 
-    MOUNTED_GAS_STORAGE_SYNC(MountedGasStorageSyncPacket.class, MountedGasStorageSyncPacket.STREAM_CODEC);
+    AMETHYST_LOADER_STATE(AmethystLoaderStatePacket.class, AmethystLoaderStatePacket.STREAM_CODEC),
+
+    AMETHYST_LOADER_OUTLINE(AmethystLoaderOutlinePacket.class, AmethystLoaderOutlinePacket.STREAM_CODEC),
+
+    AMETHYST_CRYSTAL_GROWTH(AmethystCrystalGrowthPacket.class, AmethystCrystalGrowthPacket.STREAM_CODEC),
+    AMETHYST_SOUND_SUPPRESSOR_RESET(AmethystSoundSuppressorResetPacket.class, AmethystSoundSuppressorResetPacket.STREAM_CODEC),
+    AMETHYST_SOUND_SUPPRESSOR_UPDATE(AmethystSoundSuppressorUpdatePacket.class, AmethystSoundSuppressorUpdatePacket.STREAM_CODEC),
+
+    AMETHYST_MIRROR_ROTATE(AmethystMirrorRotatePacket.class, AmethystMirrorRotatePacket.STREAM_CODEC),
+    AMETHYST_MIRROR_ROTATE_REPLY(AmethystMirrorRotateReplyPacket.class, AmethystMirrorRotateReplyPacket.STREAM_CODEC),
+    AMETHYST_MIRROR_AIM(AmethystMirrorAimPacket.class, AmethystMirrorAimPacket.STREAM_CODEC),
+    AMETHYST_MIRROR_AIM_REPLY(AmethystMirrorAimReplyPacket.class, AmethystMirrorAimReplyPacket.STREAM_CODEC),
+
+    MOUNTED_GAS_STORAGE_SYNC(MountedGasStorageSyncPacket.class, MountedGasStorageSyncPacket.STREAM_CODEC),
+    LASER_DISPLAY(LaserDisplayPacket.class, LaserDisplayPacket.STREAM_CODEC),
+    LASER_DISPLAY_REQUEST(LaserDisplayRequestPacket.class, LaserDisplayRequestPacket.STREAM_CODEC);
 
     private final PacketType<?> type;
 
     <T extends BasePacketPayload> CCBPackets(Class<T> clazz, StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
-        String name = name().toLowerCase(Locale.ROOT);
+        String name = Lang.asId(name());
         type = new PacketType<>(new Type<>(CCBAPI.asResource(name)), clazz, codec);
     }
 
     public static void register() {
-        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 7);
+        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 45);
         Arrays.stream(values()).map(packet -> packet.type).forEach(packetRegistry::registerPacket);
         packetRegistry.registerAllPackets();
         GasReleaseHandlers.registerOutlineSender(GasAreaOutlinePacket::send);

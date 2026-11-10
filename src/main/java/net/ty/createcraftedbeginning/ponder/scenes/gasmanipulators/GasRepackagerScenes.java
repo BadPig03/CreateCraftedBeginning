@@ -62,50 +62,49 @@ public class GasRepackagerScenes {
 
         BlockPos centerPos = util.grid().at(3, 1, 3);
         BlockPos repackagerPos = centerPos.east(2).above();
-        BlockPos leverPos = repackagerPos.above();
-        BlockPos outputFunnelPos = repackagerPos.north();
-        BlockPos outputBeltPos = outputFunnelPos.below();
-        BlockPos cachePos = repackagerPos.south();
-        BlockPos cacheChutePos = cachePos.above();
-        BlockPos motorPos = outputBeltPos.east().north();
+        BlockPos leverPos = centerPos.east(2).above(2);
+        BlockPos outputFunnelPos = centerPos.east(2).above().north();
+        BlockPos outputBeltPos = centerPos.east(2).north();
+        BlockPos cachePos = centerPos.east(2).above().south();
+        BlockPos cacheChutePos = centerPos.east(2).above(2).south();
+        BlockPos motorPos = centerPos.east(3).north(2);
         BlockPos naturalUnpackagerPos = centerPos.above();
-        BlockPos naturalFunnelPos = naturalUnpackagerPos.north();
-        BlockPos naturalBeltPos = naturalFunnelPos.below();
-        BlockPos naturalTankPos = naturalUnpackagerPos.south();
-        BlockPos naturalTankSupportPos = naturalTankPos.below();
+        BlockPos naturalFunnelPos = centerPos.above().north();
+        BlockPos naturalBeltPos = centerPos.north();
+        BlockPos naturalTankPos = centerPos.above().south();
+        BlockPos naturalTankSupportPos = centerPos.south();
         BlockPos steamUnpackagerPos = centerPos.west(2).above();
-        BlockPos steamFunnelPos = steamUnpackagerPos.north();
-        BlockPos steamBeltPos = steamFunnelPos.below();
-        BlockPos steamTankPos = steamUnpackagerPos.south();
-        BlockPos steamTankSupportPos = steamTankPos.below();
+        BlockPos steamFunnelPos = centerPos.west(2).above().north();
+        BlockPos steamBeltPos = centerPos.west(2).north();
+        BlockPos steamTankPos = centerPos.west(2).above().south();
+        BlockPos steamTankSupportPos = centerPos.west(2).south();
         BlockPos balloonPos = centerPos.west(2).north();
-        BlockPos beltStartPos = balloonPos.west();
-        BlockPos balloon2Pos = balloonPos.east(2);
-        BlockPos balloon3Pos = balloon2Pos.east(2);
+        BlockPos balloon2Pos = centerPos.north();
+        BlockPos balloon3Pos = centerPos.east(2).north();
 
-        Selection beltSelection = util.select().fromTo(outputBeltPos.east(), steamBeltPos.west());
+        Selection beltSelection = util.select().fromTo(centerPos.east(3).north(), centerPos.west(3).north());
         Selection motorSelection = util.select().position(motorPos);
-        Selection repackagerSelection = util.select().fromTo(repackagerPos, repackagerPos.below());
+        Selection repackagerSelection = util.select().fromTo(repackagerPos, centerPos.east(2));
         Selection leverSelection = util.select().position(leverPos);
         Selection outputFunnelSelection = util.select().position(outputFunnelPos);
-        Selection cacheSelection = util.select().fromTo(cachePos, cachePos.below());
+        Selection cacheSelection = util.select().fromTo(cachePos, centerPos.east(2).south());
         Selection cacheChuteSelection = util.select().position(cacheChutePos);
-        Selection naturalReceiverSelection = util.select().fromTo(naturalUnpackagerPos, naturalUnpackagerPos.below()).add(util.select().position(naturalFunnelPos)).add(util.select().position(naturalTankPos)).add(util.select().position(naturalTankSupportPos));
-        Selection steamReceiverSelection = util.select().fromTo(steamUnpackagerPos, steamUnpackagerPos.below()).add(util.select().position(steamFunnelPos)).add(util.select().position(steamTankPos)).add(util.select().position(steamTankSupportPos));
+        Selection naturalReceiverSelection = util.select().fromTo(naturalUnpackagerPos, centerPos).add(util.select().position(naturalFunnelPos)).add(util.select().position(naturalTankPos)).add(util.select().position(naturalTankSupportPos));
+        Selection steamReceiverSelection = util.select().fromTo(steamUnpackagerPos, centerPos.west(2)).add(util.select().position(steamFunnelPos)).add(util.select().position(steamTankPos)).add(util.select().position(steamTankSupportPos));
 
         Vec3 beltVec = util.vector().topOf(centerPos.north());
         Vec3 repackagerVec = util.vector().centerOf(repackagerPos);
         Vec3 cacheVec = util.vector().centerOf(cachePos);
         Vec3 naturalTankVec = util.vector().centerOf(naturalTankPos);
         Vec3 steamTankVec = util.vector().centerOf(steamTankPos);
-        Vec3 dropVec = util.vector().centerOf(cacheChutePos.above());
-        Vec3 dropMotion = util.vector().of(0, -0.12, 0);
-
-        Object naturalTankOutline = new Object();
-        Object steamTankOutline = new Object();
+        Vec3 dropVec = util.vector().centerOf(centerPos.east(2).above(3).south());
+        Vec3 dropMotion = Vec3.ZERO.add(0, -0.12, 0);
 
         AABB naturalTankArea = new AABB(naturalTankVec, naturalTankVec);
         AABB steamTankArea = new AABB(steamTankVec, steamTankVec);
+
+        Object naturalTankOutline = new Object();
+        Object steamTankOutline = new Object();
 
         long localPackingLimit = Math.max(1, BalloonPackingLimits.getLocalPackingLimit(GasPressure.REFERENCE_PRESSURE_PA));
         long naturalFragmentAmount = Math.max(1, localPackingLimit / 2 + localPackingLimit / 10);
@@ -121,7 +120,7 @@ public class GasRepackagerScenes {
         ItemStack sideRequest = BalloonFactory.createOrdered(new GasStack(CCBGases.ULTRAWARM_AIR.get(), sideAmount), "Side Request", SIDE_ORDER_ID, 0, true, 0, true, null);
 
         List<Candidate> mainCandidates = List.of(new Candidate(0, main0, BalloonItem.getGas(main0)), new Candidate(1, main1, BalloonItem.getGas(main1)), new Candidate(2, main2, BalloonItem.getGas(main2)), new Candidate(3, main3, BalloonItem.getGas(main3)));
-        List<BigItemStack> expectedOutput = GasRepackagerOutputs.createMixedOrderOutput(MAIN_ORDER_ID, mainCandidates, GasPressure.REFERENCE_PRESSURE_PA, RandomSource.create(MAIN_ORDER_ID));
+        List<BigItemStack> expectedOutput = GasRepackagerOutputs.createMixedOrderOutput(MAIN_ORDER_ID, mainCandidates, GasPressure.REFERENCE_PRESSURE_PA, RandomSource.create(MAIN_ORDER_ID)).packages();
         List<ItemStack> naturalOutputs = new ArrayList<>();
         List<ItemStack> steamOutputs = new ArrayList<>();
         for (BigItemStack output : expectedOutput) {
@@ -142,11 +141,13 @@ public class GasRepackagerScenes {
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.SOUTH), false);
         scene.world().showSection(beltSelection, Direction.SOUTH);
         scene.world().showSection(motorSelection, Direction.SOUTH);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(beltSelection, slowSpeed / 4);
         scene.world().setKineticSpeed(motorSelection, slowSpeed / 4);
         scene.effects().rotationSpeedIndicator(motorPos);
 
-        scene.idle(15);
+        scene.idle(5);
         scene.world().createItemOnBelt(balloon3Pos, Direction.EAST, main0.copy());
         scene.world().createItemOnBelt(balloon2Pos, Direction.EAST, sideRequest.copy());
         scene.world().createItemOnBelt(balloonPos, Direction.EAST, main1.copy());
@@ -157,18 +158,20 @@ public class GasRepackagerScenes {
 
         scene.idle(80);
         for (int x = 0; x <= 6; x++) {
-            scene.world().removeItemsFromBelt(beltStartPos.east(x));
+            scene.world().removeItemsFromBelt(centerPos.west(3).north().east(x));
         }
         scene.world().showSection(cacheSelection, Direction.DOWN);
         scene.world().showSection(cacheChuteSelection, Direction.DOWN);
         scene.world().showSection(repackagerSelection, Direction.EAST);
         scene.world().showSection(leverSelection, Direction.EAST);
         scene.world().showSection(outputFunnelSelection, Direction.SOUTH);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(beltSelection, 7.5F * slowSpeed);
         scene.world().setKineticSpeed(motorSelection, 7.5F * slowSpeed);
         scene.effects().rotationSpeedIndicator(motorPos);
 
-        scene.idle(20);
+        scene.idle(25);
         scene.overlay().showText(60).text("Route the fragments into an inventory connected to a Gas Repackager").colored(PonderPalette.GREEN).pointAt(cacheVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
@@ -208,7 +211,7 @@ public class GasRepackagerScenes {
         scene.world().showSection(naturalReceiverSelection, Direction.SOUTH);
         scene.world().showSection(steamReceiverSelection, Direction.SOUTH);
 
-        scene.idle(15);
+        scene.idle(20);
         scene.overlay().showText(60).text("Matching gases are combined when the complete request is rebuilt").colored(PonderPalette.GREEN).pointAt(repackagerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);

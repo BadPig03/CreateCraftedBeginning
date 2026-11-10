@@ -84,7 +84,7 @@ public class MoistAirCannonHandler implements AirtightCannonHandler, AirtightCan
     }
 
     @Override
-    public float getGasConsumptionMultiplier() {
+    public double getGasConsumptionMultiplier() {
         return 1;
     }
 

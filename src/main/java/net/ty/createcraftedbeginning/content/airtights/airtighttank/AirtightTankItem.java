@@ -23,12 +23,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightTankItem extends BlockItem {
-    private static final String COMPOUND_KEY_CORE = "Core";
-    private static final String COMPOUND_KEY_WIDTH = "Width";
-    private static final String COMPOUND_KEY_HEIGHT = "Height";
-    private static final String COMPOUND_KEY_LAST_KNOWN_POS = "LastKnownPos";
-    private static final String COMPOUND_KEY_CONTROLLER_POS = "Controller";
-    private static final String COMPOUND_KEY_TANK_CONTENT = "TankContent";
     private static final int INVALID_PLACEMENT = -1;
 
     public AirtightTankItem(Block block, Properties properties) {
@@ -58,12 +52,13 @@ public class AirtightTankItem extends BlockItem {
         }
 
         CompoundTag blockEntityTag = blockEntityData.copyTag();
-        blockEntityTag.remove(COMPOUND_KEY_WIDTH);
-        blockEntityTag.remove(COMPOUND_KEY_HEIGHT);
-        blockEntityTag.remove(COMPOUND_KEY_CONTROLLER_POS);
-        blockEntityTag.remove(COMPOUND_KEY_LAST_KNOWN_POS);
-        blockEntityTag.remove(COMPOUND_KEY_CORE);
-        blockEntityTag.remove(COMPOUND_KEY_TANK_CONTENT);
+        blockEntityTag.remove(AirtightTankSerializationSupport.COMPOUND_KEY_WIDTH);
+        blockEntityTag.remove(AirtightTankSerializationSupport.COMPOUND_KEY_HEIGHT);
+        blockEntityTag.remove(AirtightTankSerializationSupport.COMPOUND_KEY_CONTROLLER_POS);
+        blockEntityTag.remove(AirtightTankSerializationSupport.COMPOUND_KEY_LAST_KNOWN_POS);
+        blockEntityTag.remove(AirtightTankSerialization.COMPOUND_KEY_CORE);
+        blockEntityTag.remove(AirtightTankSerializationSupport.COMPOUND_KEY_TANK_CONTENT);
+        blockEntityTag.remove(AirtightTankSerialization.COMPOUND_KEY_PENDING_OVERFLOW);
         itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(blockEntityTag));
         return super.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState);
     }

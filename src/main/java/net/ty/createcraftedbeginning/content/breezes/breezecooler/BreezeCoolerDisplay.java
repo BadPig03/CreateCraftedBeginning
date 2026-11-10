@@ -1,18 +1,11 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
-import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.lang.LangBuilder;
-import net.createmod.catnip.math.VecHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.BreezeCoolerBlock.FrostLevel;
@@ -28,8 +21,6 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 final class BreezeCoolerDisplay {
     private final BreezeCoolerBlockEntity cooler;
-    private boolean goggles;
-    private boolean trainHat;
 
     BreezeCoolerDisplay(BreezeCoolerBlockEntity cooler) {
         this.cooler = cooler;
@@ -83,79 +74,6 @@ final class BreezeCoolerDisplay {
         CCBLang.translate("gui.warning").style(ChatFormatting.GOLD).forGoggles(tooltip);
         CCBLang.addToGoggles(tooltip, "gui.breeze_cooler.invalid_fluid");
         return true;
-    }
-
-    void spawnParticles() {
-        Level level = cooler.getLevel();
-        if (level == null) {
-            return;
-        }
-
-        RandomSource random = level.getRandom();
-        if (random.nextInt(2) != 0) {
-            return;
-        }
-
-        Vec3 center = VecHelper.getCenterOf(cooler.getBlockPos());
-        Vec3 particlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.125F).multiply(1, 0, 1));
-        boolean isTopOpen = level.getBlockState(cooler.getBlockPos().above()).getCollisionShape(level, cooler.getBlockPos().above()).isEmpty();
-        if (isTopOpen || random.nextInt(4) == 0) {
-            level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, 0, 0);
-        }
-        Vec3 chilledParticlePos = center.add(VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5F).multiply(1, 0.25, 1).normalize().scale((isTopOpen ? 0.25 : 0.5) + random.nextDouble() * 0.125)).add(0, 0.5, 0);
-        if (!cooler.getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED)) {
-            return;
-        }
-
-        level.addParticle(ParticleTypes.SNOWFLAKE, chilledParticlePos.x, chilledParticlePos.y, chilledParticlePos.z, 0, isTopOpen ? 0.0625 : random.nextDouble() * 0.0125, 0);
-    }
-
-    void playSound() {
-        Level level = cooler.getLevel();
-        if (level == null) {
-            return;
-        }
-
-        level.playSound(null, cooler.getBlockPos(), SoundEvents.BREEZE_SHOOT, SoundSource.BLOCKS, 0.125F + level.random.nextFloat() * 0.125F, 0.75F - level.random.nextFloat() * 0.25F);
-    }
-
-    void spawnParticleBurst() {
-        Level level = cooler.getLevel();
-        if (level == null) {
-            return;
-        }
-
-        Vec3 center = VecHelper.getCenterOf(cooler.getBlockPos());
-        RandomSource random = level.random;
-        for (int i = 0; i < 20; i++) {
-            Vec3 offset = VecHelper.offsetRandomly(Vec3.ZERO, random, 0.5F).multiply(1, 0.25, 1).normalize();
-            Vec3 particlePos = center.add(offset.scale(0.5 + random.nextDouble() * 0.125)).add(0, 0.125, 0);
-            Vec3 velocity = offset.scale(0.03125);
-            level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, velocity.x, velocity.y, velocity.z);
-        }
-    }
-
-    void tickAnimation(float targetAngle) {
-        cooler.getHeadAngle().chase(targetAngle, 0.25F, Chaser.exp(5));
-        cooler.getHeadAngle().tickChaser();
-        cooler.getHeadAnimationInternal().chase(0, 0.25F, Chaser.exp(0.25F));
-        cooler.getHeadAnimationInternal().tickChaser();
-    }
-
-    boolean hasGoggles() {
-        return goggles;
-    }
-
-    boolean hasTrainHat() {
-        return trainHat;
-    }
-
-    void setGoggles(boolean goggles) {
-        this.goggles = goggles;
-    }
-
-    void setTrainHat(boolean trainHat) {
-        this.trainHat = trainHat;
     }
 
     private boolean isLiquidInvalid() {

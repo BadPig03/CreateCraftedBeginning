@@ -35,6 +35,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BreezeCoolerScenes {
+    private static final String COMPOUND_KEY_HELD_ITEM = "HeldItem";
+
     public static void feeding(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
 
@@ -44,16 +46,17 @@ public class BreezeCoolerScenes {
 
         BlockPos coolerPos = util.grid().at(3, 1, 3);
         BlockPos deployerPos = coolerPos.east(2);
-        BlockPos deployerMotorPos = deployerPos.north();
+        BlockPos deployerMotorPos = coolerPos.east(2).north();
         BlockPos armPos = coolerPos.north().west(2);
-        BlockPos armCogPos = armPos.north().west();
-        BlockPos armMotorPos = armCogPos.above();
-        BlockPos depotPos = armPos.south(2);
+        BlockPos armCogPos = coolerPos.north(2).west(3);
+        BlockPos armMotorPos = coolerPos.above().north(2).west(3);
+        BlockPos depotPos = coolerPos.south().west(2);
         BlockPos pipePos = coolerPos.south();
-        BlockPos pumpPos = pipePos.south();
-        BlockPos tankPos = pumpPos.south();
-        BlockPos cogPos = pumpPos.east();
-        BlockPos motorPos = cogPos.south();
+        BlockPos pumpPos = coolerPos.south(2);
+        BlockPos tankPos = coolerPos.south(3);
+        BlockPos tankTopPos = coolerPos.above().south(3);
+        BlockPos cogPos = coolerPos.south(2).east();
+        BlockPos motorPos = coolerPos.south(3).east();
 
         Selection coolerSelection = util.select().position(coolerPos);
         Selection deployerSelection = util.select().position(deployerPos);
@@ -62,7 +65,7 @@ public class BreezeCoolerScenes {
         Selection armPowerSelection = util.select().fromTo(armCogPos, armMotorPos);
         Selection depotSelection = util.select().position(depotPos);
         Selection pipeSelection = util.select().fromTo(pipePos, pumpPos);
-        Selection tankSelection = util.select().fromTo(tankPos, tankPos.above());
+        Selection tankSelection = util.select().fromTo(tankPos, tankTopPos);
         Selection cogSelection = util.select().fromTo(cogPos, motorPos);
         Selection pumpSelection = util.select().position(pumpPos);
 
@@ -110,13 +113,19 @@ public class BreezeCoolerScenes {
         scene.world().removeItemsFromBelt(depotPos);
         scene.world().createItemOnBeltLike(depotPos, Direction.UP, packedIceItem.copy());
         scene.world().showSection(armSelection, Direction.DOWN);
+
+        scene.idle(20);
         scene.world().showSection(armPowerSelection, Direction.DOWN);
-        scene.world().showSection(depotSelection, Direction.DOWN);
 
         scene.idle(15);
         scene.world().setKineticSpeed(armPowerSelection, -mediumSpeed / 2);
         scene.world().setKineticSpeed(armSelection, mediumSpeed);
         scene.effects().rotationSpeedIndicator(armPos);
+
+        scene.idle(5);
+        scene.world().showSection(depotSelection, Direction.DOWN);
+
+        scene.idle(20);
         scene.world().instructArm(armPos, Phase.MOVE_TO_INPUT, ItemStack.EMPTY, 0);
         scene.overlay().showText(60).text("Mechanical Arms and Deployers can automatically supply valid cooling items").colored(PonderPalette.BLUE).pointAt(depotVec).attachKeyFrame();
 
@@ -130,19 +139,23 @@ public class BreezeCoolerScenes {
         scene.world().instructArm(armPos, Phase.SEARCH_INPUTS, ItemStack.EMPTY, -1);
 
         scene.idle(40);
-        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", iceItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
+        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put(COMPOUND_KEY_HELD_ITEM, iceItem.copy().saveOptional(scene.world().getHolderLookupProvider())));
         scene.world().setBlock(deployerMotorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.SOUTH), false);
         scene.world().showSection(deployerSelection, Direction.WEST);
+
+        scene.idle(20);
         scene.world().showSection(deployerMotorSelection, Direction.WEST);
 
         scene.idle(15);
         scene.world().setKineticSpeed(deployerMotorSelection, -mediumSpeed);
         scene.world().setKineticSpeed(deployerSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(deployerPos);
+
+        scene.idle(5);
         scene.world().moveDeployer(deployerPos, 1, 20);
 
         scene.idle(21);
-        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put("HeldItem", ItemStack.EMPTY.saveOptional(scene.world().getHolderLookupProvider())));
+        scene.world().modifyBlockEntityNBT(deployerSelection, DeployerBlockEntity.class, compoundTag -> compoundTag.put(COMPOUND_KEY_HELD_ITEM, ItemStack.EMPTY.saveOptional(scene.world().getHolderLookupProvider())));
         scene.effects().indicateSuccess(coolerPos);
         scene.world().moveDeployer(deployerPos, -1, 20);
 
@@ -156,14 +169,20 @@ public class BreezeCoolerScenes {
         scene.idle(20);
         scene.world().showSection(tankSelection, Direction.NORTH);
 
-        scene.idle(3);
-        scene.world().showSection(pipeSelection, Direction.NORTH);
+        scene.idle(20);
+        scene.world().showSection(pipeSelection, Direction.EAST);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.NORTH), false);
         scene.world().showSection(cogSelection, Direction.WEST);
 
         scene.idle(15);
+        scene.world().setKineticSpeed(cogSelection, mediumSpeed);
+        scene.world().setKineticSpeed(pumpSelection, -mediumSpeed);
+        scene.effects().rotationSpeedIndicator(pumpPos);
+
+        scene.idle(5);
+        scene.world().propagatePipeChange(pumpPos);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, fluidPathObject, fluidPathArea, 3);
 
         scene.idle(3);
@@ -174,10 +193,6 @@ public class BreezeCoolerScenes {
         fluidPathArea = fluidPathArea.expandTowards(0, 0, -2);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, fluidPathObject, fluidPathArea, 60);
         scene.overlay().showText(60).text("Mechanical Pumps can automatically supply valid coolant fluids through Fluid Pipes").colored(PonderPalette.BLUE).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
-        scene.world().setKineticSpeed(cogSelection, mediumSpeed);
-        scene.world().setKineticSpeed(pumpSelection, -mediumSpeed);
-        scene.effects().rotationSpeedIndicator(pumpPos);
-        scene.world().propagatePipeChange(pumpPos);
 
         scene.idle(60);
         scene.markAsFinished();
@@ -193,8 +208,8 @@ public class BreezeCoolerScenes {
         BlockPos coolerPos = util.grid().at(3, 1, 3);
         BlockPos basinPos = coolerPos.above();
         BlockPos machinePos = coolerPos.above(3);
-        BlockPos cogPos = machinePos.east();
-        BlockPos motorPos = cogPos.above();
+        BlockPos cogPos = coolerPos.above(3).east();
+        BlockPos motorPos = coolerPos.above(4).east();
 
         Selection coolerSelection = util.select().position(coolerPos);
         Selection basinSelection = util.select().position(basinPos);
@@ -218,7 +233,7 @@ public class BreezeCoolerScenes {
         scene.idle(20);
         scene.world().showSection(coolerSelection, Direction.DOWN);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().showSection(basinSelection, Direction.DOWN);
 
         scene.idle(20);
@@ -247,13 +262,15 @@ public class BreezeCoolerScenes {
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.DOWN), false);
         scene.world().showSection(machineSelection, Direction.DOWN);
 
-        scene.idle(15);
+        scene.idle(20);
         scene.world().showSection(cogSelection, Direction.DOWN);
+
+        scene.idle(15);
         scene.world().setKineticSpeed(cogSelection, fastSpeed);
         scene.world().setKineticSpeed(machineSelection, -fastSpeed);
         scene.effects().rotationSpeedIndicator(machinePos);
 
-        scene.idle(20);
+        scene.idle(5);
         scene.overlay().showText(60).text("For example, Chilled Mixing can turn water into Ice").pointAt(basinVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(basinTop, Pointing.RIGHT, 60).withItem(waterBucketItem.copy());
 
@@ -292,7 +309,7 @@ public class BreezeCoolerScenes {
 
         BlockPos coolerPos = util.grid().at(3, 1, 3);
         BlockPos fanPos = coolerPos.west(2);
-        BlockPos motorPos = fanPos.west();
+        BlockPos motorPos = coolerPos.west(3);
         BlockPos depotPos = coolerPos.east(2);
 
         Selection coolerSelection = util.select().position(coolerPos);
@@ -318,13 +335,13 @@ public class BreezeCoolerScenes {
         scene.world().createItemOnBeltLike(depotPos, Direction.UP, magmaItem.copy());
         scene.world().showSection(depotSelection, Direction.DOWN);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().showSection(coolerSelection, Direction.DOWN);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().showSection(fanSelection, Direction.EAST);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.EAST), false);
         scene.world().showSection(motorSelection, Direction.EAST);
 
@@ -332,7 +349,7 @@ public class BreezeCoolerScenes {
         scene.world().setKineticSpeed(kineticSelection, fastSpeed);
         scene.effects().rotationSpeedIndicator(fanPos);
 
-        scene.idle(20);
+        scene.idle(5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, airCurrentObject, airCurrentArea, 3);
 
         scene.idle(3);

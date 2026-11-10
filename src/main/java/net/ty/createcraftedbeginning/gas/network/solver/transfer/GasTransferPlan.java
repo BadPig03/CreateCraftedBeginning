@@ -80,6 +80,9 @@ public record GasTransferPlan(List<PlannedDrain> drains, List<PlannedFill> fills
             long secured = drain.endpoint.restoreRemainder(level, gas.copyWithAmount(remaining));
             remaining = BoundedMath.saturatedSubtract(remaining, secured);
         }
+        if (remaining > 0) {
+            throw new IllegalStateException("Gas transfer remainder could not be restored or retained: " + remaining + " GU.");
+        }
     }
 
     public record PlannedDrain(GasNetworkPressureEndpoint endpoint, long amount) {}

@@ -32,6 +32,8 @@ import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberFilterItem;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberFilterState;
+import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionChamberOperationState;
 import net.ty.createcraftedbeginning.content.airtights.gasinjectionchamber.GasInjectionFanCost;
 import net.ty.createcraftedbeginning.gas.behaviour.SmartGasTankBehaviour;
 import net.ty.createcraftedbeginning.recipe.GasInjectionRecipeLookup;
@@ -58,8 +60,8 @@ public class GasInjectionChamberScenes {
 
         BlockPos targetPos = util.grid().at(3, 1, 3);
         BlockPos chamberPos = targetPos.above(2);
-        BlockPos lowerPipePos = chamberPos.above();
-        BlockPos upperPipePos = chamberPos.above(3);
+        BlockPos lowerPipePos = targetPos.above(3);
+        BlockPos upperPipePos = targetPos.above(5);
 
         Selection targetSelection = util.select().position(targetPos);
         Selection chamberSelection = util.select().position(chamberPos);
@@ -68,6 +70,7 @@ public class GasInjectionChamberScenes {
         Vec3 targetVec = util.vector().centerOf(targetPos);
         Vec3 chamberVec = util.vector().centerOf(chamberPos);
         Vec3 upperPipeVec = util.vector().centerOf(upperPipePos);
+        Vec3 lowerPipeVec = util.vector().centerOf(lowerPipePos);
         Vec3 nozzleVec = chamberVec.subtract(0, 1.6875, 0);
 
         ItemStack blazePowder = new ItemStack(Items.BLAZE_POWDER);
@@ -83,10 +86,10 @@ public class GasInjectionChamberScenes {
         scene.idle(20);
         scene.world().showSection(targetSelection, Direction.DOWN);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().showSection(chamberSelection, Direction.DOWN);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().showSection(pipeSelection, Direction.DOWN);
 
         scene.idle(20);
@@ -99,7 +102,7 @@ public class GasInjectionChamberScenes {
         scene.idle(3);
         gasArea = gasArea.expandTowards(0, -2, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, gasFlowObject, gasArea, 60);
-        scene.overlay().showText(60).text("Only the chamber's top face can connect to a gas network").colored(PonderPalette.RED).pointAt(util.vector().centerOf(lowerPipePos)).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Only the chamber's top face can connect to a gas network").colored(PonderPalette.RED).pointAt(lowerPipeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.overlay().showText(60).text("Incoming gas is stored in the chamber's internal gas tank").pointAt(chamberVec).placeNearTarget().attachKeyFrame();
@@ -112,7 +115,7 @@ public class GasInjectionChamberScenes {
 
         scene.idle(65);
         scene.overlay().showText(60).text("When a matching item is held there, the nozzle injects gas...").colored(PonderPalette.GREEN).pointAt(chamberVec).placeNearTarget().attachKeyFrame();
-        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt("ProcessingTicks", 60));
+        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, 60));
 
         scene.idle(20);
         scene.world().modifyBlockEntity(chamberPos, GasInjectionChamberBlockEntity.class, chamber -> {
@@ -138,26 +141,28 @@ public class GasInjectionChamberScenes {
         emitCloud(scene, nozzleVec, random);
         scene.effects().indicateSuccess(targetPos);
 
-        scene.idle(40);
+        scene.idle(60);
         scene.overlay().showText(60).text("...then returns the processed result to the Depot or Belt").colored(PonderPalette.GREEN).pointAt(targetVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(70);
+        scene.idle(80);
         scene.world().removeItemsFromBelt(targetPos);
         scene.world().createItemOnBeltLike(targetPos, Direction.NORTH, gasCanister.copy());
         scene.world().modifyBlockEntity(chamberPos, GasInjectionChamberBlockEntity.class, chamber -> getGasTank(chamber).fill(new GasStack(CCBGases.NATURAL_AIR.get(), 40000), GasAction.EXECUTE));
         scene.overlay().showText(60).text("Compatible Gas Canisters can also be filled beneath the chamber").colored(PonderPalette.BLUE).pointAt(targetVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(70);
+        scene.idle(80);
         scene.overlay().showText(60).text("Gas transfers only while the chamber's pressure is higher than the canister's").colored(PonderPalette.RED).pointAt(targetVec).placeNearTarget().attachKeyFrame();
-        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt("ProcessingTicks", 60));
+        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, 60));
 
         scene.idle(20);
         scene.world().modifyBlockEntity(chamberPos, GasInjectionChamberBlockEntity.class, chamber -> {
             GasPressureCompartment tank = getGasTank(chamber);
             GasStack gas = tank.getGasStack();
-            if (!gas.isEmpty()) {
-                tank.drain(gas.copyWithAmount(Math.min(4000, gas.getAmount())), GasAction.EXECUTE);
+            if (gas.isEmpty()) {
+                return;
             }
+
+            tank.drain(gas.copyWithAmount(Math.min(4000, gas.getAmount())), GasAction.EXECUTE);
         });
         scene.world().removeItemsFromBelt(targetPos);
         scene.world().createItemOnBeltLike(targetPos, Direction.UP, filledGasCanister.copy());
@@ -178,8 +183,8 @@ public class GasInjectionChamberScenes {
 
         BlockPos targetPos = util.grid().at(3, 1, 3);
         BlockPos chamberPos = targetPos.above(2);
-        BlockPos lowerPipePos = chamberPos.above();
-        BlockPos upperPipePos = chamberPos.above(3);
+        BlockPos lowerPipePos = targetPos.above(3);
+        BlockPos upperPipePos = targetPos.above(5);
         BlockPos fanPos = targetPos.west(3);
         BlockPos coolerPos = targetPos.west(2);
 
@@ -203,10 +208,14 @@ public class GasInjectionChamberScenes {
 
         scene.idle(20);
         scene.world().showSection(targetSelection, Direction.DOWN);
+
+        scene.idle(20);
         scene.world().showSection(fanSelection, Direction.DOWN);
+
+        scene.idle(20);
         scene.world().showSection(coolerSelection, Direction.DOWN);
 
-        scene.idle(15);
+        scene.idle(20);
         scene.world().setKineticSpeed(fanSelection, fastSpeed);
         scene.effects().rotationSpeedIndicator(fanPos);
 
@@ -225,6 +234,8 @@ public class GasInjectionChamberScenes {
 
         scene.idle(20);
         scene.world().showSection(chamberSelection, Direction.DOWN);
+
+        scene.idle(20);
         scene.world().showSection(pipeSelection, Direction.DOWN);
 
         scene.idle(20);
@@ -234,7 +245,7 @@ public class GasInjectionChamberScenes {
         scene.overlay().showControls(undersideVec, Pointing.UP, 60).rightClick().withItem(configuredFilter.copy());
 
         scene.idle(7);
-        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.put("InstalledFilter", configuredFilter.copy().saveOptional(scene.world().getHolderLookupProvider())));
+        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.put(GasInjectionChamberFilterState.COMPOUND_KEY_INSTALLED_FILTER, configuredFilter.copy().saveOptional(scene.world().getHolderLookupProvider())));
 
         scene.idle(73);
         scene.overlay().showText(60).text("The chamber can then reproduce that Bulk Processing effect on compatible items below").colored(PonderPalette.GREEN).pointAt(targetVec).placeNearTarget().attachKeyFrame();
@@ -244,7 +255,7 @@ public class GasInjectionChamberScenes {
 
         scene.idle(60);
         scene.overlay().showText(60).text("Reproduced Bulk Processing consumes gas for each item processed").colored(PonderPalette.RED).pointAt(chamberVec).placeNearTarget().attachKeyFrame();
-        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt("ProcessingTicks", 60));
+        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, 60));
 
         scene.idle(35);
         scene.world().modifyBlockEntity(chamberPos, GasInjectionChamberBlockEntity.class, chamber -> {
@@ -274,7 +285,7 @@ public class GasInjectionChamberScenes {
         scene.overlay().showControls(undersideVec, Pointing.UP, 60).rightClick();
 
         scene.idle(7);
-        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.remove("InstalledFilter"));
+        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.remove(GasInjectionChamberFilterState.COMPOUND_KEY_INSTALLED_FILTER));
 
         scene.idle(53);
         scene.markAsFinished();
@@ -290,8 +301,8 @@ public class GasInjectionChamberScenes {
 
         BlockPos basinPos = util.grid().at(3, 1, 3);
         BlockPos chamberPos = basinPos.above(2);
-        BlockPos lowerPipePos = chamberPos.above();
-        BlockPos upperPipePos = chamberPos.above(3);
+        BlockPos lowerPipePos = basinPos.above(3);
+        BlockPos upperPipePos = basinPos.above(5);
 
         Selection basinSelection = util.select().position(basinPos);
         Selection chamberSelection = util.select().position(chamberPos);
@@ -311,10 +322,10 @@ public class GasInjectionChamberScenes {
         scene.idle(20);
         scene.world().showSection(basinSelection, Direction.DOWN);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().showSection(chamberSelection, Direction.DOWN);
 
-        scene.idle(3);
+        scene.idle(20);
         scene.world().showSection(pipeSelection, Direction.DOWN);
 
         scene.idle(20);
@@ -333,7 +344,7 @@ public class GasInjectionChamberScenes {
 
         scene.idle(10);
         scene.world().modifyBlockEntity(basinPos, BasinBlockEntity.class, blockEntity -> blockEntity.inputTank.getCapability().fill(new FluidStack(Fluids.LAVA, 1000), FluidAction.EXECUTE));
-        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt("ProcessingTicks", 60));
+        scene.world().modifyBlockEntityNBT(chamberSelection, GasInjectionChamberBlockEntity.class, compoundTag -> compoundTag.putInt(GasInjectionChamberOperationState.COMPOUND_KEY_PROCESSING_TICKS, 60));
 
         scene.idle(25);
         scene.world().modifyBlockEntity(chamberPos, GasInjectionChamberBlockEntity.class, chamber -> {

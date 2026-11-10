@@ -51,6 +51,10 @@ class AirtightReactorKettleTooltipBuilder {
     }
 
     boolean addToTooltip(List<Component> tooltip) {
+        if (OverpressureTooltips.addWarning(tooltip, kettle.getOverpressureBehaviour(), kettle.getAvailableGases())) {
+            return true;
+        }
+
         AirtightReactorKettleStructureManager structureManager = core.getStructureManager();
         if (structureManager.getOverstressed() && ClientContextBridge.isOverstressedTooltipEnabled()) {
             CCBLang.translate("gui.overstressed").style(ChatFormatting.GOLD).forGoggles(tooltip);
@@ -176,7 +180,7 @@ class AirtightReactorKettleTooltipBuilder {
                 CCBLang.translate("gui.airtight_reactor_kettle.gases").style(ChatFormatting.GRAY).forGoggles(tooltip, 1);
             }
             CCBLang.gasName(gasStack).add(CCBLang.text(" ")).style(ChatFormatting.GRAY).add(GasUnitFormat.amount(gasStack.getAmount()).style(ChatFormatting.AQUA)).forGoggles(tooltip, 2);
-            GasUnitsTooltips.addPressureReading(tooltip, gases, tank, 2, kettle);
+            GasUnitsTooltips.addPressureReading(tooltip, gases, tank, 2, kettle.getGasStorageReadout());
             gasCount++;
         }
         return gasCount;

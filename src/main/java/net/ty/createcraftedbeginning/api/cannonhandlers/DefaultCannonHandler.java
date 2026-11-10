@@ -79,12 +79,13 @@ public class DefaultCannonHandler implements AirtightCannonHandler, AirtightCann
     @Override
     public void explode(Level level, Vec3 pos, AirtightCannonShotContext context) {
         float multiplier = context.effectMultiplier();
-        DamageSource damageSource = new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DamageTypes.WIND_CHARGE), context.projectile());
-        level.explode(context.projectile(), damageSource, createDamageCalculator(context), pos.x(), pos.y(), pos.z(), multiplier, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
+        Entity projectile = context.projectile();
+        DamageSource damageSource = new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DamageTypes.WIND_CHARGE), projectile);
+        level.explode(projectile, damageSource, createDamageCalculator(context), pos.x(), pos.y(), pos.z(), multiplier, false, ExplosionInteraction.TRIGGER, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE, SoundEvents.WIND_CHARGE_BURST);
     }
 
     @Override
-    public float getGasConsumptionMultiplier() {
+    public double getGasConsumptionMultiplier() {
         return 1;
     }
 

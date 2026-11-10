@@ -14,54 +14,42 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class PhotothermalReceiverTooltip {
-    private static final int HEAT_BAR_SEGMENTS = 30;
+    private static final int COOLING_BAR_SEGMENTS = 30;
 
-    private static final int HEATING_THRESHOLD_PERCENT = 50;
+    private PhotothermalReceiverTooltip() {
+    }
 
-    static boolean addToGoggleTooltip(List<Component> tooltip, PhotothermalReceiverController controller) {
-        int receivedPowerLp = controller.getReceivedPowerLp();
-        int offeredPowerLp = controller.getOfferedPowerLp();
-        int heatLevel = controller.getHeatLevel();
+    static void addToGoggleTooltip(List<Component> tooltip, double incidentFluxLm, int outputHeatLevel, int heatProgress) {
+        boolean cooling = incidentFluxLm == 0 && heatProgress > 0;
         CCBLang.translate("gui.photothermal_receiver.header").forGoggles(tooltip);
         CCBLang.translate("gui.photothermal_receiver.input").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        CCBLang.number(receivedPowerLp).translate("gui.unit.optical_power").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
+        CCBLang.number(incidentFluxLm).translate("gui.unit.luminous_flux").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
         CCBLang.translate("gui.photothermal_receiver.heat").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        String heatStatus = switch (heatLevel) {
+        String heatStatus = switch (outputHeatLevel) {
             case 1 -> "gui.photothermal_receiver.heated";
             case 2 -> "gui.photothermal_receiver.superheated";
             default -> "gui.photothermal_receiver.inactive";
         };
-        TemperatureCondition condition = switch (heatLevel) {
+        TemperatureCondition condition = switch (outputHeatLevel) {
             case 1 -> TemperatureCondition.HEATED;
             case 2 -> TemperatureCondition.SUPERHEATED;
             default -> TemperatureCondition.NONE;
         };
         int heatColor = condition.getColor();
         CCBLang.translate(heatStatus).color(heatColor).forGoggles(tooltip, 1);
-        addHeatProgress(tooltip, controller.getHeatProgress());
-        if (offeredPowerLp > receivedPowerLp) {
-            CCBLang.translate("gui.photothermal_receiver.excess").style(ChatFormatting.GRAY).forGoggles(tooltip);
-            CCBLang.number(offeredPowerLp - receivedPowerLp).translate("gui.unit.optical_power").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
+        if (!cooling) {
+            return;
         }
-        return true;
-    }
 
-    private static void addHeatProgress(List<Component> tooltip, int heatProgress) {
-        CCBLang.translate("gui.photothermal_receiver.progress").style(ChatFormatting.GRAY).forGoggles(tooltip);
-        int filledSegments = Mth.clamp(heatProgress * HEAT_BAR_SEGMENTS / PhotothermalHeatState.MAX_HEAT_PROGRESS, 0, HEAT_BAR_SEGMENTS);
-        int heatingMarker = HEAT_BAR_SEGMENTS * PhotothermalHeatState.HEATING_THRESHOLD / PhotothermalHeatState.MAX_HEAT_PROGRESS;
-        MutableComponent heatBar = Component.empty();
-        for (int segment = 1; segment <= HEAT_BAR_SEGMENTS; segment++) {
-            ChatFormatting color = ChatFormatting.DARK_GRAY;
-            if (segment <= filledSegments) {
-                color = ChatFormatting.DARK_GREEN;
-                if (segment == heatingMarker || segment == HEAT_BAR_SEGMENTS) {
-                    color = ChatFormatting.GREEN;
-                }
-            }
-
-            heatBar.append(Component.literal("|").withStyle(color));
+        CCBLang.translate("gui.photothermal_receiver.cooling").style(ChatFormatting.GRAY).forGoggles(tooltip);
+        double coolingRatio = Mth.clamp((double) heatProgress / PhotothermalHeatState.MAX_HEAT_PROGRESS, 0, 1);
+        int filledSegments = (int) Math.round(coolingRatio * COOLING_BAR_SEGMENTS);
+        MutableComponent coolingBar = Component.empty();
+        for (int segment = 1; segment <= COOLING_BAR_SEGMENTS; segment++) {
+            ChatFormatting color = segment <= filledSegments ? ChatFormatting.AQUA : ChatFormatting.DARK_GRAY;
+            coolingBar.append(Component.literal("|").withStyle(color));
         }
-        CCBLang.builder().add(heatBar).space().add(CCBLang.number((double) heatProgress * HEATING_THRESHOLD_PERCENT / PhotothermalHeatState.HEATING_THRESHOLD).text("%").style(ChatFormatting.GRAY).component()).forGoggles(tooltip, 1);
+
+        CCBLang.builder().add(coolingBar).forGoggles(tooltip, 1);
     }
 }

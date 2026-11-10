@@ -64,15 +64,18 @@ public final class AirtightCannonHandlers {
             return;
         }
 
-        float consumptionMultiplier = handler.getGasConsumptionMultiplier();
+        double consumptionMultiplier = handler.getGasConsumptionMultiplier();
         if (!GasConsumptionMath.isNonNegativeFinite(consumptionMultiplier)) {
             CCBAPI.LOGGER.error("Failed to register airtight cannon handler for gas '{}': consumption multiplier must be finite and non-negative, got {}.", location, consumptionMultiplier);
             return;
         }
 
-        if (handler instanceof AirtightCannonVisualHandler visualHandler && !GasConsumptionMath.isFinite(visualHandler.getRotationSpeed())) {
-            CCBAPI.LOGGER.error("Failed to register airtight cannon handler for gas '{}': rotation speed must be finite, got {}.", location, visualHandler.getRotationSpeed());
-            return;
+        if (handler instanceof AirtightCannonVisualHandler visualHandler) {
+            float rotationSpeed = visualHandler.getRotationSpeed();
+            if (!GasConsumptionMath.isFinite(rotationSpeed)) {
+                CCBAPI.LOGGER.error("Failed to register airtight cannon handler for gas '{}': rotation speed must be finite, got {}.", location, rotationSpeed);
+                return;
+            }
         }
 
         HANDLERS.register(gasType, profile, handler);
@@ -81,5 +84,21 @@ public final class AirtightCannonHandlers {
         }
 
         AirtightCannonVisualHandlers.register(location, profile, visualHandler);
+    }
+
+    /** Changes only the consumption of an exact gameplay registration, retaining its separate visual registration. */
+    public static void modify(ResourceLocation location, GameplayPressureProfile profile, AirtightCannonHandlerPatch patch) {
+        Gas gasType = Gas.findById(location);
+        if (gasType.isEmpty()) {
+            throw new IllegalArgumentException("Gas '" + location + "' does not exist.");
+        }
+
+        AirtightCannonHandler original = HANDLERS.findExact(gasType, profile);
+        if (original == null) {
+            throw new IllegalStateException("No airtight cannon handler is registered for gas '" + location + "' and gameplay pressure profile '" + profile.id() + "'.");
+        }
+
+        AirtightCannonHandler modified = patch.applyTo(original);
+        HANDLERS.replaceExact(gasType, profile, modified);
     }
 }
