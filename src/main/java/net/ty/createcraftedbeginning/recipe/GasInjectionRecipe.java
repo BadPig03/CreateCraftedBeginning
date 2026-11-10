@@ -32,7 +32,6 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GasInjectionRecipe extends StandardGasProcessingRecipe<SingleRecipeInput> implements IAssemblyRecipe {
-
     public GasInjectionRecipe(GasProcessingRecipeParams params) {
         super(CCBRecipeTypes.GAS_INJECTION, params);
     }
@@ -118,10 +117,6 @@ public class GasInjectionRecipe extends StandardGasProcessingRecipe<SingleRecipe
     @Override
     public Supplier<Supplier<SequencedAssemblySubCategory>> getJEISubCategory() {
         return () -> GasInjectionSequencedAssemblySubCategory::new;
-    }
-
-    public boolean isFluidInjection() {
-        return ingredients.isEmpty() && results.isEmpty() && fluidIngredients.size() == 1 && fluidResults.size() == 1;
     }
 
     public boolean hasItemInput() {

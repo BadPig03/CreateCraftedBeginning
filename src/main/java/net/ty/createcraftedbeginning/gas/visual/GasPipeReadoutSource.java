@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@FunctionalInterface
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface GasPipeReadoutSource {

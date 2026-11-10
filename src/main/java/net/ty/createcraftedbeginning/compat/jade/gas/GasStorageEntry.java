@@ -6,11 +6,9 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponentPatch;
 import net.ty.createcraftedbeginning.api.gas.Gas;
 import net.ty.createcraftedbeginning.api.gas.GasRegistries;
-import net.ty.createcraftedbeginning.api.gas.GasUnits;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Objects;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -19,25 +17,16 @@ record GasStorageEntry(Gas gasType, long amount, DataComponentPatch components) 
 
     @Contract(" -> new")
     static GasStorageEntry empty() {
-        return of(Gas.EMPTY_GAS_HOLDER.value(), 0);
+        return of(Gas.EMPTY_GAS_HOLDER.value());
     }
 
     static GasStorageEntry of(Gas gasType, long amount, DataComponentPatch components) {
         return new GasStorageEntry(gasType, amount, components);
     }
 
-    @Contract("_, _ -> new")
-    static GasStorageEntry of(Gas gasType, long amount) {
-        return new GasStorageEntry(gasType, amount, DataComponentPatch.EMPTY);
-    }
-
     @Contract("_ -> new")
     static GasStorageEntry of(Gas gasType) {
-        return of(gasType, GasUnits.GU_PER_KGU);
-    }
-
-    static boolean isSameGasSameComponents(GasStorageEntry first, GasStorageEntry second) {
-        return first.gasType == second.gasType && (first.isEmpty() && second.isEmpty() || Objects.equals(first.components, second.components));
+        return new GasStorageEntry(gasType, 0, DataComponentPatch.EMPTY);
     }
 
     boolean isEmpty() {

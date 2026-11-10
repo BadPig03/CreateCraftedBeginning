@@ -25,7 +25,7 @@ public final class RecipeCandidateCache {
 
     public static List<RecipeHolder<?>> get(Object scope, RecipeManager manager, Predicate<RecipeHolder<? extends Recipe<?>>> conditions) {
         CacheKey key = new CacheKey(scope, CCBRecipeReloads.getGeneration(manager));
-        return CACHED_SEARCHES.asMap().computeIfAbsent(key, ignored -> manager.getRecipes().stream().filter(holder -> conditions.test(holder)).toList());
+        return CACHED_SEARCHES.asMap().computeIfAbsent(key, ignored -> manager.getRecipes().stream().filter(conditions).toList());
     }
 
     private record CacheKey(Object scope, Generation generation) {}

@@ -303,12 +303,12 @@ public class BreezeCoolerBlockEntity extends SmartBlockEntity implements IHaveGo
         NONE,
         NORMAL;
 
-        static CoolantType fromTag(CompoundTag compoundTag, String key, CoolantType fallback) {
+        static CoolantType fromTag(CompoundTag compoundTag) {
             try {
-                return valueOf(NbtValues.getStringOrDefault(compoundTag, key, fallback.name()));
+                return valueOf(NbtValues.getStringOrDefault(compoundTag, BreezeCoolerSerialization.COMPOUND_KEY_STATE_TYPE, NONE.name()));
             }
             catch (IllegalArgumentException ignored) {
-                return fallback;
+                return NONE;
             }
         }
     }

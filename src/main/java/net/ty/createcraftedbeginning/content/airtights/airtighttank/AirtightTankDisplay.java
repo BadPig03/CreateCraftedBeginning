@@ -39,15 +39,7 @@ final class AirtightTankDisplay {
 
     boolean addToTooltip(List<Component> tooltip) {
         AirtightTankBlockEntity controller = owner.getControllerBE();
-        if (controller == null) {
-            return false;
-        }
-
-        if (OverpressureTooltips.addWarning(tooltip, controller.getOverpressureBehaviour(), controller.getTankInventory())) {
-            return true;
-        }
-
-        return controller.getCore().addToTooltip(tooltip);
+        return controller != null && (OverpressureTooltips.addWarning(tooltip, controller.getOverpressureBehaviour(), controller.getTankInventory()) || controller.getCore().addToTooltip(tooltip));
     }
 
     int getMaxValue() {

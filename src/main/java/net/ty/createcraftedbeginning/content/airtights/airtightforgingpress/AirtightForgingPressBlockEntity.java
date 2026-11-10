@@ -138,7 +138,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     @Override
     public List<GasHandler> getAdditionalObservedGasHandlers() {
-        return List.of(getGasCapability());
+        return List.of(gasCapability);
     }
 
     @Override
@@ -148,7 +148,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
             return null;
         }
 
-        return OverpressureTooltips.snapshot(overpressure, getGasCapability());
+        return OverpressureTooltips.snapshot(overpressure, gasCapability);
     }
 
     @Override

@@ -60,7 +60,7 @@ public final class VanillaWeatherFlareHandler implements WeatherFlareHandler {
 
     @Override
     public boolean supports(ServerLevel level, Vec3 pos, WeatherFlareEffect effect) {
-        return level.dimension().equals(Level.OVERWORLD);
+        return level.dimension() == Level.OVERWORLD;
     }
 
     @Override

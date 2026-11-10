@@ -65,7 +65,7 @@ final class ChainMiningTemplate extends BaseTemplate {
         List<TagKey<Block>> oreTypes = originState.getTags().filter(tag -> {
             ResourceLocation location = tag.location();
             String path = location.getPath();
-            return location.getNamespace().equals("c") && path.startsWith(ORE_TYPE_PREFIX) && path.length() > oreTypePrefixLength && path.indexOf('/', oreTypePrefixLength) < 0;
+            return "c".equals(location.getNamespace()) && path.startsWith(ORE_TYPE_PREFIX) && path.length() > oreTypePrefixLength && path.indexOf('/', oreTypePrefixLength) < 0;
         }).toList();
         List<BlockPos> neighbors = FACE_NEIGHBORS;
         if (!oreTypes.isEmpty() || originState.is(Blocks.ORES)) {

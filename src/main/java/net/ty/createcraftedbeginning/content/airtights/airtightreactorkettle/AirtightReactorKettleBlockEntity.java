@@ -143,7 +143,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
             return null;
         }
 
-        return OverpressureTooltips.snapshot(overpressure, getAvailableGases());
+        return OverpressureTooltips.snapshot(overpressure, recipeGasCapability);
     }
 
     @Override

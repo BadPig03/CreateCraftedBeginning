@@ -36,11 +36,7 @@ final class CrateFilterController {
     }
 
     boolean canStoreItem(ItemStack stack) {
-        if (filteringBehaviour == null) {
-            return true;
-        }
-
-        return filteringBehaviour.test(stack);
+        return filteringBehaviour == null || filteringBehaviour.test(stack);
     }
 
     void addBehaviour(FilteredCrateBlockEntity blockEntity, List<BlockEntityBehaviour> behaviours) {

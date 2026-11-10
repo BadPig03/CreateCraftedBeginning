@@ -52,11 +52,7 @@ public final class CanisterContainerConsumers {
     }
 
     public static boolean executeWithFuel(Player player, AffordableFuel fuel, TransactionParticipant<?> operation) {
-        if (player.level().isClientSide) {
-            return false;
-        }
-
-        return interactContainer(player, fuel.gasType(), fuel.amount(), () -> true, false, operation, null);
+        return !player.level().isClientSide && interactContainer(player, fuel.gasType(), fuel.amount(), () -> true, false, operation, null);
     }
 
     public static Optional<AffordableFuel> findAffordableFuel(Player player, ToDoubleFunction<GasUsageContext> rawCostFunction) {
@@ -164,11 +160,7 @@ public final class CanisterContainerConsumers {
     }
 
     private static boolean commitWithoutDrain(@Nullable TransactionParticipant<?> operation) {
-        if (operation == null) {
-            return true;
-        }
-
-        return new ResourceTransaction().add(operation).commit();
+        return operation == null || new ResourceTransaction().add(operation).commit();
     }
 
     private static Optional<AffordableFuel> createAffordableFuel(Player player, GasStack storedGas, long sourcePressurePa, ToDoubleFunction<GasUsageContext> rawCostFunction) {

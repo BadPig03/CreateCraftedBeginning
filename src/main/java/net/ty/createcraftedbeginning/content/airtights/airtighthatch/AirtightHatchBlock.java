@@ -157,11 +157,7 @@ public class AirtightHatchBlock extends HorizontalDirectionalBlock implements IB
 
     @Override
     public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
-        if (!level.isClientSide && willHarvest && level.getBlockEntity(pos) instanceof AirtightHatchBlockEntity hatch && !hatch.prepareForRemoval()) {
-            return false;
-        }
-
-        return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
+        return (level.isClientSide || !willHarvest || !(level.getBlockEntity(pos) instanceof AirtightHatchBlockEntity hatch) || hatch.prepareForRemoval()) && super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
     }
 
     @Override

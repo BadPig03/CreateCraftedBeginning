@@ -22,7 +22,6 @@ public final class FunctionalStorageJEICompat {
         }
 
         @Override
-        @SuppressWarnings("deprecation")
         public String getLegacyStringSubtypeInfo(ItemStack ingredient, UidContext context) {
             return ingredient.getOrDefault(FSAttachments.TILE, new CompoundTag()).toString();
         }

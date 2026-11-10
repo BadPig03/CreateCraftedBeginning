@@ -26,7 +26,7 @@ public abstract class SubLevelContainerMixin {
     @WrapOperation(method = "removeSubLevel(IILdev/ryanhcode/sable/sublevel/storage/SubLevelRemovalReason;)V", at = @At(value = "INVOKE", target = "Ldev/ryanhcode/sable/sublevel/SubLevel;onRemove()V"))
     private void ccb$removeSubLevel(@Coerce Object subLevel, Operation<Void> original, int x, int z, @Coerce Object reason) {
         original.call(subLevel);
-        if (!(getLevel() instanceof ServerLevel level) || !((Enum<?>) reason).name().equals("REMOVED")) {
+        if (!(getLevel() instanceof ServerLevel level) || !"REMOVED".equals(((Enum<?>) reason).name())) {
             return;
         }
 

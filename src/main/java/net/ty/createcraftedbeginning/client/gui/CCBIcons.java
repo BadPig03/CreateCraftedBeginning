@@ -44,14 +44,6 @@ public class CCBIcons extends AllIcons {
     public static final CCBIcons I_EXPERIENCE_CONVERSION = next();
     public static final CCBIcons I_LIQUID_REPLACEMENT = next();
     public static final CCBIcons I_AEROGEL_PROTECTION = next();
-
-    static {
-        ccbY++;
-    }
-
-    public static final CCBIcons I_1X1 = newRow();
-    public static final CCBIcons I_3X3 = next();
-    public static final CCBIcons I_5X5 = next();
     public static final CCBIcons I_EFFECTS_PROTECTION = newRow();
     public static final CCBIcons I_WATER_BREATHING = next();
     public static final CCBIcons I_GOGGLES = next();

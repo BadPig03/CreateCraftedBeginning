@@ -132,6 +132,35 @@ public final class AirtightReactorKettleCrafting {
         return true;
     }
 
+    private static boolean canAcceptFluidOutputs(IFluidHandler outputHandler, List<FluidStack> outputFluids) {
+        int outputTankCount = outputHandler.getTanks();
+        FluidTank[] simulatedTanks = new FluidTank[outputTankCount];
+        for (int tank = 0; tank < outputTankCount; tank++) {
+            FluidTank simulatedTank = new FluidTank(outputHandler.getTankCapacity(tank));
+            simulatedTank.setFluid(outputHandler.getFluidInTank(tank).copy());
+            simulatedTanks[tank] = simulatedTank;
+        }
+        IFluidHandler simulatedHandler = new CombinedTankWrapper(simulatedTanks).enforceVariety();
+        return insertFluidOutputs(simulatedHandler, outputFluids);
+    }
+
+    private static boolean canAcceptGasOutputs(GasStorageHandler outputHandler, List<GasStack> outputGases) {
+        int outputTankCount = outputHandler.getTanks();
+        GasTank[] simulatedTanks = new GasTank[outputTankCount];
+        for (int tank = 0; tank < outputTankCount; tank++) {
+            GasTank simulatedTank = new GasTank(outputHandler.getTankVolume(tank), outputHandler.getTankMaxPressurePa(tank));
+            GasStack storedGas = outputHandler.getGasInTank(tank).copy();
+            if (!storedGas.isEmpty() && simulatedTank.fill(storedGas, GasAction.EXECUTE) != storedGas.getAmount()) {
+                return false;
+            }
+
+            simulatedTanks[tank] = simulatedTank;
+        }
+        CombinedGasStorageHandler simulatedHandler = new CombinedGasStorageHandler(simulatedTanks);
+        simulatedHandler.enforceVariety();
+        return insertGasOutputs(simulatedHandler, outputGases);
+    }
+
     CraftPlan createCraftPlan(int[] itemAmounts, int[] fluidAmounts, GasConsumptionPlan gasPlan, List<ItemStack> outputItems, List<FluidStack> outputFluids, List<GasStack> outputGases) {
         IItemHandlerModifiable availableItems = kettle.getAvailableItems();
         IFluidHandler availableFluids = kettle.getAvailableFluids();
@@ -269,35 +298,6 @@ public final class AirtightReactorKettleCrafting {
         }
 
         return true;
-    }
-
-    private boolean canAcceptFluidOutputs(IFluidHandler outputHandler, List<FluidStack> outputFluids) {
-        int outputTankCount = outputHandler.getTanks();
-        FluidTank[] simulatedTanks = new FluidTank[outputTankCount];
-        for (int tank = 0; tank < outputTankCount; tank++) {
-            FluidTank simulatedTank = new FluidTank(outputHandler.getTankCapacity(tank));
-            simulatedTank.setFluid(outputHandler.getFluidInTank(tank).copy());
-            simulatedTanks[tank] = simulatedTank;
-        }
-        IFluidHandler simulatedHandler = new CombinedTankWrapper(simulatedTanks).enforceVariety();
-        return insertFluidOutputs(simulatedHandler, outputFluids);
-    }
-
-    private boolean canAcceptGasOutputs(GasStorageHandler outputHandler, List<GasStack> outputGases) {
-        int outputTankCount = outputHandler.getTanks();
-        GasTank[] simulatedTanks = new GasTank[outputTankCount];
-        for (int tank = 0; tank < outputTankCount; tank++) {
-            GasTank simulatedTank = new GasTank(outputHandler.getTankVolume(tank), outputHandler.getTankMaxPressurePa(tank));
-            GasStack storedGas = outputHandler.getGasInTank(tank).copy();
-            if (!storedGas.isEmpty() && simulatedTank.fill(storedGas, GasAction.EXECUTE) != storedGas.getAmount()) {
-                return false;
-            }
-
-            simulatedTanks[tank] = simulatedTank;
-        }
-        CombinedGasStorageHandler simulatedHandler = new CombinedGasStorageHandler(simulatedTanks);
-        simulatedHandler.enforceVariety();
-        return insertGasOutputs(simulatedHandler, outputGases);
     }
 
     private record ItemTransactionSnapshot(List<ItemStack> inputItems, List<ItemStack> outputItems) {}

@@ -27,7 +27,7 @@ public final class BreezeCoolerSerialization {
 
     private static BaseCoolerState readState(CompoundTag compoundTag) {
         CompoundTag stateData = compoundTag.getCompound(COMPOUND_KEY_STATE_DATA);
-        CoolantType coolantType = CoolantType.fromTag(compoundTag, COMPOUND_KEY_STATE_TYPE, CoolantType.NONE);
+        CoolantType coolantType = CoolantType.fromTag(compoundTag);
         boolean isCreative = NbtValues.getBooleanOrDefault(stateData, BaseCoolerState.COMPOUND_KEY_IS_CREATIVE, false);
         int remainingTime = Mth.clamp(NbtValues.getIntOrDefault(stateData, BaseCoolerState.COMPOUND_KEY_REMAINING_TIME, 0), 0, BreezeCoolerBlockEntity.getMaxCoolantCapacity());
         if (isCreative && coolantType != CoolantType.NONE) {

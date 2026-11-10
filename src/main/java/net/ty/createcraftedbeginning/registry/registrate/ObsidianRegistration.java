@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.WallBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.neoforged.neoforge.client.model.generators.BlockModelProvider;
 import net.ty.createcraftedbeginning.foundation.block.CCBSharedProperties;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
@@ -89,6 +90,6 @@ public final class ObsidianRegistration {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> obsidianWallProperties(NonNullSupplier<? extends Block> reference) {
-        return builder -> builder.initialProperties(reference).properties(properties -> properties.forceSolidOn()).tag(BlockTags.MINEABLE_WITH_PICKAXE).tag(BlockTags.WALLS);
+        return builder -> builder.initialProperties(reference).properties(Properties::forceSolidOn).tag(BlockTags.MINEABLE_WITH_PICKAXE).tag(BlockTags.WALLS);
     }
 }

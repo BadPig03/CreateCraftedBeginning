@@ -164,11 +164,7 @@ final class AirtightHatchCanisterManager {
     }
 
     boolean prepareForRemoval() {
-        if (isEmpty()) {
-            return true;
-        }
-
-        return updateTankLimits() && !createCanisterItemStack().isEmpty();
+        return isEmpty() || updateTankLimits() && !createCanisterItemStack().isEmpty();
     }
 
     boolean giveCanisterToPlayer(Player player) {

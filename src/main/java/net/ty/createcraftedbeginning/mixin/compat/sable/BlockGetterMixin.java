@@ -35,7 +35,6 @@ import java.util.function.Function;
 @MethodsReturnNonnullByDefault
 @Mixin(value = BlockGetter.class, priority = 1200)
 public interface BlockGetterMixin {
-    @SuppressWarnings("ConstantValue")
     @WrapMethod(method = "originalClip", remap = false)
     private static BlockHitResult ccb$originalClip$specialContexts(BlockGetter level, ClipContext context, Operation<BlockHitResult> original) {
         CollisionContext collision = ((ClipContextAccessor) context).ccb$getCollisionContext();

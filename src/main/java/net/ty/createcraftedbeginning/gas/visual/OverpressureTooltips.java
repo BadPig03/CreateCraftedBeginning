@@ -24,11 +24,7 @@ public final class OverpressureTooltips {
     }
 
     public static boolean addStatus(List<Component> tooltip, OverpressureBehaviour overpressure, GasStorageHandler gasHandler) {
-        if (!GoggleTooltip.isVisible(tooltip, Section.OVERPRESSURE)) {
-            return false;
-        }
-
-        return addStatus(tooltip, snapshot(overpressure, gasHandler));
+        return GoggleTooltip.isVisible(tooltip, Section.OVERPRESSURE) && addStatus(tooltip, snapshot(overpressure, gasHandler));
     }
 
     public static boolean addStatus(List<Component> tooltip, @Nullable Snapshot snapshot) {

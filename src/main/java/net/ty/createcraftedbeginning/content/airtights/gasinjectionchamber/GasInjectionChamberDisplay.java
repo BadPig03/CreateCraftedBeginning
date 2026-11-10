@@ -40,11 +40,7 @@ final class GasInjectionChamberDisplay {
     }
 
     boolean addToTooltip(List<Component> tooltip) {
-        if (chamber.getLevel() == null) {
-            return false;
-        }
-
-        return OverpressureTooltips.addWarning(tooltip, chamber.getOverpressureBehaviour(), chamber.getGasTankBehaviour().getPrimaryHandler());
+        return chamber.getLevel() != null && OverpressureTooltips.addWarning(tooltip, chamber.getOverpressureBehaviour(), chamber.getGasTankBehaviour().getPrimaryHandler());
     }
 
     int getMaxValue() {

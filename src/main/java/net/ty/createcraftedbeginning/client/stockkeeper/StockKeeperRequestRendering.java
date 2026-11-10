@@ -106,6 +106,7 @@ public final class StockKeeperRequestRendering {
         }
     }
 
+    @SuppressWarnings("ConstantExpression")
     public static void renderBreeze(GuiGraphics graphics, Level level, BreezeCoolerBlockEntity breeze, boolean hasBlaze, int left, int top, int windowHeight) {
         PoseStack pose = graphics.pose();
         pose.pushPose();

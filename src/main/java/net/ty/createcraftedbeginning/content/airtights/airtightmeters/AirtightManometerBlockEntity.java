@@ -67,7 +67,7 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
 
     @Override
     public Pressure getGasPipeReadout() {
-        return new Pressure(getMinPressurePa(), getMaxPressurePa());
+        return new Pressure(minPressurePa, maxPressurePa);
     }
 
     @Override

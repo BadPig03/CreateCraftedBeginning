@@ -100,6 +100,7 @@ public abstract class ServerPlayerGameModeMixin implements DrillMiningProgressAc
         return wasRemoved;
     }
 
+    @SuppressWarnings("MethodMayBeStatic")
     @ModifyReturnValue(method = "destroyBlock", at = @At("RETURN"))
     private boolean ccb$destroyBlock$return(boolean result, @Share("ccb$drillMining") LocalBooleanRef drillMining, @Share("ccb$removed") LocalBooleanRef removed) {
         return result && (!drillMining.get() || removed.get());

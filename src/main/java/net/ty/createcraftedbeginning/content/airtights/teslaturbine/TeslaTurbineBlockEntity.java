@@ -58,11 +58,7 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity {
 
     @Override
     public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        if (super.addToTooltip(tooltip, isPlayerSneaking)) {
-            return true;
-        }
-
-        return core.addToTooltip(tooltip);
+        return super.addToTooltip(tooltip, isPlayerSneaking) || core.addToTooltip(tooltip);
     }
 
     @Override

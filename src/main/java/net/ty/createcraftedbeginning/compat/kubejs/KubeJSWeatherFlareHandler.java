@@ -135,15 +135,7 @@ public final class KubeJSWeatherFlareHandler implements WeatherFlareHandler {
 
     @Override
     public boolean supports(ServerLevel level, Vec3 pos, WeatherFlareEffect effect) {
-        if (!dimension.equals(level.dimension().location()) || !effects.contains(effect)) {
-            return false;
-        }
-
-        if (canApply == null) {
-            return true;
-        }
-
-        return readBoolean(canApply.test(level, pos, effect), "canApply");
+        return dimension.equals(level.dimension().location()) && effects.contains(effect) && (canApply == null || readBoolean(canApply.test(level, pos, effect), "canApply"));
     }
 
     @Override

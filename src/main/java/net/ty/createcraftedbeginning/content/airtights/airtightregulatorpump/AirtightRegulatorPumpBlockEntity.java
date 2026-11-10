@@ -43,7 +43,7 @@ public class AirtightRegulatorPumpBlockEntity extends KineticBlockEntity impleme
 
     @Override
     public RegulatorConfiguration getGasPipeReadout() {
-        return new RegulatorConfiguration(getMaxPressureRisePa(), getOutletSetPressurePa());
+        return new RegulatorConfiguration(getMaxPressureRisePa(), outletSetPressurePa);
     }
 
     @Override

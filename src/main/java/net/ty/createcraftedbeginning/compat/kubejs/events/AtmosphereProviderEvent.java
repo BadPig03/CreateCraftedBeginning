@@ -41,6 +41,7 @@ public final class AtmosphereProviderEvent implements KubeEvent {
         });
     }
 
+    @SuppressWarnings("unused")
     public void addPressure(ResourceLocation id, PressureHandler handler) {
         addPressure(id, AtmosphereProviderRegistry.DEFAULT_PRIORITY, handler);
     }

@@ -132,7 +132,7 @@ public final class GasFlowRouting {
                     segments.add(segment);
                 }
                 GasTransportPressureDrive drive = edge.pressureDrive();
-                if (!(drive instanceof PressureBoost boost) || boost.pressureBoostPa() > 0) {
+                if (!(drive instanceof PressureBoost(long pa)) || pa > 0) {
                     pressureDrives.add(drive);
                 }
                 if (edge.budgetPos() == null) {

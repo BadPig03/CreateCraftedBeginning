@@ -62,7 +62,7 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
 
     @Override
     public Flow getGasPipeReadout() {
-        return new Flow(getFlowRate());
+        return new Flow(flowRate);
     }
 
     @Override

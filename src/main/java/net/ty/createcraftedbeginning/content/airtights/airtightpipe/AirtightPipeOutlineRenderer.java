@@ -58,11 +58,11 @@ public final class AirtightPipeOutlineRenderer {
 
     private static void showCasedPipePorts(BlockPos pos, BlockState state) {
         for (Direction direction : Iterate.directions) {
-            Vec3 center = Vec3.atCenterOf(pos).relative(direction, 0.5 + 1.0 / 64);
-            Vec3 halfSize = new Vec3(direction.getStepX() == 0 ? 7.0 / 16 : 1.0 / 128, direction.getStepY() == 0 ? 7.0 / 16 : 1.0 / 128, direction.getStepZ() == 0 ? 7.0 / 16 : 1.0 / 128);
+            Vec3 center = Vec3.atCenterOf(pos).relative(direction, 0.515625);
+            Vec3 halfSize = new Vec3(direction.getStepX() == 0 ? 0.4375 : 0.0078125, direction.getStepY() == 0 ? 0.4375 : 0.0078125, direction.getStepZ() == 0 ? 0.4375 : 0.0078125);
             AABB face = new AABB(center.subtract(halfSize), center.add(halfSize));
             int color = state.getValue(AirtightPipeBlock.PROPERTY_BY_DIRECTION.get(direction)) ? COLOR_OPEN : COLOR_CLOSED;
-            Outliner.getInstance().showAABB("airtightPipePort_" + direction.getName(), face).colored(color).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(1 / 32.0F);
+            Outliner.getInstance().showAABB("airtightPipePort_" + direction.getName(), face).colored(color).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.03125f);
         }
     }
 }

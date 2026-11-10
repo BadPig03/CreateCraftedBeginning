@@ -128,11 +128,7 @@ final class SableAmethystLoaderTickets {
         if (info == null || !SableAmethystLoaderAccess.loaders(info).contains(pos)) {
             SableAmethystLoaderAccess.setForced(container, subLevel, pos, true);
         }
-        if (data.physicalNode(loader.networkNodeId()) != null) {
-            return level.isPositionEntityTicking(SubLevelBridge.resolve(level, pos).blockPos());
-        }
-
-        return true;
+        return data.physicalNode(loader.networkNodeId()) == null || level.isPositionEntityTicking(SubLevelBridge.resolve(level, pos).blockPos());
     }
 
     @SubscribeEvent

@@ -31,68 +31,72 @@ final class AirtightPipeAttachments {
         BlockState neighborState = level.getBlockState(neighborPos);
         Block neighborBlock = neighborState.getBlock();
         Direction neighborFace = face.getOpposite();
-        if (block instanceof AirtightPumpBlock) {
-            if (face.getAxis() != state.getValue(BlockStateProperties.FACING).getAxis()) {
-                return AirtightPipeAttachmentTypes.NONE;
-            }
+        switch (block) {
+            case AirtightPumpBlock ignored -> {
+                if (face.getAxis() != state.getValue(BlockStateProperties.FACING).getAxis()) {
+                    return AirtightPipeAttachmentTypes.NONE;
+                }
 
-            boolean drain = neighborBlock instanceof AirtightPipeDrain pipeDrain && pipeDrain.shouldRenderDrain(level, neighborPos, neighborState, neighborFace);
-            if (drain) {
-                return AirtightPipeAttachmentTypes.DRAIN;
-            }
-
-            return AirtightPipeAttachmentTypes.NONE;
-        }
-
-        if (block instanceof AirtightRegulatorPumpBlock) {
-            Direction output = state.getValue(BlockStateProperties.FACING);
-            if (face.getAxis() != output.getAxis()) {
-                return AirtightPipeAttachmentTypes.NONE;
-            }
-
-            boolean drain = neighborBlock instanceof AirtightPipeDrain pipeDrain && pipeDrain.shouldRenderDrain(level, neighborPos, neighborState, neighborFace);
-            if (face == output) {
+                boolean drain = neighborBlock instanceof AirtightPipeDrain pipeDrain && pipeDrain.shouldRenderDrain(level, neighborPos, neighborState, neighborFace);
                 if (drain) {
-                    return AirtightPipeAttachmentTypes.OUTLET_DRAIN;
-                }
-
-                return AirtightPipeAttachmentTypes.OUTLET_RIM;
-            }
-
-            if (drain) {
-                return AirtightPipeAttachmentTypes.INLET_DRAIN;
-            }
-
-            return AirtightPipeAttachmentTypes.INLET_RIM;
-        }
-
-        if (block instanceof AirtightPipeBlock) {
-            if (!AirtightPipeConnections.isOpen(state, face)) {
-                return AirtightPipeAttachmentTypes.NONE;
-            }
-
-            boolean connected = neighborBlock instanceof GasConnectable component && component.canConnectOnFace(neighborPos, neighborState, neighborFace);
-            if (connected && neighborBlock instanceof AirtightPipeBlock) {
-                if (!state.getValue(AirtightPipeBlock.CASED) && neighborState.getValue(AirtightPipeBlock.CASED)) {
-                    return AirtightPipeAttachmentTypes.RIM;
+                    return AirtightPipeAttachmentTypes.DRAIN;
                 }
 
                 return AirtightPipeAttachmentTypes.NONE;
             }
-
-            if (connected && neighborBlock instanceof IAxisPipe && !(neighborBlock instanceof AirtightRegulatorPumpBlock)) {
-                if (state.getValue(AirtightPipeBlock.CASED) || neighborBlock instanceof AbstractAirtightMeterBlock) {
-                    return AirtightPipeAttachmentTypes.RIM;
+            case AirtightRegulatorPumpBlock ignored -> {
+                Direction output = state.getValue(BlockStateProperties.FACING);
+                if (face.getAxis() != output.getAxis()) {
+                    return AirtightPipeAttachmentTypes.NONE;
                 }
 
-                return AirtightPipeAttachmentTypes.NONE;
-            }
+                boolean drain = neighborBlock instanceof AirtightPipeDrain pipeDrain && pipeDrain.shouldRenderDrain(level, neighborPos, neighborState, neighborFace);
+                if (face == output) {
+                    if (drain) {
+                        return AirtightPipeAttachmentTypes.OUTLET_DRAIN;
+                    }
 
-            if (neighborBlock instanceof AirtightPipeDrain drain && drain.shouldRenderDrain(level, neighborPos, neighborState, neighborFace)) {
-                return AirtightPipeAttachmentTypes.DRAIN;
-            }
+                    return AirtightPipeAttachmentTypes.OUTLET_RIM;
+                }
 
-            return AirtightPipeAttachmentTypes.RIM;
+                if (drain) {
+                    return AirtightPipeAttachmentTypes.INLET_DRAIN;
+                }
+
+                return AirtightPipeAttachmentTypes.INLET_RIM;
+            }
+            case AirtightPipeBlock ignored -> {
+                if (!AirtightPipeConnections.isOpen(state, face)) {
+                    return AirtightPipeAttachmentTypes.NONE;
+                }
+
+                boolean connected = neighborBlock instanceof GasConnectable component && component.canConnectOnFace(neighborPos, neighborState, neighborFace);
+                switch (neighborBlock) {
+                    case AirtightPipeBlock ignored1 when connected -> {
+                        if (!state.getValue(AirtightPipeBlock.CASED) && neighborState.getValue(AirtightPipeBlock.CASED)) {
+                            return AirtightPipeAttachmentTypes.RIM;
+                        }
+
+                        return AirtightPipeAttachmentTypes.NONE;
+                    }
+                    case IAxisPipe ignored1 when connected && !(neighborBlock instanceof AirtightRegulatorPumpBlock) -> {
+                        if (state.getValue(AirtightPipeBlock.CASED) || neighborBlock instanceof AbstractAirtightMeterBlock) {
+                            return AirtightPipeAttachmentTypes.RIM;
+                        }
+
+                        return AirtightPipeAttachmentTypes.NONE;
+                    }
+                    case AirtightPipeDrain drain when drain.shouldRenderDrain(level, neighborPos, neighborState, neighborFace) -> {
+                        return AirtightPipeAttachmentTypes.DRAIN;
+                    }
+                    default -> {
+                    }
+                }
+
+                return AirtightPipeAttachmentTypes.RIM;
+            }
+            default -> {
+            }
         }
 
         Axis axis = null;
