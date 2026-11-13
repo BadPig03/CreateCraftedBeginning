@@ -62,8 +62,8 @@ final class SableChunkStabilizerAccess {
             ALL_TICKETS = lookup.findVirtual(serverContainer, "getAllTickets", MethodType.methodType(Map.class));
             SUB_LEVEL = lookup.findVirtual(containers, "getSubLevel", MethodType.methodType(baseSubLevel, UUID.class));
             TICKETS = lookup.findVirtual(info, "tickets", MethodType.methodType(ObjectSet.class));
-            TYPE = lookup.findVirtual(ticket, "getType", MethodType.methodType(ticketType));
-            KEY = lookup.findVirtual(ticket, "getKey", MethodType.methodType(Object.class));
+            TYPE = lookup.findVirtual(ticket, "type", MethodType.methodType(ticketType));
+            KEY = lookup.findVirtual(ticket, "key", MethodType.methodType(Object.class));
             ADD = lookup.findVirtual(serverContainer, "addForceLoadTicket", MethodType.methodType(boolean.class, subLevel, ticketType, Object.class));
             REMOVE = lookup.findVirtual(serverContainer, "removeForceLoadTicket", MethodType.methodType(boolean.class, subLevel, ticketType, Object.class));
             HOLDING_MAP = lookup.findVirtual(serverContainer, "getHoldingChunkMap", MethodType.methodType(holdingMap));

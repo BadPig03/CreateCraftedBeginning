@@ -380,7 +380,7 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
         }
         graphics.fillGradient(leftPos + CONTENT_LEFT, topPos + CONTENT_TOP, leftPos + CONTENT_RIGHT, topPos + CONTENT_TOP + 10, 200, 0x77000000, 0x00000000);
         graphics.fillGradient(leftPos + CONTENT_LEFT, topPos + CONTENT_BOTTOM - 10, leftPos + CONTENT_RIGHT, topPos + CONTENT_BOTTOM, 200, 0x00000000, 0x77000000);
-        if (selected == null && colorEditor == null) {
+        if (!isModalOpen()) {
             return;
         }
 
@@ -459,6 +459,10 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
         }
 
         graphics.renderTooltip(font, font.split(Component.literal(name), Math.min(300, width - 20)), mouseX, mouseY);
+    }
+
+    public boolean isModalOpen() {
+        return selected != null || colorEditor != null;
     }
 
     private String networkHeading() {

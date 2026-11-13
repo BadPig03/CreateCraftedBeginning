@@ -69,6 +69,7 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressRecipeLookup;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillScreen;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerScreen;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
 import net.ty.createcraftedbeginning.recipe.ChillingRecipe;
 import net.ty.createcraftedbeginning.recipe.CoolingRecipe;
@@ -195,6 +196,7 @@ public class CCBJEIPlugin implements IModPlugin {
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+        registration.addGuiScreenHandler(ChunkStabilizerScreen.class, new ChunkStabilizerScreenHandler());
         registration.addGhostIngredientHandler(AirtightHandheldDrillScreen.class, new AirtightHandheldDrillGhostIngredientHandler());
         registration.addGhostIngredientHandler(GasFilterScreen.class, new GasFilterGhostIngredientHandler());
         registration.addGhostIngredientHandler(RedstoneRequesterScreen.class, new RedstoneRequesterGhostIngredientHandler());
