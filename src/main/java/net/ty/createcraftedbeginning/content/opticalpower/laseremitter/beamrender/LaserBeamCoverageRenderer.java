@@ -107,6 +107,11 @@ final class LaserBeamCoverageRenderer {
             return;
         }
 
+        if (!LaserRenderTypes.isAvailable()) {
+            PENDING.clear();
+            return;
+        }
+
         Minecraft minecraft = Minecraft.getInstance();
         RenderTarget main = minecraft.getMainRenderTarget();
         try (DrawState ignored = new DrawState()) {

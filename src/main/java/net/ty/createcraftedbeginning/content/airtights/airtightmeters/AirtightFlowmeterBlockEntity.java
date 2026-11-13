@@ -13,7 +13,6 @@ import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.gas.telemetry.GasFlowTelemetryTarget;
 import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.Flow;
 import net.ty.createcraftedbeginning.gas.visual.GasPipeReadoutSource;
-import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -95,7 +94,6 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
         }
 
         markTelemetryDirty(hadFlow != nextFlowRate > 0);
-        getAdvancementBehaviour().awardPlayer(CCBAdvancements.VISUAL_MONITORING);
     }
 
     @Override

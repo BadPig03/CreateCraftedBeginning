@@ -31,6 +31,7 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.CanisterMinin
 import net.ty.createcraftedbeginning.content.airtights.gascanister.GasCanisterContainerContents;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilter;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterDescription;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 import net.ty.createcraftedbeginning.recipe.gas.ingredient.GasStackLinkedSet;
@@ -213,6 +214,15 @@ public class GasCanisterPackItem extends Item implements MenuProvider, GasFilter
     @Override
     public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
         return new GasCanisterPackMenu(CCBMenuTypes.GAS_CANISTER_PACK_MENU.get(), containerId, playerInventory, player.getMainHandItem());
+    }
+
+    @Override
+    public @Nullable GasFilterDescription describe(ItemStack filterItem) {
+        if (!(filterItem.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterPackContainerContents packContents)) {
+            return null;
+        }
+
+        return GasFilterDescription.ofContainer(packContents);
     }
 
     @Override

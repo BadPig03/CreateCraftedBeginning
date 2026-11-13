@@ -13,6 +13,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.Tags.Items;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
 import org.joml.Quaternionf;
 
@@ -71,7 +72,15 @@ public record AmethystMirrorAimPacket(ResourceLocation dimension, BlockPos pos, 
             return reply(AmethystMirrorAimResult.failure(AmethystMirrorAimStatus.INVALID), false);
         }
 
-        AmethystMirrorAimResult result = AmethystMirrorReflectionPlanner.plan(level, mirror, targetPos, target);
+        AmethystMirrorAimResult result;
+        try {
+            result = AmethystMirrorReflectionPlanner.plan(level, mirror, targetPos, target);
+        }
+        catch (RuntimeException failure) {
+            CCBAPI.LOGGER.warn("Failed to plan reflection aiming for mirror at {} in dimension '{}' toward {}; rejecting request {}.", pos, dimension, targetPos, requestId, failure);
+            return reply(AmethystMirrorAimResult.failure(AmethystMirrorAimStatus.INVALID), false);
+        }
+
         Quaternionf rotation = result.rotation();
         AmethystMirrorAimStatus status = result.status();
         boolean applied = apply && status == AmethystMirrorAimStatus.READY && rotation != null;

@@ -3,8 +3,8 @@ package net.ty.createcraftedbeginning.content.opticalpower.laser.exposure;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamRegion;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamRegion.Point;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamRegion;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact.Density;
 import org.jetbrains.annotations.Nullable;
 
@@ -107,7 +107,7 @@ record OpticalSurfaceLight(double value, @Nullable Density density) {
                     continue;
                 }
 
-                Vec3 direction = density.direction();
+                Vec3 direction = density.direction().normalize();
                 if (density.slope() < 0) {
                     direction = direction.scale(-1);
                 }

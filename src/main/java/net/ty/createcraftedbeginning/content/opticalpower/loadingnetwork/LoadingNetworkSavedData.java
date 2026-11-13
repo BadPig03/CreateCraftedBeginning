@@ -79,7 +79,7 @@ public final class LoadingNetworkSavedData extends SavedData {
     public LoadingNetworkBinding create(UUID owner) {
         UUID id = UUID.randomUUID();
         String name = id.toString().substring(0, 8);
-        networks.put(id, new Network(owner, name, true, LoadingNetworkColors.from(id), null));
+        networks.put(id, new Network(owner, name, LoadingNetworkColors.from(id), null));
         setDirty();
         return new LoadingNetworkBinding(id, name);
     }
@@ -105,7 +105,7 @@ public final class LoadingNetworkSavedData extends SavedData {
             return false;
         }
 
-        networks.put(id, new Network(current.owner(), trimmed, current.enabled(), current.defaultColor(), current.customColor()));
+        networks.put(id, new Network(current.owner(), trimmed, current.defaultColor(), current.customColor()));
         setDirty();
         return true;
     }
@@ -167,7 +167,7 @@ public final class LoadingNetworkSavedData extends SavedData {
             return true;
         }
 
-        networks.put(id, new Network(current.owner(), current.name(), current.enabled(), current.defaultColor(), rgb));
+        networks.put(id, new Network(current.owner(), current.name(), current.defaultColor(), rgb));
         setDirty();
         return true;
     }
@@ -281,11 +281,6 @@ public final class LoadingNetworkSavedData extends SavedData {
 
     public LoadingNetworkMoving moving() {
         return moving;
-    }
-
-    public boolean networkEnabled(UUID id) {
-        Network network = networks.get(id);
-        return network != null && network.enabled();
     }
 
     public boolean reconcileFixedLoading(GlobalPos pos, @Nullable UUID identity) {
@@ -524,21 +519,7 @@ public final class LoadingNetworkSavedData extends SavedData {
 
     boolean enabled(Node node) {
         UUID network = node.networkId();
-        return network == null || node.enabled() && networkEnabled(network);
-    }
-
-    boolean setNetworkEnabled(UUID network, UUID player, boolean enabled) {
-        Network current = networks.get(network);
-        if (current == null || !current.owner().equals(player)) {
-            return false;
-        }
-
-        networks.put(network, new Network(current.owner(), current.name(), enabled, current.defaultColor(), current.customColor()));
-        for (Node node : members(network)) {
-            changed.add(node.loader());
-        }
-        setDirty();
-        return true;
+        return network == null || node.enabled() && networks.containsKey(network);
     }
 
     boolean setNodeEnabled(UUID network, UUID player, UUID identity, boolean enabled) {
@@ -606,7 +587,7 @@ public final class LoadingNetworkSavedData extends SavedData {
         return result;
     }
 
-    record Network(UUID owner, String name, boolean enabled, int defaultColor, @Nullable Integer customColor) {
+    record Network(UUID owner, String name, int defaultColor, @Nullable Integer customColor) {
         int color() {
             if (customColor == null) {
                 return defaultColor;

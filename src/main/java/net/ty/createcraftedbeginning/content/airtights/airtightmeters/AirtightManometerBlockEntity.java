@@ -15,7 +15,6 @@ import net.ty.createcraftedbeginning.gas.telemetry.GasPressureTelemetryTarget;
 import net.ty.createcraftedbeginning.gas.visual.GasPipeReadout.Pressure;
 import net.ty.createcraftedbeginning.gas.visual.GasPipeReadoutSource;
 import net.ty.createcraftedbeginning.gas.visual.GasPressureDisplayScale;
-import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -109,7 +108,6 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
         }
 
         markTelemetryDirty(!hadReading);
-        getAdvancementBehaviour().awardPlayer(CCBAdvancements.VISUAL_MONITORING);
     }
 
     @Override

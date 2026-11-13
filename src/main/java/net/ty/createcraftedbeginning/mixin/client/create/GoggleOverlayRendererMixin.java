@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.HitResult;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelOutput;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelOutput.Limitation;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorControls;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,7 +37,7 @@ public abstract class GoggleOverlayRendererMixin {
             return original.call(information, tooltip, sneaking);
         }
 
-        AmethystCollectorPanelOutput output = panel.getOutput();
+        AmethystCollectorPanelOutput output = panel.getTooltipOutput();
         collectorPanel.set(panel);
         collectorOutput.set(output);
         return panel.addToGoggleTooltip(tooltip, output);
@@ -48,6 +49,7 @@ public abstract class GoggleOverlayRendererMixin {
             return original.call(information, tooltip, sneaking);
         }
 
-        return panel.addToTooltip(tooltip, collectorOutput.get());
+        AmethystCollectorPanelOutput output = collectorOutput.get();
+        return (output == null || output.limitation() != Limitation.UNAVAILABLE) && panel.addToTooltip(tooltip, output);
     }
 }

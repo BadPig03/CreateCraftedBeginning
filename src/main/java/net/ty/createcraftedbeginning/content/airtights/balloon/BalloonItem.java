@@ -14,6 +14,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -35,6 +37,7 @@ import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
@@ -187,9 +190,16 @@ public class BalloonItem extends PackageItem {
             return InteractionResult.PASS;
         }
 
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+
         PackageEntity entity = new PackageEntity(level, point.x, point.y, point.z);
         entity.setBox(balloon.copy());
-        level.addFreshEntity(entity);
+        if (!level.addFreshEntity(entity)) {
+            return InteractionResult.FAIL;
+        }
+
         awardRelease(player, level, balloon);
         balloon.shrink(1);
         return InteractionResult.SUCCESS;
@@ -197,13 +207,35 @@ public class BalloonItem extends PackageItem {
 
     @Override
     public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int ticks) {
-        ItemStack released = stack.copy();
-        int duration = getUseDuration(stack, entity) - ticks;
-        super.releaseUsing(stack, level, entity, ticks);
-        if (!(entity instanceof Player player) || duration < 0 || getPackageVelocity(duration) < MIN_RELEASE_VELOCITY) {
+        if (level.isClientSide || !(entity instanceof Player player)) {
             return;
         }
 
+        int duration = getUseDuration(stack, entity) - ticks;
+        if (duration < 0) {
+            return;
+        }
+
+        float velocity = getPackageVelocity(duration);
+        if (velocity < MIN_RELEASE_VELOCITY) {
+            return;
+        }
+
+        Vec3 motion = entity.getLookAngle().scale(velocity * 2);
+        Vec3 point = entity.position().add(0, entity.getBoundingBox().getYsize() / 2, 0).add(motion);
+        ItemStack released = stack.copy();
+        PackageEntity balloon = new PackageEntity(level, point.x, point.y, point.z);
+        balloon.setBox(released);
+        balloon.setDeltaMovement(motion);
+        balloon.tossedBy = new WeakReference<>(player);
+        if (!level.addFreshEntity(balloon)) {
+            return;
+        }
+
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 0.5F, 0.5F);
+        if (!player.getAbilities().instabuild) {
+            stack.shrink(1);
+        }
         awardRelease(player, level, released);
     }
 

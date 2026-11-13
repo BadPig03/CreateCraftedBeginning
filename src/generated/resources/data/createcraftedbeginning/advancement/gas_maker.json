@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:frozen_ambrosia",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:gas_injection_chamber"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.gas_maker.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:gas_injection_chamber"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.gas_maker"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

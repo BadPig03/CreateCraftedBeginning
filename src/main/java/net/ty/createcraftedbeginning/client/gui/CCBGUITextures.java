@@ -16,14 +16,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public enum CCBGUITextures implements ScreenElement, TextureSheetSegment {
-    AMETHYST_LOADER("amethyst_loader", 0, 0, 234, 220),
-    AMETHYST_LOADER_STRIP("amethyst_loader", 4, 246, 3, 1),
-    AMETHYST_LOADER_NODE("amethyst_loader", 0, 231, 11, 21),
-    AMETHYST_LOADER_EMPTY_STRIP("amethyst_loader", 16, 231, 11, 21),
-    AMETHYST_LOADER_EDIT_NAME("amethyst_loader", 32, 231, 13, 13),
-    AMETHYST_LOADER_ENTRY("amethyst_loader_map", 0, 167, 182, 36),
-    AMETHYST_LOADER_DETAILS("amethyst_loader_map", 0, 0, 204, 146),
-    AMETHYST_LOADER_COLOR("amethyst_loader_color", 0, 0, 166, 84),
+    CHUNK_STABILIZER("chunk_stabilizer", 0, 0, 234, 220),
+    CHUNK_STABILIZER_STRIP("chunk_stabilizer", 4, 246, 3, 1),
+    CHUNK_STABILIZER_NODE("chunk_stabilizer", 0, 231, 11, 21),
+    CHUNK_STABILIZER_EMPTY_STRIP("chunk_stabilizer", 16, 231, 11, 21),
+    CHUNK_STABILIZER_EDIT_NAME("chunk_stabilizer", 32, 231, 13, 13),
+    CHUNK_STABILIZER_ENTRY("chunk_stabilizer_map", 0, 167, 182, 36),
+    CHUNK_STABILIZER_DETAILS("chunk_stabilizer_map", 0, 0, 204, 146),
+    CHUNK_STABILIZER_COLOR("chunk_stabilizer_color", 0, 0, 166, 84),
     ARMORS("armors", 0, 0, 190, 138),
     HANDHELD_DRILL("handheld_drill", 0, 0, 215, 138),
     GAS_CANISTER_PACK("gas_canister_pack", 0, 0, 196, 144),

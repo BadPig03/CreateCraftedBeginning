@@ -1,10 +1,13 @@
 package net.ty.createcraftedbeginning.content.opticalpower.energy;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NumericTag;
 import net.minecraft.nbt.Tag;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -24,6 +27,27 @@ public final class OpticalEnergyStorage {
         }
 
         this.capacityLumenSeconds = capacityLumenSeconds;
+    }
+
+    public static double readQuantityLumenSeconds(CompoundTag compoundTag) {
+        return decodeQuantity(compoundTag.get(COMPOUND_KEY_QUANTITY_LUMEN_SECONDS));
+    }
+
+    private static double decodeQuantity(@Nullable Tag quantityTag) {
+        if (quantityTag == null) {
+            return 0;
+        }
+
+        if (!(quantityTag instanceof NumericTag number)) {
+            return Double.NaN;
+        }
+
+        double quantity = number.getAsDouble();
+        if (!Double.isFinite(quantity) || quantity < 0) {
+            return Double.NaN;
+        }
+
+        return quantity;
     }
 
     public double receive(double offeredLumenSeconds) {
@@ -62,22 +86,23 @@ public final class OpticalEnergyStorage {
         compoundTag.putDouble(COMPOUND_KEY_QUANTITY_LUMEN_SECONDS, quantityLumenSeconds);
     }
 
-    public void read(CompoundTag compoundTag) {
+    public void readSaved(CompoundTag compoundTag, BlockPos pos) {
         Tag quantityTag = compoundTag.get(COMPOUND_KEY_QUANTITY_LUMEN_SECONDS);
-        if (quantityTag == null) {
-            quantityLumenSeconds = 0;
-            return;
+        double quantity = decodeQuantity(quantityTag);
+        if (quantityTag != null && Double.isNaN(quantity)) {
+            Object actual = quantityTag instanceof NumericTag number ? number.getAsDouble() : quantityTag.getType().getPrettyName();
+            CCBAPI.LOGGER.warn("Reset saved optical quantity '{}' at {} to 0 lm·s: expected a finite non-negative number, got {}.", COMPOUND_KEY_QUANTITY_LUMEN_SECONDS, pos, actual);
+            quantity = 0;
         }
 
-        if (!(quantityTag instanceof NumericTag numericTag)) {
-            throw new IllegalArgumentException("Saved optical quantity '" + COMPOUND_KEY_QUANTITY_LUMEN_SECONDS + "' must be numeric; got " + quantityTag.getType().getPrettyName() + '.');
+        restoreQuantity(quantity);
+    }
+
+    public void restoreQuantity(double quantity) {
+        if (!Double.isFinite(quantity) || quantity < 0) {
+            throw new IllegalArgumentException("Restored optical quantity must be finite and non-negative; got " + quantity + " lm·s.");
         }
 
-        double savedLumenSeconds = numericTag.getAsDouble();
-        if (!Double.isFinite(savedLumenSeconds) || savedLumenSeconds < 0) {
-            throw new IllegalArgumentException("Saved optical quantity must be finite and non-negative; got " + savedLumenSeconds + " lm·s.");
-        }
-
-        quantityLumenSeconds = Math.min(savedLumenSeconds, capacityLumenSeconds);
+        quantityLumenSeconds = Math.min(quantity, capacityLumenSeconds);
     }
 }

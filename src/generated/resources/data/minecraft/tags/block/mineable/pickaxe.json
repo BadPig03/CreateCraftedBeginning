@@ -41,7 +41,7 @@
     "createcraftedbeginning:amethyst_collector_panel",
     "createcraftedbeginning:amethyst_sound_suppressor",
     "createcraftedbeginning:laser_emitter",
-    "createcraftedbeginning:photothermal_receiver",
+    "createcraftedbeginning:photothermal_chamber",
     "createcraftedbeginning:amethyst_mirror",
     "createcraftedbeginning:amethyst_convex_lens",
     "createcraftedbeginning:amethyst_concave_lens",
@@ -161,6 +161,6 @@
       "id": "createcraftedbeginning:gas_drawer_4",
       "required": false
     },
-    "createcraftedbeginning:amethyst_loader",
+    "createcraftedbeginning:chunk_stabilizer",
     "createcraftedbeginning:amethyst_antenna"]
 }

@@ -119,11 +119,10 @@ public final class AmethystSoundSuppressorScenes {
         toggleLever(scene, leverSelection, leverPos);
 
         scene.idle(73);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, suppressorObject, suppressorArea, 60);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, suppressorObject, suppressorArea, 140);
         scene.overlay().showText(60).text("Most world sounds are muted if their source or the player is inside the covered area").colored(PonderPalette.BLUE).pointAt(suppressorVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, suppressorObject, suppressorArea, 60);
         scene.overlay().showText(60).text("Background music, normal UI sounds and a few other sounds are unaffected").colored(PonderPalette.BLUE).pointAt(suppressorVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
@@ -198,14 +197,17 @@ public final class AmethystSoundSuppressorScenes {
         setReceivedPower(scene, suppressorPos, 32);
 
         advanceQuantity(scene, suppressorPos, storage, 32, 73);
-        scene.overlay().showText(60).text("Stored light remains after the beam stops and can still grow crystals if enough is saved\n\nSound suppression continues").colored(PonderPalette.RED).pointAt(crystalVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Stored light remains after the laser stops and can still grow crystals if enough is saved. Sound suppression continues as normal").colored(PonderPalette.RED).pointAt(crystalVec).placeNearTarget().attachKeyFrame();
 
         advanceQuantity(scene, suppressorPos, storage, 32, 7);
         setReceivedPower(scene, suppressorPos, 0);
 
         scene.idle(73);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, suppressorObject, suppressorArea, 60);
-        scene.overlay().showText(60).text("On Create contraptions, suppression still works, but light reception and crystal growth do not").colored(PonderPalette.BLUE).pointAt(suppressorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, suppressorObject, suppressorArea, 140);
+        scene.overlay().showText(60).text("On Create contraptions, the suppressor can still block sounds and vibrations").colored(PonderPalette.BLUE).pointAt(suppressorVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(80);
+        scene.overlay().showText(60).text("However, it cannot receive laser light or grow Experience Crystals while mounted on a contraption").colored(PonderPalette.BLUE).pointAt(suppressorVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.markAsFinished();
@@ -277,20 +279,28 @@ public final class AmethystSoundSuppressorScenes {
         scene.world().setBlock(crystalPos, CCBBlocks.MEDIUM_EXPERIENCE_BUD.getDefaultState(), false);
         scene.addInstruction(ponder -> AmethystSoundSuppressorClient.showGrowthParticles(ponder.getWorld(), crystalVec, suppressorTipVec));
 
-        scene.overlay().showText(60).text("Each time, one crystal grows by one stage; keep supplying light to grow buds into mature clusters").pointAt(crystalVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Each time, only one crystal grows by one stage").pointAt(crystalVec).placeNearTarget().attachKeyFrame();
         advanceQuantity(scene, suppressorPos, storage, 16, 80);
         storage.extract(64);
         setQuantity(scene, suppressorPos, storage);
         scene.world().setBlock(crystalPos, CCBBlocks.EXPERIENCE_CLUSTER.getDefaultState(), false);
         scene.addInstruction(ponder -> AmethystSoundSuppressorClient.showGrowthParticles(ponder.getWorld(), crystalVec, suppressorTipVec));
 
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, secondGrowthObject, secondCrystalArea, 60);
-        scene.overlay().showText(60).text("When no immature crystals remain, new buds can grow in air or source water on Sculk").colored(PonderPalette.GREEN).pointAt(secondCrystalVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Keep supplying light to grow small buds into mature clusters").pointAt(crystalVec).placeNearTarget().attachKeyFrame();
         advanceQuantity(scene, suppressorPos, storage, 16, 80);
+
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, growthObject, crystalArea, 60);
+        scene.overlay().showText(60).text("When no immature crystals remain, the suppressor will try to grow new buds").colored(PonderPalette.GREEN).pointAt(crystalVec).placeNearTarget().attachKeyFrame();
+        advanceQuantity(scene, suppressorPos, storage, 16, 80);
+
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, secondGrowthObject, secondCrystalArea, 60);
+        scene.overlay().showText(60).text("New buds can grow in air or source water on Sculk surfaces").colored(PonderPalette.GREEN).pointAt(secondCrystalVec).placeNearTarget().attachKeyFrame();
+        advanceQuantity(scene, suppressorPos, storage, 16, 20);
         storage.extract(64);
         setQuantity(scene, suppressorPos, storage);
         scene.world().setBlock(secondCrystalPos, CCBBlocks.SMALL_EXPERIENCE_BUD.getDefaultState().setValue(BlockStateProperties.WATERLOGGED, true), false);
         scene.addInstruction(ponder -> AmethystSoundSuppressorClient.showGrowthParticles(ponder.getWorld(), secondCrystalVec, suppressorTipVec));
+        advanceQuantity(scene, suppressorPos, storage, 16, 80);
 
         scene.overlay().showText(60).text("With nowhere to grow crystals, the suppressor can save enough light for up to two growth steps").colored(PonderPalette.BLUE).pointAt(suppressorVec).placeNearTarget().attachKeyFrame();
         setReceivedPower(scene, suppressorPos, 0);

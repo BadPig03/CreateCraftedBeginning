@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:crystal_union",
+  "criteria": {
+    "0": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.let_there_be_light.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:amethyst_collector_panel"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.let_there_be_light"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -9,21 +9,21 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.LevelEvent.Unload;
 import net.neoforged.neoforge.event.tick.LevelTickEvent.Post;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkRuntime;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkRuntime.PhysicalControl;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkRuntime.Status;
-import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkRuntime;
+import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkSavedData;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkSavedData.Node;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkSavedData.PhysicalNode;
-import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkSavedData;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -40,11 +40,11 @@ public final class SableLoadingNetworkControl {
     }
 
     public static void rememberHolding(ServerLevel level, Object chunk, Object holding) {
-        remember(level, SableAmethystLoaderAccess.holdingId(holding), SableAmethystLoaderAccess.holdingPos(chunk));
+        remember(level, SableChunkStabilizerAccess.holdingId(holding), SableChunkStabilizerAccess.holdingPos(chunk));
     }
 
     public static void rememberSaved(ServerLevel level, Object data, Object pointer) {
-        remember(level, SableAmethystLoaderAccess.savedId(data), SableAmethystLoaderAccess.pointerPos(pointer));
+        remember(level, SableChunkStabilizerAccess.savedId(data), SableChunkStabilizerAccess.pointerPos(pointer));
     }
 
     static void register() {
@@ -81,7 +81,7 @@ public final class SableLoadingNetworkControl {
             if (request.enabled()) {
                 for (PhysicalNode member : data.physicalNodes()) {
                     Node node = member.node();
-                    if (node.loader().dimension() != level.dimension() || !Objects.equals(node.networkId(), request.network()) || request.loader() != null && !request.loader().equals(node.loaderId()) || control.pending.containsKey(node.loaderId())) {
+                    if (node.loader().dimension() != level.dimension() || !Objects.equals(node.networkId(), request.network()) || !request.loader().equals(node.loaderId()) || control.pending.containsKey(node.loaderId())) {
                         continue;
                     }
 
@@ -106,7 +106,7 @@ public final class SableLoadingNetworkControl {
         }
 
         SableLoadingNetworkControl control = LEVELS.remove(level);
-        Object container = SableAmethystLoaderAccess.container(level);
+        Object container = SableChunkStabilizerAccess.container(level);
         if (control == null || container == null) {
             return;
         }
@@ -117,7 +117,7 @@ public final class SableLoadingNetworkControl {
     }
 
     private void tick(ServerLevel level) {
-        Object container = SableAmethystLoaderAccess.container(level);
+        Object container = SableChunkStabilizerAccess.container(level);
         if (container == null) {
             return;
         }
@@ -132,13 +132,13 @@ public final class SableLoadingNetworkControl {
 
             UUID identity = node.loaderId();
             present.add(identity);
-            SubLevelAccess host = SableAmethystLoaderAccess.subLevel(container, member.host());
-            boolean enabled = CCBConfig.server().opticalPower.amethystLoader.enableChunkLoading.get() && data.allowsPhysical(identity);
+            SubLevelAccess host = SableChunkStabilizerAccess.subLevel(container, member.host());
+            boolean enabled = CCBConfig.server().opticalPower.chunkStabilizer.enableChunkLoading.get() && data.allowsPhysical(identity);
             if (!enabled) {
                 cancel(container, identity);
                 states.put(identity, Status.PAUSED);
                 if (host != null) {
-                    SableAmethystLoaderAccess.setForced(container, host, node.loader().pos(), false);
+                    SableChunkStabilizerAccess.setForced(container, host, node.loader().pos(), false);
                     refresh(level, node);
                 }
                 continue;
@@ -160,8 +160,8 @@ public final class SableLoadingNetworkControl {
                     continue;
                 }
 
-                SableAmethystLoaderAccess.recover(container, member.host(), member.holdingChunk());
-                host = SableAmethystLoaderAccess.subLevel(container, member.host());
+                SableChunkStabilizerAccess.recover(container, member.host(), member.holdingChunk());
+                host = SableChunkStabilizerAccess.subLevel(container, member.host());
             }
             if (host != null && level.isLoaded(node.loader().pos()) && level.isLoaded(node.antenna().pos())) {
                 if (!member.host().equals(SubLevelBridge.subLevelId(level, node.loader().pos())) || !SableLoadingNetwork.matches(level, node, false)) {
@@ -184,7 +184,7 @@ public final class SableLoadingNetworkControl {
             }
             states.put(identity, Status.RECOVERING);
             if (host != null) {
-                SableAmethystLoaderAccess.setRecovery(container, host, recovery.pos(), true);
+                SableChunkStabilizerAccess.setRecovery(container, host, recovery.pos(), true);
             }
             if (level.getServer().getTickCount() - recovery.started() < RECOVERY_TICKS) {
                 continue;
@@ -196,7 +196,7 @@ public final class SableLoadingNetworkControl {
                 continue;
             }
 
-            SableAmethystLoaderAccess.setForced(container, host, node.loader().pos(), false);
+            SableChunkStabilizerAccess.setForced(container, host, node.loader().pos(), false);
             refresh(level, node);
         }
         for (UUID identity : List.copyOf(states.keySet())) {
@@ -209,25 +209,25 @@ public final class SableLoadingNetworkControl {
             states.remove(identity);
             data.runtime().updatePhysicalState(identity, null);
         }
-        for (Entry<UUID, Object> entry : List.copyOf(SableAmethystLoaderAccess.tickets(container).entrySet())) {
-            SubLevelAccess host = SableAmethystLoaderAccess.subLevel(container, entry.getKey());
+        for (Entry<UUID, Object> entry : List.copyOf(SableChunkStabilizerAccess.tickets(container).entrySet())) {
+            SubLevelAccess host = SableChunkStabilizerAccess.subLevel(container, entry.getKey());
             if (host == null) {
                 continue;
             }
 
-            for (BlockPos pos : SableAmethystLoaderAccess.recoveries(entry.getValue())) {
+            for (BlockPos pos : SableChunkStabilizerAccess.recoveries(entry.getValue())) {
                 if (pending.values().stream().anyMatch(recovery -> recovery.host().equals(entry.getKey()) && recovery.pos().equals(pos))) {
                     continue;
                 }
 
-                SableAmethystLoaderAccess.setRecovery(container, host, pos, false);
+                SableChunkStabilizerAccess.setRecovery(container, host, pos, false);
             }
         }
-        SableAmethystLoaderTickets.refresh(level);
+        SableChunkStabilizerTickets.refresh(level);
     }
 
     private static void refresh(ServerLevel level, Node node) {
-        if (!level.isLoaded(node.loader().pos()) || !(level.getBlockEntity(node.loader().pos()) instanceof AmethystLoaderBlockEntity loader) || !node.loaderId().equals(loader.networkNodeId())) {
+        if (!level.isLoaded(node.loader().pos()) || !(level.getBlockEntity(node.loader().pos()) instanceof ChunkStabilizerBlockEntity loader) || !node.loaderId().equals(loader.networkNodeId())) {
             return;
         }
 
@@ -240,12 +240,12 @@ public final class SableLoadingNetworkControl {
             return;
         }
 
-        SubLevelAccess host = SableAmethystLoaderAccess.subLevel(container, recovery.host());
+        SubLevelAccess host = SableChunkStabilizerAccess.subLevel(container, recovery.host());
         if (host == null) {
             return;
         }
 
-        SableAmethystLoaderAccess.setRecovery(container, host, recovery.pos(), false);
+        SableChunkStabilizerAccess.setRecovery(container, host, recovery.pos(), false);
     }
 
     private record Recovery(UUID host, BlockPos pos, int started) {}

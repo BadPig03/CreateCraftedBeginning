@@ -17,8 +17,8 @@ import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.Airtigh
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillRenderHandler;
 import net.ty.createcraftedbeginning.content.breezes.breezechamber.client.BreezeChamberClientAnimation;
 import net.ty.createcraftedbeginning.content.breezes.breezecooler.client.BreezeCoolerClientAnimation;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderClient;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorClient;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerClient;
 import net.ty.createcraftedbeginning.platform.client.ClientContextBridge;
 import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge;
 import net.ty.createcraftedbeginning.platform.client.ClientScreenBridge;
@@ -48,7 +48,7 @@ public class CreateCraftedBeginningClient {
         BreezeChamberClientAnimation.initialize();
         BreezeCoolerClientAnimation.initialize();
         AmethystSoundSuppressorClient.initialize();
-        AmethystLoaderClient.initialize();
+        ChunkStabilizerClient.initialize();
 
         AirtightCannonRenderHandler.INSTANCE.registerListeners(eventBus);
         AirtightExtendArmRenderHandler.INSTANCE.registerListeners(eventBus);

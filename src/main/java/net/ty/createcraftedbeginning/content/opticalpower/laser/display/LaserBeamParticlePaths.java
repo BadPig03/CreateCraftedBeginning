@@ -9,7 +9,6 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBea
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamContext.DisplayState;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamGeometry.Section;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.DrawSection;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.MappedData;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.SamplingDomain;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.OpticalPlane;
 import org.jetbrains.annotations.Nullable;
@@ -32,7 +31,6 @@ final class LaserBeamParticlePaths {
             Section geometry = draw.geometry();
             List<Vec3> starts = geometry.starts();
             List<Vec3> ends = geometry.ends();
-            MappedData mapped = draw.mapped();
             Vec3 origin = Section.center(starts);
             Vec3 direction = Section.center(ends).subtract(origin).normalize();
             Vec3 transverse = Vec3.ZERO;
@@ -65,38 +63,34 @@ final class LaserBeamParticlePaths {
                     parent = previous.parentIndex();
                 }
 
-                if (mapped == null) {
-                    if (start.profile().widthSlope() != 0 || start.footprint().region() != null) {
-                        LaserBeamDisplayProfile world = LaserBeamDisplayProfile.fromBeam(start);
-                        profile = new LaserBeamDisplayProfile(context.toLocalPosition(world.origin()), direction, context.toLocalDirection(world.transverse()), world.physical());
-                    }
-
-                    polygon = align(polygon, geometry, context.toLocalDirection(transverseAxis), context.toLocalDirection(frame.getSecondTransverseAxis()));
-                    if (reflected) {
-                        polygon = polygon.stream().map(point -> new Point(point.u(), -point.v())).toList();
-                    }
+                if (start.profile().widthSlope() != 0 || start.footprint().region() != null) {
+                    LaserBeamDisplayProfile world = LaserBeamDisplayProfile.fromBeam(start);
+                    profile = new LaserBeamDisplayProfile(context.toLocalPosition(world.origin()), direction, context.toLocalDirection(world.transverse()), world.physical());
                 }
+
+                polygon = align(polygon, geometry, context.toLocalDirection(transverseAxis), context.toLocalDirection(frame.getSecondTransverseAxis()));
+                if (reflected) {
+                    polygon = polygon.stream().map(point -> new Point(point.u(), -point.v())).toList();
+                }
+
             }
 
             if (polygon.size() != starts.size() || polygon.size() != ends.size() || polygon.size() < 3) {
                 continue;
             }
 
-            List<OpticalPlane> planes = mapped == null ? null : mapped.endPlanes();
-            if (planes == null) {
-                List<OpticalPlane> caps = new ArrayList<>(2);
-                for (List<Vec3> cap : List.of(starts, ends)) {
-                    Vec3 first = cap.getFirst();
-                    Vec3 normal = cap.get(1).subtract(first).cross(cap.getLast().subtract(first)).normalize();
-                    if (normal.lengthSqr() < EPSILON && cap.stream().allMatch(point -> point.distanceToSqr(first) < EPSILON)) {
-                        normal = direction;
-                    }
-
-                    caps.add(new OpticalPlane(first, normal));
+            List<OpticalPlane> caps = new ArrayList<>(2);
+            for (List<Vec3> cap : List.of(starts, ends)) {
+                Vec3 first = cap.getFirst();
+                Vec3 normal = cap.get(1).subtract(first).cross(cap.getLast().subtract(first)).normalize();
+                if (normal.lengthSqr() < EPSILON && cap.stream().allMatch(point -> point.distanceToSqr(first) < EPSILON)) {
+                    normal = direction;
                 }
 
-                planes = List.copyOf(caps);
+                caps.add(new OpticalPlane(first, normal));
             }
+
+            List<OpticalPlane> planes = List.copyOf(caps);
 
             Path path = new Path(draw, polygon, origin, direction, transverse, offset, planes, profile, reflected);
             paths.add(path);
@@ -118,10 +112,6 @@ final class LaserBeamParticlePaths {
         BeamRegion region = domain.region();
         if (region == null) {
             return BeamRegion.rectangle(left, bottom, right, top).vertices();
-        }
-
-        if (draw.mapped() != null) {
-            return region.vertices();
         }
 
         return region.clip(-1, 0, left).clip(1, 0, -right).clip(0, -1, bottom).clip(0, 1, -top).vertices();

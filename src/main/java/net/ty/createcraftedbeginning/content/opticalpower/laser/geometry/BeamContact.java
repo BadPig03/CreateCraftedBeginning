@@ -5,10 +5,10 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalHit;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFootprint;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFrame;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamProfile;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamProfile.Span;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamRegion;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamProfile;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamRegion.Point;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamRegion;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
@@ -115,9 +115,13 @@ public record BeamContact(List<Patch> patches, boolean uniformDensity, boolean s
     }
 
     public static @Nullable Vertex intersect(BeamState beam, List<Span> spans, OpticalHit hit, double u, double v) {
+        return intersect(beam, spans, new OpticalPlane(hit.position(), hit.surface().normal()), u, v);
+    }
+
+    public static @Nullable Vertex intersect(BeamState beam, List<Span> spans, OpticalPlane surface, double u, double v) {
         BeamFrame frame = beam.frame();
-        Vec3 normal = hit.surface().normal();
-        Vec3 plane = hit.position();
+        Vec3 normal = surface.normal();
+        Vec3 plane = surface.point();
         Vec3 origin = frame.origin().subtract(plane);
         Vec3 first = origin.add(offset(beam, 0, u, v));
         double firstSide = first.dot(normal);
@@ -169,17 +173,21 @@ public record BeamContact(List<Patch> patches, boolean uniformDensity, boolean s
         }
     }
 
-    public record Density(Vec3 focus, Vec3 direction, Vec3 transverse, double slope, double fluxPerSourceArea) {
+    public record Density(Vec3 focus, Vec3 direction, Vec3 transverse, Vec3 vertical, double slope, double fluxPerSourceArea) {
+        public Density(Vec3 focus, Vec3 direction, Vec3 transverse, double slope, double fluxPerSourceArea) {
+            this(focus, direction, transverse, direction.cross(transverse), slope, fluxPerSourceArea);
+        }
+
         public Point project(Vec3 point) {
             Vec3 delta = point.subtract(focus);
             double radius = delta.dot(direction) * slope;
-            return new Point(delta.dot(transverse) / radius, delta.dot(direction.cross(transverse)) / radius);
+            return new Point(delta.dot(transverse) / radius, delta.dot(vertical) / radius);
         }
 
         public double at(Vec3 point, Vec3 normal) {
             Vec3 delta = point.subtract(focus);
             double distance = delta.dot(direction);
-            return fluxPerSourceArea * Math.abs(delta.dot(normal)) / (slope * slope * Math.abs(distance * distance * distance));
+            return fluxPerSourceArea * Math.abs(transverse.cross(vertical).dot(direction) * delta.dot(normal)) / (slope * slope * Math.abs(distance * distance * distance));
         }
     }
 }

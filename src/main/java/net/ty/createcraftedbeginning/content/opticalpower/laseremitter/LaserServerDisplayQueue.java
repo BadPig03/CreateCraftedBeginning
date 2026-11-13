@@ -15,17 +15,18 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFrame;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayInput;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMappedMesh;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayMesh;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamPathSignature.Input;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamWork;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserCollisionContext;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserRenderSnapshot;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserRigidDisplay;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserRigidDisplay.Candidate;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserRigidDisplay;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserStaticDependencies;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserTraceObservation;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserDisplayPacket.Mode;
-import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.RenderSource;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @ParametersAreNonnullByDefault
@@ -42,6 +44,8 @@ import java.util.UUID;
 final class LaserServerDisplayQueue {
     private static final long WORLD_QUANTUM_NS = 2000000;
     private static final int BASELINE_RESEND_INTERVAL_TICKS = 20;
+    private static final int DISPLAY_RETRY_DELAY_TICKS = 20;
+    private static final byte[] NO_DATA = new byte[0];
     private static final Map<ServerLevel, World> WORLDS = new IdentityHashMap<>();
 
     private LaserServerDisplayQueue() {}
@@ -64,63 +68,37 @@ final class LaserServerDisplayQueue {
         source.deliveryFor(player.getUUID()).requestBaseline();
     }
 
-    static void update(LaserEmitterBlockEntity owner, @Nullable BeamPropagation propagation, @Nullable LaserTraceObservation dependencies) {
+    static void update(LaserEmitterBlockEntity owner, @Nullable BeamPropagation propagation, @Nullable LaserTraceObservation dependencies, @Nullable LaserCollisionContext collision) {
         if (!(owner.getLevel() instanceof ServerLevel level) || owner.isVirtual()) {
             return;
         }
 
         World world = WORLDS.computeIfAbsent(level, ignored -> new World());
         Source source = world.sources.computeIfAbsent(owner, key -> new Source(level, key));
-        if (source.initialized && source.propagation == propagation && source.rigid == null) {
-            return;
-        }
-
-        BeamState local = owner.createBeamSource();
-        int range = owner.getLaserRange();
-        if (propagation != null && source.rigid != null && local.equals(source.localSource) && range == source.range && source.matches()) {
-            return;
-        }
-
-        source.initialized = true;
-        source.propagation = propagation;
-        source.localSource = local;
-        source.range = range;
-        source.revision++;
-        source.clearPreparation();
-        world.queue.remove(source);
-        source.dependencies = null;
-        source.rigid = null;
         if (propagation == null) {
-            source.publish(Mode.OFF, new byte[0]);
+            source.stop(world);
             return;
         }
 
-        RenderSource host = SubLevelBridge.captureRenderSource(level, Vec3.atCenterOf(owner.getBlockPos()), 1);
-        if (host != null) {
-            Vec3 scale = host.geometry().scale();
-            Vec3 previousScale = source.lastScale;
-            source.lastScale = scale;
-            if (dependencies != null && (previousScale == null || previousScale.equals(scale))) {
-                Candidate candidate = dependencies.captureRigid(level, owner.getBlockPos(), propagation);
-                if (candidate != null) {
-                    source.rigid = candidate.rigid();
-                    source.dependencies = candidate.dependencies();
-                    source.reference = candidate.reference();
-                }
-            }
-        }
-        else if (dependencies != null) {
-            source.lastScale = null;
-            source.dependencies = dependencies.staticDependencies();
-            Vec3 origin = Vec3.atLowerCornerOf(owner.getBlockPos());
-            source.reference = new LaserRenderSnapshot(propagation, origin, origin, new Vec3(1, 0, 0), new Vec3(0, 1, 0), new Vec3(0, 0, 1));
-        }
-        if (source.dependencies == null) {
-            source.publish(Mode.LOCAL, new byte[0]);
+        if (level.getGameTime() < source.retryTick || source.propagation == propagation && source.rigid == null) {
             return;
         }
 
-        source.publish(Mode.PREPARING, new byte[0]);
+        Mode mode;
+        try {
+            mode = source.prepare(world, propagation, dependencies, collision);
+        }
+        catch (RuntimeException failure) {
+            source.fail(world, failure);
+            return;
+        }
+
+        if (mode == null || mode == Mode.PREPARING && source.retryTick != Long.MIN_VALUE) {
+            return;
+        }
+
+        source.retryTick = Long.MIN_VALUE;
+        source.publish(mode, NO_DATA);
     }
 
     static void remove(LaserEmitterBlockEntity owner) {
@@ -138,9 +116,8 @@ final class LaserServerDisplayQueue {
             return;
         }
 
-        world.queue.remove(source);
-        source.clearPreparation();
-        source.publish(Mode.OFF, new byte[0]);
+        source.discard(world);
+        source.publish(Mode.OFF, NO_DATA);
     }
 
     @SubscribeEvent
@@ -165,57 +142,38 @@ final class LaserServerDisplayQueue {
             source.deliveries.keySet().removeIf(id -> players.stream().noneMatch(player -> player.getUUID().equals(id)));
             source.send(players);
             LaserRenderSnapshot reference = source.reference;
-            if (players.isEmpty() || source.work != null || source.packet.mode() != Mode.PREPARING || reference == null) {
+            if (players.isEmpty() || source.work != null || reference == null || source.dependencies == null) {
                 continue;
             }
 
-            source.work = LaserBeamMappedMesh.beginPrepare(reference, source.rigid == null);
+            try {
+                source.work = LaserBeamDisplayMesh.beginPrepare(reference);
+            }
+            catch (RuntimeException failure) {
+                source.fail(world, failure);
+                continue;
+            }
+
             world.queue.addLast(source);
         }
         long deadline = System.nanoTime() + WORLD_QUANTUM_NS;
         Map<Source, Boolean> checked = new IdentityHashMap<>();
         while (!world.queue.isEmpty() && System.nanoTime() < deadline) {
             Source source = world.queue.removeFirst();
-            LaserBeamWork<LaserBeamDisplayInput> work = source.work;
-            LaserStaticDependencies dependencies = source.dependencies;
-            LaserRenderSnapshot reference = source.reference;
-            if (work == null || dependencies == null || reference == null) {
+            PreparedDisplay prepared;
+            try {
+                prepared = source.advance(world, checked.put(source, true) == null);
+            }
+            catch (RuntimeException failure) {
+                source.fail(world, failure);
+                continue;
+            }
+            if (prepared == null) {
                 continue;
             }
 
-            if (!checked.containsKey(source)) {
-                if (!source.matches()) {
-                    source.clearPreparation();
-                    source.dependencies = null;
-                    source.rigid = null;
-                    source.publish(Mode.LOCAL, new byte[0]);
-                    continue;
-                }
-
-                checked.put(source, true);
-            }
-            if (!work.step()) {
-                world.queue.addLast(source);
-                continue;
-            }
-
-            LaserBeamDisplayInput input = work.result();
-            source.clearPreparation();
-            if (source.rigid != null && !input.base().isComplete()) {
-                source.publish(Mode.LOCAL, new byte[0]);
-                continue;
-            }
-
-            BeamState local = source.localSource;
-            BeamFrame frame = local.frame();
-            LaserDisplaySnapshot snapshot = new LaserDisplaySnapshot(frame.origin(), frame.direction(), local.fluxLm(), source.range, dependencies, input, Input.from(reference), source.rigid);
-            byte[] data = LaserDisplayCodec.encode(snapshot);
-            if (data == null) {
-                source.publish(Mode.TOO_LARGE, new byte[0]);
-                continue;
-            }
-
-            source.publish(Mode.FULL, data);
+            source.retryTick = Long.MIN_VALUE;
+            source.publish(prepared.mode(), prepared.data());
         }
     }
 
@@ -227,6 +185,8 @@ final class LaserServerDisplayQueue {
 
         WORLDS.remove(level);
     }
+
+    private record PreparedDisplay(Mode mode, byte[] data) {}
 
     private static final class World {
         private final Map<LaserEmitterBlockEntity, Source> sources = new IdentityHashMap<>();
@@ -243,17 +203,137 @@ final class LaserServerDisplayQueue {
         private @Nullable Vec3 lastScale;
         private @Nullable LaserRenderSnapshot reference;
         private @Nullable LaserBeamWork<LaserBeamDisplayInput> work;
-        private BeamState localSource;
+        private @Nullable BeamState localSource;
         private int range;
         private LaserDisplayPacket packet;
         private long sequence;
         private long revision;
+        private long retryTick = Long.MIN_VALUE;
         private boolean initialized;
 
         private Source(ServerLevel level, LaserEmitterBlockEntity owner) {
             this.level = level;
             this.owner = owner;
-            packet = new LaserDisplayPacket(level.dimension().location(), owner.getBlockPos(), owner.getDisplayInstance(), ++sequence, revision, level.getGameTime(), Mode.OFF, new byte[0]);
+            packet = new LaserDisplayPacket(level.dimension().location(), owner.getBlockPos(), owner.getDisplayInstance(), ++sequence, revision, level.getGameTime(), Mode.OFF, NO_DATA);
+        }
+
+        private @Nullable Mode prepare(World world, BeamPropagation propagation, @Nullable LaserTraceObservation observation, @Nullable LaserCollisionContext collision) {
+            BeamState local = owner.createBeamSource();
+            int range = owner.getLaserRange();
+            if (rigid != null && local.equals(localSource) && range == this.range && matches()) {
+                return null;
+            }
+
+            if (collision != null) {
+                observation = LaserTraceObservation.capture(level, propagation, collision, 1, true);
+            }
+            discard(world);
+            initialized = true;
+            this.propagation = propagation;
+            localSource = local;
+            this.range = range;
+            revision++;
+
+            BlockPos pos = owner.getBlockPos();
+            RenderSource host = SubLevelBridge.captureRenderSource(level, Vec3.atCenterOf(pos), 1);
+            if (host != null) {
+                Vec3 scale = host.geometry().scale();
+                Vec3 previousScale = lastScale;
+                lastScale = scale;
+                if (observation != null && (previousScale == null || previousScale.equals(scale))) {
+                    Candidate candidate = observation.captureRigid(level, pos, propagation);
+                    if (candidate != null) {
+                        rigid = candidate.rigid();
+                        dependencies = candidate.dependencies();
+                        reference = candidate.reference();
+                    }
+                }
+            }
+            else if (observation != null) {
+                lastScale = null;
+                dependencies = observation.staticDependencies();
+                if (dependencies != null) {
+                    Vec3 origin = Vec3.atLowerCornerOf(pos);
+                    reference = new LaserRenderSnapshot(propagation, origin, origin, new Vec3(1, 0, 0), new Vec3(0, 1, 0), new Vec3(0, 0, 1));
+                }
+            }
+            if (dependencies == null) {
+                return Mode.LOCAL;
+            }
+
+            return Mode.PREPARING;
+        }
+
+        private @Nullable PreparedDisplay advance(World world, boolean checkDependencies) {
+            LaserBeamWork<LaserBeamDisplayInput> work = this.work;
+            LaserStaticDependencies dependencies = this.dependencies;
+            LaserRenderSnapshot reference = this.reference;
+            if (work == null || dependencies == null || reference == null) {
+                return null;
+            }
+
+            if (checkDependencies && !matches()) {
+                clearPreparation();
+                this.dependencies = null;
+                rigid = null;
+                return new PreparedDisplay(Mode.LOCAL, NO_DATA);
+            }
+
+            if (!work.step()) {
+                world.queue.addLast(this);
+                return null;
+            }
+
+            LaserBeamDisplayInput input = work.result();
+            clearPreparation();
+            if (rigid != null && !input.base().isComplete()) {
+                return new PreparedDisplay(Mode.LOCAL, NO_DATA);
+            }
+
+            BeamState local = Objects.requireNonNull(localSource, "Encoding a laser display requires its local beam source.");
+            BeamFrame frame = local.frame();
+            LaserDisplaySnapshot snapshot = new LaserDisplaySnapshot(frame.origin(), frame.direction(), local.fluxLm(), range, dependencies, input, Input.from(reference), rigid);
+            byte[] data = LaserDisplayCodec.encode(snapshot);
+            if (data == null) {
+                return new PreparedDisplay(Mode.TOO_LARGE, NO_DATA);
+            }
+
+            return new PreparedDisplay(Mode.FULL, data);
+        }
+
+        private void stop(World world) {
+            retryTick = Long.MIN_VALUE;
+            if (initialized && propagation == null && packet.mode() == Mode.OFF) {
+                return;
+            }
+
+            discard(world);
+            initialized = true;
+            revision++;
+            publish(Mode.OFF, NO_DATA);
+        }
+
+        private void fail(World world, RuntimeException failure) {
+            boolean firstFailure = retryTick == Long.MIN_VALUE;
+            retryTick = level.getGameTime() + DISPLAY_RETRY_DELAY_TICKS;
+            discard(world);
+            if (!firstFailure) {
+                return;
+            }
+
+            CCBAPI.LOGGER.warn("Failed to prepare the laser display at {} in dimension '{}'; pausing this display and retrying after {} ticks.", owner.getBlockPos(), level.dimension().location(), DISPLAY_RETRY_DELAY_TICKS, failure);
+            initialized = true;
+            revision++;
+            publish(Mode.OFF, NO_DATA);
+        }
+
+        private void discard(World world) {
+            world.queue.remove(this);
+            propagation = null;
+            localSource = null;
+            dependencies = null;
+            rigid = null;
+            clearPreparation();
         }
 
         private List<ServerPlayer> players() {

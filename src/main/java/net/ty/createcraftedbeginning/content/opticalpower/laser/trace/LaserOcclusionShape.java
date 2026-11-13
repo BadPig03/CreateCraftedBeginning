@@ -5,14 +5,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalElement;
-import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverBlock;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -31,8 +29,7 @@ final class LaserOcclusionShape {
     }
 
     static boolean isPrecise(BlockState state) {
-        Block block = state.getBlock();
-        return block instanceof OpticalElement || block instanceof PhotothermalReceiverBlock;
+        return state.getBlock() instanceof OpticalElement;
     }
 
     static @Unmodifiable List<AABB> boxes(VoxelShape shape) {

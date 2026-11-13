@@ -14,6 +14,7 @@ import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipe.WindChargingAction;
 import net.ty.createcraftedbeginning.recipe.WindChargingRecipeLookup.WindChargingData;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
+import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -42,8 +43,8 @@ public abstract class BaseChamberState {
         }
 
         CCBAdvancementBehaviour advancementBehaviour = chamber.getAdvancementBehaviour();
-        if (stack.is(Items.ENCHANTED_GOLDEN_APPLE)) {
-            advancementBehaviour.awardPlayer(CCBAdvancements.LUXURY_TREAT);
+        if (CCBItemTags.GOLDEN_FOODS.matches(stack)) {
+            advancementBehaviour.awardPlayer(CCBAdvancements.GOLDEN_DELIGHT);
         }
         if (chargingTime >= 0) {
             return;

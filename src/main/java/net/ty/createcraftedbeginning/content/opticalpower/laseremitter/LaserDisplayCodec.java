@@ -24,14 +24,9 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBea
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamContext.DisplayState;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayInput;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayInput.Base;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayInput.MappedFamily;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayInput.Mapping;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayInput.MappingState;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayInput.Tile;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamFade;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamGeometry.Section;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.DrawSection;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.MappedData;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.SamplingDomain;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamPathSignature.Event;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamPathSignature.Input;
@@ -45,13 +40,13 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserRigid
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserStaticDependencies;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserStaticDependencies.Sample;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.zip.DataFormatException;
@@ -61,12 +56,11 @@ import java.util.zip.Inflater;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class LaserDisplayCodec {
-    static final int FORMAT = 2;
-    static final int QUALITY = 2;
+    static final int FORMAT = 4;
+    static final int QUALITY = 4;
     static final int MAX_PACKET_BYTES = 900000;
     private static final int MAX_RAW_BYTES = 8388608;
     private static final int MAX_ELEMENTS = 65536;
-    private static final int MAX_MAPPING_REASON_CHARS = 4096;
     private static final int MAX_INTERACTOR_NAME_CHARS = 1024;
 
     private LaserDisplayCodec() {}
@@ -178,12 +172,9 @@ final class LaserDisplayCodec {
             throw new IllegalArgumentException("Static display axes must be identity and local/world origins must match; got x=" + xAxis + ", y=" + yAxis + ", z=" + zAxis + ", localOrigin=" + localOrigin + ", worldOrigin=" + worldOrigin + '.');
         }
 
-        Mapping mapping = input.mapping();
-        List<MappedFamily> families = mapping.families();
         if (rigid != null) {
-            MappingState mappingState = mapping.state();
-            if (xAxis.lengthSqr() == 0 || yAxis.lengthSqr() == 0 || zAxis.lengthSqr() == 0 || xAxis.dot(yAxis.cross(zAxis)) <= 0 || mappingState != MappingState.UNSUPPORTED || !families.isEmpty()) {
-                throw new IllegalArgumentException("Rigid display axes must be nonzero and right-handed, with unsupported mapping and no mapped families; got x=" + xAxis + ", y=" + yAxis + ", z=" + zAxis + ", mapping=" + mappingState + ", families=" + families.size() + '.');
+            if (xAxis.lengthSqr() == 0 || yAxis.lengthSqr() == 0 || zAxis.lengthSqr() == 0 || xAxis.dot(yAxis.cross(zAxis)) <= 0) {
+                throw new IllegalArgumentException("Rigid display axes must be nonzero and right-handed; got x=" + xAxis + ", y=" + yAxis + ", z=" + zAxis + '.');
             }
         }
 
@@ -200,8 +191,8 @@ final class LaserDisplayCodec {
             double length = segment.length();
             double remainingRange = segment.remainingRange();
             Vec3 direction = segment.start().frame().direction();
-            if (parent < -1 || parent >= index || length < 0 || remainingRange < 0 || direction.lengthSqr() < 0.5) {
-                throw new IllegalArgumentException("Display segment " + index + " must have parent in [-1, " + index + "), non-negative length/range and direction squared length at least 0.5; got parent=" + parent + ", length=" + length + " blocks, range=" + remainingRange + " blocks, direction=" + direction + '.');
+            if (parent != index - 1 || length < 0 || remainingRange < 0 || direction.lengthSqr() < 0.5) {
+                throw new IllegalArgumentException("Whole-beam display segment " + index + " must have parent " + (index - 1) + ", non-negative length/range and direction squared length at least 0.5; got parent=" + parent + ", length=" + length + " blocks, range=" + remainingRange + " blocks, direction=" + direction + '.');
             }
         }
         Base base = input.base();
@@ -215,34 +206,7 @@ final class LaserDisplayCodec {
                 throw new IllegalArgumentException("Display face vertex count must be at least 3; got " + vertices + '.');
             }
         }
-        for (int selected : mapping.selected()) {
-            reference(selected, segments);
-        }
-        for (int invalid : base.invalidSegments()) {
-            reference(invalid, segments);
-        }
-        for (MappedFamily family : families) {
-            int representative = family.representative();
-            reference(representative, segments);
-            for (int selected : family.displayIds()) {
-                reference(selected, segments);
-            }
-            boolean polygonal = family.polygonal();
-            List<Tile> tiles = family.tiles();
-            for (int index = 0; index < tiles.size(); index++) {
-                Tile tile = tiles.get(index);
-                int size = tile.polygon().size();
-                int edges = tile.exposedEdges().size();
-                int normals = tile.outward().size();
-                if (size < 3 || edges != size || normals != size) {
-                    throw new IllegalArgumentException("Mapped display tile polygon must have at least 3 vertices and matching edge/normal counts; got vertices=" + size + ", edges=" + edges + ", normals=" + normals + '.');
-                }
 
-                if (polygonal && tile.interior() == null) {
-                    throw new IllegalArgumentException("Polygonal display tile " + index + " for segment " + representative + " must have an interior point; got null.");
-                }
-            }
-        }
     }
 
     private static int reference(int index, int size) {
@@ -284,12 +248,7 @@ final class LaserDisplayCodec {
         });
         integer(buffer, base.reason().ordinal());
         integer(buffer, base.remainingBudget());
-        list(buffer, base.invalidSegments().stream().sorted().toList(), LaserDisplayCodec::integer);
-        Mapping mapping = value.mapping();
-        integer(buffer, mapping.state().ordinal());
-        buffer.writeUtf(mapping.reason(), MAX_MAPPING_REASON_CHARS);
-        list(buffer, mapping.selected().stream().sorted().toList(), LaserDisplayCodec::integer);
-        list(buffer, mapping.families(), LaserDisplayCodec::family);
+
     }
 
     private static LaserBeamDisplayInput input(FriendlyByteBuf buffer) {
@@ -299,11 +258,7 @@ final class LaserDisplayCodec {
         List<Face> faces = list(buffer, source -> new Face(list(source, LaserDisplayCodec::vector), vector(source), table.get(reference(integer(source), table.size())), vector(source), vector(source), box(source)));
         SurfaceReason reason = SurfaceReason.values()[reference(integer(buffer), SurfaceReason.values().length)];
         int budget = integer(buffer);
-        Set<Integer> invalid = Set.copyOf(list(buffer, LaserDisplayCodec::integer));
-        MappingState state = MappingState.values()[reference(integer(buffer), MappingState.values().length)];
-        String detail = buffer.readUtf(MAX_MAPPING_REASON_CHARS);
-        Set<Integer> selected = Set.copyOf(list(buffer, LaserDisplayCodec::integer));
-        return new LaserBeamDisplayInput(context, new Base(sections, faces, reason, budget, invalid), new Mapping(state, detail, selected, list(buffer, LaserDisplayCodec::family)));
+        return new LaserBeamDisplayInput(context, new Base(sections, faces, reason, budget));
     }
 
     private static void profile(FriendlyByteBuf buffer, BeamProfile value) {
@@ -382,10 +337,11 @@ final class LaserDisplayCodec {
         number(buffer, value.length());
         number(buffer, value.remainingRange());
         optional(buffer, value.contact(), LaserDisplayCodec::plane);
+        optional(buffer, value.impact(), LaserDisplayCodec::plane);
     }
 
     private static DisplaySegment segment(FriendlyByteBuf buffer) {
-        return new DisplaySegment(integer(buffer), beam(buffer), number(buffer), number(buffer), optional(buffer, LaserDisplayCodec::plane));
+        return new DisplaySegment(integer(buffer), beam(buffer), number(buffer), number(buffer), optional(buffer, LaserDisplayCodec::plane), optional(buffer, LaserDisplayCodec::plane));
     }
 
     private static void context(FriendlyByteBuf buffer, LaserBeamContext value) {
@@ -459,18 +415,6 @@ final class LaserDisplayCodec {
     }
 
     @SuppressWarnings("DataFlowIssue")
-    private static void mapped(FriendlyByteBuf buffer, MappedData value) {
-        section(buffer, value.support());
-        brightness(buffer, value.widthField());
-        brightness(buffer, value.haloField());
-        optional(buffer, value.endPlanes(), LaserDisplayCodec::planes);
-    }
-
-    private static MappedData mapped(FriendlyByteBuf buffer) {
-        return new MappedData(section(buffer), brightness(buffer), brightness(buffer), optional(buffer, LaserDisplayCodec::planes));
-    }
-
-    @SuppressWarnings("DataFlowIssue")
     private static void draw(FriendlyByteBuf buffer, DrawSection value) {
         section(buffer, value.geometry());
         appearance(buffer, value.appearance());
@@ -480,44 +424,10 @@ final class LaserDisplayCodec {
         domain(buffer, value.samplingDomain());
         flag(buffer, value.grazingTerminal());
         optional(buffer, value.brightness(), LaserDisplayCodec::brightness);
-        optional(buffer, value.mapped(), LaserDisplayCodec::mapped);
     }
 
     private static DrawSection draw(FriendlyByteBuf buffer) {
-        return new DrawSection(section(buffer), appearance(buffer), integer(buffer), number(buffer), optional(buffer, LaserDisplayCodec::fade), domain(buffer), flag(buffer), optional(buffer, LaserDisplayCodec::brightness), optional(buffer, LaserDisplayCodec::mapped));
-    }
-
-    @SuppressWarnings("DataFlowIssue")
-    private static void tile(FriendlyByteBuf buffer, Tile value) {
-        section(buffer, value.geometry());
-        section(buffer, value.support());
-        list(buffer, value.polygon(), LaserDisplayCodec::point);
-        vector(buffer, value.startCenter());
-        vector(buffer, value.endCenter());
-        brightness(buffer, value.field());
-        brightness(buffer, value.haloField());
-        number(buffer, value.pathOffset());
-        list(buffer, value.exposedEdges(), LaserDisplayCodec::flag);
-        list(buffer, value.outward(), LaserDisplayCodec::vector);
-        optional(buffer, value.endPlanes(), LaserDisplayCodec::planes);
-        optional(buffer, value.interior(), LaserDisplayCodec::vector);
-    }
-
-    private static Tile tile(FriendlyByteBuf buffer) {
-        return new Tile(section(buffer), section(buffer), list(buffer, LaserDisplayCodec::point), vector(buffer), vector(buffer), brightness(buffer), brightness(buffer), number(buffer), list(buffer, LaserDisplayCodec::flag), list(buffer, LaserDisplayCodec::vector), optional(buffer, LaserDisplayCodec::planes), optional(buffer, LaserDisplayCodec::vector));
-    }
-
-    private static void family(FriendlyByteBuf buffer, MappedFamily value) {
-        list(buffer, value.displayIds(), LaserDisplayCodec::integer);
-        integer(buffer, value.representative());
-        number(buffer, value.pathDistance());
-        appearance(buffer, value.appearance());
-        list(buffer, value.tiles(), LaserDisplayCodec::tile);
-        flag(buffer, value.polygonal());
-    }
-
-    private static MappedFamily family(FriendlyByteBuf buffer) {
-        return new MappedFamily(list(buffer, LaserDisplayCodec::integer), integer(buffer), number(buffer), appearance(buffer), list(buffer, LaserDisplayCodec::tile), flag(buffer));
+        return new DrawSection(section(buffer), appearance(buffer), integer(buffer), number(buffer), optional(buffer, LaserDisplayCodec::fade), domain(buffer), flag(buffer), optional(buffer, LaserDisplayCodec::brightness));
     }
 
     @SuppressWarnings("DataFlowIssue")
@@ -686,19 +596,11 @@ final class LaserDisplayCodec {
         return state;
     }
 
-    private static void planes(FriendlyByteBuf buffer, List<OpticalPlane> value) {
-        list(buffer, value, LaserDisplayCodec::plane);
-    }
-
-    private static List<OpticalPlane> planes(FriendlyByteBuf buffer) {
-        return list(buffer, LaserDisplayCodec::plane);
-    }
-
     private static void numbers(FriendlyByteBuf buffer, List<Double> value) {
         list(buffer, value, LaserDisplayCodec::number);
     }
 
-    private static List<Double> numbers(FriendlyByteBuf buffer) {
+    private static @Unmodifiable List<Double> numbers(FriendlyByteBuf buffer) {
         return list(buffer, LaserDisplayCodec::number);
     }
 
@@ -713,7 +615,7 @@ final class LaserDisplayCodec {
         }
     }
 
-    private static <T> List<T> list(FriendlyByteBuf buffer, Function<FriendlyByteBuf, T> read) {
+    private static <T> @Unmodifiable List<T> list(FriendlyByteBuf buffer, Function<FriendlyByteBuf, T> read) {
         int count = integer(buffer);
         if (count < 0 || count > MAX_ELEMENTS) {
             throw new IllegalArgumentException("Laser display list length must be in [0, " + MAX_ELEMENTS + "] elements; got " + count + '.');

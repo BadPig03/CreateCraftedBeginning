@@ -18,8 +18,13 @@ final class AmethystSoundSuppressorTooltip {
     private AmethystSoundSuppressorTooltip() {
     }
 
-    static void addToGoggleTooltip(List<Component> tooltip, AmethystSoundSuppressorController controller) {
+    static void addToGoggleTooltip(List<Component> tooltip, AmethystSoundSuppressorController controller, boolean unavailable) {
         CCBLang.translate("gui.amethyst_sound_suppressor.header").forGoggles(tooltip);
+        if (unavailable) {
+            CCBLang.translate("gui.optical_power.state_unavailable").style(ChatFormatting.GRAY).forGoggles(tooltip);
+            return;
+        }
+
         CCBLang.translate("gui.amethyst_sound_suppressor.power").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.number(controller.getReceivedFluxLm()).translate("gui.unit.luminous_flux").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
         CCBLang.translate("gui.amethyst_sound_suppressor.storage").style(ChatFormatting.GRAY).forGoggles(tooltip);

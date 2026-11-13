@@ -78,7 +78,7 @@ public final class AmethystMirrorScenes {
         scene.world().showSection(firstSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Amethyst Mirrors turn the laser in a new direction; either face can reflect it").colored(PonderPalette.GREEN).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Both sides of an Amethyst Mirror can redirect a laser beam").colored(PonderPalette.GREEN).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, mirrorObject, mirrorArea, 60);
         scene.world().modifyBlockEntity(emitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(16));
         scene.world().modifyBlockEntity(reverseEmitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(16));
@@ -87,7 +87,7 @@ public final class AmethystMirrorScenes {
         scene.world().modifyBlockEntity(reverseEmitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(0));
 
         scene.idle(20);
-        scene.overlay().showText(60).text("With a Wrench, right-click and drag an outer square to turn the mirror").colored(PonderPalette.BLUE).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("While holding a Wrench, right-click and drag one of the outer square handles to rotate the mirror").colored(PonderPalette.BLUE).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(mirrorVec, Pointing.RIGHT, 40).rightClick().withItem(wrench.copy());
         turnMirror(scene, mirrorSelection, mirrorVec, handles, 135, 145, 0, 0);
         turnMirror(scene, mirrorSelection, mirrorVec, handles, 145, 135, 0, 0);
@@ -95,22 +95,24 @@ public final class AmethystMirrorScenes {
         turnMirror(scene, mirrorSelection, mirrorVec, handles, 135, 135, 10, 0);
 
         scene.idle(40);
-        scene.overlay().showText(60).text("Hold Sneak while dragging to adjust the mirror's direction more precisely").colored(PonderPalette.BLUE).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Drag while sneaking to make finer adjustments to the mirror's orientation").colored(PonderPalette.BLUE).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(greenHandleVec, Pointing.RIGHT, 60).rightClick().whileSneaking().withItem(wrench.copy());
         setPose(scene, mirrorSelection, 136, 0);
         turnMirror(scene, mirrorSelection, mirrorVec, handles, 136, 135, 0, 0);
         showHandles(scene, mirrorVec, handles, 135, 0, 50);
 
         scene.idle(70);
-        scene.overlay().showText(60).text("Add another mirror to turn the laser again").colored(PonderPalette.GREEN).pointAt(secondMirrorVec).placeNearTarget().attachKeyFrame();
-        scene.world().hideSection(receiverSelection, Direction.DOWN);
-        scene.world().setBlocks(receiverSelection, Blocks.AIR.defaultBlockState(), false);
+        scene.overlay().showText(60).text("Place another Amethyst Mirror in the beam's path to redirect it again").colored(PonderPalette.GREEN).pointAt(secondMirrorVec).placeNearTarget().attachKeyFrame();
+        scene.world().hideSection(receiverSelection, Direction.UP);
         scene.world().restoreBlocks(secondSelection);
         scene.world().showSection(secondSelection, Direction.DOWN);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, secondMirrorObject, secondMirrorArea, 60);
 
-        scene.idle(80);
-        scene.overlay().showText(60).text("The full light path must still fit within the emitter's range").colored(PonderPalette.RED).pointAt(panelVec).placeNearTarget().attachKeyFrame();
+        scene.idle(20);
+        scene.world().setBlocks(receiverSelection, Blocks.AIR.defaultBlockState(), false);
+
+        scene.idle(60);
+        scene.overlay().showText(60).text("The total length of the reflected path cannot exceed the Laser Emitter's range").colored(PonderPalette.RED).pointAt(panelVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(panelVec, Pointing.DOWN, 40).scroll();
 
         scene.idle(20);
@@ -129,8 +131,8 @@ public final class AmethystMirrorScenes {
 
         BlockPos mirrorPos = util.grid().at(3, 1, 1);
         BlockPos emitterPos = mirrorPos.west(3);
-        BlockPos targetPos = mirrorPos.east(3).south(3);
-        BlockPos movedTargetPos = mirrorPos.east(3).south(5);
+        BlockPos targetPos = mirrorPos.east(2).south(3);
+        BlockPos movedTargetPos = mirrorPos.west().south(5);
         BlockPos blockerPos = mirrorPos.east().south(2);
 
         Selection mirrorSelection = util.select().position(mirrorPos);
@@ -142,7 +144,7 @@ public final class AmethystMirrorScenes {
         Vec3 mirrorVec = util.vector().centerOf(mirrorPos);
         Vec3 inputVec = util.vector().blockSurface(emitterPos, Direction.EAST);
         Vec3 targetVec = util.vector().blockSurface(targetPos, Direction.WEST);
-        Vec3 movedTargetVec = util.vector().blockSurface(movedTargetPos, Direction.WEST);
+        Vec3 movedTargetVec = util.vector().blockSurface(movedTargetPos, Direction.NORTH, 0.015625F);
         Vec3 blockerVec = util.vector().topOf(blockerPos);
         Vec3 inputDirection = Vec3.atLowerCornerOf(Direction.EAST.getNormal());
         BeamFrame incoming = BeamFrame.fromDirection(inputVec, inputDirection);
@@ -167,22 +169,26 @@ public final class AmethystMirrorScenes {
         scene.world().showSection(machineSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("First, let laser light reach the mirror from only one direction").colored(PonderPalette.BLUE).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Make sure the laser reaches the mirror from only one direction before selecting a target").colored(PonderPalette.BLUE).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
         scene.world().modifyBlockEntity(emitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(16));
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, mirrorObject, mirrorArea, 60);
 
         scene.idle(80);
-        scene.overlay().showText(60).text("Right-click the mirror body with a Wrench to start choosing a target").colored(PonderPalette.BLUE).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Right-click the mirror's body with a Wrench to start selecting a target").colored(PonderPalette.BLUE).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(mirrorVec, Pointing.UP, 60).rightClick().withItem(wrench.copy());
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, mirrorObject, mirrorArea, 60);
 
         scene.idle(80);
-        scene.overlay().showText(60).text("Point at a block surface within 32 blocks of the mirror to preview whether the laser can reach it").colored(PonderPalette.BLUE).pointAt(targetVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Select a point on a block surface within 32 blocks of the mirror").colored(PonderPalette.BLUE).pointAt(targetVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, targetObject, targetArea, 60);
+
+        scene.idle(80);
+        scene.overlay().showText(60).text("A green preview means the reflected laser can reach the target").colored(PonderPalette.BLUE).pointAt(targetVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetObject, targetArea, 80);
         previewPath(scene, inputVec, firstAim.contact(), targetVec, 80);
 
         scene.idle(80);
-        scene.overlay().showText(60).text("When the target turns green, right-click to confirm\n\nSneak-right-click to cancel").colored(PonderPalette.BLUE).pointAt(mirrorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Right-click to confirm, or right-click while sneaking to cancel").colored(PonderPalette.BLUE).pointAt(targetVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetObject, targetArea, 40);
         previewPath(scene, inputVec, firstAim.contact(), targetVec, 40);
         scene.overlay().showControls(targetVec, Pointing.UP, 40).rightClick().withItem(wrench.copy());
@@ -191,34 +197,49 @@ public final class AmethystMirrorScenes {
         setPose(scene, mirrorSelection, firstAim.angle(), 0);
 
         scene.idle(40);
-        scene.overlay().showText(60).text("The frame and blocks along the path can obstruct the beam; targets the laser cannot reach are shown in red").colored(PonderPalette.RED).pointAt(blockerVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("The mirror's frame or blocks along the path can stop the entire laser beam").colored(PonderPalette.RED).pointAt(blockerVec).placeNearTarget().attachKeyFrame();
         scene.world().restoreBlocks(blockerSelection);
         scene.world().showSection(blockerSelection, Direction.DOWN);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, blockerObject, blockerArea, 40);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, targetObject, targetArea, 40);
+
+        scene.idle(20);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, blockerObject, blockerArea, 60);
+
+        scene.idle(60);
+        scene.overlay().showText(60).text("Targets that the reflected laser cannot reach are shown in red").colored(PonderPalette.RED).pointAt(targetVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, targetObject, targetArea, 60);
 
         scene.idle(40);
         scene.world().hideSection(blockerSelection, Direction.UP);
 
-        scene.idle(20);
+        scene.idle(10);
         scene.world().setBlocks(blockerSelection, airState, false);
+
+        scene.idle(10);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetObject, targetArea, 40);
         previewPath(scene, inputVec, firstAim.contact(), targetVec, 40);
 
         scene.idle(60);
-        scene.overlay().showText(60).text("The mirror does not follow a moving target; select the target again after it moves").colored(PonderPalette.BLUE).pointAt(movedTargetVec).placeNearTarget().attachKeyFrame();
-        scene.world().hideSection(targetSelection, Direction.SOUTH);
-        scene.world().setBlocks(targetSelection, airState, false);
+        scene.overlay().showText(60).text("The mirror does not automatically follow a target when it moves").colored(PonderPalette.BLUE).pointAt(movedTargetVec).placeNearTarget().attachKeyFrame();
+        scene.world().hideSection(targetSelection, Direction.UP);
         scene.world().restoreBlocks(movedTargetSelection);
         scene.world().showSection(movedTargetSelection, Direction.NORTH);
 
-        scene.idle(20);
+        scene.idle(10);
+        scene.world().setBlocks(targetSelection, airState, false);
+
+        scene.idle(10);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, targetObject, movedTargetArea, 60);
+
+        scene.idle(60);
+        scene.overlay().showText(60).text("Select a new point on the target to aim the reflected laser at it again").colored(PonderPalette.BLUE).pointAt(movedTargetVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetObject, movedTargetArea, 40);
         scene.overlay().showControls(movedTargetVec, Pointing.UP, 40).rightClick().withItem(wrench.copy());
         previewPath(scene, inputVec, movedAim.contact(), movedTargetVec, 40);
 
         scene.idle(40);
         setPose(scene, mirrorSelection, movedAim.angle(), 0);
+
+        scene.idle(20);
         scene.markAsFinished();
     }
 

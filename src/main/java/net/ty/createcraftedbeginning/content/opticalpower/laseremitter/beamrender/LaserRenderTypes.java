@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.RenderStateShard.ShaderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderType.CompositeState;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -28,45 +29,67 @@ import java.io.IOException;
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
 final class LaserRenderTypes {
     private static final String LASER_KEY = "createcraftedbeginning:laser";
+    private static final ResourceLocation SHADER_ID = CCBAPI.asResource("laser_beam");
     static final RenderType LASER = createLaser(LASER_KEY, false);
     static final RenderType PONDER_LASER = createLaser("createcraftedbeginning:ponder_laser", true);
 
-    private static @Nullable ShaderInstance laserShader;
-    private static @Nullable Uniform fogEnabled;
+    private static @Nullable ShaderBinding binding;
+    private static int shaderRevision;
 
     private LaserRenderTypes() {
     }
 
+    static boolean isAvailable() {
+        return binding != null;
+    }
+
+    static int shaderRevision() {
+        return shaderRevision;
+    }
+
     static ShaderInstance prepareLaserShader(boolean ponder) {
-        ShaderInstance shader = laserShader;
-        Uniform fog = fogEnabled;
-        if (shader == null || fog == null) {
+        ShaderBinding current = binding;
+        if (current == null) {
             throw new IllegalStateException("Laser rendering requires the laser beam shader.");
         }
 
-        fog.set(ponder ? 0 : 1);
-        return shader;
+        current.fog().set(ponder ? 0 : 1);
+        return current.shader();
     }
 
     @SubscribeEvent
-    private static void registerShaders(RegisterShadersEvent event) throws IOException {
-        event.registerShader(new ShaderInstance(event.getResourceProvider(), CCBAPI.asResource("laser_beam"), DefaultVertexFormat.POSITION_TEX_COLOR), shader -> {
+    private static void registerShaders(RegisterShadersEvent event) {
+        binding = null;
+        shaderRevision++;
+        ShaderInstance candidate;
+        try {
+            candidate = new ShaderInstance(event.getResourceProvider(), SHADER_ID, DefaultVertexFormat.POSITION_TEX_COLOR);
+        }
+        catch (IOException failure) {
+            CCBAPI.LOGGER.warn("Could not load laser beam shader '{}'; disabling laser effects until the next resource reload.", SHADER_ID, failure);
+            return;
+        }
+
+        event.registerShader(candidate, shader -> {
             Uniform minWidth = shader.getUniform("MinWidth");
             Uniform referenceRadius = shader.getUniform("ReferenceRadius");
             Uniform fog = shader.getUniform("FogEnabled");
-            if (minWidth == null || referenceRadius == null || fog == null) {
-                throw new IllegalStateException("Laser beam shader requires MinWidth, ReferenceRadius and FogEnabled uniforms.");
+            if (minWidth == null || minWidth.getType() != Uniform.UT_FLOAT1 || minWidth.getCount() != 1 || referenceRadius == null || referenceRadius.getType() != Uniform.UT_FLOAT1 || referenceRadius.getCount() != 1 || fog == null || fog.getType() != Uniform.UT_INT1 || fog.getCount() != 1) {
+                CCBAPI.LOGGER.warn("Laser beam shader '{}' is missing a required scalar uniform or has an incompatible uniform type: MinWidth (float), ReferenceRadius (float), FogEnabled (int). Laser effects are disabled until the next resource reload.", SHADER_ID);
+                return;
             }
 
             minWidth.set((float) BeamProfile.MIN_WIDTH);
             referenceRadius.set((float) LaserBeamBrightness.REFERENCE_RADIUS);
-            laserShader = shader;
-            fogEnabled = fog;
+            binding = new ShaderBinding(shader, fog);
         });
     }
 
     private static RenderType createLaser(String name, boolean ponder) {
         CompositeState state = CompositeState.builder().setShaderState(new ShaderStateShard(() -> prepareLaserShader(ponder))).setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY).setCullState(RenderStateShard.NO_CULL).setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST).setWriteMaskState(RenderStateShard.COLOR_WRITE).setOutputState(ponder ? RenderStateShard.MAIN_TARGET : RenderStateShard.TRANSLUCENT_TARGET).createCompositeState(false);
         return RenderType.create(name, DefaultVertexFormat.POSITION_TEX_COLOR, Mode.QUADS, 256, false, false, state);
+    }
+
+    private record ShaderBinding(ShaderInstance shader, Uniform fog) {
     }
 }

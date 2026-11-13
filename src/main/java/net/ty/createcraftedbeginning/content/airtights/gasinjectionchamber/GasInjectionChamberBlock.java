@@ -52,7 +52,7 @@ public class GasInjectionChamberBlock extends HorizontalDirectionalBlock impleme
             return ItemInteractionResult.FAIL;
         }
 
-        CCBAdvancements.CLANK_CLANK_CLANK.awardTo(player);
+        CCBAdvancements.PROCESSING_BY_PARTICLE_2_0.awardTo(player);
         stack.shrink(1);
         level.playSound(null, pos, state.getSoundType(level, pos, player).getPlaceSound(), SoundSource.BLOCKS, 0.75F, 1.1F);
         return ItemInteractionResult.SUCCESS;

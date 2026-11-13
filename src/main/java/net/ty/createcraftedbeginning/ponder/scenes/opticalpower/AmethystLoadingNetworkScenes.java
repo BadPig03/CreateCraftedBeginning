@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaBlockEntity;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkBinding;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -36,7 +36,7 @@ public final class AmethystLoadingNetworkScenes {
 
     public static void scene(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
-        scene.title("amethyst_loading_network", "Linking and Managing Loaders");
+        scene.title("amethyst_loading_network", "Linking and Managing Stabilizers");
         scene.configureBasePlate(0, 0, 7);
         scene.scaleSceneView(0.85F);
         scene.showBasePlate();
@@ -79,7 +79,7 @@ public final class AmethystLoadingNetworkScenes {
         setLoading(scene, secondLoaderPos, true);
 
         scene.idle(8);
-        scene.overlay().showText(60).text("Attach an antenna to a loader").colored(PonderPalette.BLUE).pointAt(firstAntennaVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Attach an Amethyst Antenna to a Chunk Stabilizer").colored(PonderPalette.BLUE).pointAt(firstAntennaVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(firstLoaderControl, Pointing.RIGHT, 30).rightClick().withItem(antenna.copy());
 
         scene.idle(10);
@@ -89,18 +89,18 @@ public final class AmethystLoadingNetworkScenes {
         scene.world().modifyBlockEntityNBT(firstAntenna, AmethystAntennaBlockEntity.class, network::write);
 
         scene.idle(50);
-        scene.overlay().showText(60).text("The antenna creates a network").colored(PonderPalette.GREEN).pointAt(firstAntennaVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Installing an antenna automatically creates a loading network").colored(PonderPalette.GREEN).pointAt(firstAntennaVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, firstAntennaOutline, firstAntennaArea, 35);
 
         scene.idle(80);
-        scene.overlay().showText(60).text("Tune an antenna here").colored(PonderPalette.BLUE).pointAt(firstLoaderVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("While holding an antenna, right-click this stabilizer to tune the antenna to its loading network").colored(PonderPalette.BLUE).pointAt(firstLoaderVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(firstLoaderControl, Pointing.RIGHT, 25).rightClick().withItem(antenna.copy());
 
         scene.idle(40);
         scene.overlay().showControls(firstLoaderControl, Pointing.RIGHT, 20).withItem(tunedAntenna.copy());
 
         scene.idle(40);
-        scene.overlay().showText(60).text("Link more loaders").colored(PonderPalette.GREEN).pointAt(secondAntennaVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("A single loading network can manage multiple Chunk Stabilizers").colored(PonderPalette.GREEN).pointAt(secondAntennaVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(secondLoaderControl, Pointing.RIGHT, 30).rightClick().withItem(tunedAntenna.copy());
 
         scene.idle(10);
@@ -112,11 +112,11 @@ public final class AmethystLoadingNetworkScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, secondAntennaOutline, secondAntennaArea, 25);
 
         scene.idle(50);
-        scene.overlay().showText(60).text("View linked loaders here").colored(PonderPalette.BLUE).pointAt(firstLoaderVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Right-click a stabilizer to view the devices connected to its loading network").colored(PonderPalette.BLUE).pointAt(firstLoaderVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(firstLoaderControl, Pointing.RIGHT, 35).rightClick();
 
         scene.idle(80);
-        scene.overlay().showText(60).text("Pause one loader in the list").colored(PonderPalette.RED).pointAt(firstLoaderVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Pause one stabilizer in the list").colored(PonderPalette.RED).pointAt(firstLoaderVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(firstLoaderControl, Pointing.RIGHT, 35).showing(AllIcons.I_PAUSE);
 
         scene.idle(10);
@@ -138,7 +138,7 @@ public final class AmethystLoadingNetworkScenes {
     private static void setLoading(CreateSceneBuilder scene, BlockPos pos, boolean active) {
         scene.addInstruction(ponder -> {
             PonderLevel level = ponder.getWorld();
-            if (!(level.getBlockEntity(pos) instanceof AmethystLoaderBlockEntity loader)) {
+            if (!(level.getBlockEntity(pos) instanceof ChunkStabilizerBlockEntity loader)) {
                 return;
             }
 

@@ -7,7 +7,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
@@ -19,6 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.ty.createcraftedbeginning.content.opticalpower.OpticalPlatePlacement;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalElement;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalGeometry;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserCollisionContext;
@@ -60,17 +60,7 @@ public final class AmethystLensBlock extends DirectionalBlock implements IBE<Ame
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        Direction facing = context.getHorizontalDirection().getOpposite();
-        if (facing.getAxis() != context.getClickedFace().getAxis()) {
-            return defaultBlockState().setValue(FACING, facing);
-        }
-
-        Player player = context.getPlayer();
-        if (player != null && player.getXRot() < 0) {
-            return defaultBlockState().setValue(FACING, Direction.DOWN);
-        }
-
-        return defaultBlockState().setValue(FACING, Direction.UP);
+        return defaultBlockState().setValue(FACING, OpticalPlatePlacement.getNormal(context));
     }
 
     @Override

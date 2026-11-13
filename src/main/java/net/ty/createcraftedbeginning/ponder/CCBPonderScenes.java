@@ -39,13 +39,13 @@ import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.AtmosphereExtraction
 import net.ty.createcraftedbeginning.ponder.scenes.gaspipes.SmartAirtightPipeScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystCollectorPanelScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystLensScenes;
-import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystLoaderScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystLoadingNetworkScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystMirrorScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.AmethystSoundSuppressorScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.ChunkStabilizerScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.LaserEmitterScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.OpticalFiberScenes;
-import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.PhotothermalReceiverScenes;
+import net.ty.createcraftedbeginning.ponder.scenes.opticalpower.PhotothermalChamberScenes;
 import net.ty.createcraftedbeginning.ponder.scenes.other.AirVentScenes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -108,11 +108,11 @@ public class CCBPonderScenes {
         entryHelper.forComponents(CCBBlocks.OPTICAL_FIBER_BLOCK).addStoryBoard("optical_fiber_story_board", OpticalFiberScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AMETHYST_COLLECTOR_PANEL_BLOCK).addStoryBoard("amethyst_collector_panel_assembly_story_board", AmethystCollectorPanelScenes::assembly, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_collector_panel_lighting_story_board", AmethystCollectorPanelScenes::lighting, CCBPonderTags.OPTICAL_POWER_TAG_ID);
         entryHelper.forComponents(CCBBlocks.LASER_EMITTER_BLOCK).addStoryBoard("laser_emitter_story_board", LaserEmitterScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
-        entryHelper.forComponents(CCBBlocks.PHOTOTHERMAL_RECEIVER_BLOCK).addStoryBoard("photothermal_receiver_story_board", PhotothermalReceiverScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.PHOTOTHERMAL_CHAMBER_BLOCK).addStoryBoard("photothermal_chamber_story_board", PhotothermalChamberScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AMETHYST_MIRROR_BLOCK).addStoryBoard("amethyst_mirror_reflecting_story_board", AmethystMirrorScenes::reflecting, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_mirror_targeting_story_board", AmethystMirrorScenes::targeting);
         entryHelper.forComponents(CCBBlocks.AMETHYST_CONVEX_LENS_BLOCK, CCBBlocks.AMETHYST_CONCAVE_LENS_BLOCK).addStoryBoard("amethyst_lens_story_board", AmethystLensScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
-        entryHelper.forComponents(CCBBlocks.AMETHYST_LOADER_BLOCK).addStoryBoard("amethyst_loader_factory_story_board", AmethystLoaderScenes::factory, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_loader_moving_story_board", AmethystLoaderScenes::moving, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_loader_train_story_board", AmethystLoaderScenes::train, CCBPonderTags.OPTICAL_POWER_TAG_ID);
-        entryHelper.forComponents(CCBBlocks.AMETHYST_ANTENNA_BLOCK, CCBBlocks.AMETHYST_LOADER_BLOCK).addStoryBoard("amethyst_loading_network_story_board", AmethystLoadingNetworkScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.CHUNK_STABILIZER_BLOCK).addStoryBoard("chunk_stabilizer_factory_story_board", ChunkStabilizerScenes::factory, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("chunk_stabilizer_moving_story_board", ChunkStabilizerScenes::moving, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("chunk_stabilizer_train_story_board", ChunkStabilizerScenes::train, CCBPonderTags.OPTICAL_POWER_TAG_ID);
+        entryHelper.forComponents(CCBBlocks.AMETHYST_ANTENNA_BLOCK, CCBBlocks.CHUNK_STABILIZER_BLOCK).addStoryBoard("amethyst_loading_network_story_board", AmethystLoadingNetworkScenes::scene, CCBPonderTags.OPTICAL_POWER_TAG_ID);
         entryHelper.forComponents(CCBBlocks.AMETHYST_SOUND_SUPPRESSOR_BLOCK).addStoryBoard("amethyst_sound_suppressor_suppression_story_board", AmethystSoundSuppressorScenes::suppression, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_sound_suppressor_lighting_story_board", AmethystSoundSuppressorScenes::lighting, CCBPonderTags.OPTICAL_POWER_TAG_ID).addStoryBoard("amethyst_sound_suppressor_growth_story_board", AmethystSoundSuppressorScenes::growth, CCBPonderTags.OPTICAL_POWER_TAG_ID);
     }
 

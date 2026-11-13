@@ -56,6 +56,7 @@ public final class AmethystCollectorPanelScenes {
         Selection northExpansionSelection = util.select().fromTo(northExpansionStartPos, northExpansionEndPos);
         Selection eastExpansionSelection = util.select().fromTo(eastExpansionStartPos, arrayEndPos);
         Selection excessPanelSelection = util.select().position(excessPanelPos);
+        Selection fiberSelection = util.select().fromTo(fiberPos, thirdFiberPos);
         Selection supplySelection = util.select().fromTo(fiberPos, emitterPos).add(util.select().position(targetPos));
         Selection laterSelection = expandedSelection.copy().add(loosePanelSelection).add(thirdRowSelection).add(northExpansionSelection).add(eastExpansionSelection).add(excessPanelSelection);
 
@@ -75,8 +76,7 @@ public final class AmethystCollectorPanelScenes {
         Object excessObject = new Object();
 
         scene.world().setBlocks(laterSelection, Blocks.AIR.defaultBlockState(), false);
-        scene.world().modifyBlock(secondFiberPos, state -> state.setValue(OpticalFiberBlock.SOUTH, false), false);
-        scene.world().modifyBlock(thirdFiberPos, state -> state.setValue(OpticalFiberBlock.SOUTH, false), false);
+        scene.world().setBlocks(fiberSelection, CCBBlocks.OPTICAL_FIBER_BLOCK.getDefaultState(), false);
 
         scene.idle(20);
         scene.world().showSection(singlePanelSelection, Direction.DOWN);
@@ -85,6 +85,9 @@ public final class AmethystCollectorPanelScenes {
         scene.world().showSection(supplySelection, Direction.DOWN);
 
         scene.idle(20);
+        scene.world().restoreBlocks(fiberSelection);
+        scene.world().modifyBlock(secondFiberPos, state -> state.setValue(OpticalFiberBlock.SOUTH, false), false);
+        scene.world().modifyBlock(thirdFiberPos, state -> state.setValue(OpticalFiberBlock.SOUTH, false), false);
         setPower(scene, emitterPos, 1);
         scene.overlay().showText(60).text("Amethyst Collector Panels gather sunlight to supply devices through Optical Fibers").colored(PonderPalette.GREEN).pointAt(collectorVec).placeNearTarget().attachKeyFrame();
 
@@ -93,11 +96,11 @@ public final class AmethystCollectorPanelScenes {
 
         scene.idle(7);
         scene.world().restoreBlocks(expandedSelection);
-        scene.world().modifyBlock(secondFiberPos, state -> state.setValue(OpticalFiberBlock.SOUTH, true), false);
-        scene.world().modifyBlock(thirdFiberPos, state -> state.setValue(OpticalFiberBlock.SOUTH, true), false);
         scene.world().showSection(expandedSelection, Direction.DOWN);
 
         scene.idle(20);
+        scene.world().modifyBlock(secondFiberPos, state -> state.setValue(OpticalFiberBlock.SOUTH, true), false);
+        scene.world().modifyBlock(thirdFiberPos, state -> state.setValue(OpticalFiberBlock.SOUTH, true), false);
         setPower(scene, emitterPos, 6);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, arrayObject, arrayStartArea, 3);
 
@@ -175,6 +178,7 @@ public final class AmethystCollectorPanelScenes {
         BlockPos excessPanelPos = collectorPos.east(5);
         BlockPos fiberPos = collectorPos.north();
         BlockPos emitterPos = collectorPos.east(3).north();
+        BlockPos lastFiberPos = emitterPos.west();
         BlockPos targetPos = collectorPos.east(6).north();
         BlockPos roofStartPos = collectorPos.above(2);
         BlockPos partialRoofEndPos = collectorPos.east().south(4).above(2);
@@ -184,6 +188,7 @@ public final class AmethystCollectorPanelScenes {
 
         Selection arraySelection = util.select().fromTo(collectorPos, arrayEndPos);
         Selection excessPanelSelection = util.select().position(excessPanelPos);
+        Selection fiberSelection = util.select().fromTo(fiberPos, lastFiberPos);
         Selection supplySelection = util.select().fromTo(fiberPos, emitterPos).add(util.select().position(targetPos));
         Selection partialRoofSelection = util.select().fromTo(roofStartPos, partialRoofEndPos);
         Selection remainingRoofSelection = util.select().fromTo(remainingRoofStartPos, roofEndPos);
@@ -203,6 +208,7 @@ public final class AmethystCollectorPanelScenes {
 
         scene.world().setBlocks(excessPanelSelection, Blocks.AIR.defaultBlockState(), false);
         scene.world().setBlocks(roofSelection, Blocks.AIR.defaultBlockState(), false);
+        scene.world().setBlocks(fiberSelection, CCBBlocks.OPTICAL_FIBER_BLOCK.getDefaultState(), false);
 
         scene.idle(20);
         scene.world().showSection(arraySelection, Direction.DOWN);
@@ -211,6 +217,7 @@ public final class AmethystCollectorPanelScenes {
         scene.world().showSection(supplySelection, Direction.DOWN);
 
         scene.idle(20);
+        scene.world().restoreBlocks(fiberSelection);
         setPower(scene, emitterPos, 32);
         scene.overlay().showText(60).text("Covering the panels from above reduces the light they collect; covering them completely stops the supply").colored(PonderPalette.RED).pointAt(arrayVec).placeNearTarget().attachKeyFrame();
 

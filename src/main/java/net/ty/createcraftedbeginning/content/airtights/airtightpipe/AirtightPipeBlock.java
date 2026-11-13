@@ -14,6 +14,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -44,6 +45,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
+import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasConnectable;
@@ -96,7 +98,6 @@ public class AirtightPipeBlock extends PipeBlock implements IBE<AirtightPipeBloc
             BlockState updated = AirtightPipeConnections.update(level.getBlockState(pos), level, pos, context.getClickedFace().getAxis());
             level.setBlockAndUpdate(pos, updated);
             level.scheduleTick(pos, this, 1);
-            AirtightPipeAdvancement.checkPlayerAction(level, pos, context.getPlayer());
             return InteractionResult.SUCCESS;
         }
 
@@ -107,7 +108,6 @@ public class AirtightPipeBlock extends PipeBlock implements IBE<AirtightPipeBloc
         Direction face = context.getClickedFace();
         boolean wasOpen = AirtightPipeConnections.isOpen(state, face);
         level.setBlockAndUpdate(pos, state.setValue(PROPERTY_BY_DIRECTION.get(face), !wasOpen));
-        AirtightPipeAdvancement.checkPlayerAction(level, pos, context.getPlayer());
         if (wasOpen) {
             CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1, 1);
         }
@@ -131,7 +131,6 @@ public class AirtightPipeBlock extends PipeBlock implements IBE<AirtightPipeBloc
         BlockPos pos = context.getClickedPos();
         BlockState bare = AirtightPipeConnections.update(state.setValue(CASED, false), level, pos, context.getClickedFace().getAxis());
         level.setBlockAndUpdate(pos, bare);
-        AirtightPipeAdvancement.checkPlayerAction(level, pos, context.getPlayer());
         CCBSoundEvents.SHEET_REMOVED.playOnServer(level, pos, 1, 1);
         return InteractionResult.SUCCESS;
     }
@@ -173,7 +172,7 @@ public class AirtightPipeBlock extends PipeBlock implements IBE<AirtightPipeBloc
             }
         });
         level.setBlockAndUpdate(pos, state.setValue(CASED, true).setValue(BlockStateProperties.WATERLOGGED, false));
-        AirtightPipeAdvancement.checkPlayerAction(level, pos, player);
+        AirtightPipeAdvancement.awardCasing(level, pos, player);
         CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1, 1);
         return ItemInteractionResult.sidedSuccess(false);
     }
@@ -216,7 +215,11 @@ public class AirtightPipeBlock extends PipeBlock implements IBE<AirtightPipeBloc
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
         CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
-        AirtightPipeAdvancement.checkPlayerAction(level, pos, entity);
+        if (!(level instanceof ServerLevel serverLevel) || !(entity instanceof ServerPlayer player) || player instanceof FakePlayer) {
+            return;
+        }
+
+        withBlockEntityDo(serverLevel, pos, pipe -> pipe.place(serverLevel, player.getUUID()));
     }
 
     @Override
@@ -260,6 +263,11 @@ public class AirtightPipeBlock extends PipeBlock implements IBE<AirtightPipeBloc
             transport.markConnectionsDirty();
         }
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
+        if (!(level instanceof ServerLevel serverLevel) || serverLevel.restoringBlockSnapshots || !(serverLevel.getChunkAt(pos).getBlockEntity(pos) instanceof AirtightPipeBlockEntity pipe)) {
+            return;
+        }
+
+        pipe.commitPlacement(serverLevel);
     }
 
     @Override

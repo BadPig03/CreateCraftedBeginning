@@ -6,7 +6,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamGeometry.Section;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.DrawSection;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.MappedData;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.SamplingDomain;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamParticleIndex.FrameWork;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamParticleIndex.IndexWork;
@@ -281,10 +280,6 @@ public final class LaserBeamParticles {
                         }
 
                         LaserBeamBrightness widthField = draw.brightness();
-                        MappedData mapped = draw.mapped();
-                        if (mapped != null) {
-                            widthField = mapped.widthField();
-                        }
 
                         double width = 2 * LaserBeamBrightness.REFERENCE_RADIUS;
                         if (widthField != null) {

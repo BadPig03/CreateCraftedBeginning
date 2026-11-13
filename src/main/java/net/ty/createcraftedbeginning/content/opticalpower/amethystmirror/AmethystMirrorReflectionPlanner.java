@@ -133,7 +133,20 @@ final class AmethystMirrorReflectionPlanner {
 
             OpticalTarget hitTarget = hit.target();
             Vec3 hitPoint = hit.position();
-            if (!hitTarget.blockPos().equals(targetPos) || hitTarget.contraptionId() != null || hitTarget.inSubLevel() || hitPoint.distanceTo(target) > TARGET_TOLERANCE) {
+            if (!hitTarget.blockPos().equals(targetPos) || hitTarget.contraptionId() != null || hitTarget.inSubLevel()) {
+                continue;
+            }
+
+            BeamFrame outgoing = segment.start().frame();
+            Vec3 normal = hit.surface().normal();
+            double incidence = outgoing.direction().dot(normal);
+            if (Math.abs(incidence) < 1.0E-12) {
+                continue;
+            }
+
+            double targetDistance = hitPoint.subtract(outgoing.origin()).dot(normal) / incidence;
+            Vec3 aimedPoint = outgoing.origin().add(outgoing.direction().scale(targetDistance));
+            if (aimedPoint.distanceTo(target) > TARGET_TOLERANCE) {
                 continue;
             }
 
@@ -148,7 +161,7 @@ final class AmethystMirrorReflectionPlanner {
                 continue;
             }
 
-            return new AmethystMirrorAimResult(AmethystMirrorAimStatus.READY, rotation, parent.start().frame().origin(), parentHit.position(), hitPoint);
+            return new AmethystMirrorAimResult(AmethystMirrorAimStatus.READY, rotation, parent.start().frame().origin(), parentHit.position(), aimedPoint);
         }
         return AmethystMirrorAimResult.failure(AmethystMirrorAimStatus.BLOCKED);
     }

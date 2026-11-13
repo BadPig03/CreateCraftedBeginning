@@ -15,8 +15,8 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderBlockEntity;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderNetwork;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerNetwork;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkBinding;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkSavedData;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
@@ -49,8 +49,8 @@ public final class AmethystAntennaBlockItem extends BlockItem {
 
         BlockEntity target = level.getBlockEntity(pos);
         LoadingNetworkBinding binding = null;
-        if (target instanceof AmethystLoaderBlockEntity loader) {
-            binding = AmethystLoaderNetwork.binding(loader);
+        if (target instanceof ChunkStabilizerBlockEntity loader) {
+            binding = ChunkStabilizerNetwork.binding(loader);
         }
         else if (target instanceof AmethystAntennaBlockEntity antenna) {
             binding = antenna.binding();

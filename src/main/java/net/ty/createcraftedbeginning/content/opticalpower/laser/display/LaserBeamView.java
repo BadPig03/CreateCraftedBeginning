@@ -8,7 +8,6 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBea
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamContext.DisplayState;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamGeometry.Section;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.DrawSection;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.MappedData;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,36 +39,12 @@ public final class LaserBeamView {
             BeamProfile profile = segment.start().profile();
             return profile.widthSlope() == 0 && profile.radius() == sourceRadius;
         });
-        if (uniform && !sections.isEmpty() && sections.stream().noneMatch(draw -> draw.mapped() != null)) {
+        if (uniform && !sections.isEmpty()) {
             return new LaserBeamView(context, sourceRadius, true, List.of());
         }
 
         List<Span> spans = new ArrayList<>(sections.size());
         for (DrawSection draw : sections) {
-            MappedData mapped = draw.mapped();
-            if (mapped != null) {
-                Section geometry = draw.geometry();
-                LaserBeamBrightness widthField = mapped.widthField();
-                List<List<Vec3>> caps = List.of(geometry.starts(), geometry.ends());
-                List<Vec3> centers = new ArrayList<>(2);
-                double[] radii = new double[2];
-                for (int index = 0; index < caps.size(); index++) {
-                    List<Vec3> cap = caps.get(index);
-                    centers.add(context.toWorldPosition(Section.center(cap)));
-                    for (Vec3 vertex : cap) {
-                        double radius = widthField.profile().radius();
-                        if (widthField.profile().widthSlope() != 0) {
-                            radius = Math.abs(widthField.referenceWidthAt(vertex)) / 2;
-                        }
-
-                        radii[index] = Math.max(radii[index], radius);
-                    }
-                }
-
-                Vec3 start = centers.getFirst();
-                spans.add(new Span(start, centers.get(1).subtract(start), radii[0], radii[1]));
-                continue;
-            }
 
             DisplaySegment segment = segments.get(draw.segmentIndex());
             DisplayState beam = segment.start();
@@ -187,15 +162,6 @@ public final class LaserBeamView {
                     return false;
                 }
 
-                if (index < sections.size()) {
-                    if (sections.get(index++).mapped() != null) {
-                        index = 0;
-                        phase = 2;
-                    }
-
-                    return false;
-                }
-
                 result = new LaserBeamView(context, sourceRadius, true, List.of());
                 return true;
             }
@@ -214,11 +180,9 @@ public final class LaserBeamView {
                 center = Vec3.ZERO;
                 radii[0] = 0;
                 radii[1] = 0;
-                if (draw.mapped() == null) {
-                    DisplayState beam = segments.get(draw.segmentIndex()).start();
-                    display = LaserBeamDisplayProfile.fromBeam(beam);
-                    frame = beam.frame();
-                }
+                DisplayState beam = segments.get(draw.segmentIndex()).start();
+                display = LaserBeamDisplayProfile.fromBeam(beam);
+                frame = beam.frame();
 
                 return false;
             }
@@ -227,22 +191,10 @@ public final class LaserBeamView {
             if (vertex < points.size()) {
                 Vec3 point = points.get(vertex++);
                 center = center.add(point);
-                double radius;
-                MappedData mapped = draw.mapped();
-                if (mapped != null) {
-                    LaserBeamBrightness field = mapped.widthField();
-                    radius = field.profile().radius();
-                    if (field.profile().widthSlope() != 0) {
-                        radius = Math.abs(field.referenceWidthAt(point)) / 2;
-                    }
-                }
-                else {
-                    DisplayFrame beamFrame = Objects.requireNonNull(frame, "Unmapped laser beam radius sampling requires a beam frame.");
-                    Vec3 world = context.toWorldPosition(point);
-                    double distance = Math.clamp(world.subtract(beamFrame.origin()).dot(beamFrame.direction()), 0, segments.get(draw.segmentIndex()).remainingRange());
-                    radius = Objects.requireNonNull(display, "Unmapped laser beam radius sampling requires a display profile.").radiusAt(distance);
-                }
-
+                DisplayFrame beamFrame = Objects.requireNonNull(frame, "Whole-beam radius sampling requires a beam frame.");
+                Vec3 world = context.toWorldPosition(point);
+                double distance = Math.clamp(world.subtract(beamFrame.origin()).dot(beamFrame.direction()), 0, segments.get(draw.segmentIndex()).remainingRange());
+                double radius = Objects.requireNonNull(display, "Whole-beam radius sampling requires a display profile.").radiusAt(distance);
                 radii[cap] = Math.max(radii[cap], radius);
                 return false;
             }

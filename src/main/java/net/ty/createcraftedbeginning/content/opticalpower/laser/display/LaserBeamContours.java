@@ -6,9 +6,7 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamProfile;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamContext.DisplaySegment;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.DrawSection;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.MappedData;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamSurfaces.Face;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.OpticalPlane;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -57,14 +55,7 @@ public final class LaserBeamContours {
         for (Face face : faces) {
             Vec3 normal = face.normal();
             DrawSection draw = face.draw();
-            MappedData mapped = draw.mapped();
-            DisplayKey display;
-            if (mapped == null) {
-                display = new DisplayKey(draw.appearance(), draw.brightness(), false, null, null, null);
-            }
-            else {
-                display = new DisplayKey(draw.appearance(), draw.brightness(), true, mapped.widthField(), mapped.haloField(), mapped.endPlanes());
-            }
+            DisplayKey display = new DisplayKey(draw.appearance(), draw.brightness());
 
             long x = Math.round(normal.x * NORMAL_SCALE);
             long y = Math.round(normal.y * NORMAL_SCALE);
@@ -206,14 +197,7 @@ public final class LaserBeamContours {
         private boolean group(Face face) {
             Vec3 normal = face.normal();
             DrawSection draw = face.draw();
-            MappedData mapped = draw.mapped();
-            DisplayKey display;
-            if (mapped == null) {
-                display = new DisplayKey(draw.appearance(), draw.brightness(), false, null, null, null);
-            }
-            else {
-                display = new DisplayKey(draw.appearance(), draw.brightness(), true, mapped.widthField(), mapped.haloField(), mapped.endPlanes());
-            }
+            DisplayKey display = new DisplayKey(draw.appearance(), draw.brightness());
 
             long x = Math.round(normal.x * NORMAL_SCALE);
             long y = Math.round(normal.y * NORMAL_SCALE);
@@ -323,16 +307,6 @@ public final class LaserBeamContours {
         DrawSection firstDraw = first.draw();
         DrawSection secondDraw = second.draw();
         if (!firstDraw.appearance().equals(secondDraw.appearance()) || !Objects.equals(firstDraw.brightness(), secondDraw.brightness())) {
-            return false;
-        }
-
-        MappedData firstMapped = firstDraw.mapped();
-        MappedData secondMapped = secondDraw.mapped();
-        if ((firstMapped == null) != (secondMapped == null)) {
-            return false;
-        }
-
-        if (firstMapped != null && (!firstMapped.widthField().equals(secondMapped.widthField()) || !firstMapped.haloField().equals(secondMapped.haloField()) || !Objects.equals(firstMapped.endPlanes(), secondMapped.endPlanes()))) {
             return false;
         }
 
@@ -553,7 +527,7 @@ public final class LaserBeamContours {
 
     private record Edge(PointKey start, PointKey end) {}
 
-    private record DisplayKey(LaserBeamAppearance appearance, @Nullable LaserBeamBrightness brightness, boolean mapped, @Nullable LaserBeamBrightness widthField, @Nullable LaserBeamBrightness haloField, @Nullable List<OpticalPlane> endPlanes) {}
+    private record DisplayKey(LaserBeamAppearance appearance, @Nullable LaserBeamBrightness brightness) {}
 
     private record NormalKey(long x, long y, long z, long distance, DisplayKey display) {}
 

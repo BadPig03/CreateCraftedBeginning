@@ -12,7 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkBinding;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkSavedData;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkSavedData.Node;
@@ -39,7 +39,7 @@ final class AmethystAntennaConnection {
             return false;
         }
 
-        if (!CCBBlocks.AMETHYST_LOADER_BLOCK.has(level.getBlockState(target))) {
+        if (!CCBBlocks.CHUNK_STABILIZER_BLOCK.has(level.getBlockState(target))) {
             return false;
         }
 
@@ -83,7 +83,7 @@ final class AmethystAntennaConnection {
             }
         }
 
-        return CCBBlocks.AMETHYST_LOADER_BLOCK.has(level.getBlockState(target));
+        return CCBBlocks.CHUNK_STABILIZER_BLOCK.has(level.getBlockState(target));
     }
 
     static void reconcile(AmethystAntennaBlockEntity antenna, @Nullable LoadingNetworkBinding binding) {
@@ -106,7 +106,7 @@ final class AmethystAntennaConnection {
         }
 
         UUID host = SubLevelBridge.subLevelId(level, pos);
-        if (!Objects.equals(host, SubLevelBridge.subLevelId(level, target)) || !(level.getBlockEntity(target) instanceof AmethystLoaderBlockEntity loader)) {
+        if (!Objects.equals(host, SubLevelBridge.subLevelId(level, target)) || !(level.getBlockEntity(target) instanceof ChunkStabilizerBlockEntity loader)) {
             data.removeAntenna(antennaPos, antenna.identity());
             return;
         }
@@ -125,7 +125,7 @@ final class AmethystAntennaConnection {
     static void remove(ServerLevel level, BlockPos pos, BlockState state, UUID identity) {
         LoadingNetworkSavedData.get(level).removeAntenna(GlobalPos.of(level.dimension(), pos), identity);
         BlockPos target = pos.relative(state.getValue(DirectionalBlock.FACING).getOpposite());
-        if (SubLevelBridge.subLevelId(level, target) == null || !level.isLoaded(target) || !(level.getBlockEntity(target) instanceof AmethystLoaderBlockEntity loader)) {
+        if (SubLevelBridge.subLevelId(level, target) == null || !level.isLoaded(target) || !(level.getBlockEntity(target) instanceof ChunkStabilizerBlockEntity loader)) {
             return;
         }
 

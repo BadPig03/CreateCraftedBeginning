@@ -138,12 +138,12 @@ final class AirtightFractionationTowerStructure {
         if (!new ResourceTransaction().add(new AirtightFractionationTowerAssembly(level, tanks, origin, height)).commit()) {
             return new AssemblyFailure(origin, end, INVALID_STRUCTURE, false);
         }
-        CCBAdvancements.DISSOCIATIVE_RECOMBINATION.awardTo(player);
+        CCBAdvancements.MATTER_DECONSTRUCTION.awardTo(player);
         if (height != AirtightFractionationTowerBlock.MAX_HEIGHT) {
             return null;
         }
 
-        CCBAdvancements.BREAK_THROUGH_THE_DOME.awardTo(player);
+        CCBAdvancements.HIGH_PRECISION_CHIMNEY.awardTo(player);
         return null;
     }
 

@@ -124,6 +124,7 @@ public class CCBAdvancement {
 
     public enum TaskType {
         HIDDEN_TASK(AdvancementType.TASK, false, false, false),
+        TASK(AdvancementType.TASK, true, false, false),
         GOAL(AdvancementType.GOAL, true, true, false),
         HIDDEN_GOAL(AdvancementType.GOAL, true, true, true);
 
@@ -141,7 +142,7 @@ public class CCBAdvancement {
     }
 
     public class Builder {
-        private TaskType type = TaskType.GOAL;
+        private TaskType type = TaskType.TASK;
         private boolean externalTrigger;
         private int keyIndex;
         private ItemStack icon;

@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning;
 
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -53,8 +52,6 @@ import net.ty.createcraftedbeginning.registry.CCBTags;
 import net.ty.createcraftedbeginning.registry.CCBUnpackingHandlers;
 import net.ty.createcraftedbeginning.registry.gas.CCBGases;
 import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
-import org.jetbrains.annotations.Contract;
-import org.slf4j.Logger;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -62,14 +59,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @Mod(CCBAPI.MOD_ID)
 public class CreateCraftedBeginning {
-    public static final Logger LOGGER = CCBAPI.LOGGER;
-
     private static final CreateRegistrate CCB_REGISTRATE = CCBRegistrateProvider.get();
 
     public CreateCraftedBeginning(IEventBus modEventBus, ModContainer modContainer) {
         CCBCompatBootstrap.initialize();
         CCB_REGISTRATE.registerEventListeners(modEventBus);
-        bootstrapRegistrateEntries();
+        CCBMountedStorage.register();
+        CCBDisplaySources.register();
+        CCBBlocks.register();
+        CCBItems.register();
+        CCBBlockEntities.register();
+        CCBEntityTypes.register();
 
         CCBSoundEvents.prepare();
         CCBArmInteractionPointTypes.register(modEventBus);
@@ -87,14 +87,18 @@ public class CreateCraftedBeginning {
         CCBConfig.register(modContainer);
         CCBStressProviders.register(CCBConfig.server().kinetics);
 
-        addRegistrationListeners(modEventBus);
+        modEventBus.addListener(CreateCraftedBeginning::registerEventListener);
+        modEventBus.addListener(CreateCraftedBeginning::registerRegistries);
+
+        CCBGases.GAS_REGISTER.register(modEventBus);
+        GasIngredientTypes.REGISTER.register(modEventBus);
         modEventBus.addListener(CreateCraftedBeginning::init);
         modEventBus.addListener(EventPriority.HIGHEST, CCBDataGen::gatherDataHighPriority);
         modEventBus.addListener(EventPriority.LOWEST, CCBDataGen::gatherData);
         modEventBus.addListener(CCBSoundEvents::register);
     }
 
-    public static void init(FMLCommonSetupEvent event) {
+    private static void init(FMLCommonSetupEvent event) {
         CCBCompatBootstrap.commonSetup(event);
         CCBFluids.registerFluidInteractions();
 
@@ -112,32 +116,6 @@ public class CreateCraftedBeginning {
             ModLoader.postEvent(new RegisterAtmosphereProvidersEvent());
             CCBUnpackingHandlers.register();
         });
-    }
-
-    @Contract("_ -> new")
-    public static ResourceLocation asResource(String path) {
-        return CCBAPI.asResource(path);
-    }
-
-    public static CreateRegistrate registrate() {
-        return CCBRegistrateProvider.get();
-    }
-
-    private static void bootstrapRegistrateEntries() {
-        CCBMountedStorage.register();
-        CCBDisplaySources.register();
-        CCBBlocks.register();
-        CCBItems.register();
-        CCBBlockEntities.register();
-        CCBEntityTypes.register();
-    }
-
-    private static void addRegistrationListeners(IEventBus modEventBus) {
-        modEventBus.addListener(CreateCraftedBeginning::registerEventListener);
-        modEventBus.addListener(CreateCraftedBeginning::registerRegistries);
-
-        CCBGases.GAS_REGISTER.register(modEventBus);
-        GasIngredientTypes.REGISTER.register(modEventBus);
     }
 
     private static void registerEventListener(RegisterEvent event) {

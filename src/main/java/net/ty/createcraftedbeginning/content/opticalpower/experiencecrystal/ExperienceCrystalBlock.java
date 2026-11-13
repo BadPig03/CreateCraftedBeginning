@@ -4,13 +4,21 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.AmethystClusterBlock;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
+import net.neoforged.neoforge.common.util.FakePlayer;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -70,6 +78,21 @@ public final class ExperienceCrystalBlock extends AmethystClusterBlock {
             default -> CCBBlocks.EXPERIENCE_CLUSTER.getDefaultState();
         };
         return level.setBlockAndUpdate(pos, next.setValue(FACING, facing).setValue(WATERLOGGED, waterlogged));
+    }
+
+    @Override
+    public void playerDestroy(Level level, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
+        super.playerDestroy(level, player, pos, state, blockEntity, tool);
+        if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer) || player instanceof FakePlayer || !isMature()) {
+            return;
+        }
+
+        BlockPos support = pos.relative(state.getValue(FACING).getOpposite());
+        if (!serverLevel.isLoaded(support) || !serverLevel.getBlockState(support).is(Blocks.SCULK)) {
+            return;
+        }
+
+        CCBAdvancements.SCULK_HARVEST.awardTo(serverPlayer);
     }
 
     @Override

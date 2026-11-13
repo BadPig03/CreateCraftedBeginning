@@ -153,7 +153,7 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.BUNDLE_OF_JOY);
+        advancementBehaviour = new CCBAdvancementBehaviour(this, CCBAdvancements.TECHNOLOGICAL_ITERATION);
         behaviours.add(advancementBehaviour);
         addFluidBehaviours(behaviours);
         addGasBehaviours(behaviours);
@@ -403,8 +403,8 @@ public class AirtightReactorKettleBlockEntity extends SmartBlockEntity implement
         return controller;
     }
 
-    void awardBackToBasics() {
-        advancementBehaviour.awardPlayer(CCBAdvancements.BUNDLE_OF_JOY);
+    void awardTechnologicalIteration() {
+        advancementBehaviour.awardPlayer(CCBAdvancements.TECHNOLOGICAL_ITERATION);
     }
 
     IItemHandler getItemPortCapability() {

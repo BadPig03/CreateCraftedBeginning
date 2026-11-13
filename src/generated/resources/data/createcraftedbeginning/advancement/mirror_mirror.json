@@ -1,0 +1,35 @@
+{
+  "parent": "createcraftedbeginning:light_on_the_motion_of_photons",
+  "criteria": {
+    "0": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createcraftedbeginning:amethyst_mirror"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.mirror_mirror.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:amethyst_mirror"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.mirror_mirror"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

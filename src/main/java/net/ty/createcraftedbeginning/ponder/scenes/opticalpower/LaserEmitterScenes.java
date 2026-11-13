@@ -15,9 +15,10 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterRangeBehaviour;
-import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverBlockEntity;
-import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverPort;
-import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverSerialization;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalchamber.PhotothermalChamberBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalchamber.PhotothermalChamberPort;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalchamber.PhotothermalChamberSerialization;
+import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -46,6 +47,7 @@ public final class LaserEmitterScenes {
         Selection emitterSelection = util.select().position(emitterPos);
         Selection inputSelection = util.select().position(inputPos);
         Selection lineSelection = util.select().fromTo(lineStartPos, lineEndPos);
+        Selection fiberSelection = lineSelection.copy().add(inputSelection);
         Selection collectorSelection = util.select().fromTo(collectorStartPos, collectorEndPos);
         Selection machineSelection = emitterSelection.copy().add(util.select().position(receiverPos));
         Selection blockerSelection = util.select().position(blockerPos);
@@ -70,6 +72,7 @@ public final class LaserEmitterScenes {
         Object emitterObject = new Object();
 
         scene.world().setBlocks(blockerSelection, Blocks.AIR.defaultBlockState(), false);
+        scene.world().setBlocks(fiberSelection, CCBBlocks.OPTICAL_FIBER_BLOCK.getDefaultState(), false);
 
         scene.idle(20);
         scene.world().showSection(collectorSelection, Direction.DOWN);
@@ -82,15 +85,14 @@ public final class LaserEmitterScenes {
         scene.world().showSection(machineSelection, Direction.DOWN);
 
         scene.idle(20);
+        scene.world().restoreBlocks(fiberSelection);
         scene.overlay().showText(60).text("Connect Optical Fibers to the back of a Laser Emitter to emit a laser from the front").colored(PonderPalette.GREEN).pointAt(inputVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, inputObject, inputArea, 60);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outputObject, outputArea, 60);
-
-        scene.idle(20);
         scene.world().modifyBlockEntity(emitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(10));
         setReceiverPower(scene, receiverPos, 10);
 
-        scene.idle(60);
+        scene.idle(80);
         scene.overlay().showText(60).text("Use the side panel to adjust the laser's range").colored(PonderPalette.BLUE).pointAt(panelVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, panelObject, panelArea, 60);
         scene.overlay().showControls(panelVec, Pointing.DOWN, 60).scroll();
@@ -100,7 +102,7 @@ public final class LaserEmitterScenes {
         setReceiverPower(scene, receiverPos, 0);
 
         scene.idle(60);
-        scene.overlay().showText(60).text("Increase the range to reach more distant devices without changing the beam's strength").colored(PonderPalette.GREEN).pointAt(receiverVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Increase the range to reach more distant devices without changing the beam's strength").colored(PonderPalette.GREEN).placeNearTarget().pointAt(receiverVec).attachKeyFrame();
         scene.overlay().showControls(panelVec, Pointing.DOWN, 20).scroll();
 
         scene.idle(20);
@@ -108,7 +110,7 @@ public final class LaserEmitterScenes {
         setReceiverPower(scene, receiverPos, 10);
 
         scene.idle(60);
-        scene.overlay().showText(60).text("Blocking the laser's path cuts off luminous flux to devices behind the obstruction").colored(PonderPalette.RED).pointAt(blockerVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("If any part of the beam hits an obstacle, the whole beam stops there").colored(PonderPalette.RED).pointAt(blockerVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
         scene.world().restoreBlocks(blockerSelection);
@@ -134,14 +136,14 @@ public final class LaserEmitterScenes {
     }
 
     private static void setReceiverPower(CreateSceneBuilder scene, BlockPos receiverPos, double fluxLm) {
-        scene.world().modifyBlockEntity(receiverPos, PhotothermalReceiverBlockEntity.class, receiver -> {
+        scene.world().modifyBlockEntity(receiverPos, PhotothermalChamberBlockEntity.class, receiver -> {
             int ports = 0;
             if (fluxLm > 0) {
-                ports = 1 << PhotothermalReceiverPort.WEST.ordinal();
+                ports = 1 << PhotothermalChamberPort.WEST.ordinal();
             }
 
             CompoundTag compoundTag = new CompoundTag();
-            PhotothermalReceiverSerialization.writeIllumination(compoundTag, ports, fluxLm, fluxLm, fluxLm);
+            PhotothermalChamberSerialization.writeIllumination(compoundTag, ports, fluxLm, fluxLm, fluxLm);
             receiver.handleUpdateTag(compoundTag, scene.world().getHolderLookupProvider());
         });
     }

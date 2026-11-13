@@ -1,7 +1,9 @@
 package net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.opticalpower.energy.OpticalEnergyStorage;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -48,8 +50,37 @@ public final class AmethystSoundSuppressorSerialization {
         return NbtValues.getBooleanOrDefault(tag, COMPOUND_KEY_SHOW_OUTLINE, fallback);
     }
 
-    static long readGrowth(CompoundTag tag, OpticalEnergyStorage storage) {
-        storage.read(tag);
+    static @Nullable ClientSnapshot readClient(CompoundTag tag, BlockPos pos, boolean reportFailure) {
+        double quantity = OpticalEnergyStorage.readQuantityLumenSeconds(tag);
+        if (Double.isNaN(quantity)) {
+            if (reportFailure) {
+                CCBAPI.LOGGER.warn("Rejected the amethyst sound suppressor update at {}: 'QuantityLumenSeconds' must be a finite non-negative number in lm·s.", pos);
+            }
+
+            return null;
+        }
+
+        boolean hasReceived = tag.contains(COMPOUND_KEY_RECEIVED_FLUX_LM);
+        boolean hasQualified = tag.contains(COMPOUND_KEY_QUALIFIED_FLUX_LM);
+        double received = hasReceived ? NbtValues.getDoubleOrDefault(tag, COMPOUND_KEY_RECEIVED_FLUX_LM, Double.NaN) : 0;
+        double qualified = hasQualified ? NbtValues.getDoubleOrDefault(tag, COMPOUND_KEY_QUALIFIED_FLUX_LM, Double.NaN) : 0;
+        if (!Double.isFinite(received) || received < 0 || !Double.isFinite(qualified) || qualified < 0 || hasReceived && hasQualified && qualified > received) {
+            if (reportFailure) {
+                CCBAPI.LOGGER.warn("Rejected the amethyst sound suppressor update at {}: luminous flux must be numeric and finite with 0 <= qualified <= received when both fields are present; got received={}, qualified={} lm.", pos, received, qualified);
+            }
+
+            return null;
+        }
+
+        long growthTick = readGrowthTick(tag);
+        if (!hasReceived || !hasQualified) {
+            return new ClientSnapshot(quantity, growthTick, 0, 0);
+        }
+
+        return new ClientSnapshot(quantity, growthTick, received, qualified);
+    }
+
+    static long readGrowthTick(CompoundTag tag) {
         if (!tag.contains(COMPOUND_KEY_LAST_GROWTH_TICK)) {
             return -1;
         }
@@ -57,15 +88,5 @@ public final class AmethystSoundSuppressorSerialization {
         return tag.getLong(COMPOUND_KEY_LAST_GROWTH_TICK);
     }
 
-    static Illumination readIllumination(CompoundTag tag) {
-        double received = NbtValues.getDoubleOrDefault(tag, COMPOUND_KEY_RECEIVED_FLUX_LM, Double.NaN);
-        double qualified = NbtValues.getDoubleOrDefault(tag, COMPOUND_KEY_QUALIFIED_FLUX_LM, Double.NaN);
-        if (!Double.isFinite(received) || received < 0 || !Double.isFinite(qualified) || qualified < 0 || qualified > received) {
-            return new Illumination(0, 0);
-        }
-
-        return new Illumination(received, qualified);
-    }
-
-    record Illumination(double receivedFluxLm, double qualifiedFluxLm) {}
+    record ClientSnapshot(double quantityLumenSeconds, long lastGrowthTick, double receivedFluxLm, double qualifiedFluxLm) {}
 }

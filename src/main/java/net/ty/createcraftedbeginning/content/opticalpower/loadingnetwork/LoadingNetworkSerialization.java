@@ -59,7 +59,7 @@ final class LoadingNetworkSerialization {
             UUID id = entry.getUUID(COMPOUND_KEY_ID);
             String name = entry.getString(COMPOUND_KEY_NAME);
             Integer customColor = entry.contains(COMPOUND_KEY_CUSTOM_COLOR, Tag.TAG_INT) ? entry.getInt(COMPOUND_KEY_CUSTOM_COLOR) : null;
-            data.networks.put(id, new Network(entry.getUUID(COMPOUND_KEY_OWNER), name, NbtValues.getBooleanOrDefault(entry, COMPOUND_KEY_ENABLED, true), LoadingNetworkColors.from(id), customColor));
+            data.networks.put(id, new Network(entry.getUUID(COMPOUND_KEY_OWNER), name, LoadingNetworkColors.from(id), customColor));
         }
         ListTag nodes = compoundTag.getList(COMPOUND_KEY_NODES, Tag.TAG_COMPOUND);
         for (int i = 0; i < nodes.size(); i++) {
@@ -98,7 +98,6 @@ final class LoadingNetworkSerialization {
             entry.putUUID(COMPOUND_KEY_ID, id);
             entry.putUUID(COMPOUND_KEY_OWNER, network.owner());
             entry.putString(COMPOUND_KEY_NAME, network.name());
-            entry.putBoolean(COMPOUND_KEY_ENABLED, network.enabled());
             Integer customColor = network.customColor();
             if (customColor != null) {
                 entry.putInt(COMPOUND_KEY_CUSTOM_COLOR, customColor);

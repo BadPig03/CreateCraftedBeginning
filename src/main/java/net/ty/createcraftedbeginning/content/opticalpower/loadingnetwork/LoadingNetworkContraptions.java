@@ -24,8 +24,8 @@ import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaSerialization;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderBlockEntity;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderSerialization;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerSerialization;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkSavedData.Node;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -64,7 +64,7 @@ public final class LoadingNetworkContraptions {
             BlockPos local = loaderPos.pos().subtract(origin);
             StructureBlockInfo loader = blocks.get(local);
             StructureBlockInfo antenna = blocks.get(antennaPos.pos().subtract(origin));
-            boolean hasLoader = loader != null && loader.state().is(CCBBlocks.AMETHYST_LOADER_BLOCK.get());
+            boolean hasLoader = loader != null && loader.state().is(CCBBlocks.CHUNK_STABILIZER_BLOCK.get());
             boolean hasAntenna = antenna != null && antenna.state().is(CCBBlocks.AMETHYST_ANTENNA_BLOCK.get());
             if (!hasLoader && !hasAntenna) {
                 continue;
@@ -153,7 +153,7 @@ public final class LoadingNetworkContraptions {
             BlockPos loaderPos = pos.pos();
             BlockPos antennaPos = node.antenna().pos();
             data.endPlacement(pos);
-            if (!level.isLoaded(loaderPos) || !(level.getBlockEntity(loaderPos) instanceof AmethystLoaderBlockEntity loader) || !node.loaderId().equals(loader.networkNodeId())) {
+            if (!level.isLoaded(loaderPos) || !(level.getBlockEntity(loaderPos) instanceof ChunkStabilizerBlockEntity loader) || !node.loaderId().equals(loader.networkNodeId())) {
                 continue;
             }
 
@@ -254,7 +254,7 @@ public final class LoadingNetworkContraptions {
     }
 
     private static @Nullable Node readTransfer(@Nullable StructureBlockInfo loader) {
-        if (loader == null || !loader.state().is(CCBBlocks.AMETHYST_LOADER_BLOCK.get())) {
+        if (loader == null || !loader.state().is(CCBBlocks.CHUNK_STABILIZER_BLOCK.get())) {
             return null;
         }
 
@@ -268,11 +268,11 @@ public final class LoadingNetworkContraptions {
         }
 
         BlockState antennaState = antenna.state();
-        if (!loader.state().is(CCBBlocks.AMETHYST_LOADER_BLOCK.get()) || !antennaState.is(CCBBlocks.AMETHYST_ANTENNA_BLOCK.get()) || !local.equals(antenna.pos().relative(antennaState.getValue(DirectionalBlock.FACING).getOpposite()))) {
+        if (!loader.state().is(CCBBlocks.CHUNK_STABILIZER_BLOCK.get()) || !antennaState.is(CCBBlocks.AMETHYST_ANTENNA_BLOCK.get()) || !local.equals(antenna.pos().relative(antennaState.getValue(DirectionalBlock.FACING).getOpposite()))) {
             return false;
         }
 
-        UUID loaderId = AmethystLoaderSerialization.readNetworkNodeId(loader.nbt());
+        UUID loaderId = ChunkStabilizerSerialization.readNetworkNodeId(loader.nbt());
         CompoundTag antennaTag = antenna.nbt();
         if (loaderId == null || antennaTag == null) {
             return false;

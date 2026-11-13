@@ -55,6 +55,11 @@ public final class OpticalExposureLedger {
                 throw new IllegalArgumentException("Exposure dimension must match source level " + dimension + "; got " + targetDimension + '.');
             }
 
+            double receivedFluxLm = exposure.receivedFluxLm();
+            if (!Double.isFinite(receivedFluxLm) || receivedFluxLm < 0 || receivedFluxLm > exposure.absorbedFluxLm()) {
+                throw new IllegalArgumentException("Received exposure flux must be finite and in [0, " + exposure.absorbedFluxLm() + "] lm; got " + receivedFluxLm + " lm.");
+            }
+
             BlockEntity recipient = null;
             BlockPos pos = target.blockPos();
             if (target.contraptionId() == null && level.isLoaded(pos)) {

@@ -1,0 +1,28 @@
+{
+  "parent": "createcraftedbeginning:let_there_be_light",
+  "criteria": {
+    "0": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "color": "#DBA213",
+      "translate": "advancement.createcraftedbeginning.light_on_the_motion_of_photons.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "createcraftedbeginning:laser_emitter"
+    },
+    "title": {
+      "translate": "advancement.createcraftedbeginning.light_on_the_motion_of_photons"
+    }
+  },
+  "requirements": [
+    [
+      "0"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

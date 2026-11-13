@@ -63,16 +63,16 @@ import net.ty.createcraftedbeginning.content.end.endcasing.EndCasingBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystlens.AmethystLensBlock;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderBlock;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderMovementBehaviour;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderMovingInteraction;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorMovementBehaviour;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerMovementBehaviour;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerMovingInteraction;
 import net.ty.createcraftedbeginning.content.opticalpower.experiencecrystal.ExperienceCrystalBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
-import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverBlock;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalchamber.PhotothermalChamberBlock;
 import net.ty.createcraftedbeginning.registry.CCBCreativeTabLayout.CCBCreativeTabSection;
 import net.ty.createcraftedbeginning.registry.registrate.AerogelRegistration;
 import net.ty.createcraftedbeginning.registry.registrate.AirtightBlockProperties;
@@ -161,9 +161,9 @@ public class CCBBlocks {
     public static final BlockEntry<OpticalFiberBlock> OPTICAL_FIBER_BLOCK = CCB_REGISTRATE.block("optical_fiber", OpticalFiberBlock::new).transform(OpticalRegistration.opticalFiber()).transform(OpticalRegistration.opticalComponentProperties()).register();
     public static final BlockEntry<AmethystCollectorPanelBlock> AMETHYST_COLLECTOR_PANEL_BLOCK = CCB_REGISTRATE.block("amethyst_collector_panel", AmethystCollectorPanelBlock::new).transform(OpticalRegistration.amethystCollectorPanel()).transform(OpticalRegistration.opticalComponentProperties()).register();
     public static final BlockEntry<LaserEmitterBlock> LASER_EMITTER_BLOCK = CCB_REGISTRATE.block("laser_emitter", LaserEmitterBlock::new).transform(OpticalRegistration.laserEmitter()).transform(OpticalRegistration.opticalComponentProperties()).register();
-    public static final BlockEntry<PhotothermalReceiverBlock> PHOTOTHERMAL_RECEIVER_BLOCK = CCB_REGISTRATE.block("photothermal_receiver", PhotothermalReceiverBlock::new).transform(OpticalRegistration.photothermalReceiver()).transform(OpticalRegistration.photothermalReceiverProperties()).register();
+    public static final BlockEntry<PhotothermalChamberBlock> PHOTOTHERMAL_CHAMBER_BLOCK = CCB_REGISTRATE.block("photothermal_chamber", PhotothermalChamberBlock::new).lang("Photothermal Chamber").transform(OpticalRegistration.photothermalChamber()).transform(OpticalRegistration.photothermalChamberProperties()).register();
 
-    public static final BlockEntry<AmethystLoaderBlock> AMETHYST_LOADER_BLOCK = CCB_REGISTRATE.block("amethyst_loader", AmethystLoaderBlock::new).transform(OpticalRegistration.amethystLoader()).transform(OpticalRegistration.opticalComponentProperties()).onRegister(MovementBehaviour.movementBehaviour(new AmethystLoaderMovementBehaviour())).onRegister(MovingInteractionBehaviour.interactionBehaviour(new AmethystLoaderMovingInteraction())).register();
+    public static final BlockEntry<ChunkStabilizerBlock> CHUNK_STABILIZER_BLOCK = CCB_REGISTRATE.block("chunk_stabilizer", ChunkStabilizerBlock::new).lang("Chunk Stabilizer").transform(OpticalRegistration.chunkStabilizer()).transform(OpticalRegistration.opticalComponentProperties()).onRegister(MovementBehaviour.movementBehaviour(new ChunkStabilizerMovementBehaviour())).onRegister(MovingInteractionBehaviour.interactionBehaviour(new ChunkStabilizerMovingInteraction())).register();
     public static final BlockEntry<AmethystAntennaBlock> AMETHYST_ANTENNA_BLOCK = CCB_REGISTRATE.block("amethyst_antenna", AmethystAntennaBlock::new).transform(OpticalRegistration.amethystAntenna()).transform(OpticalRegistration.opticalComponentProperties()).onRegister(AmethystAntennaBlock::registerMovementChecks).register();
 
     public static final BlockEntry<AmethystMirrorBlock> AMETHYST_MIRROR_BLOCK = CCB_REGISTRATE.block("amethyst_mirror", AmethystMirrorBlock::new).transform(OpticalRegistration.amethystMirror()).transform(OpticalRegistration.opticalComponentProperties()).register();

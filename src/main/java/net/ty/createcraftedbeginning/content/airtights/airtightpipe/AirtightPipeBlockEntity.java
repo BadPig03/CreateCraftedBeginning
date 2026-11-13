@@ -9,18 +9,23 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.UUID;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AirtightPipeBlockEntity extends AbstractAirtightPipeBlockEntity implements TransformableBlockEntity, IHaveHoveringInformation {
+    private @Nullable UUID pendingPlacer;
+
     public AirtightPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
@@ -63,5 +68,24 @@ public class AirtightPipeBlockEntity extends AbstractAirtightPipeBlockEntity imp
     @Override
     public boolean allowsGasTransport(Level level, BlockState blockState, BlockPos blockPos, Direction direction) {
         return AirtightPipeConnections.isOpen(blockState, direction);
+    }
+
+    void place(ServerLevel level, UUID placer) {
+        pendingPlacer = placer;
+        if (level.captureBlockSnapshots) {
+            return;
+        }
+
+        commitPlacement(level);
+    }
+
+    void commitPlacement(ServerLevel level) {
+        UUID placer = pendingPlacer;
+        pendingPlacer = null;
+        if (placer == null) {
+            return;
+        }
+
+        AirtightPipeAdvancement.awardCasing(level, worldPosition, level.getPlayerByUUID(placer));
     }
 }

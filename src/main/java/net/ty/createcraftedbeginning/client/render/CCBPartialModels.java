@@ -17,12 +17,12 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CCBPartialModels {
-    public static final PartialModel AMETHYST_LOADER_CORE = block("amethyst_loader/core");
+    public static final PartialModel CHUNK_STABILIZER_CORE = block("chunk_stabilizer/core");
     public static final PartialModel AMETHYST_MIRROR_PANEL = block("amethyst_mirror/panel");
-    public static final PartialModel PHOTOTHERMAL_RECEIVER_HORIZONTAL_PORT = block("photothermal_receiver/ports/horizontal");
-    public static final PartialModel PHOTOTHERMAL_RECEIVER_HORIZONTAL_GLOW_PORT = block("photothermal_receiver/ports/horizontal_glow");
-    public static final PartialModel PHOTOTHERMAL_RECEIVER_VERTICAL_PORT = block("photothermal_receiver/ports/vertical");
-    public static final PartialModel PHOTOTHERMAL_RECEIVER_VERTICAL_GLOW_PORT = block("photothermal_receiver/ports/vertical_glow");
+    public static final PartialModel PHOTOTHERMAL_CHAMBER_HORIZONTAL_PORT = block("photothermal_chamber/ports/horizontal");
+    public static final PartialModel PHOTOTHERMAL_CHAMBER_HORIZONTAL_GLOW_PORT = block("photothermal_chamber/ports/horizontal_glow");
+    public static final PartialModel PHOTOTHERMAL_CHAMBER_VERTICAL_PORT = block("photothermal_chamber/ports/vertical");
+    public static final PartialModel PHOTOTHERMAL_CHAMBER_VERTICAL_GLOW_PORT = block("photothermal_chamber/ports/vertical_glow");
 
     public static final PartialModel BREEZE_TRAIN_HAT = entity("train_hat");
     public static final PartialModel BREEZE_LOGISTICS_HAT = entity("logistics_hat");

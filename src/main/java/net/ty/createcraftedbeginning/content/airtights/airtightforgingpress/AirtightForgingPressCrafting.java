@@ -171,7 +171,7 @@ public final class AirtightForgingPressCrafting {
             return true;
         }
 
-        press.getBehaviour(CCBAdvancementBehaviour.TYPE).awardPlayer(CCBAdvancements.SUPERMASSIVE);
+        press.getBehaviour(CCBAdvancementBehaviour.TYPE).awardPlayer(CCBAdvancements.REAL_WORLD_ALCHEMY);
         return true;
     }
 

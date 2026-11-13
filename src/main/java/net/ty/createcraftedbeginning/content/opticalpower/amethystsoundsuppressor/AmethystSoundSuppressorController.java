@@ -4,11 +4,11 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorSerialization.Illumination;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorSerialization.ClientSnapshot;
 import net.ty.createcraftedbeginning.content.opticalpower.energy.OpticalEnergyStorage;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.exposure.OpticalExposure;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.exposure.OpticalExposureSettlement;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.exposure.OpticalExposureSettlement.Receipt;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.exposure.OpticalExposureSettlement;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.exposure.OpticalIllumination;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -57,7 +57,7 @@ public final class AmethystSoundSuppressorController {
         double previousQualifiedFluxLm = qualifiedFluxLm;
         double previousQuantity = storage.getQuantityLumenSeconds();
         OpticalIllumination illumination = new OpticalIllumination();
-        VoxelShape receivingShape = AmethystSoundSuppressorPort.getReceivingShape();
+        VoxelShape receivingShape = AmethystSoundSuppressorPort.INSTANCE.getReceivingShape();
         VoxelShape collisionShape = AmethystSoundSuppressorPort.INSTANCE.getCollisionShape();
         for (OpticalExposure exposure : receipt.exposures()) {
             illumination.add(exposure, 0, receivingShape, collisionShape);
@@ -83,15 +83,16 @@ public final class AmethystSoundSuppressorController {
         AmethystSoundSuppressorSerialization.write(tag, storage, lastCrystalGrowthTick, receivedFluxLm, qualifiedFluxLm, clientPacket);
     }
 
-    void read(CompoundTag tag, boolean clientPacket) {
-        lastCrystalGrowthTick = AmethystSoundSuppressorSerialization.readGrowth(tag, storage);
-        if (!clientPacket) {
-            return;
-        }
+    void readSaved(CompoundTag tag) {
+        storage.readSaved(tag, suppressor.getBlockPos());
+        lastCrystalGrowthTick = AmethystSoundSuppressorSerialization.readGrowthTick(tag);
+    }
 
-        Illumination illumination = AmethystSoundSuppressorSerialization.readIllumination(tag);
-        receivedFluxLm = illumination.receivedFluxLm();
-        qualifiedFluxLm = illumination.qualifiedFluxLm();
+    void restoreClientState(ClientSnapshot snapshot) {
+        storage.restoreQuantity(snapshot.quantityLumenSeconds());
+        lastCrystalGrowthTick = snapshot.lastGrowthTick();
+        receivedFluxLm = snapshot.receivedFluxLm();
+        qualifiedFluxLm = snapshot.qualifiedFluxLm();
     }
 
     double getReceivedFluxLm() {

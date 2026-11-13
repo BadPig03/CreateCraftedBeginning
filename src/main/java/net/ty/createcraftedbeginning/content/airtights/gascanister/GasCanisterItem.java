@@ -19,10 +19,12 @@ import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilter;
+import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterDescription;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -109,6 +111,15 @@ public class GasCanisterItem extends Item implements GasFilter {
     @Override
     public int getEnchantmentValue(ItemStack canister) {
         return 20;
+    }
+
+    @Override
+    public @Nullable GasFilterDescription describe(ItemStack filterItem) {
+        if (!(filterItem.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents filterContents)) {
+            return null;
+        }
+
+        return GasFilterDescription.ofContainer(filterContents);
     }
 
     @Override

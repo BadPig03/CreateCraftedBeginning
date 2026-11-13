@@ -9,6 +9,7 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBea
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamBrightness;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamSurfaces.Face;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamWork;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.beamrender.LaserBeamImpact.Vertex;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
@@ -72,11 +73,13 @@ final class LaserBeamVertices {
         private final LayerColor color;
         private final @Nullable PackedVertices packed;
         private final AABB bounds;
+        private final @Nullable Layer attachment;
 
         private Layer(List<Face> surfaces, Vec3 origin, LayerColor color, boolean prepare) {
             this.surfaces = surfaces;
             this.origin = origin;
             this.color = color;
+            attachment = null;
             double minX = Double.POSITIVE_INFINITY;
             double minY = Double.POSITIVE_INFINITY;
             double minZ = Double.POSITIVE_INFINITY;
@@ -116,11 +119,47 @@ final class LaserBeamVertices {
             this.surfaces = surfaces;
             this.origin = origin;
             this.color = color;
+            attachment = null;
             this.bounds = bounds;
             this.packed = packed;
         }
 
+        private Layer(Layer body, Layer attachment) {
+            surfaces = body.surfaces;
+            origin = body.origin;
+            color = body.color;
+            packed = body.packed;
+            bounds = body.bounds.minmax(attachment.bounds);
+            this.attachment = attachment;
+        }
+
+        static Layer impact(List<Vertex> vertices, Vec3 origin) {
+            PackedVertices packed = new PackedVertices(vertices.size());
+            AABB bounds = new AABB(0, 0, 0, 0, 0, 0);
+            for (int index = 0; index < vertices.size(); index++) {
+                Vertex vertex = vertices.get(index);
+                Vec3 point = vertex.position().subtract(origin);
+                packed.positions[index * 3] = (float) point.x;
+                packed.positions[index * 3 + 1] = (float) point.y;
+                packed.positions[index * 3 + 2] = (float) point.z;
+                packed.colors[index] = vertex.color();
+                packed.brightness[index * 2] = vertex.width();
+                packed.brightness[index * 2 + 1] = vertex.opacity();
+                AABB corner = new AABB(point, point);
+                bounds = index == 0 ? corner : bounds.minmax(corner);
+            }
+            return new Layer(List.of(), origin, COLORS.getFirst(), bounds, packed);
+        }
+
+        Layer withAttachment(Layer attachment) {
+            return new Layer(this, attachment);
+        }
+
         boolean isEmpty() {
+            if (attachment != null && !attachment.isEmpty()) {
+                return false;
+            }
+
             if (packed == null) {
                 return surfaces.isEmpty();
             }
@@ -135,14 +174,19 @@ final class LaserBeamVertices {
         void render(VertexConsumer buffer, Matrix4f pose) {
             if (packed == null) {
                 renderDirect(buffer, pose);
+            }
+            else {
+                for (int index = 0; index < packed.colors.length; index++) {
+                    int offset = index * 3;
+                    int attributeOffset = index * 2;
+                    buffer.addVertex(pose, packed.positions[offset], packed.positions[offset + 1], packed.positions[offset + 2]).setColor(packed.colors[index]).setUv(packed.brightness[attributeOffset], packed.brightness[attributeOffset + 1]);
+                }
+            }
+            if (attachment == null) {
                 return;
             }
 
-            for (int index = 0; index < packed.colors.length; index++) {
-                int offset = index * 3;
-                int attributeOffset = index * 2;
-                buffer.addVertex(pose, packed.positions[offset], packed.positions[offset + 1], packed.positions[offset + 2]).setColor(packed.colors[index]).setUv(packed.brightness[attributeOffset], packed.brightness[attributeOffset + 1]);
-            }
+            attachment.render(buffer, pose);
         }
 
         private boolean matches(List<Face> surfaces) {

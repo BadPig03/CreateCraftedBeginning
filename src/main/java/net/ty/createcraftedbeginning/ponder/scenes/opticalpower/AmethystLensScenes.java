@@ -39,12 +39,16 @@ public final class AmethystLensScenes {
         BlockPos previewPos = lensPos.north();
         BlockPos emitterPos = lensPos.west();
         BlockPos fiberPos = lensPos.west(2);
+        BlockPos arrayStartPos = lensPos.west(2).south();
         BlockPos arrayCornerPos = lensPos.west().south(2);
         BlockPos nearFocusPos = lensPos.east(2);
         BlockPos farFocusPos = lensPos.east(4);
 
         Selection lensSelection = util.select().position(lensPos);
-        Selection setupSelection = util.select().fromTo(fiberPos, arrayCornerPos).add(lensSelection);
+        Selection collectorSelection = util.select().fromTo(arrayStartPos, arrayCornerPos);
+        Selection emitterSelection = util.select().position(emitterPos);
+        Selection fiberSelection = util.select().position(fiberPos);
+        Selection fiberEntrySelection = fiberSelection.copy().add(lensSelection);
         Selection previewSelection = util.select().position(previewPos);
 
         Vec3 lensVec = util.vector().centerOf(lensPos);
@@ -58,14 +62,22 @@ public final class AmethystLensScenes {
         Object controlOutline = new Object();
 
         scene.world().setBlock(lensPos, Blocks.AIR.defaultBlockState(), false);
+        scene.world().setBlock(fiberPos, CCBBlocks.OPTICAL_FIBER_BLOCK.getDefaultState(), false);
 
         scene.idle(20);
-        scene.world().showSection(setupSelection, Direction.DOWN);
+        scene.world().showSection(collectorSelection, Direction.DOWN);
+
+        scene.idle(3);
+        scene.world().showSection(emitterSelection, Direction.DOWN);
+
+        scene.idle(3);
+        scene.world().showSection(fiberEntrySelection, Direction.DOWN);
 
         scene.idle(20);
+        scene.world().restoreBlocks(fiberSelection);
         scene.world().modifyBlockEntity(emitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(4));
 
-        scene.idle(30);
+        scene.idle(24);
         scene.world().setBlock(previewPos, CCBBlocks.AMETHYST_CONVEX_LENS_BLOCK.getDefaultState().setValue(AmethystLensBlock.FACING, Direction.WEST), false);
         ElementLink<WorldSectionElement> fallingLens = scene.world().showIndependentSection(previewSelection, Direction.DOWN);
         scene.world().moveSection(fallingLens, previewOffset, 0);
@@ -101,7 +113,7 @@ public final class AmethystLensScenes {
 
         scene.idle(80);
         scene.overlay().showText(60).text("Shorten the focal length to make the beam wider at the same distance").pointAt(farFocusVec).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(controlVec, Pointing.DOWN, 20).rightClick();
+        scene.overlay().showControls(controlVec, Pointing.UP, 20).rightClick();
 
         scene.idle(10);
         setFocalLength(scene, lensPos, 3);

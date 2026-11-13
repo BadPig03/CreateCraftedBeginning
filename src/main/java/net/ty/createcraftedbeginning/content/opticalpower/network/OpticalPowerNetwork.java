@@ -3,11 +3,13 @@ package net.ty.createcraftedbeginning.content.opticalpower.network;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerSource.Source;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,8 +44,22 @@ public final class OpticalPowerNetwork {
         return CCBConfig.server().opticalPower.network.maxNetworkFluxLm.get();
     }
 
+    static double readDynamicFlux(Level level, BlockPos contact, BlockState state, OpticalPowerSource provider, Source source) {
+        try {
+            double fluxLm = provider.getCurrentOpticalFluxLm(level, contact, state, source);
+            if (!Double.isFinite(fluxLm) || fluxLm < 0) {
+                throw new IllegalArgumentException("Source luminous flux must be finite and non-negative; got " + fluxLm + " lm.");
+            }
+
+            return fluxLm;
+        }
+        catch (RuntimeException failure) {
+            throw new DynamicSourceFailure(contact, state.getBlock(), source, failure);
+        }
+    }
+
     RefreshResult refreshDynamicSourceFluxes(Level level) {
-        boolean anySourceFluxChanged = false;
+        Map<SourceEntry, Double> changes = null;
         for (SourceEntry entry : sources.values()) {
             Source source = entry.discoveredSource();
             if (!source.dynamic()) {
@@ -60,23 +76,22 @@ public final class OpticalPowerNetwork {
                 return RefreshResult.RESCAN_REQUIRED;
             }
 
-            double newFluxLm = sourceProvider.getCurrentOpticalFluxLm(level, contactPos, state, source);
-            if (!Double.isFinite(newFluxLm) || newFluxLm < 0) {
-                throw new IllegalArgumentException("Source luminous flux must be finite and non-negative; got " + newFluxLm + " lm.");
-            }
-
+            double newFluxLm = readDynamicFlux(level, contactPos, state, sourceProvider, source);
             if (newFluxLm == entry.currentFluxLm()) {
                 continue;
             }
 
-            entry.setCurrentFluxLm(newFluxLm);
-            anySourceFluxChanged = true;
+            if (changes == null) {
+                changes = new HashMap<>();
+            }
+            changes.put(entry, newFluxLm);
         }
-        if (!anySourceFluxChanged) {
+        if (changes == null) {
             return RefreshResult.TOTAL_UNCHANGED;
         }
 
         double previousTotalSourceFluxLm = totalSourceFluxLm;
+        changes.forEach(SourceEntry::setCurrentFluxLm);
         recalculateTotalSourceFluxLm();
         if (totalSourceFluxLm == previousTotalSourceFluxLm) {
             return RefreshResult.TOTAL_UNCHANGED;
@@ -134,6 +149,19 @@ public final class OpticalPowerNetwork {
         TOTAL_UNCHANGED,
         TOTAL_CHANGED,
         RESCAN_REQUIRED
+    }
+
+    static final class DynamicSourceFailure extends RuntimeException {
+        final BlockPos contact;
+        final Block provider;
+        final Source source;
+
+        private DynamicSourceFailure(BlockPos contact, Block provider, Source source, RuntimeException failure) {
+            super("Failed to refresh the optical source at " + contact + '.', failure);
+            this.contact = contact;
+            this.provider = provider;
+            this.source = source;
+        }
     }
 
     static final class SourceEntry {

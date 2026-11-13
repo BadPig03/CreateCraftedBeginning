@@ -158,7 +158,7 @@ public class AirtightForgingPressBlockEntity extends SmartBlockEntity implements
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        behaviours.add(new CCBAdvancementBehaviour(this, CCBAdvancements.SUPERMASSIVE));
+        behaviours.add(new CCBAdvancementBehaviour(this, CCBAdvancements.REAL_WORLD_ALCHEMY));
         fluidTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.INPUT, this, 1, Math.max(1, CCBConfig.server().machines.airtightForgingPress.fluidCapacity.get()) * FluidType.BUCKET_VOLUME, false).whenFluidUpdates(this::notifyContentsChanged);
         fluidCapability = fluidTank.getCapability();
         behaviours.add(fluidTank);

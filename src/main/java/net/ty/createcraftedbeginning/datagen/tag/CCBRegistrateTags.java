@@ -58,6 +58,7 @@ public class CCBRegistrateTags {
         provider.addTag(CCBItemTags.END_CASING_RAW_MATERIALS.tag).add(BuiltInRegistries.ITEM.getResourceKey(Blocks.CRYING_OBSIDIAN.asItem()).orElseThrow());
         provider.addTag(CCBItemTags.PRESS_HEAD_TOOLS.tag).add(BuiltInRegistries.ITEM.getResourceKey(Items.HEAVY_CORE).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(Items.IRON_BARS).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(Items.IRON_TRAPDOOR).orElseThrow());
         provider.addTag(CCBItemTags.WIND_CHARGING_EXCLUDED.tag).add(BuiltInRegistries.ITEM.getResourceKey(Items.OMINOUS_BOTTLE).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(CCBItems.MILK_ICE_CREAM.get()).orElseThrow());
+        provider.addTag(CCBItemTags.GOLDEN_FOODS.tag).add(BuiltInRegistries.ITEM.getResourceKey(Items.GOLDEN_APPLE).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(Items.ENCHANTED_GOLDEN_APPLE).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(Items.GOLDEN_CARROT).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(CCBItems.GOLDEN_ICE_CREAM.get()).orElseThrow());
         provider.addTag(ItemTags.PIGLIN_LOVED).add(BuiltInRegistries.ITEM.getResourceKey(CCBItems.GOLDEN_ICE_CREAM.get()).orElseThrow());
         Arrays.stream(CCBItemTags.values()).filter(tag -> tag.alwaysDataGen).map(tag -> tag.tag).forEach(provider::addTag);
     }

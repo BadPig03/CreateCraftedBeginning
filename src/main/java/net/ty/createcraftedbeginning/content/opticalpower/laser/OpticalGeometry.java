@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.opticalpower.laser;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +23,7 @@ public interface OpticalGeometry {
         return null;
     }
 
-    default boolean hasOpaqueBoxSurfaces() {
-        return false;
+    default VoxelShape getReceivingShape() {
+        return Shapes.empty();
     }
 }

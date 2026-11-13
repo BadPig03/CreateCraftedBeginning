@@ -27,16 +27,6 @@ import net.ty.createcraftedbeginning.content.airtights.gascanister.container.Can
 import net.ty.createcraftedbeginning.content.airtights.gascanisterpack.GasCanisterPackMenuSyncPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterGhostItemSubmitPacket;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreenPacket;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderOutlinePacket;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderStatePacket;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderBeamPacket;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderColorPacket;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderControlPacket;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderMapPositionPacket;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderMapRequestPacket;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderMapSyncPacket;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderRenamePacket;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderSyncPacket;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorAimPacket;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorAimReplyPacket;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorRotatePacket;
@@ -44,6 +34,16 @@ import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.Amethys
 import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystCrystalGrowthPacket;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorResetPacket;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorUpdatePacket;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerOutlinePacket;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerStatePacket;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerBeamPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerColorPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerControlPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerMapPositionPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerMapRequestPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerMapSyncPacket;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerRenamePacket;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerSyncPacket;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserDisplayPacket;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserDisplayRequestPacket;
 import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageSyncPacket;
@@ -77,18 +77,18 @@ public enum CCBPackets implements PacketTypeProvider {
     GAS_AREA_OUTLINE(GasAreaOutlinePacket.class, GasAreaOutlinePacket.STREAM_CODEC),
     CANISTER_CONTAINER_CLIENT(CanisterContainerClientPacket.class, CanisterContainerClientPacket.STREAM_CODEC),
 
-    AMETHYST_LOADER_CONTROL(AmethystLoaderControlPacket.class, AmethystLoaderControlPacket.STREAM_CODEC),
-    AMETHYST_LOADER_RENAME(AmethystLoaderRenamePacket.class, AmethystLoaderRenamePacket.STREAM_CODEC),
-    AMETHYST_LOADER_COLOR(AmethystLoaderColorPacket.class, AmethystLoaderColorPacket.STREAM_CODEC),
-    AMETHYST_LOADER_BEAM(AmethystLoaderBeamPacket.class, AmethystLoaderBeamPacket.STREAM_CODEC),
-    AMETHYST_LOADER_SYNC(AmethystLoaderSyncPacket.class, AmethystLoaderSyncPacket.STREAM_CODEC),
-    AMETHYST_LOADER_MAP_REQUEST(AmethystLoaderMapRequestPacket.class, AmethystLoaderMapRequestPacket.STREAM_CODEC),
-    AMETHYST_LOADER_MAP_POSITION(AmethystLoaderMapPositionPacket.class, AmethystLoaderMapPositionPacket.STREAM_CODEC),
-    AMETHYST_LOADER_MAP_SYNC(AmethystLoaderMapSyncPacket.class, AmethystLoaderMapSyncPacket.STREAM_CODEC),
+    CHUNK_STABILIZER_CONTROL(ChunkStabilizerControlPacket.class, ChunkStabilizerControlPacket.STREAM_CODEC),
+    CHUNK_STABILIZER_RENAME(ChunkStabilizerRenamePacket.class, ChunkStabilizerRenamePacket.STREAM_CODEC),
+    CHUNK_STABILIZER_COLOR(ChunkStabilizerColorPacket.class, ChunkStabilizerColorPacket.STREAM_CODEC),
+    CHUNK_STABILIZER_BEAM(ChunkStabilizerBeamPacket.class, ChunkStabilizerBeamPacket.STREAM_CODEC),
+    CHUNK_STABILIZER_SYNC(ChunkStabilizerSyncPacket.class, ChunkStabilizerSyncPacket.STREAM_CODEC),
+    CHUNK_STABILIZER_MAP_REQUEST(ChunkStabilizerMapRequestPacket.class, ChunkStabilizerMapRequestPacket.STREAM_CODEC),
+    CHUNK_STABILIZER_MAP_POSITION(ChunkStabilizerMapPositionPacket.class, ChunkStabilizerMapPositionPacket.STREAM_CODEC),
+    CHUNK_STABILIZER_MAP_SYNC(ChunkStabilizerMapSyncPacket.class, ChunkStabilizerMapSyncPacket.STREAM_CODEC),
 
-    AMETHYST_LOADER_STATE(AmethystLoaderStatePacket.class, AmethystLoaderStatePacket.STREAM_CODEC),
+    CHUNK_STABILIZER_STATE(ChunkStabilizerStatePacket.class, ChunkStabilizerStatePacket.STREAM_CODEC),
 
-    AMETHYST_LOADER_OUTLINE(AmethystLoaderOutlinePacket.class, AmethystLoaderOutlinePacket.STREAM_CODEC),
+    CHUNK_STABILIZER_OUTLINE(ChunkStabilizerOutlinePacket.class, ChunkStabilizerOutlinePacket.STREAM_CODEC),
 
     AMETHYST_CRYSTAL_GROWTH(AmethystCrystalGrowthPacket.class, AmethystCrystalGrowthPacket.STREAM_CODEC),
     AMETHYST_SOUND_SUPPRESSOR_RESET(AmethystSoundSuppressorResetPacket.class, AmethystSoundSuppressorResetPacket.STREAM_CODEC),
@@ -111,7 +111,7 @@ public enum CCBPackets implements PacketTypeProvider {
     }
 
     public static void register() {
-        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 45);
+        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 47);
         Arrays.stream(values()).map(packet -> packet.type).forEach(packetRegistry::registerPacket);
         packetRegistry.registerAllPackets();
         GasReleaseHandlers.registerOutlineSender(GasAreaOutlinePacket::send);

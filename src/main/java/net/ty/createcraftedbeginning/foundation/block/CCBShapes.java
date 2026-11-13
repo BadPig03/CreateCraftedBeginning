@@ -68,7 +68,7 @@ public class CCBShapes {
     public static final VoxelShaper OPTICAL_FIBER_DEVICE_PORT = shape(5, 14, 5, 11, 17, 11).forDirectional(Direction.UP);
 
     public static final VoxelShape AMETHYST_MIRROR_COLLISION_SHAPE = shape(1, 1, 1, 15, 15, 15).build();
-    public static final VoxelShape PHOTOTHERMAL_RECEIVER = shape(0, 0, 0, 16, 12, 16).add(1, 12, 1, 15, 13, 15).add(0, 13, 0, 16, 15, 16).add(1, 15, 1, 15, 16, 15).build();
+    public static final VoxelShape PHOTOTHERMAL_CHAMBER = shape(0, 0, 0, 16, 12, 16).add(1, 12, 1, 15, 13, 15).add(0, 13, 0, 16, 15, 16).add(1, 15, 1, 15, 16, 15).build();
     public static final VoxelShape OPTICAL_FIBER_JUNCTION = Block.box(5, 5, 5, 11, 11, 11);
 
     @Contract("_, _, _, _, _, _ -> new")

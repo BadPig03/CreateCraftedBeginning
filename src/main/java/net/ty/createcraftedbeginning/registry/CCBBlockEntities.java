@@ -45,11 +45,11 @@ import net.ty.createcraftedbeginning.content.crates.sturdycrate.SturdyCrateBlock
 import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystlens.AmethystLensBlockEntity;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlockEntity;
-import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalchamber.PhotothermalChamberBlockEntity;
 import net.ty.createcraftedbeginning.registry.registrate.CCBRegistrateProvider;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -107,9 +107,9 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<LaserEmitterBlockEntity> LASER_EMITTER = CCB_REGISTRATE.blockEntity("laser_emitter", LaserEmitterBlockEntity::new).validBlock(CCBBlocks.LASER_EMITTER_BLOCK).register();
     public static final BlockEntityEntry<AmethystMirrorBlockEntity> AMETHYST_MIRROR = CCB_REGISTRATE.blockEntity("amethyst_mirror", AmethystMirrorBlockEntity::new).validBlock(CCBBlocks.AMETHYST_MIRROR_BLOCK).register();
     public static final BlockEntityEntry<AmethystLensBlockEntity> AMETHYST_LENS = CCB_REGISTRATE.blockEntity("amethyst_lens", AmethystLensBlockEntity::new).validBlocks(CCBBlocks.AMETHYST_CONVEX_LENS_BLOCK, CCBBlocks.AMETHYST_CONCAVE_LENS_BLOCK).register();
-    public static final BlockEntityEntry<PhotothermalReceiverBlockEntity> PHOTOTHERMAL_RECEIVER = CCB_REGISTRATE.blockEntity("photothermal_receiver", PhotothermalReceiverBlockEntity::new).validBlock(CCBBlocks.PHOTOTHERMAL_RECEIVER_BLOCK).register();
+    public static final BlockEntityEntry<PhotothermalChamberBlockEntity> PHOTOTHERMAL_CHAMBER = CCB_REGISTRATE.blockEntity("photothermal_chamber", PhotothermalChamberBlockEntity::new).validBlock(CCBBlocks.PHOTOTHERMAL_CHAMBER_BLOCK).register();
 
-    public static final BlockEntityEntry<AmethystLoaderBlockEntity> AMETHYST_LOADER = CCB_REGISTRATE.blockEntity("amethyst_loader", AmethystLoaderBlockEntity::new).validBlock(CCBBlocks.AMETHYST_LOADER_BLOCK).register();
+    public static final BlockEntityEntry<ChunkStabilizerBlockEntity> CHUNK_STABILIZER = CCB_REGISTRATE.blockEntity("chunk_stabilizer", ChunkStabilizerBlockEntity::new).validBlock(CCBBlocks.CHUNK_STABILIZER_BLOCK).register();
     public static final BlockEntityEntry<AmethystAntennaBlockEntity> AMETHYST_ANTENNA = CCB_REGISTRATE.blockEntity("amethyst_antenna", AmethystAntennaBlockEntity::new).validBlock(CCBBlocks.AMETHYST_ANTENNA_BLOCK).register();
     public static final BlockEntityEntry<AmethystSoundSuppressorBlockEntity> AMETHYST_SOUND_SUPPRESSOR = CCB_REGISTRATE.blockEntity("amethyst_sound_suppressor", AmethystSoundSuppressorBlockEntity::new).validBlock(CCBBlocks.AMETHYST_SOUND_SUPPRESSOR_BLOCK).register();
 

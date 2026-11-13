@@ -21,10 +21,6 @@ final class LaserEmitterController {
     }
 
     void restoreAllocation(double fluxLm) {
-        if (!Double.isFinite(fluxLm)) {
-            throw new IllegalArgumentException("Emitter packet luminous flux must be finite; got " + fluxLm + " lm.");
-        }
-
         allocatedFluxLm = Math.max(0, fluxLm);
         allocationValidity = null;
     }

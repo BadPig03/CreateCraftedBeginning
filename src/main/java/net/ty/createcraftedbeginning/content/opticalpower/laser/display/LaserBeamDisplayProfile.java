@@ -2,17 +2,17 @@ package net.ty.createcraftedbeginning.content.opticalpower.laser.display;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalHit;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFootprint;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFrame;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamProfile;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamProfile.Span;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamProfile;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamRegion.Point;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamContext.DisplayFrame;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamContext.DisplayState;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact.Vertex;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.OpticalPlane;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -90,8 +90,8 @@ record LaserBeamDisplayProfile(Vec3 origin, Vec3 direction, Vec3 transverse, Bea
         return List.of(0.0, range);
     }
 
-    @Nullable Contact intersect(OpticalHit hit, double range, double u, double v) {
-        Vec3 normal = hit.surface().normal();
+    @Nullable Contact intersect(OpticalPlane plane, double range, double u, double v) {
+        Vec3 normal = plane.normal();
         double slope = physical.widthSlope();
         double width = physical.referenceWidth();
         Vec3 across = transverse.scale(u).add(direction.cross(transverse).scale(v));
@@ -112,7 +112,7 @@ record LaserBeamDisplayProfile(Vec3 origin, Vec3 direction, Vec3 transverse, Bea
                 continue;
             }
 
-            double distance = hit.position().subtract(start).dot(normal) / denominator;
+            double distance = plane.point().subtract(start).dot(normal) / denominator;
             if (distance < -DISTANCE_EPSILON || distance > range + DISTANCE_EPSILON || slope != 0 && side * (width + slope * distance) < -DISTANCE_EPSILON || nearest != null && distance >= nearest.distance()) {
                 continue;
             }
@@ -123,8 +123,8 @@ record LaserBeamDisplayProfile(Vec3 origin, Vec3 direction, Vec3 transverse, Bea
         return nearest;
     }
 
-    Terminal createTerminal(BeamState beam, double range, OpticalHit hit, List<Point> boundary) {
-        return new Terminal(this, beam, range, hit, boundary);
+    Terminal createTerminal(BeamState beam, double range, OpticalPlane plane, List<Point> boundary) {
+        return new Terminal(this, beam, range, plane, boundary);
     }
 
     record Contact(Vec3 position, double distance) {}
@@ -135,12 +135,12 @@ record LaserBeamDisplayProfile(Vec3 origin, Vec3 direction, Vec3 transverse, Bea
         private final List<Point> boundary;
         private final List<Contact> contacts;
 
-        private Terminal(LaserBeamDisplayProfile display, BeamState beam, double range, OpticalHit hit, List<Point> boundary) {
+        private Terminal(LaserBeamDisplayProfile display, BeamState beam, double range, OpticalPlane plane, List<Point> boundary) {
             this.boundary = List.copyOf(boundary);
             List<Contact> ideal = new ArrayList<>(boundary.size());
             boolean connecting = false;
             for (Point point : boundary) {
-                Contact contact = display.intersect(hit, range, point.u(), point.v());
+                Contact contact = display.intersect(plane, range, point.u(), point.v());
                 if (contact == null) {
                     connecting = true;
                     continue;
@@ -157,16 +157,16 @@ record LaserBeamDisplayProfile(Vec3 origin, Vec3 direction, Vec3 transverse, Bea
             List<Vertex> physical = new ArrayList<>(boundary.size());
             List<Vec3> projected = new ArrayList<>(boundary.size());
             double blend = 1;
-            Vec3 normal = hit.surface().normal();
+            Vec3 normal = plane.normal();
             Vec3 direction = display.direction();
             for (Point point : boundary) {
-                Vertex vertex = BeamContact.intersect(beam, trajectory, hit, point.u(), point.v());
+                Vertex vertex = BeamContact.intersect(beam, trajectory, plane, point.u(), point.v());
                 if (vertex == null) {
                     throw new IllegalStateException("Accepted beam has no physical terminal intersection at source coordinates " + point + '.');
                 }
 
                 Vec3 target = display.point(vertex.distance(), point.u(), point.v());
-                target = target.subtract(normal.scale(target.subtract(hit.position()).dot(normal)));
+                target = target.subtract(normal.scale(target.subtract(plane.point()).dot(normal)));
                 blend = constrainBlend(blend, vertex.position(), target, display.origin(), direction, range);
                 physical.add(vertex);
                 projected.add(target);

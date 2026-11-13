@@ -38,7 +38,8 @@ enum AmethystSoundSuppressorPort implements OpticalGeometry {
         return false;
     }
 
-    static VoxelShape getReceivingShape() {
+    @Override
+    public VoxelShape getReceivingShape() {
         return CRYSTAL;
     }
 
@@ -55,10 +56,5 @@ enum AmethystSoundSuppressorPort implements OpticalGeometry {
     @Override
     public OpticalSurface getSurface(BlockHitResult hit, Vec3 localDirection) {
         return OpticalSurface.opaque(hit);
-    }
-
-    @Override
-    public boolean hasOpaqueBoxSurfaces() {
-        return true;
     }
 }

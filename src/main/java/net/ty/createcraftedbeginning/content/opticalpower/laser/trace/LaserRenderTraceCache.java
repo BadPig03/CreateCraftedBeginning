@@ -34,15 +34,19 @@ public final class LaserRenderTraceCache {
         return new LaserRenderGeometry(cached.level(), dependencies);
     }
 
+    public void clear() {
+        entry = null;
+        sourceObservation = null;
+        motionObservation = null;
+    }
+
     public LaserRenderSnapshot trace(Level level, BeamState source, Vec3 origin, double range, float partialTick) {
         if (!Float.isFinite(partialTick) || partialTick < 0 || partialTick > 1) {
             throw new IllegalArgumentException("Render trace partial tick must be finite and in [0, 1]; got " + partialTick + '.');
         }
 
         if (!(level instanceof ClientLevel)) {
-            entry = null;
-            sourceObservation = null;
-            motionObservation = null;
+            clear();
             return LaserRenderSnapshot.trace(level, source, origin, range, partialTick);
         }
 
@@ -51,9 +55,7 @@ public final class LaserRenderTraceCache {
         if (SubLevelBridge.resolve(level, anchor).inSubLevel()) {
             renderSource = SubLevelBridge.captureRenderSource(level, anchor, partialTick);
             if (renderSource == null) {
-                entry = null;
-                sourceObservation = null;
-                motionObservation = null;
+                clear();
                 return LaserRenderSnapshot.trace(level, source, origin, range, partialTick);
             }
 

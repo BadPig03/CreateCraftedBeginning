@@ -102,6 +102,7 @@ public final class AmethystAntennaBlockEntity extends SmartBlockEntity {
             network = LoadingNetworkSavedData.get(level).create(owner);
         }
         attach(network);
+        AmethystAntennaAdvancements.awardPlacement(this, level, owner, network);
     }
 
     void attach(@Nullable LoadingNetworkBinding network) {

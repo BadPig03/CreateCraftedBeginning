@@ -153,6 +153,10 @@ public final class AmethystMirrorShape extends VoxelShape {
         return geometry.toLocal(point.subtract(0.5, 0.5, 0.5));
     }
 
+    public Vec3 fromPanelCoordinates(Vec3 point) {
+        return geometry.toWorld(point).add(0.5, 0.5, 0.5);
+    }
+
     public List<AABB> getPanelBoxes() {
         return BOXES;
     }

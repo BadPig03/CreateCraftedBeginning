@@ -11,7 +11,6 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBea
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamContours.Result;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamGeometry.Section;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.DrawSection;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.MappedData;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamSurfaces.Face;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.OpticalPlane;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -78,7 +77,7 @@ public final class LaserBeamShells {
         Map<DrawSection, Boolean> renderability = new IdentityHashMap<>();
         for (Face face : core) {
             DrawSection draw = face.draw();
-            if (!renderability.computeIfAbsent(draw, section -> section.renderSupport().isRenderable(section.getReferenceWidth()))) {
+            if (!renderability.computeIfAbsent(draw, section -> section.geometry().isRenderable(section.getReferenceWidth()))) {
                 partial = true;
                 continue;
             }
@@ -136,18 +135,6 @@ public final class LaserBeamShells {
                     Vec3 world = context.toWorldPosition(point);
                     double distance = Math.clamp(world.subtract(frame.origin()).dot(frame.direction()), 0, segment.remainingRange());
                     return display.radiusAt(distance) * OUTER_THICKNESS_RATIO;
-                };
-            }
-
-            if (face.draw().mapped() != null) {
-                LaserBeamBrightness widthField = face.draw().mapped().widthField();
-                thickness = point -> {
-                    double width = widthField.referenceWidthAt(point);
-                    if (widthField.profile().widthSlope() == 0) {
-                        return widthField.profile().radius() * OUTER_THICKNESS_RATIO;
-                    }
-
-                    return Math.abs(width) * 0.5 * OUTER_THICKNESS_RATIO;
                 };
             }
 
@@ -246,7 +233,7 @@ public final class LaserBeamShells {
             reason = ShellReason.PARTIAL;
         }
 
-        return new ShellMesh(List.of(outer.stream().map(LaserBeamShells::haloField).toList(), inner.stream().map(LaserBeamShells::haloField).toList(), core), quality, reason);
+        return new ShellMesh(List.of(outer, inner, core), quality, reason);
     }
 
     static LaserBeamWork<ShellMesh> begin(LaserBeamContext context, List<Face> core, Budget budget, @Nullable ShellReuse previous, ShellReuse next) {
@@ -329,7 +316,7 @@ public final class LaserBeamShells {
                 if (index < core.size()) {
                     Face face = core.get(index++);
                     DrawSection draw = face.draw();
-                    if (renderability.computeIfAbsent(draw, section -> section.renderSupport().isRenderable(section.getReferenceWidth()))) {
+                    if (renderability.computeIfAbsent(draw, section -> section.geometry().isRenderable(section.getReferenceWidth()))) {
                         candidates.add(face);
                     }
                     else {
@@ -403,8 +390,8 @@ public final class LaserBeamShells {
             }
 
             if (index < outer.size()) {
-                outerHalo.add(haloField(outer.get(index)));
-                innerHalo.add(haloField(inner.get(index)));
+                outerHalo.add(outer.get(index));
+                innerHalo.add(inner.get(index));
                 index++;
                 return false;
             }
@@ -453,18 +440,6 @@ public final class LaserBeamShells {
                     Vec3 world = context.toWorldPosition(point);
                     double distance = Math.clamp(world.subtract(frame.origin()).dot(frame.direction()), 0, segment.remainingRange());
                     return display.radiusAt(distance) * OUTER_THICKNESS_RATIO;
-                };
-            }
-
-            if (face.draw().mapped() != null) {
-                LaserBeamBrightness widthField = face.draw().mapped().widthField();
-                thickness = point -> {
-                    double width = widthField.referenceWidthAt(point);
-                    if (widthField.profile().widthSlope() == 0) {
-                        return widthField.profile().radius() * OUTER_THICKNESS_RATIO;
-                    }
-
-                    return Math.abs(width) * 0.5 * OUTER_THICKNESS_RATIO;
                 };
             }
 
@@ -538,16 +513,6 @@ public final class LaserBeamShells {
             pending.addLast(new PendingPatch(first, depth + 1));
             pending.addLast(new PendingPatch(second, depth + 1));
         }
-    }
-
-    private static Face haloField(Face face) {
-        DrawSection draw = face.draw();
-        if (draw.mapped() == null) {
-            return face;
-        }
-
-        DrawSection halo = new DrawSection(draw.geometry(), draw.appearance(), draw.segmentIndex(), draw.pathDistance(), draw.fade(), draw.samplingDomain(), draw.grazingTerminal(), draw.mapped().haloField(), draw.mapped());
-        return new Face(face.vertices(), face.normal(), halo, face.startCenter(), face.endCenter(), face.bounds());
     }
 
     private static @Nullable ShellPatch createPatch(Face face, ContourPointIndex pointIndex, Map<Vec3, @Nullable Vec3> offsets, ToDoubleFunction<Vec3> thickness, double scale, Budget budget) {
@@ -767,10 +732,6 @@ public final class LaserBeamShells {
             }
 
             List<OpticalPlane> planes = pointIndex.endPlanes.computeIfAbsent(face.draw(), draw -> {
-                MappedData mapped = draw.mapped();
-                if (mapped != null && mapped.endPlanes() != null) {
-                    return mapped.endPlanes();
-                }
 
                 Section geometry = draw.geometry();
                 List<OpticalPlane> result = new ArrayList<>();

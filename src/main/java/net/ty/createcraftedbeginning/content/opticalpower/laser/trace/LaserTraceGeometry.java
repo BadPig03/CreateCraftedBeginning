@@ -17,8 +17,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystlens.AmethystLensBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorBlock;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation.Segment;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalElement;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalGeometry;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalHit;
@@ -27,13 +27,14 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFrame;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamProfile.Span;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamRegion.Point;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact.Patch;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserTraceDependencies.BlockSample;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserTraceDependencies.LoadSample;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalchamber.PhotothermalChamberBlock;
 import net.ty.createcraftedbeginning.mixin.common.accessor.ClipContextAccessor;
-import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.RenderGeometry;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -42,8 +43,8 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -210,7 +211,7 @@ final class LaserTraceGeometry {
 
                 BlockState state = block.state();
                 Block type = state.getBlock();
-                if (type instanceof OpticalElement && !(type instanceof AmethystMirrorBlock) && !(type instanceof AmethystSoundSuppressorBlock) && !(type instanceof AmethystLensBlock)) {
+                if (type instanceof OpticalElement && !(type instanceof AmethystMirrorBlock) && !(type instanceof AmethystSoundSuppressorBlock) && !(type instanceof AmethystLensBlock) && !(type instanceof PhotothermalChamberBlock)) {
                     return null;
                 }
 
@@ -288,10 +289,6 @@ final class LaserTraceGeometry {
 
     List<BlockPos> getWorldCandidates(BlockGetter level, BlockPos cell, ClipContext context, float partialTick) {
         return getCandidates(level, cell, pos -> getWorldBlock(level, pos, context, partialTick));
-    }
-
-    List<BlockPos> getMountedCandidates(BlockGetter owner, Map<BlockPos, StructureBlockInfo> blocks, BlockPos cell, LaserCollisionContext context) {
-        return getCandidates(owner, cell, pos -> getMountedBlock(owner, blocks, pos, context));
     }
 
     @Nullable PreparedBlock getWorldBlock(BlockGetter level, BlockPos pos, ClipContext context, float partialTick) {

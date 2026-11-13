@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.content.opticalpower.network;
 
+import it.unimi.dsi.fastutil.longs.Long2LongMap.Entry;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -8,10 +10,14 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
+import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetwork.DynamicSourceFailure;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetwork.RefreshResult;
+import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetworkScanner.ScanResult;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
@@ -22,8 +28,10 @@ final class OpticalPowerNetworkCache {
 
     private final Long2ObjectOpenHashMap<CachedNetwork> cachedNetworkByConsumer = new Long2ObjectOpenHashMap<>();
     private final LongOpenHashSet consumersPendingRebuild = new LongOpenHashSet();
+    private final Long2LongOpenHashMap deferredRebuilds = new Long2LongOpenHashMap();
     private final ObjectOpenHashSet<CachedNetwork> networksPendingInvalidation = new ObjectOpenHashSet<>();
     private final OpticalPowerNetworkSpatialIndex spatialIndex = new OpticalPowerNetworkSpatialIndex();
+    private final OpticalPowerNetworkScanner scanner = new OpticalPowerNetworkScanner();
     private final OpticalPowerRefreshSchedule refreshSchedule = new OpticalPowerRefreshSchedule();
     private double observedMaxNetworkFluxLm = -1;
     private double observedMaxConsumerFluxLm = -1;
@@ -40,11 +48,11 @@ final class OpticalPowerNetworkCache {
         long consumerKey = consumerPos.asLong();
         CachedNetwork cached = cachedNetworkByConsumer.get(consumerKey);
         if (cached != null && cached.isValid()) {
-            applyAllocation(level, consumerPos, cached.network.getAllocatedFluxLm(consumerPos), cached);
+            applyCachedAllocation(level, consumerPos, cached);
             return;
         }
 
-        consumersPendingRebuild.add(consumerKey);
+        queueRebuild(consumerKey);
     }
 
     void requestConsumerRebuildIfUnassigned(BlockPos consumerPos) {
@@ -54,12 +62,13 @@ final class OpticalPowerNetworkCache {
             return;
         }
 
-        consumersPendingRebuild.add(consumerKey);
+        queueRebuild(consumerKey);
     }
 
     void invalidateNetworksAt(ServerLevel level, BlockPos pos) {
+        scanner.invalidateSource(level, pos);
         for (CachedNetwork network : spatialIndex.networksAt(pos)) {
-            invalidateNetwork(level, network);
+            invalidateNetwork(level, network, Long.MIN_VALUE);
         }
     }
 
@@ -71,7 +80,7 @@ final class OpticalPowerNetworkCache {
         List<CachedNetwork> changedNetworks = List.copyOf(networksPendingInvalidation);
         networksPendingInvalidation.clear();
         for (CachedNetwork network : changedNetworks) {
-            invalidateNetwork(level, network);
+            invalidateNetwork(level, network, Long.MIN_VALUE);
         }
         refreshAllocationsForConfigChanges(level);
         refreshDynamicNetworks(level);
@@ -87,15 +96,29 @@ final class OpticalPowerNetworkCache {
         return cached.network;
     }
 
+    private void applyCachedAllocation(ServerLevel level, BlockPos consumer, CachedNetwork cached) {
+        try {
+            applyAllocation(level, consumer, cached.network.getAllocatedFluxLm(consumer), cached);
+        }
+        catch (RuntimeException failure) {
+            failNetwork(level, cached, "publish", failure);
+        }
+    }
+
     private void pushAllocations(ServerLevel level, CachedNetwork cached) {
         OpticalPowerNetwork network = cached.network;
-        double fluxLm = network.calculateFluxPerConsumerLm();
-        for (BlockPos consumer : network.getConsumers()) {
-            if (cachedNetworkByConsumer.get(consumer.asLong()) != cached) {
-                continue;
-            }
+        try {
+            double fluxLm = network.calculateFluxPerConsumerLm();
+            for (BlockPos consumer : network.getConsumers()) {
+                if (cachedNetworkByConsumer.get(consumer.asLong()) != cached) {
+                    continue;
+                }
 
-            applyAllocation(level, consumer, fluxLm, cached);
+                applyAllocation(level, consumer, fluxLm, cached);
+            }
+        }
+        catch (RuntimeException failure) {
+            failNetwork(level, cached, "publish", failure);
         }
     }
 
@@ -127,9 +150,21 @@ final class OpticalPowerNetworkCache {
                 continue;
             }
 
-            RefreshResult result = cached.network.refreshDynamicSourceFluxes(level);
+            RefreshResult result;
+            try {
+                result = cached.network.refreshDynamicSourceFluxes(level);
+            }
+            catch (DynamicSourceFailure failure) {
+                invalidateNetwork(level, cached, scanner.deferDynamicSource(level, failure));
+                continue;
+            }
+            catch (RuntimeException failure) {
+                failNetwork(level, cached, "refresh", failure);
+                continue;
+            }
+
             if (result == RefreshResult.RESCAN_REQUIRED) {
-                invalidateNetwork(level, cached);
+                invalidateNetwork(level, cached, Long.MIN_VALUE);
                 continue;
             }
 
@@ -142,6 +177,18 @@ final class OpticalPowerNetworkCache {
     }
 
     private void rebuildPendingNetworks(ServerLevel level) {
+        long now = level.getGameTime();
+        Iterator<Entry> waiting = deferredRebuilds.long2LongEntrySet().fastIterator();
+        while (waiting.hasNext()) {
+            Entry entry = waiting.next();
+            if (now < entry.getLongValue()) {
+                continue;
+            }
+
+            consumersPendingRebuild.add(entry.getLongKey());
+            waiting.remove();
+        }
+
         int rebuilds = 0;
         while (!consumersPendingRebuild.isEmpty() && rebuilds < MAX_TOPOLOGY_REBUILDS_PER_TICK) {
             LongIterator iterator = consumersPendingRebuild.iterator();
@@ -155,16 +202,53 @@ final class OpticalPowerNetworkCache {
 
             CachedNetwork existing = cachedNetworkByConsumer.get(consumerKey);
             if (existing != null && existing.isValid()) {
-                applyAllocation(level, consumerPos, existing.network.getAllocatedFluxLm(consumerPos), existing);
+                applyCachedAllocation(level, consumerPos, existing);
                 continue;
             }
 
-            OpticalPowerNetwork network = OpticalPowerNetworkScanner.scanNetwork(level, consumerPos);
+            rebuilds++;
+            ScanResult result;
+            try {
+                result = scanner.scanNetwork(level, consumerPos);
+            }
+            catch (RuntimeException failure) {
+                deferRebuild(consumerKey, now + OpticalPowerNetworkScanner.RETRY_DELAY_TICKS);
+                CCBAPI.LOGGER.warn("Failed to scan the optical network for the consumer at {} in dimension '{}'; retrying after {} ticks.", consumerPos, level.dimension().location(), OpticalPowerNetworkScanner.RETRY_DELAY_TICKS, failure);
+                continue;
+            }
+
+            OpticalPowerNetwork network = result.network();
+            if (network == null) {
+                long retryAt = result.retryAt();
+                for (BlockPos consumer : result.consumers()) {
+                    long key = consumer.asLong();
+                    CachedNetwork cached = cachedNetworkByConsumer.get(key);
+                    if (cached != null) {
+                        invalidateNetwork(level, cached, retryAt);
+                    }
+
+                    deferRebuild(key, retryAt);
+                }
+                continue;
+            }
+
             CachedNetwork cached = new CachedNetwork(network);
             registerCachedNetwork(cached);
             pushAllocations(level, cached);
-            rebuilds++;
         }
+    }
+
+    private void queueRebuild(long consumerKey) {
+        if (deferredRebuilds.containsKey(consumerKey)) {
+            return;
+        }
+
+        consumersPendingRebuild.add(consumerKey);
+    }
+
+    private void deferRebuild(long consumerKey, long retryAt) {
+        consumersPendingRebuild.remove(consumerKey);
+        deferredRebuilds.put(consumerKey, Math.max(retryAt, deferredRebuilds.getOrDefault(consumerKey, Long.MIN_VALUE)));
     }
 
     private void registerCachedNetwork(CachedNetwork cached) {
@@ -177,18 +261,28 @@ final class OpticalPowerNetworkCache {
 
             cachedNetworkByConsumer.put(consumerKey, cached);
             consumersPendingRebuild.remove(consumerKey);
+            deferredRebuilds.remove(consumerKey);
         }
 
         spatialIndex.add(cached);
         refreshSchedule.add(cached);
     }
 
-    private void invalidateNetwork(ServerLevel level, CachedNetwork cached) {
+    private void failNetwork(ServerLevel level, CachedNetwork cached, String operation, RuntimeException failure) {
+        CCBAPI.LOGGER.warn("Failed to {} the optical network allocation at {} in dimension '{}'; retrying after {} ticks.", operation, cached.network.getConsumers().getFirst(), level.dimension().location(), OpticalPowerNetworkScanner.RETRY_DELAY_TICKS, failure);
+        invalidateNetwork(level, cached, level.getGameTime() + OpticalPowerNetworkScanner.RETRY_DELAY_TICKS);
+    }
+
+    private void invalidateNetwork(ServerLevel level, CachedNetwork cached, long retryAt) {
         if (!cached.isValid()) {
             return;
         }
 
         cached.allocationValidity.valid = false;
+        spatialIndex.remove(cached);
+        refreshSchedule.remove(cached);
+        networksPendingInvalidation.remove(cached);
+        boolean resetFailureReported = false;
         for (BlockPos consumer : cached.network.getConsumers()) {
             long consumerKey = consumer.asLong();
             if (cachedNetworkByConsumer.get(consumerKey) != cached) {
@@ -196,12 +290,24 @@ final class OpticalPowerNetworkCache {
             }
 
             cachedNetworkByConsumer.remove(consumerKey);
-            applyAllocation(level, consumer, 0, cached);
-            consumersPendingRebuild.add(consumerKey);
-        }
+            if (retryAt == Long.MIN_VALUE) {
+                queueRebuild(consumerKey);
+            }
+            else {
+                deferRebuild(consumerKey, retryAt);
+            }
+            try {
+                applyAllocation(level, consumer, 0, cached);
+            }
+            catch (RuntimeException failure) {
+                if (resetFailureReported) {
+                    continue;
+                }
 
-        spatialIndex.remove(cached);
-        refreshSchedule.remove(cached);
+                resetFailureReported = true;
+                CCBAPI.LOGGER.warn("Failed to clear the optical allocation for the consumer at {} in dimension '{}'; its old allocation is invalid.", consumer, level.dimension().location(), failure);
+            }
+        }
     }
 
     static final class CachedNetwork {

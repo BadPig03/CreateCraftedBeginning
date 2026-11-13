@@ -23,6 +23,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalElement;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalGeometry;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalSurface;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserCollisionContext;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
@@ -36,6 +37,10 @@ public final class AmethystMirrorBlock extends DirectionalBlock implements IBE<A
     public AmethystMirrorBlock(Properties properties) {
         super(properties);
         registerDefaultState(defaultBlockState().setValue(FACING, Direction.UP));
+    }
+
+    public static boolean isReflectiveSurface(OpticalSurface surface) {
+        return surface.interactor() instanceof AmethystMirrorOptics;
     }
 
     @Override

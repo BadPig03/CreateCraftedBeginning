@@ -31,3 +31,4 @@ repo
 /src/test/
 /.editorconfig
 /.gradle-user/
+/reports/

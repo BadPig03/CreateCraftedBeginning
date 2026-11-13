@@ -9,10 +9,12 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
+import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -58,6 +60,7 @@ public final class OpticalFiberScenes {
         Selection secondMachineSelection = util.select().position(secondEmitterPos).add(util.select().position(secondTargetPos));
         Selection collectorSelection = util.select().position(collectorPos);
         Selection secondGlowstoneSelection = util.select().position(firstArrayMaxPos);
+        Selection removedFiberSelection = secondLinkSelection.copy().add(secondInputSelection);
         Selection laterSelection = secondArraySelection.copy().add(secondLinkSelection).add(inputSelection).add(secondInputSelection).add(machineSelection).add(secondMachineSelection);
         Selection removedSelection = firstArraySelection.copy().add(secondArraySelection).add(secondLinkSelection).add(secondInputSelection).add(secondMachineSelection);
 
@@ -87,8 +90,10 @@ public final class OpticalFiberScenes {
         Object secondEmitterObject = new Object();
         Object glowstoneObject = new Object();
 
+        BlockState disconnectedFiberState = CCBBlocks.OPTICAL_FIBER_BLOCK.getDefaultState();
+
         scene.world().setBlocks(laterSelection, Blocks.AIR.defaultBlockState(), false);
-        scene.world().modifyBlock(junctionPos, state -> state.setValue(OpticalFiberBlock.EAST, false).setValue(OpticalFiberBlock.SOUTH, false), false);
+        scene.world().setBlocks(initialLineSelection, disconnectedFiberState, false);
 
         scene.idle(20);
         scene.world().showSection(firstArraySelection, Direction.DOWN);
@@ -97,6 +102,8 @@ public final class OpticalFiberScenes {
         scene.world().showSection(initialLineSelection, Direction.NORTH);
 
         scene.idle(20);
+        scene.world().restoreBlocks(initialLineSelection);
+        scene.world().modifyBlock(junctionPos, state -> state.setValue(OpticalFiberBlock.EAST, false).setValue(OpticalFiberBlock.SOUTH, false), false);
         scene.overlay().showText(60).text("Connect Optical Fibers to a horizontal side of an Amethyst Collector Panel to carry away the light it collects").colored(PonderPalette.INPUT).pointAt(collectorVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, collectorPortObject, collectorPortArea, 60);
 
@@ -105,15 +112,16 @@ public final class OpticalFiberScenes {
         scene.world().showSection(machineSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Run the fiber to the back of a Laser Emitter to supply it with light").colored(PonderPalette.GREEN).pointAt(inputVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Connect the fibers to the back of a Laser Emitter to supply it with light").colored(PonderPalette.GREEN).pointAt(inputVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, inputPortObject, inputPortArea, 60);
 
         scene.idle(60);
-        scene.world().restoreBlocks(inputSelection);
-        scene.world().modifyBlock(inputPos, state -> state.setValue(OpticalFiberBlock.SOUTH, false), false);
+        scene.world().setBlocks(inputSelection, disconnectedFiberState, false);
         scene.world().showSection(inputSelection, Direction.WEST);
 
         scene.idle(20);
+        scene.world().restoreBlocks(inputSelection);
+        scene.world().modifyBlock(inputPos, state -> state.setValue(OpticalFiberBlock.SOUTH, false), false);
         scene.world().modifyBlock(junctionPos, state -> state.setValue(OpticalFiberBlock.SOUTH, true), false);
         scene.world().modifyBlockEntity(emitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(10));
 
@@ -125,7 +133,7 @@ public final class OpticalFiberScenes {
         scene.overlay().showText(60).text("Connect another independent collector array to the same fiber network to combine the light from both arrays").colored(PonderPalette.GREEN).pointAt(secondArrayVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
-        scene.world().restoreBlocks(secondLinkSelection);
+        scene.world().setBlocks(secondLinkSelection, disconnectedFiberState, false);
         scene.world().showSection(secondLinkSelection, Direction.WEST);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, firstArrayObject, firstArrayStartArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, secondArrayObject, secondArrayStartArea, 3);
@@ -135,6 +143,7 @@ public final class OpticalFiberScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, secondArrayObject, secondArrayArea, 50);
 
         scene.idle(17);
+        scene.world().restoreBlocks(secondLinkSelection);
         scene.world().modifyBlock(junctionPos, state -> state.setValue(OpticalFiberBlock.EAST, true), false);
         scene.world().modifyBlockEntity(emitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(20));
 
@@ -143,15 +152,16 @@ public final class OpticalFiberScenes {
         scene.world().showSection(secondMachineSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Add a second emitter and the two will share the network's light equally").pointAt(junctionVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Add a second Laser Emitter, and the two will share the light supplied by the network equally").pointAt(junctionVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, emitterObject, emitterArea, 60);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, secondEmitterObject, secondEmitterArea, 60);
 
         scene.idle(7);
-        scene.world().restoreBlocks(secondInputSelection);
+        scene.world().setBlocks(secondInputSelection, disconnectedFiberState, false);
         scene.world().showSection(secondInputSelection, Direction.WEST);
 
         scene.idle(20);
+        scene.world().restoreBlocks(secondInputSelection);
         scene.world().modifyBlock(inputPos, state -> state.setValue(OpticalFiberBlock.SOUTH, true), false);
         scene.world().modifyBlockEntity(emitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(10));
         scene.world().modifyBlockEntity(secondEmitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(10));
@@ -160,8 +170,10 @@ public final class OpticalFiberScenes {
         scene.world().modifyBlockEntity(emitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(0));
         scene.world().modifyBlockEntity(secondEmitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(0));
         scene.world().modifyBlock(junctionPos, state -> state.setValue(OpticalFiberBlock.EAST, false), false);
+        scene.world().modifyBlock(firstFiberPos, state -> state.setValue(OpticalFiberBlock.NORTH, false), false);
         scene.world().modifyBlock(middleFiberPos, state -> state.setValue(OpticalFiberBlock.NORTH, false), false);
         scene.world().modifyBlock(inputPos, state -> state.setValue(OpticalFiberBlock.SOUTH, false), false);
+        scene.world().setBlocks(removedFiberSelection, disconnectedFiberState, false);
         scene.world().hideSection(removedSelection, Direction.UP);
 
         scene.idle(20);
@@ -170,18 +182,19 @@ public final class OpticalFiberScenes {
         scene.world().showSection(collectorSelection, Direction.DOWN);
 
         scene.idle(20);
+        scene.world().modifyBlock(firstFiberPos, state -> state.setValue(OpticalFiberBlock.NORTH, true), false);
         scene.world().modifyBlockEntity(emitterPos, LaserEmitterBlockEntity.class, emitter -> emitter.setPonderFlux(1));
-        scene.overlay().showText(60).text("Full blocks as bright as Glowstone can also supply a little light").colored(PonderPalette.BLUE).pointAt(glowstoneVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Full blocks as bright as Glowstone can also supply a small amount of light").colored(PonderPalette.BLUE).pointAt(glowstoneVec).placeNearTarget().attachKeyFrame();
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, glowstoneObject, glowstoneArea, 60);
 
         scene.idle(80);
-        scene.overlay().showText(60).text("Adding more of these sources to the same network does not increase the light supply").colored(PonderPalette.BLUE).pointAt(secondGlowstoneVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Adding more of these light sources to the same network does not increase its light supply").colored(PonderPalette.BLUE).pointAt(secondGlowstoneVec).placeNearTarget().attachKeyFrame();
         scene.world().setBlock(firstArrayMaxPos, Blocks.GLOWSTONE.defaultBlockState(), false);
-        scene.world().modifyBlock(middleFiberPos, state -> state.setValue(OpticalFiberBlock.NORTH, true), false);
         scene.world().showSection(secondGlowstoneSelection, Direction.DOWN);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, glowstoneObject, glowstoneArea, 20);
 
         scene.idle(20);
+        scene.world().modifyBlock(middleFiberPos, state -> state.setValue(OpticalFiberBlock.NORTH, true), false);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.BLUE, glowstoneObject, combinedGlowstoneArea, 40);
 
         scene.idle(40);

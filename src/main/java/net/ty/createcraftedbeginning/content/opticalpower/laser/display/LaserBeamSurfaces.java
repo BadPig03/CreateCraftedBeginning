@@ -45,23 +45,6 @@ public final class LaserBeamSurfaces {
         return build(sections, budget).faces();
     }
 
-    static SurfaceBuild resolve(List<Face> faces, Budget budget) {
-        if (faces.isEmpty()) {
-            return new SurfaceBuild(List.of(), SurfaceReason.EMPTY);
-        }
-
-        if (!budget.spend(faces.size())) {
-            return new SurfaceBuild(List.of(), SurfaceReason.OPERATION_BUDGET);
-        }
-
-        Vec3 anchor = faces.getFirst().vertices().getFirst();
-        Map<PlaneKey, List<Face>> planes = new LinkedHashMap<>();
-        for (Face face : faces) {
-            add(planes, anchor, face.vertices(), face.draw(), face.startCenter(), face.endCenter());
-        }
-        return resolvePlanes(planes, anchor, budget);
-    }
-
     static SurfaceBuild build(List<DrawSection> sections, Budget budget) {
         if (sections.isEmpty()) {
             return new SurfaceBuild(List.of(), SurfaceReason.EMPTY);
@@ -95,7 +78,7 @@ public final class LaserBeamSurfaces {
 
                 Vec3 center = Section.center(cap);
                 Section capped = new Section(cap, cap, false);
-                DrawSection cappedDraw = new DrawSection(capped, draw.appearance(), draw.segmentIndex(), draw.pathDistance(), null, draw.samplingDomain(), false, draw.brightness(), draw.mapped());
+                DrawSection cappedDraw = new DrawSection(capped, draw.appearance(), draw.segmentIndex(), draw.pathDistance(), null, draw.samplingDomain(), false, draw.brightness());
                 add(planes, anchor, cap, cappedDraw, center, center);
                 continue;
             }
@@ -137,7 +120,7 @@ public final class LaserBeamSurfaces {
 
             Vec3 center = Section.center(cap);
             Section capped = new Section(cap, cap, false);
-            DrawSection cappedDraw = new DrawSection(capped, draw.appearance(), draw.segmentIndex(), pathDistance, null, draw.samplingDomain(), false, draw.brightness(), null);
+            DrawSection cappedDraw = new DrawSection(capped, draw.appearance(), draw.segmentIndex(), pathDistance, null, draw.samplingDomain(), false, draw.brightness());
             Map<PlaneKey, List<Face>> fallback = new LinkedHashMap<>();
             add(fallback, anchor, cap, cappedDraw, center, center);
             for (List<Face> group : fallback.values()) {

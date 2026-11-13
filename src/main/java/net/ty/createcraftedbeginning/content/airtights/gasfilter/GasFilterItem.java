@@ -27,6 +27,7 @@ import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilters.GasF
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBDataComponents;
 import net.ty.createcraftedbeginning.registry.CCBItems;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -124,6 +125,16 @@ public class GasFilterItem extends Item implements MenuProvider, SupportsItemCop
     @Override
     public Component getDisplayName() {
         return getDescription();
+    }
+
+    @Override
+    public @Nullable GasFilterDescription describe(ItemStack filterItem) {
+        if (!filterItem.is(CCBItems.GAS_FILTER)) {
+            return null;
+        }
+
+        GasFilterData filterData = getFilterData(filterItem);
+        return new GasFilterDescription(filterData.blacklist(), filterData.respectData(), filterData.gases());
     }
 
     @Override

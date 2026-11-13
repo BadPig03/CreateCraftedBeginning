@@ -25,6 +25,7 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBea
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamParticles.DrawPoint;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamParticles.FlowPoint;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamParticles.GlowPoint;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -44,6 +45,7 @@ final class LaserGlowParticle extends Particle {
     private static final ParticleRenderType PONDER_RENDER_TYPE = new GlowRenderType(true);
     private static long frame;
     private final ParticleRenderType renderType;
+    private final int shaderRevision;
     private final Vec3 driftOffset;
     private LaserBeamAppearance appearance;
     private double opacity;
@@ -66,10 +68,31 @@ final class LaserGlowParticle extends Particle {
         velocity = flow.direction().scale(DRIFT_SPEED);
         lastSeenFrame = frame;
         renderType = ponder ? PONDER_RENDER_TYPE : WORLD_RENDER_TYPE;
+        shaderRevision = LaserRenderTypes.shaderRevision();
         RandomSource random = RandomSource.create(seed ^ flow.identity() * 0x9E3779B97F4A7C15L);
         lifetime = MIN_LIFETIME + random.nextInt(LIFETIME_VARIATION);
         driftOffset = new Vec3((random.nextDouble() * 2 - 1) * DRIFT_VARIATION, (random.nextDouble() * 2 - 1) * DRIFT_VARIATION, (random.nextDouble() * 2 - 1) * DRIFT_VARIATION);
         friction = 0.98F;
+        hasPhysics = false;
+    }
+
+    LaserGlowParticle(ClientLevel level, DrawPoint point, Vec3 velocity, int lifetime, boolean ponder) {
+        super(level, point.geometry().position().x, point.geometry().position().y, point.geometry().position().z);
+        GlowPoint geometry = point.geometry();
+        appearance = point.appearance();
+        opacity = point.opacity();
+        halfSize = geometry.halfSize();
+        initialAlpha = geometry.alpha();
+        this.velocity = velocity;
+        this.lifetime = lifetime;
+        xd = velocity.x;
+        yd = velocity.y;
+        zd = velocity.z;
+        driftOffset = Vec3.ZERO;
+        renderType = ponder ? PONDER_RENDER_TYPE : WORLD_RENDER_TYPE;
+        shaderRevision = LaserRenderTypes.shaderRevision();
+        following = false;
+        friction = 0.92F;
         hasPhysics = false;
     }
 
@@ -104,6 +127,11 @@ final class LaserGlowParticle extends Particle {
 
     @Override
     public void tick() {
+        if (shaderRevision != LaserRenderTypes.shaderRevision()) {
+            remove();
+            return;
+        }
+
         if (following) {
             if (frame - lastSeenFrame <= 1) {
                 xo = x;
@@ -121,6 +149,10 @@ final class LaserGlowParticle extends Particle {
 
     @Override
     public void render(VertexConsumer buffer, Camera camera, float partialTicks) {
+        if (!isAlive() || shaderRevision != LaserRenderTypes.shaderRevision()) {
+            return;
+        }
+
         float progress = Math.clamp(following ? (age + partialTicks) / FADE_IN_TICKS : 1 - (age + partialTicks) / lifetime, 0, 1);
         double fade = progress * progress * (3 - 2 * progress);
         int alpha = (int) Math.round(initialAlpha * fade);
@@ -193,7 +225,11 @@ final class LaserGlowParticle extends Particle {
 
     private record GlowRenderType(boolean ponder) implements ParticleRenderType {
         @Override
-        public BufferBuilder begin(Tesselator tesselator, TextureManager textureManager) {
+        public @Nullable BufferBuilder begin(Tesselator tesselator, TextureManager textureManager) {
+            if (!LaserRenderTypes.isAvailable()) {
+                return null;
+            }
+
             RenderSystem.depthMask(false);
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();

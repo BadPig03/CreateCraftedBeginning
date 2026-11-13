@@ -35,6 +35,7 @@ import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder
 import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder.PartBuilder;
 import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder.PartBuilder.ConditionGroup;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaBlockItem;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorBlockItem;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberBlockItem;
 import net.ty.createcraftedbeginning.foundation.block.CCBSharedProperties;
@@ -116,7 +117,7 @@ public final class OpticalRegistration {
 
     @Contract(pure = true)
     public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> amethystMirror() {
-        return builder -> builder.properties(Properties::dynamicShape).blockstate((context, provider) -> provider.directionalBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/amethyst_mirror/block")))).item().transform(ModelGen.customItemModel("amethyst_mirror", "item"));
+        return builder -> builder.properties(Properties::dynamicShape).blockstate((context, provider) -> provider.directionalBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/amethyst_mirror/block")))).item(AmethystMirrorBlockItem::new).transform(ModelGen.customItemModel("amethyst_mirror", "item"));
     }
 
     @Contract(pure = true)
@@ -150,8 +151,8 @@ public final class OpticalRegistration {
     }
 
     @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> amethystLoader() {
-        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/amethyst_loader/block")))).item().transform(ModelGen.customItemModel("amethyst_loader", "item"));
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> chunkStabilizer() {
+        return builder -> builder.blockstate((context, provider) -> provider.simpleBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/chunk_stabilizer/block")))).item().transform(ModelGen.customItemModel("chunk_stabilizer", "item"));
     }
 
     @Contract(pure = true)
@@ -188,8 +189,8 @@ public final class OpticalRegistration {
     }
 
     @Contract(pure = true)
-    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> photothermalReceiver() {
-        return builder -> builder.properties(Properties::dynamicShape).blockstate((context, provider) -> provider.horizontalBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/photothermal_receiver/block")))).item().transform(ModelGen.customItemModel("photothermal_receiver", "item"));
+    public static <B extends Block, P> @NotNull NonNullUnaryOperator<BlockBuilder<B, P>> photothermalChamber() {
+        return builder -> builder.properties(Properties::dynamicShape).blockstate((context, provider) -> provider.horizontalBlock(context.getEntry(), provider.models().getExistingFile(provider.modLoc("block/photothermal_chamber/block")))).item().transform(ModelGen.customItemModel("photothermal_chamber", "item"));
     }
 
     @Contract(pure = true)
@@ -203,7 +204,7 @@ public final class OpticalRegistration {
     }
 
     @Contract(pure = true)
-    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> photothermalReceiverProperties() {
+    public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> photothermalChamberProperties() {
         return builder -> builder.initialProperties(CCBSharedProperties::stone).tag(BlockTags.MINEABLE_WITH_PICKAXE).onRegister(block -> BoilerHeater.REGISTRY.register(block, BoilerHeater.BLAZE_BURNER)).properties(properties -> properties.mapColor(MapColor.COLOR_PURPLE).noOcclusion().lightLevel(state -> switch (state.getValue(BlazeBurnerBlock.HEAT_LEVEL)) {
             case KINDLED -> 8;
             case SEETHING -> 12;

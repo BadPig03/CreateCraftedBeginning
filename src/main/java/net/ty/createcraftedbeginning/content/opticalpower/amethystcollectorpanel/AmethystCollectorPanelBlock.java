@@ -7,8 +7,11 @@ import net.createmod.catnip.placement.PlacementHelpers;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -20,10 +23,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetworkManager;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerSource;
 import net.ty.createcraftedbeginning.platform.SkyLightCollisionContext;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
@@ -109,6 +114,16 @@ public class AmethystCollectorPanelBlock extends Block implements IBE<AmethystCo
     }
 
     @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, entity, stack);
+        if (!(level instanceof ServerLevel serverLevel) || !(entity instanceof ServerPlayer player) || player instanceof FakePlayer) {
+            return;
+        }
+
+        withBlockEntityDo(serverLevel, pos, panel -> panel.place(serverLevel, player.getUUID()));
+    }
+
+    @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
         super.onPlace(state, level, pos, oldState, isMoving);
         if (oldState.is(state.getBlock())) {
@@ -121,6 +136,11 @@ public class AmethystCollectorPanelBlock extends Block implements IBE<AmethystCo
         }
 
         OpticalPowerNetworkManager.invalidateAround(level, pos);
+        if (!(level instanceof ServerLevel serverLevel) || serverLevel.restoringBlockSnapshots || !(serverLevel.getChunkAt(pos).getBlockEntity(pos) instanceof AmethystCollectorPanelBlockEntity panel)) {
+            return;
+        }
+
+        panel.commitPlacement(serverLevel);
     }
 
     @Override

@@ -1,8 +1,11 @@
 package net.ty.createcraftedbeginning.content.opticalpower.laser;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamTerminal;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.OpticalPlane;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +18,7 @@ import java.util.Objects;
 @MethodsReturnNonnullByDefault
 public record BeamPropagation(BeamState source, List<Segment> segments, List<Termination> terminations, OcclusionWork occlusionWork) {
     public BeamPropagation(BeamState source, List<Segment> segments, List<Termination> terminations) {
-        this(source, segments, terminations, new OcclusionWork(0, 0));
+        this(source, segments, terminations, new OcclusionWork(0, 0, 0));
     }
 
     public BeamPropagation {
@@ -41,9 +44,17 @@ public record BeamPropagation(BeamState source, List<Segment> segments, List<Ter
         return power;
     }
 
-    public record Segment(int parentIndex, BeamState start, BeamState incident, double length, double remainingRange, @Nullable OpticalHit hit, double absorbedFluxLm, @Nullable BeamContact contact) {
+    public record Segment(int parentIndex, BeamState start, BeamState incident, double length, double remainingRange, @Nullable OpticalHit hit, double absorbedFluxLm, @Nullable BeamContact contact, @Nullable Boundary boundary, @Nullable BeamTerminal terminal) {
         public Segment(int parentIndex, BeamState start, BeamState incident, double length, double remainingRange, @Nullable OpticalHit hit, double absorbedFluxLm) {
-            this(parentIndex, start, incident, length, remainingRange, hit, absorbedFluxLm, null);
+            this(parentIndex, start, incident, length, remainingRange, hit, absorbedFluxLm, null, null);
+        }
+
+        public Segment(int parentIndex, BeamState start, BeamState incident, double length, double remainingRange, @Nullable OpticalHit hit, double absorbedFluxLm, @Nullable BeamContact contact) {
+            this(parentIndex, start, incident, length, remainingRange, hit, absorbedFluxLm, contact, null);
+        }
+
+        public Segment(int parentIndex, BeamState start, BeamState incident, double length, double remainingRange, @Nullable OpticalHit hit, double absorbedFluxLm, @Nullable BeamContact contact, @Nullable Boundary boundary) {
+            this(parentIndex, start, incident, length, remainingRange, hit, absorbedFluxLm, contact, boundary, null);
         }
 
         public Segment {
@@ -58,8 +69,9 @@ public record BeamPropagation(BeamState source, List<Segment> segments, List<Ter
     public record Termination(int parentIndex, BeamState state, Reason reason) {
     }
 
-    public record OcclusionWork(int sampledRegions, int tracedRays) {
-    }
+    public record Boundary(double firstContactDistance, Vec3 firstContactPoint, OpticalPlane cutoffPlane, boolean opticalInteraction) {}
+
+    public record OcclusionWork(int beamQueries, int candidateBlocks, int shapeTests) {}
 
     public enum Reason {
         ABSORBED,

@@ -24,7 +24,8 @@ import java.util.Map;
 final class LaserBeamParticleFlow {
     private static final double CONTINUITY_TOLERANCE_SQR = 1.0E-12;
     private static final double MAX_STEP_PER_TICK = 0.25;
-    private final Map<Long, List<WeakReference<LaserGlowParticle>>> active = new HashMap<>();
+    private Map<Long, List<WeakReference<LaserGlowParticle>>> active = new HashMap<>();
+    private Map<Long, List<WeakReference<LaserGlowParticle>>> pending = new HashMap<>();
     private @Nullable ShellSampler sampler;
     private @Nullable LaserBeamContext context;
     private long lastTick;
@@ -42,6 +43,28 @@ final class LaserBeamParticleFlow {
             result.add(new FlowPoint(flow.identity(), new DrawPoint(new GlowPoint(position, geometry.halfSize(), geometry.alpha()), point.appearance(), point.opacity()), context.toWorldPosition(flow.anchor()), direction));
         }
         return result;
+    }
+
+    private static void removeParticles(Map<Long, List<WeakReference<LaserGlowParticle>>> particles) {
+        for (List<WeakReference<LaserGlowParticle>> group : particles.values()) {
+            for (WeakReference<LaserGlowParticle> reference : group) {
+                LaserGlowParticle particle = reference.get();
+                if (particle == null) {
+                    continue;
+                }
+
+                particle.remove();
+            }
+        }
+
+        particles.clear();
+    }
+
+    void clear() {
+        removeParticles(active);
+        removeParticles(pending);
+        sampler = null;
+        context = null;
     }
 
     void touch() {
@@ -76,20 +99,7 @@ final class LaserBeamParticleFlow {
 
     void update(ClientLevel level, @Nullable PonderLevel ponderLevel, ShellSampler sampler, LaserBeamContext context, List<FlowPoint> points, long tick, long seed, int stride, float partialTick) {
         if (ponderLevel != null && tick < lastTick) {
-            for (List<WeakReference<LaserGlowParticle>> group : active.values()) {
-                for (WeakReference<LaserGlowParticle> reference : group) {
-                    LaserGlowParticle particle = reference.get();
-                    if (particle == null) {
-                        continue;
-                    }
-
-                    particle.remove();
-                }
-            }
-
-            active.clear();
-            this.sampler = null;
-            this.context = null;
+            clear();
         }
 
         List<FlowPoint> current = toWorld(points, context);
@@ -142,7 +152,6 @@ final class LaserBeamParticleFlow {
             continuations.computeIfAbsent(prediction.identity(), ignored -> new ArrayList<>()).add(new Continuation(prediction, closest));
         }
 
-        active.clear();
         for (FlowPoint flow : current) {
             List<Continuation> group = continuations.get(flow.identity());
             Continuation matched = null;
@@ -158,28 +167,28 @@ final class LaserBeamParticleFlow {
                 }
             }
 
-            LaserGlowParticle particle;
-            if (matched != null) {
-                group.remove(matched);
-                particle = matched.particle();
-                Vec3 adjustment = matched.prediction().point().geometry().position().subtract(flow.point().geometry().position());
-                if (adjustment.lengthSqr() <= CONTINUITY_TOLERANCE_SQR) {
-                    adjustment = Vec3.ZERO;
-                }
-
-                particle.follow(flow, adjustment, elapsedTicks);
-            }
-            else {
-                particle = new LaserGlowParticle(level, flow, seed, ponderLevel != null);
+            if (matched == null) {
+                LaserGlowParticle particle = new LaserGlowParticle(level, flow, seed, ponderLevel != null);
+                pending.computeIfAbsent(flow.identity(), ignored -> new ArrayList<>()).add(new WeakReference<>(particle));
                 if (ponderLevel != null) {
                     ponderLevel.addParticle(particle);
                 }
                 else {
                     Minecraft.getInstance().particleEngine.add(particle);
                 }
+
+                continue;
             }
 
-            active.computeIfAbsent(flow.identity(), ignored -> new ArrayList<>()).add(new WeakReference<>(particle));
+            group.remove(matched);
+            LaserGlowParticle particle = matched.particle();
+            pending.computeIfAbsent(flow.identity(), ignored -> new ArrayList<>()).add(new WeakReference<>(particle));
+            Vec3 adjustment = matched.prediction().point().geometry().position().subtract(flow.point().geometry().position());
+            if (adjustment.lengthSqr() <= CONTINUITY_TOLERANCE_SQR) {
+                adjustment = Vec3.ZERO;
+            }
+
+            particle.follow(flow, adjustment, elapsedTicks);
         }
 
         for (List<LaserGlowParticle> group : available.values()) {
@@ -193,6 +202,10 @@ final class LaserBeamParticleFlow {
             }
         }
 
+        Map<Long, List<WeakReference<LaserGlowParticle>>> previous = active;
+        active = pending;
+        pending = previous;
+        pending.clear();
         this.sampler = sampler;
         this.context = context;
         this.seed = seed;

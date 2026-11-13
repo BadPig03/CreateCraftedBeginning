@@ -7,6 +7,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.PropagationBudget;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFrame;
@@ -15,7 +16,6 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.exposure.OpticalExposureLedger;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.BeamOcclusionSolver;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserCollisionContext;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserTraceObservation;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.RayProjection;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +32,7 @@ public final class LaserBehaviour extends BlockEntityBehaviour {
     public static final int MAX_RANGE = 32;
     public static final BehaviourType<LaserBehaviour> TYPE = new BehaviourType<>();
     private static final BeamProfile SOURCE_PROFILE = new BeamProfile(0.03125);
+    private static final int TRACE_RETRY_DELAY_TICKS = 20;
     private final Supplier<Vec3> start;
     private final Supplier<Vec3> direction;
     private final DoubleSupplier flux;
@@ -39,7 +40,7 @@ public final class LaserBehaviour extends BlockEntityBehaviour {
     private final LaserServerTraceCache cache = new LaserServerTraceCache();
 
     private @Nullable BeamPropagation propagation;
-    private @Nullable LaserTraceObservation displayDependencies;
+    private long traceRetryTick = Long.MIN_VALUE;
 
     public LaserBehaviour(SmartBlockEntity blockEntity, Supplier<Vec3> start, Supplier<Vec3> direction, DoubleSupplier flux, IntSupplier range) {
         super(blockEntity);
@@ -60,34 +61,70 @@ public final class LaserBehaviour extends BlockEntityBehaviour {
 
     @Override
     public void tick() {
-        propagation = trace(null, true);
-        if (propagation == null) {
-            cache.clear();
-            OpticalExposureLedger.withdraw(blockEntity);
-            if (blockEntity instanceof LaserEmitterBlockEntity emitter) {
-                LaserServerDisplayQueue.update(emitter, null, null);
-            }
+        Level level = blockEntity.getLevel();
+        if (level == null || level.isClientSide) {
+            traceRetryTick = Long.MIN_VALUE;
+            clearPropagation();
             return;
         }
 
-        OpticalExposureLedger.submit(blockEntity, propagation);
+        long tick = level.getGameTime();
+        if (tick < traceRetryTick) {
+            return;
+        }
+
+        BeamPropagation result;
+        LaserCollisionContext displayCollision = null;
+        try {
+            TraceSource source = createTraceSource(level);
+            if (source == null) {
+                result = null;
+            }
+            else {
+                if (!source.inSubLevel() && !SubLevelBridge.resolve(level, blockEntity.getBlockPos()).inSubLevel()) {
+                    result = cache.trace(level, source.beam(), source.range());
+                }
+                else {
+                    cache.clear();
+                    displayCollision = new LaserCollisionContext(1, true);
+                    result = BeamOcclusionSolver.solve(level, source.beam(), PropagationBudget.standard(source.range()), displayCollision, false);
+                }
+                OpticalExposureLedger.submit(blockEntity, result);
+            }
+            traceRetryTick = Long.MIN_VALUE;
+        }
+        catch (RuntimeException failure) {
+            result = null;
+            if (traceRetryTick == Long.MIN_VALUE) {
+                CCBAPI.LOGGER.warn("Failed to update laser propagation or exposure at {} in dimension '{}'; pausing this source and retrying after {} ticks.", blockEntity.getBlockPos(), level.dimension().location(), TRACE_RETRY_DELAY_TICKS, failure);
+            }
+
+            traceRetryTick = tick + TRACE_RETRY_DELAY_TICKS;
+        }
+
+        if (result == null) {
+            clearPropagation();
+            if (!(blockEntity instanceof LaserEmitterBlockEntity emitter)) {
+                return;
+            }
+
+            LaserServerDisplayQueue.update(emitter, null, null, null);
+            return;
+        }
+
+        propagation = result;
         if (!(blockEntity instanceof LaserEmitterBlockEntity emitter)) {
             return;
         }
 
-        LaserTraceObservation dependencies = cache.dependencies(propagation);
-        if (dependencies == null) {
-            dependencies = displayDependencies;
-        }
-        LaserServerDisplayQueue.update(emitter, propagation, dependencies);
+        LaserEmitterAdvancements.award(emitter, result);
+        LaserServerDisplayQueue.update(emitter, result, cache.dependencies(result), displayCollision);
     }
 
     @Override
     public void unload() {
-        cache.clear();
-        propagation = null;
-        displayDependencies = null;
-        OpticalExposureLedger.withdraw(blockEntity);
+        traceRetryTick = Long.MIN_VALUE;
+        clearPropagation();
         if (!(blockEntity instanceof LaserEmitterBlockEntity emitter)) {
             return;
         }
@@ -100,16 +137,25 @@ public final class LaserBehaviour extends BlockEntityBehaviour {
     }
 
     public @Nullable BeamPropagation trace(@Nullable LaserCollisionContext collision) {
-        return trace(collision, false);
+        Level level = blockEntity.getLevel();
+        if (level == null || level.isClientSide) {
+            return null;
+        }
+
+        TraceSource source = createTraceSource(level);
+        if (source == null) {
+            return null;
+        }
+
+        if (collision == null) {
+            collision = new LaserCollisionContext(1, false);
+        }
+        return BeamOcclusionSolver.solve(level, source.beam(), PropagationBudget.standard(source.range()), collision, false);
     }
 
-    private @Nullable BeamPropagation trace(@Nullable LaserCollisionContext collision, boolean cached) {
-        if (cached) {
-            displayDependencies = null;
-        }
-        Level level = blockEntity.getLevel();
+    private @Nullable TraceSource createTraceSource(Level level) {
         double fluxLm = flux.getAsDouble();
-        if (level == null || level.isClientSide || blockEntity.isVirtual() || blockEntity.isRemoved() || fluxLm <= 0) {
+        if (blockEntity.isVirtual() || blockEntity.isRemoved() || fluxLm <= 0) {
             return null;
         }
 
@@ -123,20 +169,14 @@ public final class LaserBehaviour extends BlockEntityBehaviour {
         Vec3 worldStart = ray.worldStart();
         BeamFrame worldFrame = new BeamFrame(worldStart, ray.worldEnd().subtract(worldStart), axis.worldEnd().subtract(axis.worldStart()));
         BeamState source = new BeamState(worldFrame, localSource.profile(), localSource.fluxLm(), localSource.footprint());
-        if (cached) {
-            if (!ray.inSubLevel() && !SubLevelBridge.resolve(level, blockEntity.getBlockPos()).inSubLevel()) {
-                return cache.trace(level, source, sourceRange);
-            }
-
-            cache.clear();
-        }
-        if (collision == null) {
-            collision = new LaserCollisionContext(1, cached);
-        }
-        BeamPropagation result = BeamOcclusionSolver.solve(level, source, PropagationBudget.standard(sourceRange), collision, false);
-        if (cached) {
-            displayDependencies = LaserTraceObservation.capture(level, result, collision, 1, true);
-        }
-        return result;
+        return new TraceSource(source, sourceRange, ray.inSubLevel());
     }
+
+    private void clearPropagation() {
+        cache.clear();
+        propagation = null;
+        OpticalExposureLedger.withdraw(blockEntity);
+    }
+
+    private record TraceSource(BeamState beam, int range, boolean inSubLevel) {}
 }

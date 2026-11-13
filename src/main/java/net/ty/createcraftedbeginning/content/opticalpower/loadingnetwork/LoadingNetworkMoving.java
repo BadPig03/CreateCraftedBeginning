@@ -24,7 +24,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.config.CCBConfig;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderLocation;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerLocation;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkMovingSerialization.StoredHost;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkRuntime.Status;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkSavedData.Node;
@@ -94,7 +94,7 @@ public final class LoadingNetworkMoving {
         return hosts.containsKey(host);
     }
 
-    public @Nullable AmethystLoaderLocation position(MinecraftServer server, UUID identity) {
+    public @Nullable ChunkStabilizerLocation position(MinecraftServer server, UUID identity) {
         UUID hostId = memberHosts.get(identity);
         Host host = hosts.get(hostId);
         if (host == null) {
@@ -116,7 +116,7 @@ public final class LoadingNetworkMoving {
                 return null;
             }
 
-            return new AmethystLoaderLocation(level.dimension(), position, hostId, 0);
+            return new ChunkStabilizerLocation(level.dimension(), position, hostId, 0);
         }
         return null;
     }
@@ -160,7 +160,7 @@ public final class LoadingNetworkMoving {
         if (layout == null || layout.contraption() != contraption) {
             Map<BlockPos, StructureBlockInfo> blocks = contraption.getBlocks();
             Map<BlockPos, Node> members = LoadingNetworkContraptions.members(blocks);
-            boolean independent = blocks.values().stream().anyMatch(info -> info.state().is(CCBBlocks.AMETHYST_LOADER_BLOCK.get()) && !members.containsKey(info.pos()));
+            boolean independent = blocks.values().stream().anyMatch(info -> info.state().is(CCBBlocks.CHUNK_STABILIZER_BLOCK.get()) && !members.containsKey(info.pos()));
             layout = new Layout(contraption, List.copyOf(members.values()), independent);
             layouts.put(identity, layout);
         }
@@ -234,11 +234,11 @@ public final class LoadingNetworkMoving {
         return states.getOrDefault(identity, Status.UNAVAILABLE);
     }
 
-    void retry(UUID network, @Nullable UUID member) {
+    void retry(UUID network, UUID member) {
         for (Node node : data.assembledMembers(network)) {
             UUID identity = node.loaderId();
             UUID host = memberHosts.get(identity);
-            if (host == null || member != null && !member.equals(identity)) {
+            if (host == null || !member.equals(identity)) {
                 continue;
             }
 
@@ -257,7 +257,7 @@ public final class LoadingNetworkMoving {
     }
 
     void tick(MinecraftServer server) {
-        boolean enabled = CCBConfig.server().opticalPower.amethystLoader.enableChunkLoading.get();
+        boolean enabled = CCBConfig.server().opticalPower.chunkStabilizer.enableChunkLoading.get();
         int tick = server.getTickCount();
         for (Entry<UUID, Host> entry : List.copyOf(hosts.entrySet())) {
             UUID identity = entry.getKey();

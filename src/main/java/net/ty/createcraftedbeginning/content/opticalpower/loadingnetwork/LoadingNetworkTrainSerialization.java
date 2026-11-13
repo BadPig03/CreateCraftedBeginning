@@ -39,7 +39,7 @@ final class LoadingNetworkTrainSerialization {
         Map<Integer, BlockState> states = new HashMap<>();
         for (int index = 0; index < palette.size(); index++) {
             BlockState state = NbtUtils.readBlockState(lookup, palette.getCompound(index));
-            if (!state.is(CCBBlocks.AMETHYST_LOADER_BLOCK.get()) && !state.is(CCBBlocks.AMETHYST_ANTENNA_BLOCK.get())) {
+            if (!state.is(CCBBlocks.CHUNK_STABILIZER_BLOCK.get()) && !state.is(CCBBlocks.AMETHYST_ANTENNA_BLOCK.get())) {
                 continue;
             }
 

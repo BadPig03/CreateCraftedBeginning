@@ -24,6 +24,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
 public class AirtightChestplateEvents {
+    private static final int ADVANCEMENT_CHECK_INTERVAL = 20;
+
     private AirtightChestplateEvents() {
     }
 
@@ -64,7 +66,7 @@ public class AirtightChestplateEvents {
         }
 
         AirtightChestplateUpgradeRegistry.tick(player, chestplate);
-        if (level.getGameTime() % 20 != 0 || player.getEyePosition().y <= level.getMaxBuildHeight()) {
+        if (level.getGameTime() % ADVANCEMENT_CHECK_INTERVAL != 0 || player.getY() < level.getMaxBuildHeight() || player.onGround() || !player.isFallFlying() && !player.getAbilities().flying) {
             return;
         }
 

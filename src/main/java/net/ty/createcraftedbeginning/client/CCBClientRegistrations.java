@@ -70,15 +70,15 @@ import net.ty.createcraftedbeginning.content.fluids.TintedFluidType;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaRenderer;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelClientExtensions;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystcollectorpanel.AmethystCollectorPanelModel;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderRenderer;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderVisual;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.management.AmethystLoaderScreen;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorRenderer;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerRenderer;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerVisual;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerScreen;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterClientExtensions;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.beamrender.LaserEmitterRenderer;
 import net.ty.createcraftedbeginning.content.opticalpower.opticalfiber.OpticalFiberModel;
-import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverClientExtensions;
-import net.ty.createcraftedbeginning.content.opticalpower.photothermalreceiver.PhotothermalReceiverRenderer;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalchamber.PhotothermalChamberClientExtensions;
+import net.ty.createcraftedbeginning.content.opticalpower.photothermalchamber.PhotothermalChamberRenderer;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
@@ -120,11 +120,11 @@ public final class CCBClientRegistrations {
         event.registerBlock(new AirtightForgingPressStructuralClientExtensions(), CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_BLOCK.get(), CCBBlocks.AIRTIGHT_FORGING_PRESS_STRUCTURAL_SHAFT_BLOCK.get());
         event.registerBlock(new AmethystCollectorPanelClientExtensions(), CCBBlocks.AMETHYST_COLLECTOR_PANEL_BLOCK.get());
         event.registerBlock(new LaserEmitterClientExtensions(), CCBBlocks.LASER_EMITTER_BLOCK);
-        event.registerBlock(new PhotothermalReceiverClientExtensions(), CCBBlocks.PHOTOTHERMAL_RECEIVER_BLOCK);
+        event.registerBlock(new PhotothermalChamberClientExtensions(), CCBBlocks.PHOTOTHERMAL_CHAMBER_BLOCK);
     }
 
     public static void registerMenuScreens(RegisterMenuScreensEvent event) {
-        event.register(CCBMenuTypes.AMETHYST_LOADER_MENU.get(), AmethystLoaderScreen::new);
+        event.register(CCBMenuTypes.CHUNK_STABILIZER_MENU.get(), ChunkStabilizerScreen::new);
         event.register(CCBMenuTypes.AIRTIGHT_HELMET_MENU.get(), AirtightHelmetScreen::new);
         event.register(CCBMenuTypes.AIRTIGHT_CHESTPLATE_MENU.get(), AirtightChestplateScreen::new);
         event.register(CCBMenuTypes.AIRTIGHT_LEGGINGS_MENU.get(), AirtightLeggingsScreen::new);
@@ -162,9 +162,9 @@ public final class CCBClientRegistrations {
         event.registerBlockEntityRenderer(CCBBlockEntities.GAS_FACTORY_GAUGE.get(), GasFactoryGaugeRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.LASER_EMITTER.get(), LaserEmitterRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.AMETHYST_MIRROR.get(), AmethystMirrorRenderer::new);
-        event.registerBlockEntityRenderer(CCBBlockEntities.AMETHYST_LOADER.get(), AmethystLoaderRenderer::new);
+        event.registerBlockEntityRenderer(CCBBlockEntities.CHUNK_STABILIZER.get(), ChunkStabilizerRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.AMETHYST_ANTENNA.get(), AmethystAntennaRenderer::new);
-        event.registerBlockEntityRenderer(CCBBlockEntities.PHOTOTHERMAL_RECEIVER.get(), PhotothermalReceiverRenderer::new);
+        event.registerBlockEntityRenderer(CCBBlockEntities.PHOTOTHERMAL_CHAMBER.get(), PhotothermalChamberRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.ANDESITE_CRATE.get(), SmartBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.BRASS_CRATE.get(), SmartBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.STURDY_CRATE.get(), SmartBlockEntityRenderer::new);
@@ -176,7 +176,7 @@ public final class CCBClientRegistrations {
     }
 
     public static void registerVisualizers(FMLClientSetupEvent ignoredEvent) {
-        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AMETHYST_LOADER.get()).factory(AmethystLoaderVisual::new).skipVanillaRender(loader -> true).apply();
+        SimpleBlockEntityVisualizer.builder(CCBBlockEntities.CHUNK_STABILIZER.get()).factory(ChunkStabilizerVisual::new).skipVanillaRender(loader -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIR_VENT.get()).factory(AirVentVisual::new).skipVanillaRender(vent -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_ENGINE.get()).factory(AirtightEngineVisual::new).skipVanillaRender(engine -> true).apply();
         SimpleBlockEntityVisualizer.builder(CCBBlockEntities.AIRTIGHT_FORGING_PRESS.get()).factory(AirtightForgingPressVisual::new).neverSkipVanillaRender().apply();

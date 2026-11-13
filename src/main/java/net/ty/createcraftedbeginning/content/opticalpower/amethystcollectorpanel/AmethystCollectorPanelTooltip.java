@@ -12,26 +12,39 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class AmethystCollectorPanelTooltip {
+    private static final String UNAVAILABLE = "gui.optical_power.state_unavailable";
+
     static void addToGoggleTooltip(List<Component> tooltip, AmethystCollectorPanelOutput output) {
         CCBLang.translate("gui.amethyst_collector_panel.header").forGoggles(tooltip);
+        if (output.limitation() == Limitation.UNAVAILABLE) {
+            CCBLang.translate(UNAVAILABLE).style(ChatFormatting.GRAY).forGoggles(tooltip);
+            return;
+        }
+
         CCBLang.translate("gui.amethyst_collector_panel.power").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.number(output.fluxLm()).translate("gui.unit.luminous_flux").style(ChatFormatting.AQUA).forGoggles(tooltip, 1);
     }
 
     static boolean addToTooltip(List<Component> tooltip, AmethystCollectorPanelOutput output) {
         Limitation limitation = output.limitation();
-        if (limitation == Limitation.NONE) {
-            return false;
-        }
-
         String reason = switch (limitation) {
+            case NONE -> null;
             case OVERSIZED -> "gui.amethyst_collector_panel.oversized";
             case NO_SKYLIGHT -> "gui.amethyst_collector_panel.no_skylight";
             case NIGHT -> "gui.amethyst_collector_panel.night";
             case OBSTRUCTED -> "gui.amethyst_collector_panel.obstructed";
             case RAIN -> "gui.amethyst_collector_panel.rain";
-            default -> throw new IllegalStateException("Unexpected collector output limitation: " + limitation + '.');
+            case UNAVAILABLE -> UNAVAILABLE;
         };
+        if (reason == null) {
+            return false;
+        }
+
+        if (limitation == Limitation.UNAVAILABLE) {
+            CCBLang.translate(reason).style(ChatFormatting.GRAY).forGoggles(tooltip);
+            return true;
+        }
+
         String title = output.fluxLm() > 0 || limitation == Limitation.RAIN ? "gui.amethyst_collector_panel.limited" : "gui.amethyst_collector_panel.failure";
         CCBLang.translate(title).style(ChatFormatting.GOLD).forGoggles(tooltip);
         CCBLang.addToGoggles(tooltip, reason);

@@ -15,6 +15,7 @@ public record AmethystCollectorPanelOutput(double fluxLm, Limitation limitation)
         NO_SKYLIGHT,
         NIGHT,
         OBSTRUCTED,
-        RAIN
+        RAIN,
+        UNAVAILABLE
     }
 }

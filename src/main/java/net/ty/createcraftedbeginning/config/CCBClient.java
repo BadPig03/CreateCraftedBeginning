@@ -32,7 +32,7 @@ public final class CCBClient extends ConfigBase {
     public static final class Outlines extends ConfigBase {
         public final ConfigBool showCasedAirtightPipeSides = b(true, "show_cased_airtight_pipe_sides", "Show the open and closed sides of cased Airtight Pipes while holding a Wrench and wearing Engineer's Goggles.");
         public final ConfigBool showAmethystSoundSuppressorChunks = b(true, "show_amethyst_sound_suppressor_chunks", "Show the chunk columns affected by the Amethyst Sound Suppressor when its range display is enabled and the player is wearing Engineer's Goggles.");
-        public final ConfigBool showAmethystLoaderChunks = b(true, "show_amethyst_loader_chunks", "Show the current chunk of active Amethyst Loaders when their range display is enabled and the player is wearing Engineer's Goggles.");
+        public final ConfigBool showChunkStabilizerChunks = b(true, "show_chunk_stabilizer_chunks", "Show the current chunk of active Chunk Stabilizers when their range display is enabled and the player is wearing Engineer's Goggles.");
         public final ConfigBool showGasReleaseAreas = b(true, "show_gas_release_areas", "Show gas release area outlines while wearing Engineer's Goggles.");
 
         @Override

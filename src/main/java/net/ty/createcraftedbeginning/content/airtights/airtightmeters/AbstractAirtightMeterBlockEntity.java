@@ -3,16 +3,21 @@ package net.ty.createcraftedbeginning.content.airtights.airtightmeters;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
+import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AbstractAirtightPipeBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AxisGasPipeBlock;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
+import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver.AdjacentConnection;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -59,6 +64,36 @@ public abstract class AbstractAirtightMeterBlockEntity extends AbstractAirtightP
 
         updateComparatorOutput();
         flushTelemetrySync();
+    }
+
+    @Override
+    public void lazyTick() {
+        super.lazyTick();
+        Level level = getLevel();
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        CCBAdvancementBehaviour advancement = getAdvancementBehaviour();
+        Player player = advancement.getPlayer();
+        if (player == null || CCBAdvancements.VISUAL_MONITORING.isAlreadyAwardedTo(player)) {
+            return;
+        }
+
+        BlockState state = getBlockState();
+        for (Direction face : Iterate.directions) {
+            if (!AxisGasPipeBlock.isOpenAt(state, face)) {
+                continue;
+            }
+
+            AdjacentConnection adjacent = GasConnectionResolver.resolveAdjacentConnection(level, worldPosition, face);
+            if (!adjacent.hasTransportConnection() && !adjacent.hasGasHandler()) {
+                continue;
+            }
+
+            advancement.awardPlayer(CCBAdvancements.VISUAL_MONITORING);
+            return;
+        }
     }
 
     @Override

@@ -5,6 +5,8 @@ import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -19,7 +21,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.common.Tags.Items;
-import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.neoforged.neoforge.common.util.FakePlayer;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalElement;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalGeometry;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserCollisionContext;
@@ -67,7 +69,24 @@ public final class AmethystSoundSuppressorBlock extends Block implements IBE<Ame
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
-        CCBAdvancementBehaviour.setPlacedBy(level, pos, entity);
+        if (!(level instanceof ServerLevel serverLevel) || !(entity instanceof ServerPlayer player) || player instanceof FakePlayer) {
+            return;
+        }
+
+        withBlockEntityDo(serverLevel, pos, suppressor -> suppressor.place(serverLevel, player.getUUID()));
+    }
+
+    @Override
+    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState previous, boolean moved) {
+        if (!(level instanceof ServerLevel serverLevel) || serverLevel.restoringBlockSnapshots || previous.is(this)) {
+            return;
+        }
+
+        if (!(serverLevel.getChunkAt(pos).getBlockEntity(pos) instanceof AmethystSoundSuppressorBlockEntity suppressor)) {
+            return;
+        }
+
+        suppressor.commitPlacement(serverLevel);
     }
 
     @Override

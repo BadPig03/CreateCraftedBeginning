@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Con
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation.Segment;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalHit;
@@ -24,13 +25,11 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalSurface;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalTarget;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamContext;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamContours.Budget;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayInput;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayMesh;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayMesh.Cache;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayMesh.Result;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayMesh.Status;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMappedMesh;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.DrawSection;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamParticles.FlowPoint;
@@ -63,6 +62,7 @@ import java.util.WeakHashMap;
 @MethodsReturnNonnullByDefault
 public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBlockEntity> {
     private static final double PARTICLE_VIEW_DISTANCE_SQR = 4096;
+    private static final long DISPLAY_RETRY_DELAY_NS = 1000000000L;
 
     private static final Set<LaserEmitterRenderer> RENDERERS = Collections.newSetFromMap(new WeakHashMap<>());
 
@@ -76,6 +76,10 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
         LaserBeamMeshCache.clear();
         LaserBeamCoverageRenderer.clear();
         for (LaserEmitterRenderer renderer : RENDERERS) {
+            for (RenderState state : renderer.renderStates.values()) {
+                state.particleFlow.clear();
+                state.impactParticles.clear();
+            }
             renderer.renderStates.clear();
         }
     }
@@ -89,12 +93,21 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
     @Override
     protected void renderSafe(LaserEmitterBlockEntity blockEntity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
         Level level = blockEntity.getLevel();
-        if (level == null || !blockEntity.isLaserActive()) {
+        boolean shaderAvailable = LaserRenderTypes.isAvailable();
+        if (!shaderAvailable || level == null || !blockEntity.isLaserActive()) {
             LaserBeamMeshCache.remove(blockEntity);
             RenderState removed = renderStates.remove(blockEntity);
-            if (removed != null) {
-                removed.particleFlow.detach(partialTick);
+            if (removed == null) {
+                return;
             }
+
+            if (!shaderAvailable || blockEntity.isDisplaySuspended()) {
+                removed.particleFlow.clear();
+                removed.impactParticles.clear();
+                return;
+            }
+
+            removed.particleFlow.detach(partialTick);
             return;
         }
 
@@ -103,7 +116,9 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
         RenderState state = renderStates.get(blockEntity);
         if (state == null || state.ownerLevel.get() != level) {
             if (state != null) {
-                LaserBeamMeshCache.remove(blockEntity);
+                state.clearGeometry(blockEntity);
+                state.particleFlow.clear();
+                state.impactParticles.clear();
             }
 
             state = new RenderState(level);
@@ -114,99 +129,161 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
         if (!ponder) {
             if (!blockEntity.isVirtual()) {
                 UUID instance = blockEntity.getDisplayInstance();
-                if (!instance.equals(state.requestedInstance)) {
+                boolean suspended = blockEntity.isDisplaySuspended();
+                if (blockEntity.takeDisplayBaselineRetry(level.getGameTime()) || !suspended && !instance.equals(state.requestedInstance)) {
                     state.requestedInstance = instance;
+                    state.retryAtNs = Long.MIN_VALUE;
                     CatnipServices.NETWORK.sendToServer(new LaserDisplayRequestPacket(level.dimension().location(), blockPos, instance));
+                }
+                if (suspended) {
+                    state.clearGeometry(blockEntity);
+                    state.particleFlow.clear();
+                    state.impactParticles.clear();
+                    state.lastParticleTick = Long.MIN_VALUE;
+                    state.retryAtNs = Long.MIN_VALUE;
+                    return;
                 }
             }
 
             if (blockEntity.isDisplayOff()) {
-                LaserBeamMeshCache.remove(blockEntity);
-                state.mesh = null;
+                state.clearGeometry(blockEntity);
                 state.particleFlow.detach(partialTick);
+                state.retryAtNs = Long.MIN_VALUE;
                 return;
             }
         }
 
-        Minecraft minecraft = Minecraft.getInstance();
-        BeamState source = blockEntity.createBeamSource();
-        LaserDisplaySnapshot synchronizedInput = LaserBeamSync.current(blockEntity, level, source, partialTick);
-        CachedMesh mesh;
-        LaserBeamContext context;
-        LaserBeamContext rigidSnapshotContext = null;
-        if (synchronizedInput != null) {
-            mesh = LaserBeamMeshCache.requestSynchronized(blockEntity, state, synchronizedInput, blockOrigin);
-            context = synchronizedInput.input().context();
-            if (synchronizedInput.rigid() != null) {
-                rigidSnapshotContext = context;
-                context = context.atRenderPose(level, partialTick);
-            }
+        long retryAtNs = state.retryAtNs;
+        if (retryAtNs != Long.MIN_VALUE && System.nanoTime() - retryAtNs < 0) {
+            return;
         }
-        else {
-            LaserBeamMeshCache.local(blockEntity);
-            LaserRenderSnapshot snapshot = state.traceCache.trace(level, source, blockOrigin, blockEntity.getLaserRange(), partialTick);
-            BeamPropagation propagation = snapshot.propagation();
-            List<Segment> segments = propagation.segments();
-            double radius = source.profile().radius();
-            mesh = state.mesh;
-            if (state.checkedSnapshot != snapshot || state.checkedRadius != radius) {
-                state.context = LaserBeamContext.from(snapshot);
-                state.checkedSnapshot = snapshot;
-                state.checkedRadius = radius;
-                state.sourceDomainDisplay = level == minecraft.level && !SubLevelBridge.resolve(level, blockPos).inSubLevel() && segments.stream().map(Segment::hit).filter(Objects::nonNull).noneMatch(hit -> {
-                    OpticalTarget target = hit.target();
-                    return target.contraptionId() != null || target.inSubLevel();
-                });
-                state.cacheEligible = state.sourceDomainDisplay && LaserBeamMeshCache.supports(snapshot);
-            }
 
-            context = Objects.requireNonNull(state.context, "Local laser rendering requires a display context.");
-            if (state.cacheEligible) {
-                mesh = LaserBeamMeshCache.request(blockEntity, state, snapshot, blockOrigin, radius);
-            }
-            else {
-                LaserBeamMeshCache.detach(blockEntity);
-                if (mesh == null || mesh.snapshot != snapshot) {
-                    List<DrawSection> inputSections = LaserBeamMesh.create(snapshot);
-                    boolean sourceDomainDisplay = state.sourceDomainDisplay;
-                    List<DrawSection> sections;
-                    List<OpticalSurface> optics = segments.stream().map(Segment::hit).filter(Objects::nonNull).map(OpticalHit::surface).filter(surface -> surface.aperture() != null).toList();
-                    List<OpticalPlane> contacts = segments.stream().map(Segment::hit).filter(Objects::nonNull).map(hit -> new OpticalPlane(hit.position(), hit.surface().normal())).toList();
-                    ShellMesh shells;
-                    ShellSampler particles;
-                    LaserBeamVertices vertices;
-                    Status displayStatus;
-                    String displayReason;
-                    if (mesh != null && mesh.geometrySnapshot == mesh.snapshot && mesh.sourceDomainDisplay == sourceDomainDisplay && mesh.inputSections.equals(inputSections) && mesh.contacts.equals(contacts) && mesh.optics.equals(optics) && mesh.radius == radius) {
-                        sections = mesh.sections;
-                        displayStatus = mesh.displayStatus;
-                        displayReason = mesh.displayReason;
-                        shells = mesh.shells;
-                        particles = mesh.particles;
-                        vertices = mesh.vertices;
-                    }
-                    else {
-                        Result display;
-                        if (sourceDomainDisplay) {
-                            display = LaserBeamMappedMesh.create(snapshot, inputSections);
-                        }
-                        else {
-                            display = LaserBeamDisplayMesh.createUnmapped(context, inputSections, new Budget(), "Source-domain display is limited to ordinary client-world sources and optical targets.");
-                        }
-
-                        sections = display.sections();
-                        shells = display.shells();
-                        displayStatus = display.status();
-                        displayReason = display.reason();
-                        particles = null;
-                        vertices = null;
-                    }
-
-                    mesh = new CachedMesh(snapshot, inputSections, sections, contacts, optics, radius, shells, particles, vertices, displayStatus, displayReason, sourceDomainDisplay);
-                    state.mesh = mesh;
+        Matrix4f pose;
+        List<Layer> layers;
+        try {
+            Minecraft minecraft = Minecraft.getInstance();
+            BeamState source = blockEntity.createBeamSource();
+            LaserDisplaySnapshot synchronizedInput = LaserBeamSync.current(blockEntity, level, source, partialTick);
+            CachedMesh mesh;
+            LaserBeamContext context;
+            LaserBeamContext rigidSnapshotContext = null;
+            if (synchronizedInput != null) {
+                mesh = LaserBeamMeshCache.requestSynchronized(blockEntity, state, synchronizedInput, blockOrigin);
+                context = synchronizedInput.input().context();
+                if (synchronizedInput.rigid() != null) {
+                    rigidSnapshotContext = context;
+                    context = context.atRenderPose(level, partialTick);
                 }
             }
+            else {
+                LaserBeamMeshCache.local(blockEntity);
+                LaserRenderSnapshot snapshot = state.traceCache.trace(level, source, blockOrigin, blockEntity.getLaserRange(), partialTick);
+                BeamPropagation propagation = snapshot.propagation();
+                List<Segment> segments = propagation.segments();
+                double radius = source.profile().radius();
+                mesh = state.mesh;
+                if (state.checkedSnapshot != snapshot || state.checkedRadius != radius) {
+                    state.context = LaserBeamContext.from(snapshot);
+                    state.checkedSnapshot = snapshot;
+                    state.checkedRadius = radius;
+                    state.staticWorldPath = level == minecraft.level && !SubLevelBridge.resolve(level, blockPos).inSubLevel() && segments.stream().map(Segment::hit).filter(Objects::nonNull).noneMatch(hit -> {
+                        OpticalTarget target = hit.target();
+                        return target.contraptionId() != null || target.inSubLevel();
+                    });
+                    state.cacheEligible = state.staticWorldPath && LaserBeamMeshCache.supports(snapshot);
+                }
+
+                context = Objects.requireNonNull(state.context, "Local laser rendering requires a display context.");
+                if (state.cacheEligible) {
+                    mesh = LaserBeamMeshCache.request(blockEntity, state, snapshot, blockOrigin, radius);
+                }
+                else {
+                    LaserBeamMeshCache.detach(blockEntity);
+                    if (mesh == null || mesh.snapshot != snapshot) {
+                        List<DrawSection> inputSections = LaserBeamMesh.create(snapshot);
+                        boolean staticWorldPath = state.staticWorldPath;
+                        List<DrawSection> sections;
+                        List<OpticalSurface> optics = segments.stream().map(Segment::hit).filter(Objects::nonNull).map(OpticalHit::surface).filter(surface -> surface.aperture() != null).toList();
+                        List<OpticalPlane> contacts = segments.stream().map(Segment::hit).filter(Objects::nonNull).map(hit -> new OpticalPlane(hit.position(), hit.surface().normal())).toList();
+                        ShellMesh shells;
+                        ShellSampler particles;
+                        LaserBeamVertices vertices;
+                        Status displayStatus;
+                        String displayReason;
+                        if (mesh != null && mesh.geometrySnapshot == mesh.snapshot && mesh.staticWorldPath == staticWorldPath && mesh.inputSections.equals(inputSections) && mesh.contacts.equals(contacts) && mesh.optics.equals(optics) && mesh.radius == radius) {
+                            sections = mesh.sections;
+                            displayStatus = mesh.displayStatus;
+                            displayReason = mesh.displayReason;
+                            shells = mesh.shells;
+                            particles = mesh.particles;
+                            vertices = mesh.vertices;
+                        }
+                        else {
+                            Result display = LaserBeamDisplayMesh.create(LaserBeamDisplayMesh.prepare(snapshot, inputSections));
+
+                            sections = display.sections();
+                            shells = display.shells();
+                            displayStatus = display.status();
+                            displayReason = display.reason();
+                            particles = null;
+                            vertices = null;
+                        }
+
+                        mesh = new CachedMesh(snapshot, inputSections, sections, contacts, optics, radius, shells, particles, vertices, displayStatus, displayReason, staticWorldPath);
+                        state.mesh = mesh;
+                    }
+                }
+            }
+            pose = poseStack.last().pose();
+            Vec3 xAxis = context.xAxis();
+            Vec3 yAxis = context.yAxis();
+            Vec3 zAxis = context.zAxis();
+            double scaleX = xAxis.length();
+            double scaleY = yAxis.length();
+            double scaleZ = zAxis.length();
+            if (scaleX != 1 || scaleY != 1 || scaleZ != 1) {
+                pose = new Matrix4f(pose).scale((float) (1 / scaleX), (float) (1 / scaleY), (float) (1 / scaleZ));
+            }
+
+            Camera camera = minecraft.gameRenderer.getMainCamera();
+            Vec3 cameraPosition = camera.getPosition();
+            Vec3 viewPosition = cameraPosition;
+            if (rigidSnapshotContext != null) {
+                viewPosition = rigidSnapshotContext.toWorldPosition(context.toLocalPosition(cameraPosition));
+            }
+            double widthPixels = Double.POSITIVE_INFINITY;
+            if (!ponder) {
+                widthPixels = mesh.view.radiusDistanceRatio(viewPosition) * minecraft.getWindow().getHeight() / Math.tan(Math.toRadians(minecraft.options.fov().get()) * 0.5);
+            }
+
+            List<List<Face>> surfacesByLayer = state.display.select(mesh.shells, widthPixels);
+            List<Face> surfaces = surfacesByLayer.getFirst();
+            LaserBeamVertices vertices = mesh.vertices;
+            if (vertices == null || !vertices.matchesOrigin(blockOrigin)) {
+                vertices = new LaserBeamVertices(blockOrigin);
+                mesh.vertices = vertices;
+            }
+
+            if (mesh.impact == null) {
+                mesh.impact = LaserBeamImpact.create(mesh.particleContext, mesh.sections, blockOrigin);
+            }
+            layers = mesh.impact.attach(vertices.select(surfacesByLayer));
+            state.updateParticles(minecraft, ponderLevel, context, cameraPosition, mesh, surfaces, blockPos.asLong(), partialTick);
         }
+        catch (RuntimeException failure) {
+            if (retryAtNs == Long.MIN_VALUE) {
+                CCBAPI.LOGGER.warn("Failed to prepare the laser display at {} in dimension '{}'; pausing this display and retrying after {} ms.", blockPos, level.dimension().location(), DISPLAY_RETRY_DELAY_NS / 1000000, failure);
+            }
+
+            state.retryAtNs = System.nanoTime() + DISPLAY_RETRY_DELAY_NS;
+            state.clearGeometry(blockEntity);
+            state.particleFlow.clear();
+            state.impactParticles.clear();
+            state.lastParticleTick = Long.MIN_VALUE;
+            return;
+        }
+
+        state.retryAtNs = Long.MIN_VALUE;
         VertexConsumer buffer;
         if (ponder && bufferSource instanceof SuperRenderTypeBuffer ponderBuffer) {
             buffer = ponderBuffer.getLateBuffer(LaserRenderTypes.PONDER_LASER);
@@ -215,91 +292,14 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
             buffer = bufferSource.getBuffer(ponder ? LaserRenderTypes.PONDER_LASER : LaserRenderTypes.LASER);
         }
 
-        Matrix4f pose = poseStack.last().pose();
-        Vec3 xAxis = context.xAxis();
-        Vec3 yAxis = context.yAxis();
-        Vec3 zAxis = context.zAxis();
-        double scaleX = xAxis.length();
-        double scaleY = yAxis.length();
-        double scaleZ = zAxis.length();
-        if (scaleX != 1 || scaleY != 1 || scaleZ != 1) {
-            pose = new Matrix4f(pose).scale((float) (1 / scaleX), (float) (1 / scaleY), (float) (1 / scaleZ));
-        }
-
-        Camera camera = minecraft.gameRenderer.getMainCamera();
-        Vec3 cameraPosition = camera.getPosition();
-        Vec3 viewPosition = cameraPosition;
-        if (rigidSnapshotContext != null) {
-            viewPosition = rigidSnapshotContext.toWorldPosition(context.toLocalPosition(cameraPosition));
-        }
-        double widthPixels = Double.POSITIVE_INFINITY;
         if (!ponder) {
-            widthPixels = mesh.view.radiusDistanceRatio(viewPosition) * minecraft.getWindow().getHeight() / Math.tan(Math.toRadians(minecraft.options.fov().get()) * 0.5);
-        }
-
-        List<List<Face>> surfacesByLayer = state.display.select(mesh.shells, widthPixels);
-        List<Face> surfaces = surfacesByLayer.getFirst();
-        LaserBeamVertices vertices = mesh.vertices;
-        if (vertices == null || !vertices.matchesOrigin(blockOrigin)) {
-            vertices = new LaserBeamVertices(blockOrigin);
-            mesh.vertices = vertices;
-        }
-
-        List<Layer> layers = vertices.select(surfacesByLayer);
-        if (ponder) {
-            for (Layer layer : layers) {
-                layer.render(buffer, pose);
-            }
-        }
-        else {
             LaserBeamCoverageRenderer.submit(blockEntity, pose, layers);
-        }
-
-        int stride = switch (minecraft.options.particles().get()) {
-            case ALL -> 1;
-            case DECREASED -> 2;
-            case MINIMAL -> 0;
-        };
-        if (stride == 0 || surfaces.isEmpty()) {
-            state.particleFlow.detach(partialTick);
             return;
         }
 
-        long particleTick = minecraft.levelRenderer.getTicks();
-        if (ponderLevel != null) {
-            PonderScene scene = ponderLevel.scene;
-            if (scene == null) {
-                return;
-            }
-
-            particleTick = scene.getCurrentTime();
+        for (Layer layer : layers) {
+            layer.render(buffer, pose);
         }
-        else if (cameraPosition.distanceToSqr(context.worldOrigin().add(xAxis.add(yAxis).add(zAxis).scale(0.5))) > PARTICLE_VIEW_DISTANCE_SQR) {
-            state.particleFlow.detach(partialTick);
-            return;
-        }
-
-        state.particleFlow.touch();
-        if (!ponder && minecraft.isPaused() || state.lastParticleTick == particleTick) {
-            return;
-        }
-
-        state.lastParticleTick = particleTick;
-        ClientLevel particleLevel = minecraft.level;
-        if (ponder) {
-            particleLevel = state.particleLevel.get();
-            if (particleLevel == null) {
-                particleLevel = WrappedClientLevel.of(level);
-                state.particleLevel = new WeakReference<>(particleLevel);
-            }
-        }
-        if (particleLevel == null) {
-            return;
-        }
-
-        long seed = blockPos.asLong();
-        List<FlowPoint> points = mesh.sampleParticles(surfaces, particleTick, seed, stride);
-        state.particleFlow.update(particleLevel, ponderLevel, Objects.requireNonNull(mesh.particles, "Laser particle flow requires a shell sampler."), context, points, particleTick, seed, stride, partialTick);
     }
 
     @Override
@@ -317,18 +317,79 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
         final LaserRenderTraceCache traceCache = new LaserRenderTraceCache();
         private final LaserBeamDisplayState display = new LaserBeamDisplayState();
         private final LaserBeamParticleFlow particleFlow = new LaserBeamParticleFlow();
+        private final LaserBeamImpactParticles impactParticles = new LaserBeamImpactParticles();
         @Nullable CachedMesh mesh;
         private @Nullable LaserRenderSnapshot checkedSnapshot;
         private @Nullable LaserBeamContext context;
         private WeakReference<ClientLevel> particleLevel = new WeakReference<>(null);
         private long lastParticleTick = Long.MIN_VALUE;
+        private long retryAtNs = Long.MIN_VALUE;
         private double checkedRadius;
-        private boolean sourceDomainDisplay;
+        private boolean staticWorldPath;
         private boolean cacheEligible;
         private @Nullable UUID requestedInstance;
 
         private RenderState(Level level) {
             ownerLevel = new WeakReference<>(level);
+        }
+
+        private void clearGeometry(LaserEmitterBlockEntity owner) {
+            LaserBeamMeshCache.remove(owner);
+            traceCache.clear();
+            mesh = null;
+            checkedSnapshot = null;
+            context = null;
+        }
+
+        private void updateParticles(Minecraft minecraft, @Nullable PonderLevel ponderLevel, LaserBeamContext context, Vec3 cameraPosition, CachedMesh mesh, List<Face> surfaces, long seed, float partialTick) {
+            int stride = switch (minecraft.options.particles().get()) {
+                case ALL -> 1;
+                case DECREASED -> 2;
+                case MINIMAL -> 0;
+            };
+            if (stride == 0 || surfaces.isEmpty()) {
+                particleFlow.detach(partialTick);
+                return;
+            }
+
+            long particleTick = minecraft.levelRenderer.getTicks();
+            if (ponderLevel != null) {
+                PonderScene scene = ponderLevel.scene;
+                if (scene == null) {
+                    return;
+                }
+
+                particleTick = scene.getCurrentTime();
+            }
+            else if (cameraPosition.distanceToSqr(context.worldOrigin().add(context.xAxis().add(context.yAxis()).add(context.zAxis()).scale(0.5))) > PARTICLE_VIEW_DISTANCE_SQR) {
+                particleFlow.detach(partialTick);
+                return;
+            }
+
+            particleFlow.touch();
+            if (ponderLevel == null && minecraft.isPaused() || lastParticleTick == particleTick) {
+                return;
+            }
+
+            if (ponderLevel != null && particleTick < lastParticleTick) {
+                impactParticles.clear();
+            }
+            lastParticleTick = particleTick;
+            ClientLevel particleLevel = minecraft.level;
+            if (ponderLevel != null) {
+                particleLevel = this.particleLevel.get();
+                if (particleLevel == null) {
+                    particleLevel = WrappedClientLevel.of(ponderLevel);
+                    this.particleLevel = new WeakReference<>(particleLevel);
+                }
+            }
+            if (particleLevel == null) {
+                return;
+            }
+
+            impactParticles.update(particleLevel, ponderLevel, context, Objects.requireNonNull(mesh.impact, "Impact particles require prepared impact geometry."), cameraPosition, particleTick, seed, stride);
+            List<FlowPoint> points = mesh.sampleParticles(surfaces, particleTick, seed, stride);
+            particleFlow.update(particleLevel, ponderLevel, Objects.requireNonNull(mesh.particles, "Laser particle flow requires a shell sampler."), context, points, particleTick, seed, stride, partialTick);
         }
     }
 
@@ -337,7 +398,7 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
         final @Nullable LaserRenderSnapshot snapshot;
         final @Nullable Cache geometryCache;
         final @Nullable LaserRenderSnapshot geometrySnapshot;
-        final boolean sourceDomainDisplay;
+        final boolean staticWorldPath;
         final List<DrawSection> inputSections;
         final List<DrawSection> sections;
         final List<OpticalSurface> optics;
@@ -349,17 +410,18 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
         final LaserBeamView view;
         @Nullable ShellSampler particles;
         @Nullable LaserBeamVertices vertices;
+        private @Nullable LaserBeamImpact impact;
 
-        private CachedMesh(LaserRenderSnapshot snapshot, List<DrawSection> inputSections, List<DrawSection> sections, List<OpticalPlane> contacts, List<OpticalSurface> optics, double radius, ShellMesh shells, @Nullable ShellSampler particles, @Nullable LaserBeamVertices vertices, Status displayStatus, String displayReason, boolean sourceDomainDisplay) {
-            this(snapshot, inputSections, sections, contacts, optics, radius, shells, particles, vertices, displayStatus, displayReason, sourceDomainDisplay, LaserBeamView.create(LaserBeamContext.from(snapshot), sections), snapshot, null);
+        private CachedMesh(LaserRenderSnapshot snapshot, List<DrawSection> inputSections, List<DrawSection> sections, List<OpticalPlane> contacts, List<OpticalSurface> optics, double radius, ShellMesh shells, @Nullable ShellSampler particles, @Nullable LaserBeamVertices vertices, Status displayStatus, String displayReason, boolean staticWorldPath) {
+            this(snapshot, inputSections, sections, contacts, optics, radius, shells, particles, vertices, displayStatus, displayReason, staticWorldPath, LaserBeamView.create(LaserBeamContext.from(snapshot), sections), snapshot, null);
         }
 
-        CachedMesh(LaserRenderSnapshot snapshot, List<DrawSection> inputSections, List<DrawSection> sections, List<OpticalPlane> contacts, List<OpticalSurface> optics, double radius, ShellMesh shells, @Nullable ShellSampler particles, @Nullable LaserBeamVertices vertices, Status displayStatus, String displayReason, boolean sourceDomainDisplay, LaserBeamView view, @Nullable LaserRenderSnapshot geometrySnapshot, @Nullable Cache geometryCache) {
+        CachedMesh(LaserRenderSnapshot snapshot, List<DrawSection> inputSections, List<DrawSection> sections, List<OpticalPlane> contacts, List<OpticalSurface> optics, double radius, ShellMesh shells, @Nullable ShellSampler particles, @Nullable LaserBeamVertices vertices, Status displayStatus, String displayReason, boolean staticWorldPath, LaserBeamView view, @Nullable LaserRenderSnapshot geometrySnapshot, @Nullable Cache geometryCache) {
             this.snapshot = snapshot;
             particleContext = LaserBeamContext.from(geometrySnapshot == null ? snapshot : geometrySnapshot);
             this.geometryCache = geometryCache;
             this.geometrySnapshot = geometrySnapshot;
-            this.sourceDomainDisplay = sourceDomainDisplay;
+            this.staticWorldPath = staticWorldPath;
             this.inputSections = inputSections;
             this.sections = sections;
             this.optics = optics;
@@ -378,7 +440,7 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
             particleContext = input.context();
             geometrySnapshot = null;
             geometryCache = result.cache();
-            sourceDomainDisplay = true;
+            staticWorldPath = true;
             inputSections = input.base().sections();
             sections = result.sections();
             contacts = List.of();

@@ -14,11 +14,14 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserDisplayPacket.Mode;
+import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterSerialization.ClientAllocation;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerConsumerBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.network.OpticalPowerNetworkManager;
+import net.ty.createcraftedbeginning.registry.CCBAdvancements;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,6 +49,7 @@ public class LaserEmitterBlockEntity extends SmartBlockEntity implements Optical
     @Override
     @SuppressWarnings("Convert2MethodRef")
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        behaviours.add(new CCBAdvancementBehaviour(this, CCBAdvancements.LIGHT_ON_THE_MOTION_OF_PHOTONS, CCBAdvancements.RECURSIVE_GLOW));
         rangeBehaviour = new LaserEmitterRangeBehaviour(this);
         behaviours.add(rangeBehaviour);
 
@@ -81,8 +85,19 @@ public class LaserEmitterBlockEntity extends SmartBlockEntity implements Optical
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.read(compoundTag, provider, clientPacket);
-        LaserEmitterSerialization.read(compoundTag, clientPacket, controller, displayState);
+        if (!clientPacket) {
+            super.read(compoundTag, provider, false);
+            return;
+        }
+
+        ClientAllocation allocation = LaserEmitterSerialization.readClient(compoundTag, worldPosition, displayState);
+        if (allocation == null) {
+            return;
+        }
+
+        super.read(compoundTag, provider, true);
+        controller.restoreAllocation(allocation.fluxLm());
+        displayState.acceptAllocation(allocation.instance());
     }
 
     @Override
@@ -146,6 +161,10 @@ public class LaserEmitterBlockEntity extends SmartBlockEntity implements Optical
 
     @Internal
     public @Nullable LaserDisplaySnapshot getDisplaySnapshot() {
+        if (displayState.isSuspended()) {
+            return null;
+        }
+
         return displayState.snapshot();
     }
 
@@ -158,6 +177,16 @@ public class LaserEmitterBlockEntity extends SmartBlockEntity implements Optical
     public boolean isDisplayOff() {
         LaserDisplayPacket packet = getDisplayPacket();
         return packet != null && packet.mode() == Mode.OFF;
+    }
+
+    @Internal
+    public boolean isDisplaySuspended() {
+        return displayState.isSuspended();
+    }
+
+    @Internal
+    public boolean takeDisplayBaselineRetry(long tick) {
+        return displayState.takeBaselineRetry(tick);
     }
 
     @Nullable LaserDisplayPacket getDisplayPacket() {

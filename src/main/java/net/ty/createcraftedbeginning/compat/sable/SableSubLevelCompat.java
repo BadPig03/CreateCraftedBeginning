@@ -76,7 +76,7 @@ public final class SableSubLevelCompat implements Service {
 
     public static void register() {
         SubLevelBridge.install(new SableSubLevelCompat());
-        SableAmethystLoaderTickets.register();
+        SableChunkStabilizerTickets.register();
         SableLoadingNetwork.register();
     }
 

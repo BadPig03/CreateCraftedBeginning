@@ -205,7 +205,7 @@ public final class AirtightReactorKettleCrafting {
 
         boolean craftSucceeded = craftTransaction.commit();
         if (craftSucceeded && plan.outputItems().stream().anyMatch(outputItem -> outputItem.is(AllItems.ANDESITE_ALLOY))) {
-            kettle.awardBackToBasics();
+            kettle.awardTechnologicalIteration();
         }
         return craftSucceeded;
     }

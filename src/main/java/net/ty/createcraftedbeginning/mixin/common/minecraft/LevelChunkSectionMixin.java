@@ -4,10 +4,10 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.map.AmethystLoaderMapChanges;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.map.AmethystLoaderMapSectionAccess;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorSectionAccess;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorSectionIndex;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.map.ChunkStabilizerMapChanges;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.map.ChunkStabilizerMapSectionAccess;
 import net.ty.createcraftedbeginning.content.opticalpower.experiencecrystal.ExperienceCrystalSectionAccess;
 import net.ty.createcraftedbeginning.content.opticalpower.experiencecrystal.ExperienceCrystalSectionIndex;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +24,7 @@ import java.lang.ref.WeakReference;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(LevelChunkSection.class)
-public abstract class LevelChunkSectionMixin implements ExperienceCrystalSectionAccess, AmethystMirrorSectionAccess, AmethystLoaderMapSectionAccess {
+public abstract class LevelChunkSectionMixin implements ExperienceCrystalSectionAccess, AmethystMirrorSectionAccess, ChunkStabilizerMapSectionAccess {
     @Unique
     @Nullable
     private ExperienceCrystalSectionIndex ccb$crystalIndex;
@@ -33,13 +33,13 @@ public abstract class LevelChunkSectionMixin implements ExperienceCrystalSection
     private AmethystMirrorSectionIndex ccb$mirrorIndex;
     @Unique
     @Nullable
-    private WeakReference<AmethystLoaderMapChanges> ccb$mapChanges;
+    private WeakReference<ChunkStabilizerMapChanges> ccb$mapChanges;
 
     @Override
-    public AmethystLoaderMapChanges ccb$getMapChanges() {
-        AmethystLoaderMapChanges changes = ccb$mapChanges == null ? null : ccb$mapChanges.get();
+    public ChunkStabilizerMapChanges ccb$getMapChanges() {
+        ChunkStabilizerMapChanges changes = ccb$mapChanges == null ? null : ccb$mapChanges.get();
         if (changes == null) {
-            changes = new AmethystLoaderMapChanges();
+            changes = new ChunkStabilizerMapChanges();
             ccb$mapChanges = new WeakReference<>(changes);
         }
         return changes;
@@ -75,7 +75,7 @@ public abstract class LevelChunkSectionMixin implements ExperienceCrystalSection
         if (ccb$crystalIndex != null) {
             ccb$crystalIndex.changed(x, y, z, state);
         }
-        AmethystLoaderMapChanges changes = ccb$mapChanges == null ? null : ccb$mapChanges.get();
+        ChunkStabilizerMapChanges changes = ccb$mapChanges == null ? null : ccb$mapChanges.get();
         if (changes != null) {
             changes.changed(x, z);
         }

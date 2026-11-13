@@ -9,14 +9,19 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
+import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorSerialization.ClientSnapshot;
+
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
@@ -29,6 +34,8 @@ public final class AmethystSoundSuppressorBlockEntity extends SmartBlockEntity i
     private final AmethystSoundSuppressorController controller;
     private final AmethystCrystalGrowthCandidates growthCandidates = new AmethystCrystalGrowthCandidates();
     private boolean showOutline;
+    private boolean clientStateRejected;
+    private @Nullable UUID pendingPlacer;
 
     public AmethystSoundSuppressorBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -43,7 +50,6 @@ public final class AmethystSoundSuppressorBlockEntity extends SmartBlockEntity i
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        behaviours.add(new CCBAdvancementBehaviour(this, CCBAdvancements.STEVES_REDEMPTION));
     }
 
     @Override
@@ -80,14 +86,27 @@ public final class AmethystSoundSuppressorBlockEntity extends SmartBlockEntity i
 
     @Override
     protected void read(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
-        super.read(compoundTag, provider, clientPacket);
+        if (clientPacket) {
+            ClientSnapshot snapshot = AmethystSoundSuppressorSerialization.readClient(compoundTag, worldPosition, !clientStateRejected);
+            if (snapshot == null) {
+                clientStateRejected = true;
+                return;
+            }
+
+            super.read(compoundTag, provider, true);
+            controller.restoreClientState(snapshot);
+            clientStateRejected = false;
+        }
+        else {
+            super.read(compoundTag, provider, false);
+            controller.readSaved(compoundTag);
+        }
         showOutline = AmethystSoundSuppressorSerialization.readShowOutline(compoundTag, showOutline);
-        controller.read(compoundTag, clientPacket);
     }
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        AmethystSoundSuppressorTooltip.addToGoggleTooltip(tooltip, controller);
+        AmethystSoundSuppressorTooltip.addToGoggleTooltip(tooltip, controller, clientStateRejected);
         return true;
     }
 
@@ -117,6 +136,25 @@ public final class AmethystSoundSuppressorBlockEntity extends SmartBlockEntity i
         controller.refresh();
     }
 
+    void place(ServerLevel level, UUID player) {
+        pendingPlacer = player;
+        if (level.captureBlockSnapshots) {
+            return;
+        }
+
+        commitPlacement(level);
+    }
+
+    void commitPlacement(ServerLevel level) {
+        UUID placer = pendingPlacer;
+        pendingPlacer = null;
+        if (placer == null || !level.getBiome(worldPosition).is(Biomes.DEEP_DARK) || !(level.getPlayerByUUID(placer) instanceof ServerPlayer player)) {
+            return;
+        }
+
+        CCBAdvancements.DEEP_DARK_EXPLORER.awardTo(player);
+    }
+
     double getReceivedFluxLm() {
         return controller.getReceivedFluxLm();
     }
@@ -130,7 +168,7 @@ public final class AmethystSoundSuppressorBlockEntity extends SmartBlockEntity i
     }
 
     boolean isIlluminated() {
-        return controller.isIlluminated();
+        return !clientStateRejected && controller.isIlluminated();
     }
 
     short getWorkingRange() {

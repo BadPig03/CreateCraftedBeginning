@@ -2,24 +2,26 @@ package net.ty.createcraftedbeginning.content.opticalpower.laser.exposure;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation.Segment;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalHit;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalTarget;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFrame;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact.Density;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact.Patch;
-import net.ty.createcraftedbeginning.platform.SubLevelBridge;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamTerminal;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.RayProjection;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,7 +32,11 @@ import java.util.Objects;
 @Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record OpticalExposure(long gameTime, BlockPos sourcePos, int segmentIndex, OpticalHit hit, BeamState incident, double absorbedFluxLm, BeamFrame localFrame, List<Patch> contactPatches) {
+public record OpticalExposure(long gameTime, BlockPos sourcePos, int segmentIndex, OpticalHit hit, BeamState incident, double absorbedFluxLm, BeamFrame localFrame, List<Patch> contactPatches, @Nullable BeamTerminal terminal) {
+    public OpticalExposure(long gameTime, BlockPos sourcePos, int segmentIndex, OpticalHit hit, BeamState incident, double absorbedFluxLm, BeamFrame localFrame, List<Patch> contactPatches) {
+        this(gameTime, sourcePos, segmentIndex, hit, incident, absorbedFluxLm, localFrame, contactPatches, null);
+    }
+
     public OpticalExposure {
         sourcePos = sourcePos.immutable();
         Objects.requireNonNull(hit, "Optical exposure hit must not be null.");
@@ -79,8 +85,17 @@ public record OpticalExposure(long gameTime, BlockPos sourcePos, int segmentInde
                 transverse = new Vec3(localTransverse[0], localTransverse[1], localTransverse[2]);
             }
             BeamFrame localFrame = new BeamFrame(localHit.getLocation().subtract(anchor), direction, transverse);
+            if (segment.terminal() != null) {
+                exposures.add(new OpticalExposure(gameTime, sourcePos, index, hit, incident, segment.absorbedFluxLm(), localFrame, List.of(), segment.terminal()));
+                continue;
+            }
+
             BeamContact contact = segment.contact();
             BeamState start = segment.start();
+            if (segment.boundary() != null && !segment.boundary().opticalInteraction()) {
+                continue;
+            }
+
             if (contact == null && start.profile().widthSlope() != 0) {
                 contact = BeamContact.create(start, segment.remainingRange(), hit);
                 if (contact == null) {
@@ -110,6 +125,18 @@ public record OpticalExposure(long gameTime, BlockPos sourcePos, int segmentInde
 
     private static Vec3 transform(Vec3 vector, BeamFrame from, BeamFrame to) {
         return to.direction().scale(vector.dot(from.direction())).add(to.transverseAxis().scale(vector.dot(from.transverseAxis()))).add(to.getSecondTransverseAxis().scale(vector.dot(from.getSecondTransverseAxis())));
+    }
+
+    public double receivedFluxLm() {
+        if (terminal == null) {
+            return absorbedFluxLm;
+        }
+
+        return absorbedFluxLm * terminal.receivedFraction();
+    }
+
+    public double dissipatedFluxLm() {
+        return absorbedFluxLm - receivedFluxLm();
     }
 
 }

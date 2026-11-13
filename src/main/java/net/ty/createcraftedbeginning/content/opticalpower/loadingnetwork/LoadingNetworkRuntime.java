@@ -15,7 +15,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent.Post;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystantenna.AmethystAntennaBlockEntity;
-import net.ty.createcraftedbeginning.content.opticalpower.amethystloader.AmethystLoaderBlockEntity;
+import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.ChunkStabilizerBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.loadingnetwork.LoadingNetworkSavedData.Node;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import org.jetbrains.annotations.Nullable;
@@ -64,9 +64,8 @@ public final class LoadingNetworkRuntime {
         LoadingNetworkSavedData.get(server.overworld()).runtime().tick(server);
     }
 
-    public boolean control(MinecraftServer server, UUID network, UUID player, @Nullable UUID loader, boolean enabled) {
-        boolean accepted = loader == null ? data.setNetworkEnabled(network, player, enabled) : data.setNodeEnabled(network, player, loader, enabled);
-        if (!accepted) {
+    public boolean control(MinecraftServer server, UUID network, UUID player, UUID loader, boolean enabled) {
+        if (!data.setNodeEnabled(network, player, loader, enabled)) {
             return false;
         }
 
@@ -76,7 +75,7 @@ public final class LoadingNetworkRuntime {
             moving.retry(network, loader);
             for (Node node : data.trainMembers()) {
                 UUID identity = node.loaderId();
-                if (!network.equals(node.networkId()) || loader != null && !loader.equals(identity)) {
+                if (!network.equals(node.networkId()) || !loader.equals(identity)) {
                     continue;
                 }
 
@@ -89,7 +88,7 @@ public final class LoadingNetworkRuntime {
     }
 
     public Status status(Node node) {
-        if (!CCBConfig.server().opticalPower.amethystLoader.enableChunkLoading.get()) {
+        if (!CCBConfig.server().opticalPower.chunkStabilizer.enableChunkLoading.get()) {
             return Status.SERVER_DISABLED;
         }
 
@@ -152,7 +151,7 @@ public final class LoadingNetworkRuntime {
     void tick(MinecraftServer server) {
         data.trains().refresh(server, data);
         data.moving().tick(server);
-        boolean enabled = CCBConfig.server().opticalPower.amethystLoader.enableChunkLoading.get();
+        boolean enabled = CCBConfig.server().opticalPower.chunkStabilizer.enableChunkLoading.get();
         int tick = server.getTickCount();
         Set<GlobalPos> changes = new HashSet<>(data.takeChanges());
         if (!initialized) {
@@ -225,7 +224,7 @@ public final class LoadingNetworkRuntime {
                 continue;
             }
 
-            if (!CCBConfig.server().opticalPower.amethystLoader.enableChunkLoading.get() || node != null && !data.enabled(node)) {
+            if (!CCBConfig.server().opticalPower.chunkStabilizer.enableChunkLoading.get() || node != null && !data.enabled(node)) {
                 cancel(server, pos);
                 refreshLoaded(server, pos);
                 continue;
@@ -273,7 +272,7 @@ public final class LoadingNetworkRuntime {
             return true;
         }
 
-        if (!(level.getBlockEntity(loaderPos) instanceof AmethystLoaderBlockEntity loader) || !identity.equals(loader.networkNodeId()) || SubLevelBridge.resolve(level, loaderPos).inSubLevel()) {
+        if (!(level.getBlockEntity(loaderPos) instanceof ChunkStabilizerBlockEntity loader) || !identity.equals(loader.networkNodeId()) || SubLevelBridge.resolve(level, loaderPos).inSubLevel()) {
             data.removeLoader(pos);
             states.remove(pos);
             return true;
@@ -338,7 +337,7 @@ public final class LoadingNetworkRuntime {
         ASSEMBLED
     }
 
-    public record PhysicalControl(MinecraftServer server, UUID network, @Nullable UUID loader, boolean enabled) {}
+    public record PhysicalControl(MinecraftServer server, UUID network, UUID loader, boolean enabled) {}
 
     private record Recovery(UUID identity, boolean detached, int started) {}
 }

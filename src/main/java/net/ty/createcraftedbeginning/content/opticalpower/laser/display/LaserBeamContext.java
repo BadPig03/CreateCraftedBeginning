@@ -4,11 +4,13 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation.Boundary;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalHit;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFootprint;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFrame;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamProfile;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamTerminal;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.OpticalPlane;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserRenderSnapshot;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
@@ -31,11 +33,20 @@ public record LaserBeamContext(double sourceRadius, List<DisplaySegment> segment
         BeamPropagation propagation = snapshot.propagation();
         List<DisplaySegment> segments = propagation.segments().stream().map(segment -> {
             OpticalHit hit = segment.hit();
+            Boundary boundary = segment.boundary();
             OpticalPlane contact = null;
-            if (hit != null) {
+            if (boundary != null) {
+                contact = boundary.cutoffPlane();
+            }
+            else if (hit != null) {
                 contact = new OpticalPlane(hit.position(), hit.surface().normal());
             }
-            return new DisplaySegment(segment.parentIndex(), segment.start(), segment.length(), segment.remainingRange(), contact);
+            OpticalPlane impact = null;
+            BeamTerminal terminal = segment.terminal();
+            if (hit != null && boundary != null && !boundary.opticalInteraction() && (terminal == null || terminal.faces().isEmpty())) {
+                impact = new OpticalPlane(boundary.firstContactPoint(), hit.surface().normal());
+            }
+            return new DisplaySegment(segment.parentIndex(), state(segment.start()), segment.length(), segment.remainingRange(), contact, impact);
         }).toList();
         return new LaserBeamContext(propagation.source().profile().radius(), segments, snapshot.localOrigin(), snapshot.worldOrigin(), snapshot.xAxis(), snapshot.yAxis(), snapshot.zAxis());
     }
@@ -90,9 +101,10 @@ public record LaserBeamContext(double sourceRadius, List<DisplaySegment> segment
 
     public record DisplayState(DisplayFrame frame, BeamProfile profile, double fluxLm, BeamFootprint footprint) {}
 
-    public record DisplaySegment(int parentIndex, DisplayState start, double length, double remainingRange, @Nullable OpticalPlane contact) {
+    public record DisplaySegment(int parentIndex, DisplayState start, double length, double remainingRange, @Nullable OpticalPlane contact, @Nullable OpticalPlane impact) {
+
         public DisplaySegment(int parentIndex, BeamState start, double length, double remainingRange, @Nullable OpticalPlane contact) {
-            this(parentIndex, state(start), length, remainingRange, contact);
+            this(parentIndex, state(start), length, remainingRange, contact, null);
         }
     }
 }

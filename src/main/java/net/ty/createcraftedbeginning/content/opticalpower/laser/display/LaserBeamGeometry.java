@@ -391,7 +391,8 @@ public final class LaserBeamGeometry {
                 int next = (corner + 1) % starts.size();
                 Vec3 start = starts.get(corner);
                 Vec3 end = ends.get(corner);
-                if (!startPoint && !endPoint && end.subtract(start).dot(direction) <= epsilon) {
+                double advance = end.subtract(start).dot(direction);
+                if (!startPoint && !endPoint && (variableWidth ? advance < -epsilon : advance <= epsilon)) {
                     return List.of();
                 }
 
@@ -401,6 +402,22 @@ public final class LaserBeamGeometry {
                 }
                 else if (endPoint) {
                     side = List.of(start, end, starts.get(next));
+                }
+                else if (variableWidth) {
+                    List<Vec3> compact = new ArrayList<>();
+                    for (Vec3 point : side) {
+                        if (compact.isEmpty() || compact.getLast().distanceTo(point) > epsilon) {
+                            compact.add(point);
+                        }
+                    }
+                    if (compact.size() > 1 && compact.getFirst().distanceTo(compact.getLast()) <= epsilon) {
+                        compact.removeLast();
+                    }
+                    if (compact.size() < 3) {
+                        continue;
+                    }
+
+                    side = List.copyOf(compact);
                 }
                 if (validBoundary(side, edge, epsilon) && containsVolume(side, vertices, center, epsilon)) {
                     sides.add(side);

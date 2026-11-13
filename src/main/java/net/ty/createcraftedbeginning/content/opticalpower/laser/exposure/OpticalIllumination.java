@@ -2,9 +2,9 @@ package net.ty.createcraftedbeginning.content.opticalpower.laser.exposure;
 
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -15,6 +15,8 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.exposure.OpticalSurfaceLight.Qualification;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact.Density;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact.Patch;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamTerminal.Face;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamTerminal;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -25,8 +27,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Map;
 
 @Internal
 @ParametersAreNonnullByDefault
@@ -137,6 +139,14 @@ public final class OpticalIllumination {
         BeamState incident = exposure.incident();
         double absorbedFlux = exposure.absorbedFluxLm();
         if (incident.fluxLm() <= 0 || absorbedFlux <= 0) {
+            return;
+        }
+
+        BeamTerminal terminal = exposure.terminal();
+        if (terminal != null) {
+            for (Face face : terminal.faces()) {
+                addContacts(exposure.absorbedFluxLm(), face.direction(), face.plane(), face.patches(), group, receivingShape, collisionShape);
+            }
             return;
         }
 
@@ -302,11 +312,14 @@ public final class OpticalIllumination {
 
     private void addContacts(OpticalExposure exposure, int group, VoxelShape receivingShape, VoxelShape collisionShape) {
         Direction face = exposure.hit().localHit().getDirection();
+        double plane = coordinate(exposure.localFrame().origin(), face.getAxis());
+        addContacts(exposure.absorbedFluxLm(), face, plane, exposure.contactPatches(), group, receivingShape, collisionShape);
+    }
+
+    private void addContacts(double absorbedFlux, Direction face, double plane, List<Patch> patches, int group, VoxelShape receivingShape, VoxelShape collisionShape) {
         Axis axis = face.getAxis();
         Vec3 normal = Vec3.atLowerCornerOf(face.getNormal());
-        double plane = coordinate(exposure.localFrame().origin(), axis);
         AxisDirection axisDirection = face.getAxisDirection();
-        double absorbedFlux = exposure.absorbedFluxLm();
         Area visible = new Area();
         for (AABB box : receivingShape.toAabbs()) {
             double boundary = axisDirection == AxisDirection.POSITIVE ? box.max(axis) : box.min(axis);
@@ -325,7 +338,7 @@ public final class OpticalIllumination {
             visible.subtract(projectBox(slice(obstacle, axis, plane, plane), normal, axis, plane));
         }
         Surface surface = new Surface(group, face, plane);
-        for (Patch patch : exposure.contactPatches()) {
+        for (Patch patch : patches) {
             List<Point> vertices = patch.vertices().stream().map(vertex -> project(vertex, normal, axis, plane)).toList();
             Area region = polygon(vertices);
             double fullArea = area(region);
