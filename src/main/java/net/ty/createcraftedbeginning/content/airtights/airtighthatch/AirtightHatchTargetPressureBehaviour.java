@@ -29,7 +29,7 @@ final class AirtightHatchTargetPressureBehaviour extends ScrollValueBehaviour {
     static final int STEPS_PER_ATMOSPHERE = 2;
     static final int MAX_PRESSURE_ATM = GasPressureLimits.HARD_PRESSURE_ATM;
     static final int MAX_PRESSURE_STEPS = MAX_PRESSURE_ATM * STEPS_PER_ATMOSPHERE;
-    private static final long DEFAULT_TARGET_PRESSURE_PA = GasPressure.pascals(5);
+    private static final long DEFAULT_TARGET_PRESSURE_PA = 5 * GasPressure.REFERENCE_PRESSURE_PA;
 
     private final AirtightHatchBlockEntity owner;
 

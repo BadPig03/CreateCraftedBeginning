@@ -33,13 +33,6 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
     private static final int PLAYER_INVENTORY_SLOTS = Inventory.INVENTORY_SIZE;
 
     private static final int MAX_COUNT = 4;
-    private static final int PLAYER_SLOT_X = 20;
-    private static final int PLAYER_SLOT_Y = 166;
-    private static final int SLOT_Y = 89;
-    private static final int I_SLOT_X = 23;
-    private static final int II_SLOT_X = 65;
-    private static final int III_SLOT_X = 107;
-    private static final int IV_SLOT_X = 149;
 
     private PackItemHandler packInventory;
 
@@ -75,11 +68,11 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
 
     @Override
     protected void addSlots() {
-        addPlayerSlots(PLAYER_SLOT_X, PLAYER_SLOT_Y);
-        addSlot(SlotType.createCanisterSlot(packInventory, I_SLOT_INDEX, I_SLOT_X));
-        addSlot(SlotType.createCanisterSlot(packInventory, II_SLOT_INDEX, II_SLOT_X));
-        addSlot(SlotType.createCanisterSlot(packInventory, III_SLOT_INDEX, III_SLOT_X));
-        addSlot(SlotType.createCanisterSlot(packInventory, IV_SLOT_INDEX, IV_SLOT_X));
+        addPlayerSlots(20, 166);
+        addSlot(SlotType.createCanisterSlot(packInventory, I_SLOT_INDEX, 23));
+        addSlot(SlotType.createCanisterSlot(packInventory, II_SLOT_INDEX, 65));
+        addSlot(SlotType.createCanisterSlot(packInventory, III_SLOT_INDEX, 107));
+        addSlot(SlotType.createCanisterSlot(packInventory, IV_SLOT_INDEX, 149));
     }
 
     @Override
@@ -185,7 +178,7 @@ public class GasCanisterPackMenu extends MenuBase<ItemStack> {
         }
 
         private static SlotItemHandler createCanisterSlot(IItemHandler itemHandler, int slotIndex, int x) {
-            return new SlotItemHandler(itemHandler, slotIndex, x, SLOT_Y) {
+            return new SlotItemHandler(itemHandler, slotIndex, x, 89) {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
                     return stack.getCapability(CanisterCapabilities.ITEM) instanceof GasCanisterContainerContents;

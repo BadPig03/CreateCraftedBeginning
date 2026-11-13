@@ -9,7 +9,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class GasRecipePressureSpeed {
     public static final float MAXIMUM_MULTIPLIER = 2;
-    public static final long HALF_BONUS_PRESSURE_PA = GasPressure.pascals(5);
+    public static final long HALF_BONUS_PRESSURE_PA = 5 * GasPressure.REFERENCE_PRESSURE_PA;
 
     private GasRecipePressureSpeed() {
     }

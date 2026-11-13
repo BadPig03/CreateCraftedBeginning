@@ -8,7 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBPressureRequirements {
-    public static final long PRESSURIZED_MINIMUM_PRESSURE_PA = GasPressure.pascals(10);
+    public static final long PRESSURIZED_MINIMUM_PRESSURE_PA = 10 * GasPressure.REFERENCE_PRESSURE_PA;
     public static final PressureRequirement PRESSURIZED = PressureRequirement.atLeast(PRESSURIZED_MINIMUM_PRESSURE_PA);
 
     private CCBPressureRequirements() {

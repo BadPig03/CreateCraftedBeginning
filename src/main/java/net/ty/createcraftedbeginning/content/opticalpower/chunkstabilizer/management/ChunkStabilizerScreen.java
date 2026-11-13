@@ -52,26 +52,13 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
     private static final int CONTENT_RIGHT = 223;
     private static final int CONTENT_TOP = 21;
     private static final int CONTENT_BOTTOM = 189;
-    private static final int LIST_X = 7;
-    private static final int STRIP_X = LIST_X + 8;
-    private static final int ENTRY_X = LIST_X + 23;
-    private static final int ENTRY_Y = 27;
     private static final int ENTRY_HEIGHT = ENTRY.getHeight();
     private static final int ENTRY_GAP = 2;
-    private static final int TEXT_X = 17;
-    private static final int NAME_Y = 14;
     private static final int NAME_WIDTH = 104;
-    private static final int DETAILS_BUTTON_X = 132;
-    private static final int BUTTON_X = 150;
-    private static final int BUTTON_Y = 9;
     private static final int BUTTON_SIZE = 18;
-    private static final int MAP_X = 54;
-    private static final int MAP_Y = 25;
     private static final int MAP_FADE_HEIGHT = 8;
     private static final int DETAILS_NAME_WIDTH = DETAILS.getWidth() - 20;
     private static final int DETAILS_Z = 200;
-    private static final int TITLE_WIDTH = 206;
-    private static final int TITLE_EDIT_SPACE = 18;
     private final List<EntryButton> entryButtons = new ArrayList<>();
     private final ScreenOverlay detailsWidgets = new ScreenOverlay(DETAILS_Z);
     private final LerpedFloat scroll = LerpedFloat.linear().startWithValue(0);
@@ -262,7 +249,7 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
         detailsLeft = getLeftOfCentered(DETAILS.getWidth());
         detailsTop = topPos + 40;
         ChunkStabilizerSnapshot snapshot = menu.snapshot();
-        networkName = new EditBox(new NoShadowFontWrapper(font), leftPos + 10, topPos + 4, TITLE_WIDTH - 2 * TITLE_EDIT_SPACE, 10, CCBLang.translateDirect("loading_network.name"));
+        networkName = new EditBox(new NoShadowFontWrapper(font), leftPos + 10, topPos + 4, 170, 10, CCBLang.translateDirect("loading_network.name"));
         networkName.setBordered(false);
         networkName.setTextColor(0xFFFFFF);
         networkName.setMaxLength(LoadingNetworkBinding.MAX_NAME_LENGTH);
@@ -276,7 +263,7 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
             setFocused(networkName);
             networkName.setFocused(true);
         }
-        networkColor = new ColorButton(leftPos + (BACKGROUND.getWidth() - 8 - font.width(networkHeading())) / 2 - TITLE_EDIT_SPACE, topPos + 1);
+        networkColor = new ColorButton(leftPos + (BACKGROUND.getWidth() - 8 - font.width(networkHeading())) / 2 - 18, topPos + 1);
         networkColor.visible = selected == null && colorEditor == null && !editingName && snapshot.network() != null;
         networkColor.active = snapshot.editable();
         int buttonCount = (CONTENT_BOTTOM - CONTENT_TOP) / (ENTRY_HEIGHT + ENTRY_GAP) + 2;
@@ -337,7 +324,7 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
             String heading = networkHeading();
             int headingWidth = font.width(heading);
             int headingX = leftPos + (BACKGROUND.getWidth() - 8 - headingWidth) / 2;
-            networkColor.setX(headingX - TITLE_EDIT_SPACE);
+            networkColor.setX(headingX - 18);
             graphics.drawString(font, heading, headingX, topPos + 4, 0xFFFFFF, false);
             if (rename) {
                 CCBGUITextures.CHUNK_STABILIZER_EDIT_NAME.render(graphics, headingX + headingWidth + 5, topPos + 1);
@@ -354,22 +341,22 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
         updateEntryButtons(scrollOffset);
         int rowHeight = ENTRY_HEIGHT + ENTRY_GAP;
         int nodeOffset = (ENTRY_HEIGHT - NODE.getHeight()) / 2;
-        int firstRow = Math.floorDiv(CONTENT_TOP - ENTRY_Y - nodeOffset + scrollOffset, rowHeight);
-        int lastRow = Math.floorDiv(CONTENT_BOTTOM - 1 - ENTRY_Y + scrollOffset, rowHeight);
+        int firstRow = Math.floorDiv(CONTENT_TOP - 27 - nodeOffset + scrollOffset, rowHeight);
+        int lastRow = Math.floorDiv(CONTENT_BOTTOM - 1 - 27 + scrollOffset, rowHeight);
         graphics.enableScissor(leftPos + CONTENT_LEFT, topPos + CONTENT_TOP, leftPos + CONTENT_RIGHT, topPos + CONTENT_BOTTOM);
         try {
             for (int i = firstRow; i <= lastRow; i++) {
-                int y = topPos + ENTRY_Y + i * rowHeight - scrollOffset;
+                int y = topPos + 27 + i * rowHeight - scrollOffset;
                 boolean hasMember = i >= 0 && i < members.size();
                 CCBGUITextures segment = hasMember ? NODE : EMPTY_STRIP;
-                segment.render(graphics, leftPos + STRIP_X - 4, y + nodeOffset);
+                segment.render(graphics, leftPos + 11, y + nodeOffset);
                 int segmentHeight = segment.getHeight();
-                UIRenderHelper.drawStretched(graphics, leftPos + STRIP_X, y + nodeOffset + segmentHeight, STRIP.getWidth(), rowHeight - segmentHeight, 0, STRIP);
+                UIRenderHelper.drawStretched(graphics, leftPos + 15, y + nodeOffset + segmentHeight, STRIP.getWidth(), rowHeight - segmentHeight, 0, STRIP);
                 if (!hasMember) {
                     continue;
                 }
 
-                renderEntry(graphics, members.get(i), leftPos + ENTRY_X, y);
+                renderEntry(graphics, members.get(i), leftPos + 30, y);
             }
             for (EntryButton button : entryButtons) {
                 button.render(graphics, mouseX, mouseY, partialTick);
@@ -428,33 +415,33 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
 
         ChunkStabilizerSnapshot snapshot = menu.snapshot();
         List<Member> members = snapshot.members();
-        int x = leftPos + ENTRY_X;
+        int x = leftPos + 30;
         int scrollOffset = (int) scroll.getValue(partialTick);
         int rowHeight = ENTRY_HEIGHT + ENTRY_GAP;
-        int index = Math.floorDiv(mouseY - topPos - ENTRY_Y + scrollOffset, rowHeight);
+        int index = Math.floorDiv(mouseY - topPos - 27 + scrollOffset, rowHeight);
         if (index < 0 || index >= members.size()) {
             return;
         }
 
         Member member = members.get(index);
-        int y = topPos + ENTRY_Y + index * rowHeight - scrollOffset;
-        if (mouseX >= x + DETAILS_BUTTON_X && mouseX < x + DETAILS_BUTTON_X + BUTTON_SIZE && mouseY >= y + BUTTON_Y && mouseY < y + BUTTON_Y + BUTTON_SIZE) {
+        int y = topPos + 27 + index * rowHeight - scrollOffset;
+        if (mouseX >= x + 132 && mouseX < x + 132 + BUTTON_SIZE && mouseY >= y + 9 && mouseY < y + 9 + BUTTON_SIZE) {
             graphics.renderTooltip(font, CCBLang.translateDirect("loading_network.view_details"), mouseX, mouseY);
             return;
         }
 
-        if (mouseX >= x + BUTTON_X && mouseX < x + BUTTON_X + BUTTON_SIZE && mouseY >= y + BUTTON_Y && mouseY < y + BUTTON_Y + BUTTON_SIZE) {
+        if (mouseX >= x + 150 && mouseX < x + 150 + BUTTON_SIZE && mouseY >= y + 9 && mouseY < y + 9 + BUTTON_SIZE) {
             String action = member.enabled() ? "loading_network.disable_node" : "loading_network.enable_node";
             graphics.renderTooltip(font, CCBLang.translateDirect(action), mouseX, mouseY);
             return;
         }
 
-        if (mouseX < x + TEXT_X) {
+        if (mouseX < x + 17) {
             return;
         }
 
         String name = ChunkStabilizerDisplay.name(member);
-        if (mouseX >= x + TEXT_X + NAME_WIDTH || mouseY < y + NAME_Y || mouseY >= y + NAME_Y + font.lineHeight || font.width(name) <= NAME_WIDTH) {
+        if (mouseX >= x + 17 + NAME_WIDTH || mouseY < y + 14 || mouseY >= y + 14 + font.lineHeight || font.width(name) <= NAME_WIDTH) {
             return;
         }
 
@@ -467,7 +454,7 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
 
     private String networkHeading() {
         ChunkStabilizerSnapshot snapshot = menu.snapshot();
-        int availableWidth = snapshot.network() == null ? TITLE_WIDTH : TITLE_WIDTH - 2 * TITLE_EDIT_SPACE;
+        int availableWidth = snapshot.network() == null ? 206 : 170;
         String heading = snapshot.network() == null ? title.getString() : snapshot.name();
         if (font.width(heading) <= availableWidth) {
             return heading;
@@ -516,11 +503,11 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
         ChunkStabilizerSnapshot snapshot = menu.snapshot();
         List<Member> members = snapshot.members();
         int rowHeight = ENTRY_HEIGHT + ENTRY_GAP;
-        int firstRow = Math.max(0, Math.floorDiv(CONTENT_TOP - ENTRY_Y + scrollOffset, rowHeight));
+        int firstRow = Math.max(0, Math.floorDiv(CONTENT_TOP - 27 + scrollOffset, rowHeight));
         for (int i = 0; i < entryButtons.size(); i++) {
             EntryButton button = entryButtons.get(i);
             int index = firstRow + i / 2;
-            int y = topPos + ENTRY_Y + index * rowHeight - scrollOffset + BUTTON_Y;
+            int y = topPos + 36 + index * rowHeight - scrollOffset;
             button.visible = index < members.size() && y < topPos + CONTENT_BOTTOM && y + BUTTON_SIZE > topPos + CONTENT_TOP;
             button.member = null;
             button.active = false;
@@ -530,7 +517,7 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
 
             Member member = members.get(index);
             button.member = member;
-            button.setPosition(leftPos + ENTRY_X + (button.details ? DETAILS_BUTTON_X : BUTTON_X), y);
+            button.setPosition(leftPos + (button.details ? 162 : 180), y);
             boolean enabled = member.enabled();
             ScreenElement icon = enabled ? AllIcons.I_PAUSE : AllIcons.I_PLAY;
             if (button.details) {
@@ -544,7 +531,7 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
 
     private void renderEntry(GuiGraphics graphics, Member member, int x, int y) {
         ENTRY.render(graphics, x, y);
-        drawEntryText(graphics, ChunkStabilizerDisplay.name(member), x + TEXT_X, y + NAME_Y);
+        drawEntryText(graphics, ChunkStabilizerDisplay.name(member), x + 17, y + 14);
     }
 
     private void drawEntryText(GuiGraphics graphics, String text, int x, int y) {
@@ -621,13 +608,13 @@ public final class ChunkStabilizerScreen extends AbstractSimiContainerScreen<Chu
         Vec3 point = maps.point(nanos);
         Vec3 origin = maps.origin(nanos);
         if (member != null && map != null && map.state() == State.READY && point != null && origin != null) {
-            mapTexture.render(graphics, map, point, origin, detailsLeft + MAP_X, detailsTop + MAP_Y, member.status() == Status.RUNNING);
+            mapTexture.render(graphics, map, point, origin, detailsLeft + 54, detailsTop + 25, member.status() == Status.RUNNING);
         }
         else {
-            mapTexture.renderUnknown(graphics, detailsLeft + MAP_X, detailsTop + MAP_Y);
+            mapTexture.renderUnknown(graphics, detailsLeft + 54, detailsTop + 25);
         }
-        int mapLeft = detailsLeft + MAP_X;
-        int mapTop = detailsTop + MAP_Y;
+        int mapLeft = detailsLeft + 54;
+        int mapTop = detailsTop + 25;
         int mapRight = mapLeft + ChunkStabilizerMapSnapshot.WIDTH;
         int mapBottom = mapTop + ChunkStabilizerMapSnapshot.HEIGHT;
         graphics.fillGradient(mapLeft, mapTop, mapRight, mapTop + MAP_FADE_HEIGHT, 200, 0x77000000, 0x00000000);

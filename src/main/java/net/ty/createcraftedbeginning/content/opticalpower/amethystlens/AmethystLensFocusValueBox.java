@@ -12,11 +12,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class AmethystLensFocusValueBox extends Sided {
-    private static final float FOCUS_BOX_SCALE = 0.3F;
-
     @Override
     public float getScale() {
-        return FOCUS_BOX_SCALE;
+        return 0.3F;
     }
 
     @Override

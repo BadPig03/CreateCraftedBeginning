@@ -19,12 +19,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class LaserEmitterRangeValueBox extends Sided {
-    private static final double PANEL_OFFSET_FROM_CENTER = 0.125;
-
     @Override
     public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
         Direction facing = state.getValue(DirectionalBlock.FACING);
-        return super.getLocalOffset(level, pos, state).subtract(Vec3.atLowerCornerOf(facing.getNormal()).scale(PANEL_OFFSET_FROM_CENTER));
+        return super.getLocalOffset(level, pos, state).subtract(Vec3.atLowerCornerOf(facing.getNormal()).scale(0.125));
     }
 
     @Override

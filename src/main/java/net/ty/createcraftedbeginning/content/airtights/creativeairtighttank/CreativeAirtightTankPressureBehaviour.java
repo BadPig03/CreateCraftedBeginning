@@ -21,7 +21,7 @@ final class CreativeAirtightTankPressureBehaviour extends ScrollValueBehaviour {
     private static final int STEPS_PER_ATMOSPHERE = 2;
     private static final int MAX_PRESSURE_ATM = GasPressureLimits.SAFE_PRESSURE_ATM;
     private static final int MAX_PRESSURE_STEPS = MAX_PRESSURE_ATM * STEPS_PER_ATMOSPHERE;
-    static final long MAX_PRESSURE_PA = GasPressure.pascals(MAX_PRESSURE_ATM);
+    static final long MAX_PRESSURE_PA = MAX_PRESSURE_ATM * GasPressure.REFERENCE_PRESSURE_PA;
 
     private final CreativeAirtightTankBlockEntity owner;
 

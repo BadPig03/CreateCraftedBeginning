@@ -17,8 +17,8 @@ public final class GasPressureLimits {
     public static final int SAFE_PRESSURE_ATM = 16;
     public static final int HARD_PRESSURE_ATM = 24;
 
-    public static final long SAFE_PRESSURE_PA = GasPressure.pascals(SAFE_PRESSURE_ATM);
-    public static final long HARD_PRESSURE_PA = GasPressure.pascals(HARD_PRESSURE_ATM);
+    public static final long SAFE_PRESSURE_PA = SAFE_PRESSURE_ATM * GasPressure.REFERENCE_PRESSURE_PA;
+    public static final long HARD_PRESSURE_PA = HARD_PRESSURE_ATM * GasPressure.REFERENCE_PRESSURE_PA;
 
     private GasPressureLimits() {
     }

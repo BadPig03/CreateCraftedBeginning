@@ -15,14 +15,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class AirtightHatchTargetPressureValueBox extends Sided {
-    private static final double CANISTER_CENTER_OFFSET = 0.1875;
-    private static final double VALUE_BOX_FACE_OFFSET = 0.21875;
-
     @Override
     public Vec3 getLocalOffset(LevelAccessor level, BlockPos pos, BlockState state) {
         Direction facing = state.getValue(AirtightHatchBlock.FACING);
-        Vec3 canisterCenter = VecHelper.voxelSpace(8, 8, 8).add(Vec3.atLowerCornerOf(facing.getNormal()).scale(CANISTER_CENTER_OFFSET));
-        Vec3 faceOffset = Vec3.atLowerCornerOf(getSide().getNormal()).scale(VALUE_BOX_FACE_OFFSET);
+        Vec3 canisterCenter = VecHelper.voxelSpace(8, 8, 8).add(Vec3.atLowerCornerOf(facing.getNormal()).scale(0.1875));
+        Vec3 faceOffset = Vec3.atLowerCornerOf(getSide().getNormal()).scale(0.21875);
         return canisterCenter.add(faceOffset);
     }
 
