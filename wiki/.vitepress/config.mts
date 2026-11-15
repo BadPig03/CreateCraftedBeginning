@@ -8,17 +8,9 @@ function sidebar(english: boolean): DefaultTheme.SidebarItem[] {
 
   return [
     {
-      text: english ? 'Start here' : '从这里开始',
+      text: english ? 'For Players' : '面向玩家',
       items: [
-        { text: english ? 'Getting started' : '快速开始', link: `${prefix}/guide/getting-started` },
-        { text: english ? 'Questions & answers' : '常见问题', link: `${prefix}/guide/faq` }
-      ]
-    },
-    {
-      text: english ? 'Explore the systems' : '探索系统',
-      items: [
-        { text: english ? 'Gas networks' : '气体网络', link: `${prefix}/systems/gas-networks` },
-        { text: english ? 'Amethyst optics' : '紫晶光学', link: `${prefix}/systems/amethyst-optics` }
+        { text: english ? 'Getting started' : '快速开始', link: `${prefix}/guide/getting-started` }
       ]
     }
   ]
@@ -37,10 +29,6 @@ export default defineConfig({
       label: '简体中文',
       lang: 'zh-CN',
       themeConfig: {
-        nav: [
-          { text: '指南', link: '/guide/getting-started', activeMatch: '/guide/' },
-          { text: '系统', link: '/systems/gas-networks', activeMatch: '/systems/' }
-        ],
         sidebar: sidebar(false),
         outline: { label: '本页目录', level: [2, 3] },
         docFooter: { prev: '上一篇', next: '下一篇' },
@@ -57,8 +45,7 @@ export default defineConfig({
           quote: '这条管路还没有接通。回到首页，换一条路线吧。',
           linkLabel: '前往首页',
           linkText: '返回首页'
-        },
-        footer: { message: 'Create Crafted Beginning · 文档预览', copyright: 'Made for curious engineers.' }
+        }
       }
     },
     en: {
@@ -66,14 +53,9 @@ export default defineConfig({
       lang: 'en',
       description: 'Guides and system notes for Create Crafted Beginning.',
       themeConfig: {
-        nav: [
-          { text: 'Guide', link: '/en/guide/getting-started', activeMatch: '/en/guide/' },
-          { text: 'Systems', link: '/en/systems/gas-networks', activeMatch: '/en/systems/' }
-        ],
         sidebar: sidebar(true),
         outline: { label: 'On this page', level: [2, 3] },
-        editLink: { pattern: `${repository}/edit/main/wiki/src/:path`, text: 'Edit this page on GitHub' },
-        footer: { message: 'Create Crafted Beginning · Wiki preview', copyright: 'Made for curious engineers.' }
+        editLink: { pattern: `${repository}/edit/main/wiki/src/:path`, text: 'Edit this page on GitHub' }
       }
     }
   },

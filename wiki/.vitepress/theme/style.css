@@ -16,17 +16,8 @@
   --vp-home-hero-name-background: linear-gradient(125deg, #f4e8d5 8%, #c5a1f2 90%);
 }
 
-.wiki-preview {
-  display: inline-block;
-  margin-bottom: 20px;
-  color: var(--vp-c-brand-1);
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.12em;
-}
-
 .VPHomeHero .name {
-  max-width: 640px;
+  max-width: 100%;
   letter-spacing: -0.035em;
 }
 
@@ -36,10 +27,8 @@
   line-height: 1.45;
 }
 
-.VPHomeHero .tagline {
-  max-width: 540px;
-  font-size: 18px;
-  line-height: 1.8;
+.VPHomeFeatures {
+  margin-top: 64px;
 }
 
 .VPFeature {
@@ -56,6 +45,10 @@
   line-height: 1.8;
 }
 
+.VPHomeFeatures .link-text {
+  padding-top: 24px;
+}
+
 .vp-doc .item-icon {
   width: 64px;
   height: 64px;
@@ -68,11 +61,7 @@
     font-size: 24px;
   }
 
-  .VPHomeHero .tagline {
-    font-size: 16px;
-  }
-
-  .wiki-preview {
-    font-size: 10px;
+  .VPHomeFeatures {
+    margin-top: 32px;
   }
 }
