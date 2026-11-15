@@ -49,13 +49,6 @@
   padding-top: 24px;
 }
 
-.vp-doc .item-icon {
-  width: 64px;
-  height: 64px;
-  margin: 24px 0;
-  image-rendering: pixelated;
-}
-
 @media (max-width: 639px) {
   .VPHomeHero .text {
     font-size: 24px;
