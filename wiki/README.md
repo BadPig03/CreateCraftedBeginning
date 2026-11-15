@@ -47,6 +47,6 @@ npm run preview
 
 ## Assets
 
-- `ccb-mark.svg` and `factory-core.svg` are original vector artwork for this wiki.
+- `breeze-chamber-cover.png` is the project cover supplied by the maintainer, used for the navigation logo and browser tab icon.
 - `gas-canister.png` and `amethyst-crystal-sheet.png` are copied from this project's item textures. When replacing those textures, update the wiki copies as needed.
 - The wiki follows this repository's MIT license. No text, images or theme overrides were copied from the Create wiki.

@@ -30,7 +30,7 @@ export default defineConfig({
   base,
   srcDir: 'src',
   cleanUrls: false,
-  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}assets/ccb-mark.svg` }]],
+  head: [['link', { rel: 'icon', type: 'image/png', href: `${base}assets/breeze-chamber-cover.png` }]],
   sitemap: { hostname: `https://badpig03.github.io${base}` },
   locales: {
     root: {
@@ -79,7 +79,7 @@ export default defineConfig({
   },
   themeConfig: {
     siteTitle: 'CCB Wiki',
-    logo: { src: '/assets/ccb-mark.svg', alt: 'Create Crafted Beginning' },
+    logo: { src: '/assets/breeze-chamber-cover.png', alt: 'Create Crafted Beginning' },
     socialLinks: [{ icon: 'github', link: repository }],
     search: {
       provider: 'local',

@@ -4,9 +4,6 @@ hero:
   name: Create Crafted Beginning
   text: Bring gas and light to your factory.
   tagline: Guides and system notes for a Create addon. Start with a pipe, follow a beam, and discover new ways to build.
-  image:
-    src: /assets/factory-core.svg
-    alt: A brass gear surrounding an amethyst crystal, connected to pipes and beams
   actions:
     - theme: brand
       text: Start exploring

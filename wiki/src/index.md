@@ -4,9 +4,6 @@ hero:
   name: Create Crafted Beginning
   text: 把气体与光，接入你的工厂。
   tagline: Create 附属模组的玩法指南与机制参考。从一条管路、一束光开始，探索工厂的新可能。
-  image:
-    src: /assets/factory-core.svg
-    alt: 黄铜齿轮环绕一枚紫晶，连接管路与光线
   actions:
     - theme: brand
       text: 开始探索
