@@ -3,17 +3,22 @@ import { defineConfig, type DefaultTheme } from 'vitepress'
 const base = '/CreateCraftedBeginning/'
 const repository = 'https://github.com/BadPig03/CreateCraftedBeginning'
 
-function sidebar(english: boolean): DefaultTheme.SidebarItem[] {
+function sidebar(english: boolean): DefaultTheme.Sidebar {
   const prefix = english ? '/en' : ''
 
-  return [
-    {
-      text: english ? 'For Players' : '面向玩家',
-      items: [
-        { text: english ? 'Getting started' : '快速开始', link: `${prefix}/guide/getting-started` }
-      ]
-    }
-  ]
+  return {
+    [`${prefix}/developers/`]: [
+      { text: english ? 'For Developers' : '面向开发者', link: `${prefix}/developers/` }
+    ],
+    [`${prefix}/`]: [
+      {
+        text: english ? 'For Players' : '面向玩家',
+        items: [
+          { text: english ? 'Getting started' : '快速开始', link: `${prefix}/guide/getting-started` }
+        ]
+      }
+    ]
+  }
 }
 
 export default defineConfig({

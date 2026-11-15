@@ -10,6 +10,6 @@ features:
     linkText: Start reading
   - title: For Developers
     details: Explore the source and build configuration, and contribute to mod development.
-    link: https://github.com/BadPig03/CreateCraftedBeginning
-    linkText: Browse source
+    link: /en/developers/
+    linkText: Start reading
 ---
