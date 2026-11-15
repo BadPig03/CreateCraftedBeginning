@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420" fill="none">
+  <defs>
+    <linearGradient id="metal" x1="100" y1="80" x2="320" y2="340" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e7c68f"/><stop offset=".48" stop-color="#ad8150"/><stop offset="1" stop-color="#73543b"/>
+    </linearGradient>
+    <linearGradient id="crystal" x1="178" y1="122" x2="248" y2="294" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e5ccff"/><stop offset=".5" stop-color="#ba88ed"/><stop offset="1" stop-color="#7443ae"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#a08cae" opacity=".38">
+    <circle cx="210" cy="210" r="177" stroke-dasharray="3 9"/>
+    <path d="M25 210h48m274 0h48M210 25v48m0 274v48M72 72l31 31m214 214 31 31M72 348l31-31M317 103l31-31"/>
+    <circle cx="210" cy="210" r="148"/>
+  </g>
+  <path d="M49 165h53m216 90h53M165 49v53m90 216v53" stroke="#b79260" stroke-width="10"/>
+  <path d="M40 156v18m322 72v18M156 40h18m72 322h18" stroke="#6e6178" stroke-width="6"/>
+  <g fill="url(#metal)" stroke="#68503c" stroke-width="2">
+    <path id="tooth" d="M190 78h40l5 30h-50Z"/>
+    <use href="#tooth" transform="rotate(45 210 210)"/>
+    <use href="#tooth" transform="rotate(90 210 210)"/>
+    <use href="#tooth" transform="rotate(135 210 210)"/>
+    <use href="#tooth" transform="rotate(180 210 210)"/>
+    <use href="#tooth" transform="rotate(225 210 210)"/>
+    <use href="#tooth" transform="rotate(270 210 210)"/>
+    <use href="#tooth" transform="rotate(315 210 210)"/>
+    <circle cx="210" cy="210" r="111"/>
+  </g>
+  <circle cx="210" cy="210" r="89" fill="#302c3a" stroke="#eed2a2" stroke-width="3"/>
+  <circle cx="210" cy="210" r="77" stroke="#77667f"/>
+  <g fill="#d9bc91" stroke="#5c473b" stroke-width="2">
+    <circle cx="210" cy="108" r="5"/><circle cx="312" cy="210" r="5"/>
+    <circle cx="210" cy="312" r="5"/><circle cx="108" cy="210" r="5"/>
+  </g>
+  <path d="m210 123 48 68-48 108-48-108Z" fill="url(#crystal)" stroke="#efd9ff" stroke-width="2"/>
+  <path d="m210 123 0 176 48-108Z" fill="#8351bd" opacity=".75"/>
+  <path d="m162 191 48 21 48-21M210 123l-22 79 22 97m0-176 22 79-22 97" stroke="#efd9ff" stroke-width="1.5"/>
+  <path d="m124 260 42-49m88-5 38-45" stroke="#ead2ff" stroke-width="2"/>
+  <g fill="#c9a0f3">
+    <circle cx="124" cy="260" r="4"/><circle cx="292" cy="161" r="4"/>
+    <path d="m322 83 3 8 8 3-8 3-3 8-3-8-8-3 8-3ZM91 304l2 6 6 2-6 2-2 6-2-6-6-2 6-2Z"/>
+  </g>
+</svg>

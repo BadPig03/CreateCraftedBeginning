@@ -1,3 +1,8 @@
+# Wiki
+
+[简体中文](https://badpig03.github.io/CreateCraftedBeginning/) · [English](https://badpig03.github.io/CreateCraftedBeginning/en/)
+
+Wiki source and local preview instructions: [wiki/README.md](wiki/README.md).
 
 Installation information
 =======
