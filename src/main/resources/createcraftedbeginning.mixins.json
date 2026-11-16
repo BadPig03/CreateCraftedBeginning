@@ -74,6 +74,7 @@
     "compat.sable.SubLevelHoldingChunkMapMixin"
   ],
   "client": [
+    "compat.sable.SableSubLevelRenderPlatformMixin",
     "client.accessor.CreativeModeInventoryScreenAccessor",
     "client.accessor.HumanoidArmorLayerAccessor",
     "client.accessor.ItemInHandRendererAccessor",
