@@ -125,7 +125,8 @@ public final class StockKeeperRequestRendering {
                 BlockState state = breeze.getBlockState();
                 BufferSource buffers = graphics.bufferSource();
                 float horizontalAngle = AngleHelper.rad(270);
-                boolean isChilled = breeze.getFrostLevel().isAtLeast(FrostLevel.CHILLED);
+                FrostLevel frostLevel = breeze.getFrostLevelForRender();
+                boolean isChilled = frostLevel.isAtLeast(FrostLevel.CHILLED);
                 CachedBuffers.partial(CCBPartialModels.BREEZE_COOLER_BLOCK, state).rotateCentered(horizontalAngle + Mth.PI, Direction.UP).light(LightTexture.FULL_BRIGHT).renderInto(pose, buffers.getBuffer(RenderType.cutoutMipped()));
                 PartialModel hatModel = null;
                 if (breeze.hasTrainHat()) {
@@ -134,7 +135,7 @@ public final class StockKeeperRequestRendering {
                 else if (breeze.isStockKeeper()) {
                     hatModel = CCBPartialModels.BREEZE_LOGISTICS_HAT;
                 }
-                BreezeCoolerRenderer.renderShared(pose, null, buffers, level, state, breeze.getFrostLevelForRender(), breeze.getHeadAnimation().getValue(AnimationTickHolder.getPartialTicks()) * 0.175F, horizontalAngle, breeze.hasGoggles(), hatModel, isChilled, isChilled ? 24 : 0, breeze.hashCode(), LightTexture.FULL_BRIGHT, null);
+                BreezeCoolerRenderer.renderShared(pose, null, buffers, level, state, frostLevel, breeze.getHeadAnimation().getValue(AnimationTickHolder.getPartialTicks()) * 0.175F, horizontalAngle, breeze.hasGoggles(), hatModel, isChilled, isChilled ? 24 : 0, breeze.hashCode(), LightTexture.FULL_BRIGHT, null);
             }
             finally {
                 Lighting.setupFor3DItems();

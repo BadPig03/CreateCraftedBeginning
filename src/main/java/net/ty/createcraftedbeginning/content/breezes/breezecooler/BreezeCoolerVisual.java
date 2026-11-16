@@ -1,7 +1,5 @@
 package net.ty.createcraftedbeginning.content.breezes.breezecooler;
 
-
-
 import dev.engine_room.flywheel.api.instance.Instance;
 import dev.engine_room.flywheel.api.instance.InstancerProvider;
 import dev.engine_room.flywheel.api.visual.DynamicVisual;
@@ -111,6 +109,7 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         boolean hasGoggles = blockEntity.hasGoggles();
         if (hasGoggles && goggles == null) {
             goggles = instances.instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredGogglesModel)).createInstance();
+            relight(goggles);
             gogglesModel = desiredGogglesModel;
         }
         else if (hasGoggles && gogglesModel != desiredGogglesModel) {
@@ -132,6 +131,7 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
         }
         if (desiredHatModel != null && hat == null) {
             hat = instances.instancer(InstanceTypes.TRANSFORMED, Models.partial(desiredHatModel)).createInstance();
+            relight(hat);
             hatModel = desiredHatModel;
         }
         else if (desiredHatModel != null && hatModel != desiredHatModel) {
@@ -144,11 +144,11 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
             hatModel = null;
         }
 
-        boolean hasWind = blockEntity.getFrostLevelFromBlock().isAtLeast(FrostLevel.CHILLED);
-        if (hasWind && wind == null) {
+        if (active && wind == null) {
             wind = instances.instancer(InstanceTypes.TRANSFORMED, Models.partial(CCBPartialModels.BREEZE_COOLER_WIND)).createInstance();
+            relight(wind);
         }
-        else if (!hasWind && wind != null) {
+        else if (!active && wind != null) {
             wind.delete();
             wind = null;
         }
@@ -176,6 +176,6 @@ public class BreezeCoolerVisual extends AbstractBlockEntityVisual<BreezeCoolerBl
             return;
         }
 
-        wind.setIdentityTransform().translate(visualPos).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * (hasWind ? 24 : 0) % 360)).translateBack(Translate.CENTER).setChanged();
+        wind.setIdentityTransform().translate(visualPos).translateY(headY).translate(Translate.CENTER).rotateY(horizontalAngle + AngleHelper.rad(renderTime * 24 % 360)).translateBack(Translate.CENTER).setChanged();
     }
 }
