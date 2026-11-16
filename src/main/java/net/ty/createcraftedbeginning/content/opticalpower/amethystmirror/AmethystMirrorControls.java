@@ -30,6 +30,7 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
 import net.neoforged.neoforge.common.Tags.Items;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3d;
@@ -80,7 +81,7 @@ public final class AmethystMirrorControls {
         double degreesPerPixel = NORMAL_DEGREES_PER_PIXEL;
         int snapSteps = AmethystMirrorRotatePacket.STEPS_PER_DEGREE;
         if (fineAdjustment) {
-            degreesPerPixel = FINE_DEGREES_PER_PIXEL;
+            degreesPerPixel = FINE_DEGREES_PER_PIXEL * CCBConfig.client().amethystMirror.fineDragMultiplier.get();
             snapSteps = 1;
         }
         AmethystMirrorBlockEntity mirror = current.selection.mirror();

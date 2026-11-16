@@ -13,6 +13,7 @@ public final class CCBClient extends ConfigBase {
     public final Particles particles = nested(0, Particles::new, "Particles");
     public final Overlays overlays = nested(0, Overlays::new, "Overlays");
     public final GasRequests gasRequests = nested(0, GasRequests::new, "Gas Requests");
+    public final AmethystMirror amethystMirror = nested(0, AmethystMirror::new, "Amethyst Mirror");
 
     @Override
     public String getName() {
@@ -73,6 +74,15 @@ public final class CCBClient extends ConfigBase {
         @Override
         public String getName() {
             return "gas_requests";
+        }
+    }
+
+    public static final class AmethystMirror extends ConfigBase {
+        public final ConfigFloat fineDragMultiplier = f(1, 0.01F, 10, "fine_drag_multiplier", "[Unit: multiplier]", "Scales mouse sensitivity while dragging an Amethyst Mirror with the Sneak key held; 1 preserves standard sensitivity. Lower values require more mouse movement per 0.1 degree step. Normal dragging is unchanged.");
+
+        @Override
+        public String getName() {
+            return "amethyst_mirror";
         }
     }
 }
