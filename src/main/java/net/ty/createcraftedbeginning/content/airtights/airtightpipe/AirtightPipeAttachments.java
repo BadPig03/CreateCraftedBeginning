@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
 import net.ty.createcraftedbeginning.content.airtights.airtightmeters.AbstractAirtightMeterBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.ShaftDrivenAirtightPumpBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightregulatorpump.AirtightRegulatorPumpBlock;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasConnectable;
@@ -44,7 +45,7 @@ final class AirtightPipeAttachments {
 
                 return AirtightPipeAttachmentTypes.NONE;
             }
-            case AirtightRegulatorPumpBlock ignored -> {
+            case Block ignored when block instanceof AirtightRegulatorPumpBlock || block instanceof ShaftDrivenAirtightPumpBlock -> {
                 Direction output = state.getValue(BlockStateProperties.FACING);
                 if (face.getAxis() != output.getAxis()) {
                     return AirtightPipeAttachmentTypes.NONE;
@@ -79,7 +80,7 @@ final class AirtightPipeAttachments {
 
                         return AirtightPipeAttachmentTypes.NONE;
                     }
-                    case IAxisPipe ignored1 when connected && !(neighborBlock instanceof AirtightRegulatorPumpBlock) -> {
+                    case IAxisPipe ignored1 when connected && !(neighborBlock instanceof AirtightRegulatorPumpBlock) && !(neighborBlock instanceof ShaftDrivenAirtightPumpBlock) -> {
                         if (state.getValue(AirtightPipeBlock.CASED) || neighborBlock instanceof AbstractAirtightMeterBlock) {
                             return AirtightPipeAttachmentTypes.RIM;
                         }
@@ -108,7 +109,7 @@ final class AirtightPipeAttachments {
                 return AirtightPipeAttachmentTypes.NONE;
             }
 
-            boolean alignedPipe = neighborBlock instanceof IAxisPipe neighborPipe && !(neighborBlock instanceof AirtightRegulatorPumpBlock) && neighborPipe.getAxis(neighborState) == axis || neighborBlock instanceof AirtightPipeBlock && AirtightPipeConnections.isOpen(neighborState, neighborFace);
+            boolean alignedPipe = neighborBlock instanceof IAxisPipe neighborPipe && !(neighborBlock instanceof AirtightRegulatorPumpBlock) && !(neighborBlock instanceof ShaftDrivenAirtightPumpBlock) && neighborPipe.getAxis(neighborState) == axis || neighborBlock instanceof AirtightPipeBlock && AirtightPipeConnections.isOpen(neighborState, neighborFace);
             if (!alignedPipe) {
                 boolean drain = neighborBlock instanceof AirtightPipeDrain pipeDrain && pipeDrain.shouldRenderDrain(level, neighborPos, neighborState, neighborFace);
                 if (drain) {

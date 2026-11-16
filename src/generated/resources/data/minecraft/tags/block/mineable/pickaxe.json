@@ -6,6 +6,7 @@
     "createcraftedbeginning:airtight_valve",
     "createcraftedbeginning:smart_airtight_pipe",
     "createcraftedbeginning:airtight_pump",
+    "createcraftedbeginning:shaft_driven_airtight_pump",
     "createcraftedbeginning:airtight_regulator_pump",
     "createcraftedbeginning:airtight_flowmeter",
     "createcraftedbeginning:airtight_manometer",
@@ -39,12 +40,14 @@
     "createcraftedbeginning:creative_gas_canister",
     "createcraftedbeginning:optical_fiber",
     "createcraftedbeginning:amethyst_collector_panel",
-    "createcraftedbeginning:amethyst_sound_suppressor",
     "createcraftedbeginning:laser_emitter",
     "createcraftedbeginning:photothermal_chamber",
+    "createcraftedbeginning:chunk_stabilizer",
+    "createcraftedbeginning:amethyst_antenna",
     "createcraftedbeginning:amethyst_mirror",
-    "createcraftedbeginning:amethyst_convex_lens",
     "createcraftedbeginning:amethyst_concave_lens",
+    "createcraftedbeginning:amethyst_convex_lens",
+    "createcraftedbeginning:amethyst_sound_suppressor",
     "createcraftedbeginning:small_experience_bud",
     "createcraftedbeginning:medium_experience_bud",
     "createcraftedbeginning:experience_cluster",
@@ -160,7 +163,6 @@
     {
       "id": "createcraftedbeginning:gas_drawer_4",
       "required": false
-    },
-    "createcraftedbeginning:chunk_stabilizer",
-    "createcraftedbeginning:amethyst_antenna"]
+    }
+  ]
 }

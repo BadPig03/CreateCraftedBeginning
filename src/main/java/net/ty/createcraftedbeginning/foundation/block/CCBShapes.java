@@ -19,6 +19,7 @@ public class CCBShapes {
     public static final VoxelShaper AIRTIGHT_ENGINE = shape(0, 0, 0, 16, 2, 16).add(2, 2, 2, 14, 6, 14).add(0, 6, 0, 16, 10, 16).add(2, 10, 2, 14, 14, 14).forDirectional(Direction.UP);
     public static final VoxelShaper AIRTIGHT_HATCH = shape(2, 2, 0, 14, 14, 1).add(3, 0, 0, 13, 16, 10).forHorizontal(Direction.SOUTH);
     public static final VoxelShaper AIRTIGHT_PIPE = shape(4, 0, 4, 12, 16, 12).forAxis();
+    public static final VoxelShaper SHAFT_DRIVEN_AIRTIGHT_PUMP = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).forAxis();
     public static final VoxelShaper AIRTIGHT_PUMP = shape(2, 0, 2, 14, 16, 14).forDirectional(Direction.UP);
     public static final VoxelShaper AIRTIGHT_CHECK_VALVE = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).forAxis();
     public static final VoxelShaper AIRTIGHT_VALVE = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).forAxis();

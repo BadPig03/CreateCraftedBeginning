@@ -1,0 +1,54 @@
+{
+  "variants": {
+    "axis_along_first=false,facing=down": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block",
+      "y": 270
+    },
+    "axis_along_first=false,facing=east": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis_along_first=false,facing=north": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block_sideways",
+      "x": 90
+    },
+    "axis_along_first=false,facing=south": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block_sideways",
+      "x": 90
+    },
+    "axis_along_first=false,facing=up": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block",
+      "y": 270
+    },
+    "axis_along_first=false,facing=west": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "axis_along_first=true,facing=down": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block"
+    },
+    "axis_along_first=true,facing=east": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block_sideways",
+      "x": 90,
+      "y": 90
+    },
+    "axis_along_first=true,facing=north": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block",
+      "x": 90
+    },
+    "axis_along_first=true,facing=south": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block",
+      "x": 90
+    },
+    "axis_along_first=true,facing=up": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block"
+    },
+    "axis_along_first=true,facing=west": {
+      "model": "createcraftedbeginning:block/shaft_driven_airtight_pump/block_sideways",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

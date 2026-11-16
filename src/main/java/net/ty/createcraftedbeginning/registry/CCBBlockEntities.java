@@ -65,6 +65,7 @@ public class CCBBlockEntities {
     public static final BlockEntityEntry<AirtightCheckValveBlockEntity> AIRTIGHT_CHECK_VALVE = CCB_REGISTRATE.blockEntity("airtight_check_valve", AirtightCheckValveBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_CHECK_VALVE_BLOCK).register();
     public static final BlockEntityEntry<SmartAirtightPipeBlockEntity> SMART_AIRTIGHT_PIPE = CCB_REGISTRATE.blockEntity("smart_airtight_pipe", SmartAirtightPipeBlockEntity::new).validBlock(CCBBlocks.SMART_AIRTIGHT_PIPE_BLOCK).register();
     public static final BlockEntityEntry<AirtightPumpBlockEntity> AIRTIGHT_PUMP = CCB_REGISTRATE.blockEntity("airtight_pump", AirtightPumpBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_PUMP_BLOCK).register();
+    public static final BlockEntityEntry<AirtightPumpBlockEntity> SHAFT_DRIVEN_AIRTIGHT_PUMP = CCB_REGISTRATE.blockEntity("shaft_driven_airtight_pump", AirtightPumpBlockEntity::new).validBlock(CCBBlocks.SHAFT_DRIVEN_AIRTIGHT_PUMP_BLOCK).register();
     public static final BlockEntityEntry<AirtightRegulatorPumpBlockEntity> AIRTIGHT_REGULATOR_PUMP = CCB_REGISTRATE.blockEntity("airtight_regulator_pump", AirtightRegulatorPumpBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_REGULATOR_PUMP_BLOCK).register();
     public static final BlockEntityEntry<AirtightValveBlockEntity> AIRTIGHT_VALVE = CCB_REGISTRATE.blockEntity("airtight_valve", AirtightValveBlockEntity::new).validBlock(CCBBlocks.AIRTIGHT_VALVE_BLOCK).register();
 

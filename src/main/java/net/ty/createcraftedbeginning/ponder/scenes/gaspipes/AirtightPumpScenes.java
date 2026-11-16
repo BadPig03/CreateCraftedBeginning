@@ -48,15 +48,15 @@ public class AirtightPumpScenes {
         Selection pipeBackSelection = util.select().fromTo(pipeFirstPos, pipeSecondPos);
         Selection encasedSelection = util.select().position(encasedPos);
         Selection pipeFrontSelection = util.select().fromTo(pipeLeftPos, pipeRightPos);
-        Selection cogSelection = util.select().fromTo(cogPos, motorPos);
+        Selection driveSelection = util.select().fromTo(cogPos, motorPos);
         Selection pumpSelection = util.select().position(pumpPos);
 
         Vec3 pumpVec = util.vector().centerOf(pumpPos);
         Vec3 pipeFirstVec = util.vector().centerOf(pipeFirstPos);
         Vec3 inputFlowStartVec = util.vector().blockSurface(pipeRightPos, Direction.WEST);
         Vec3 backpressureFrontStartVec = util.vector().blockSurface(encasedPos, Direction.WEST);
-        Vec3 pumpTopVec = util.vector().topOf(pumpPos);
         Vec3 pumpOutputVec = util.vector().blockSurface(pumpPos, Direction.EAST);
+        Vec3 wrenchVec = util.vector().topOf(pumpPos);
 
         float slowSpeed = SpeedLevel.SLOW.getSpeedValue();
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
@@ -100,10 +100,10 @@ public class AirtightPumpScenes {
 
         scene.idle(3);
         scene.world().setBlock(motorPos, AllBlocks.CREATIVE_MOTOR.getDefaultState().setValue(CreativeMotorBlock.FACING, Direction.WEST), false);
-        scene.world().showSection(cogSelection, Direction.NORTH);
+        scene.world().showSection(driveSelection, Direction.NORTH);
 
         scene.idle(15);
-        scene.world().setKineticSpeed(cogSelection, slowSpeed);
+        scene.world().setKineticSpeed(driveSelection, slowSpeed);
         scene.world().setKineticSpeed(pumpSelection, -slowSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
 
@@ -115,7 +115,7 @@ public class AirtightPumpScenes {
         scene.overlay().showText(60).text("Airtight Pumps require at least Medium rotational speed to operate").colored(PonderPalette.RED).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(77);
-        scene.world().setKineticSpeed(cogSelection, mediumSpeed);
+        scene.world().setKineticSpeed(driveSelection, mediumSpeed);
         scene.world().setKineticSpeed(pumpSelection, -mediumSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, inputConnectionObject, connectionArea, 3);
@@ -127,7 +127,7 @@ public class AirtightPumpScenes {
         scene.overlay().showText(60).text("When active, the pump provides a pressure boost from its inlet toward its outlet").pointAt(pumpVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(77);
-        scene.world().setKineticSpeed(cogSelection, fastSpeed);
+        scene.world().setKineticSpeed(driveSelection, fastSpeed);
         scene.world().setKineticSpeed(pumpSelection, -fastSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, performanceObject, performanceArea, 3);
@@ -179,7 +179,7 @@ public class AirtightPumpScenes {
         scene.overlay().showText(60).text("Reversing the shaft rotation does not reverse the pumping direction").colored(PonderPalette.RED).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
-        scene.world().setKineticSpeed(cogSelection, -fastSpeed);
+        scene.world().setKineticSpeed(driveSelection, -fastSpeed);
         scene.world().setKineticSpeed(pumpSelection, fastSpeed);
         scene.effects().rotationSpeedIndicator(pumpPos);
 
@@ -191,7 +191,7 @@ public class AirtightPumpScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, wrenchInputConnectionObject, connectionArea.move(-0.5, 0, 0), 7);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, wrenchOutputConnectionObject, connectionArea.move(0.5, 0, 0), 7);
         scene.overlay().showText(60).text("Use a Wrench to swap the inlet and outlet sides").colored(PonderPalette.BLUE).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
-        scene.overlay().showControls(pumpTopVec, Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
+        scene.overlay().showControls(wrenchVec, Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);
         scene.world().modifyBlock(pumpPos, state -> state.setValue(AirtightPumpBlock.FACING, Direction.WEST), false);

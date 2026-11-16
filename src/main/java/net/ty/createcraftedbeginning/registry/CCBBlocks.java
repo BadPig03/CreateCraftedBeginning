@@ -29,6 +29,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightmeters.AirtightFl
 import net.ty.createcraftedbeginning.content.airtights.airtightmeters.AirtightManometerBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.ShaftDrivenAirtightPumpBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralCogBlock;
@@ -110,6 +111,7 @@ public class CCBBlocks {
     public static final BlockEntry<AirtightValveBlock> AIRTIGHT_VALVE_BLOCK = CCB_REGISTRATE.block("airtight_valve", AirtightValveBlock::new).transform(GasPipeRegistration.airtightValve()).transform(AirtightBlockProperties.airtightComponentWithImpact(4)).register();
     public static final BlockEntry<SmartAirtightPipeBlock> SMART_AIRTIGHT_PIPE_BLOCK = CCB_REGISTRATE.block("smart_airtight_pipe", SmartAirtightPipeBlock::new).transform(GasPipeRegistration.smartAirtightPipe()).transform(AirtightBlockProperties.airtightComponent()).register();
     public static final BlockEntry<AirtightPumpBlock> AIRTIGHT_PUMP_BLOCK = CCB_REGISTRATE.block("airtight_pump", AirtightPumpBlock::new).transform(GasPipeRegistration.airtightPump()).transform(AirtightBlockProperties.airtightComponentWithImpact(8)).register();
+    public static final BlockEntry<ShaftDrivenAirtightPumpBlock> SHAFT_DRIVEN_AIRTIGHT_PUMP_BLOCK = CCB_REGISTRATE.block("shaft_driven_airtight_pump", ShaftDrivenAirtightPumpBlock::new).transform(GasPipeRegistration.shaftDrivenAirtightPump()).transform(AirtightBlockProperties.airtightComponentWithImpact(8)).register();
     public static final BlockEntry<AirtightRegulatorPumpBlock> AIRTIGHT_REGULATOR_PUMP_BLOCK = CCB_REGISTRATE.block("airtight_regulator_pump", AirtightRegulatorPumpBlock::new).transform(GasPipeRegistration.airtightRegulatorPump()).transform(AirtightBlockProperties.airtightComponentWithImpact(16)).register();
 
     public static final BlockEntry<AirtightFlowmeterBlock> AIRTIGHT_FLOWMETER_BLOCK = CCB_REGISTRATE.block("airtight_flowmeter", AirtightFlowmeterBlock::new).transform(GasPipeRegistration.airtightMeter("flowmeter")).transform(GasPipeRegistration.airtightFlowmeterProperties()).register();

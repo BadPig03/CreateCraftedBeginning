@@ -1,9 +1,11 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpump;
 
+import com.simibubi.create.content.kinetics.base.KineticBlock;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.config.CCBConfig;
@@ -20,7 +22,7 @@ final class AirtightPumpPerformanceController {
     }
 
     static boolean isSideAccessible(BlockState state, Direction direction) {
-        return state.getBlock() instanceof AirtightPumpBlock && state.getValue(AirtightPumpBlock.FACING).getAxis() == direction.getAxis();
+        return isPumpBlock(state) && state.getValue(AirtightPumpBlock.FACING).getAxis() == direction.getAxis();
     }
 
     static Direction getPumpInletDirection(BlockState state) {
@@ -29,6 +31,11 @@ final class AirtightPumpPerformanceController {
 
     static Direction getPumpOutletDirection(BlockState state) {
         return state.getValue(AirtightPumpBlock.FACING);
+    }
+
+    private static boolean isPumpBlock(BlockState state) {
+        Block block = state.getBlock();
+        return block instanceof AirtightPumpBlock || block instanceof ShaftDrivenAirtightPumpBlock;
     }
 
     boolean allowsGasTransport(BlockState state, Direction direction) {
@@ -58,10 +65,12 @@ final class AirtightPumpPerformanceController {
     }
 
     private boolean isPumpRunning() {
-        if (pump.getLevel() == null || pump.isRemoved() || !(pump.getBlockState().getBlock() instanceof AirtightPumpBlock block)) {
+        BlockState state = pump.getBlockState();
+        if (pump.getLevel() == null || pump.isRemoved() || !isPumpBlock(state)) {
             return false;
         }
 
+        KineticBlock block = (KineticBlock) state.getBlock();
         float absoluteSpeed = Mth.abs(pump.getSpeed());
         return absoluteSpeed > 0 && absoluteSpeed >= block.getMinimumRequiredSpeedLevel().getSpeedValue();
     }

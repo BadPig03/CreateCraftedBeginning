@@ -1,0 +1,11 @@
+{
+  "parent": "createcraftedbeginning:block/shaft_driven_airtight_pump/block",
+  "transform": {
+    "rotation": [
+      0,
+      90,
+      0
+    ],
+    "origin": "center"
+  }
+}

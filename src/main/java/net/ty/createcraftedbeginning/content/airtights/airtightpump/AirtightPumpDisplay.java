@@ -27,7 +27,8 @@ final class AirtightPumpDisplay {
         }
 
         PumpConfiguration readout = pump.getGasPipeReadout();
-        CCBLang.translate("gui.airtight_pump").forGoggles(tooltip);
+        String title = pump.getBlockState().getBlock() instanceof ShaftDrivenAirtightPumpBlock ? "gui.shaft_driven_airtight_pump" : "gui.airtight_pump";
+        CCBLang.translate(title).forGoggles(tooltip);
         CCBLang.translate("gui.airtight_pump.max_pressure_boost").style(ChatFormatting.GRAY).forGoggles(tooltip);
         CCBLang.text(GasPressure.formatAtm(readout.maxPressureBoostPa())).style(ChatFormatting.GOLD).forGoggles(tooltip, 1);
     }

@@ -29,6 +29,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.Air
 import net.ty.createcraftedbeginning.content.airtights.airtightmeters.AirtightMeterRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeAttachmentModel;
 import net.ty.createcraftedbeginning.content.airtights.airtightpump.AirtightPumpRenderer;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.ShaftDrivenAirtightPumpRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleClientExtensions;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleRenderer;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructuralClientExtensions;
@@ -101,6 +102,7 @@ public final class CCBClientRegistrations {
         models.register(CCBAPI.asResource("airtight_check_valve"), AirtightPipeAttachmentModel::withAO);
         models.register(CCBAPI.asResource("smart_airtight_pipe"), AirtightPipeAttachmentModel::withAO);
         models.register(CCBAPI.asResource("airtight_pump"), AirtightPipeAttachmentModel::withAO);
+        models.register(CCBAPI.asResource("shaft_driven_airtight_pump"), AirtightPipeAttachmentModel::withAO);
         models.register(CCBAPI.asResource("airtight_regulator_pump"), AirtightPipeAttachmentModel::withAO);
         models.register(CCBAPI.asResource("airtight_valve"), AirtightPipeAttachmentModel::withAO);
         models.register(CCBAPI.asResource("gas_factory_gauge"), GasFactoryGaugeModel::new);
@@ -142,6 +144,7 @@ public final class CCBClientRegistrations {
         event.registerBlockEntityRenderer(CCBBlockEntities.AIRTIGHT_TANK.get(), AirtightTankRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.HORIZONTAL_AIRTIGHT_TANK.get(), AirtightTankRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.AIRTIGHT_PUMP.get(), AirtightPumpRenderer::new);
+        event.registerBlockEntityRenderer(CCBBlockEntities.SHAFT_DRIVEN_AIRTIGHT_PUMP.get(), ShaftDrivenAirtightPumpRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.AIRTIGHT_REGULATOR_PUMP.get(), AirtightRegulatorPumpRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.AIRTIGHT_VALVE.get(), AirtightValveRenderer::new);
         event.registerBlockEntityRenderer(CCBBlockEntities.GAS_INJECTION_CHAMBER.get(), GasInjectionChamberRenderer::new);

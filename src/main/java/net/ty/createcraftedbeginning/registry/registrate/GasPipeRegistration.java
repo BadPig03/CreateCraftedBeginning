@@ -20,6 +20,7 @@ import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.ty.createcraftedbeginning.content.airtights.airtightcheckvalve.AirtightCheckValveBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightmeters.AirtightMeterCTBehaviour;
 import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeCTBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.airtightpump.ShaftDrivenAirtightPumpBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightvalve.AirtightValveBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentBlock;
 import net.ty.createcraftedbeginning.content.airtights.airvents.AirVentCTBehaviour;
@@ -108,6 +109,23 @@ public final class GasPipeRegistration {
             int rotationY = direction.getAxis().isVertical() ? 0 : ((int) direction.toYRot() + 180) % 360;
 
             return ConfiguredModel.builder().modelFile(AssetLookup.partialBaseModel(context, provider)).rotationX(rotationX).rotationY(rotationY).build();
+        }, BlockStateProperties.WATERLOGGED)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
+    }
+
+    @Contract(pure = true)
+    public static <B extends ShaftDrivenAirtightPumpBlock> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> shaftDrivenAirtightPump() {
+        return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> {
+            Axis axis = state.getValue(BlockStateProperties.FACING).getAxis();
+            Axis shaftAxis = context.getEntry().getRotationAxis(state);
+            Direction panel = switch (axis) {
+                case X -> shaftAxis == Axis.Y ? Direction.SOUTH : Direction.UP;
+                case Y -> shaftAxis == Axis.X ? Direction.SOUTH : Direction.EAST;
+                case Z -> shaftAxis == Axis.X ? Direction.UP : Direction.EAST;
+            };
+            boolean sideways = axis != Axis.Y && panel.getAxis() != Axis.Y;
+            String modelPath = sideways ? "block/shaft_driven_airtight_pump/block_sideways" : "block/shaft_driven_airtight_pump/block";
+            ModelFile model = provider.models().getExistingFile(provider.modLoc(modelPath));
+            return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationX(GasPipeOrientation.rotationX(axis, panel)).rotationY(GasPipeOrientation.rotationY(axis, panel)).build();
         }, BlockStateProperties.WATERLOGGED)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 

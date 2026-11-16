@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "tag": "c:plates/iron"
+    },
+    {
+      "item": "create:shaft"
+    },
+    {
+      "item": "createcraftedbeginning:airtight_pipe"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createcraftedbeginning:shaft_driven_airtight_pump"
+  }
+}
