@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightregulatorpump;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import net.createmod.catnip.render.CachedBuffers;
@@ -30,10 +31,11 @@ public class AirtightRegulatorPumpRenderer extends KineticBlockEntityRenderer<Ai
         BlockPos pos = blockEntity.getBlockPos();
         Axis shaftAxis = AirtightRegulatorPumpBlock.getShaftAxis(state);
         float angle = getAngleForBe(blockEntity, pos, shaftAxis);
+        VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.cutoutMipped());
         for (AxisDirection axisDirection : AxisDirection.values()) {
             Direction shaftDirection = Direction.fromAxisAndDirection(shaftAxis, axisDirection);
             SuperByteBuffer shaft = CachedBuffers.partialFacing(AllPartialModels.SHAFT_HALF, state, shaftDirection);
-            kineticRotationTransform(shaft, blockEntity, shaftAxis, angle, light).renderInto(poseStack, buffer.getBuffer(RenderType.cutoutMipped()));
+            kineticRotationTransform(shaft, blockEntity, shaftAxis, angle, light).renderInto(poseStack, vertexConsumer);
         }
     }
 

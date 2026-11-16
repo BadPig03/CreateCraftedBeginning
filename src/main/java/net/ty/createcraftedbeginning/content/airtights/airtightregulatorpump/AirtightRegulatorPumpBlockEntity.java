@@ -114,7 +114,20 @@ public class AirtightRegulatorPumpBlockEntity extends KineticBlockEntity impleme
         return advancementBehaviour;
     }
 
-    public long getFlowRateLimit() {
+    public void setOutletSetPressurePa(long outletSetPressurePa) {
+        long normalizedPressurePa = AirtightRegulatorPumpPressureBehaviour.normalizePressurePa(outletSetPressurePa);
+        if (this.outletSetPressurePa == normalizedPressurePa) {
+            return;
+        }
+
+        this.outletSetPressurePa = normalizedPressurePa;
+        if (pressureBehaviour != null) {
+            pressureBehaviour.syncFromOwner();
+        }
+        onOutletSetPressureChanged();
+    }
+
+    long getFlowRateLimit() {
         if (!isRunning()) {
             return 0;
         }
@@ -127,26 +140,13 @@ public class AirtightRegulatorPumpBlockEntity extends KineticBlockEntity impleme
         return Math.max(1, Math.round(configuredMaximum * getSpeedProgress()));
     }
 
-    public long getOutletSetPressurePa() {
+    long getOutletSetPressurePa() {
         return outletSetPressurePa;
     }
 
-    public long getMaxPressureRisePa() {
+    long getMaxPressureRisePa() {
         double configuredMaximumAtm = Math.max(0, CCBConfig.server().machines.airtightRegulatorPump.maxPressureRise.getF());
         return GasPressure.pascals(configuredMaximumAtm);
-    }
-
-    public void setOutletSetPressurePa(long outletSetPressurePa) {
-        long normalizedPressurePa = AirtightRegulatorPumpPressureBehaviour.normalizePressurePa(outletSetPressurePa);
-        if (this.outletSetPressurePa == normalizedPressurePa) {
-            return;
-        }
-
-        this.outletSetPressurePa = normalizedPressurePa;
-        if (pressureBehaviour != null) {
-            pressureBehaviour.syncFromOwner();
-        }
-        onOutletSetPressureChanged();
     }
 
     void applyOutletSetPressureFromBehaviour(long outletSetPressurePa) {

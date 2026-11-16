@@ -18,6 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
@@ -93,7 +94,8 @@ public class AirtightRegulatorPumpBlock extends KineticBlock implements IBE<Airt
         BlockPos pos = context.getClickedPos();
         Direction outputDirection = GasPlacementHelper.choosePumpFacing(context, false);
         Direction preferredShaft = null;
-        boolean sneaking = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
+        Player player = context.getPlayer();
+        boolean sneaking = player != null && player.isShiftKeyDown();
         if (!sneaking) {
             preferredShaft = GasPlacementHelper.getPreferredShaft(level, pos);
         }
