@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.content.opticalpower.laseremitter.beamrender;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
@@ -30,17 +31,19 @@ import java.io.IOException;
 final class LaserRenderTypes {
     private static final String LASER_KEY = "createcraftedbeginning:laser";
     private static final ResourceLocation SHADER_ID = CCBAPI.asResource("laser_beam");
+    private static final ResourceLocation CLOUD_SHADER_ID = CCBAPI.asResource("laser_clouds");
     static final RenderType LASER = createLaser(LASER_KEY, false);
     static final RenderType PONDER_LASER = createLaser("createcraftedbeginning:ponder_laser", true);
 
     private static @Nullable ShaderBinding binding;
+    private static @Nullable ShaderInstance cloudShader;
     private static int shaderRevision;
 
     private LaserRenderTypes() {
     }
 
     static boolean isAvailable() {
-        return binding != null;
+        return binding != null && cloudShader != null;
     }
 
     static int shaderRevision() {
@@ -54,12 +57,42 @@ final class LaserRenderTypes {
         }
 
         current.fog().set(ponder ? 0 : 1);
-        return current.shader();
+        current.cloudForeground().set(0);
+        ShaderInstance shader = current.shader();
+        shader.setSampler("CloudsSampler", 0);
+        shader.setSampler("CloudsDepthSampler", 0);
+        return shader;
+    }
+
+    static ShaderInstance prepareCloudForegroundShader(RenderTarget clouds) {
+        ShaderBinding current = binding;
+        if (current == null) {
+            throw new IllegalStateException("Laser cloud rendering requires the laser beam shader.");
+        }
+
+        current.fog().set(1);
+        current.cloudForeground().set(1);
+        ShaderInstance shader = current.shader();
+        shader.setSampler("CloudsSampler", clouds.getColorTextureId());
+        shader.setSampler("CloudsDepthSampler", clouds.getDepthTextureId());
+        return shader;
+    }
+
+    static ShaderInstance prepareCloudShader(RenderTarget clouds, RenderTarget foreground) {
+        ShaderInstance shader = cloudShader;
+        if (shader == null) {
+            throw new IllegalStateException("Laser cloud rendering requires the cloud composition shader.");
+        }
+
+        shader.setSampler("CloudsSampler", clouds.getColorTextureId());
+        shader.setSampler("ForegroundSampler", foreground.getColorTextureId());
+        return shader;
     }
 
     @SubscribeEvent
     private static void registerShaders(RegisterShadersEvent event) {
         binding = null;
+        cloudShader = null;
         shaderRevision++;
         ShaderInstance candidate;
         try {
@@ -74,15 +107,22 @@ final class LaserRenderTypes {
             Uniform minWidth = shader.getUniform("MinWidth");
             Uniform referenceRadius = shader.getUniform("ReferenceRadius");
             Uniform fog = shader.getUniform("FogEnabled");
-            if (minWidth == null || minWidth.getType() != Uniform.UT_FLOAT1 || minWidth.getCount() != 1 || referenceRadius == null || referenceRadius.getType() != Uniform.UT_FLOAT1 || referenceRadius.getCount() != 1 || fog == null || fog.getType() != Uniform.UT_INT1 || fog.getCount() != 1) {
-                CCBAPI.LOGGER.warn("Laser beam shader '{}' is missing a required scalar uniform or has an incompatible uniform type: MinWidth (float), ReferenceRadius (float), FogEnabled (int). Laser effects are disabled until the next resource reload.", SHADER_ID);
+            Uniform cloudForeground = shader.getUniform("CloudForeground");
+            if (minWidth == null || minWidth.getType() != Uniform.UT_FLOAT1 || minWidth.getCount() != 1 || referenceRadius == null || referenceRadius.getType() != Uniform.UT_FLOAT1 || referenceRadius.getCount() != 1 || fog == null || fog.getType() != Uniform.UT_INT1 || fog.getCount() != 1 || cloudForeground == null || cloudForeground.getType() != Uniform.UT_INT1 || cloudForeground.getCount() != 1) {
+                CCBAPI.LOGGER.warn("Laser beam shader '{}' is missing a required scalar uniform or has an incompatible uniform type: MinWidth (float), ReferenceRadius (float), FogEnabled (int), CloudForeground (int). Laser effects are disabled until the next resource reload.", SHADER_ID);
                 return;
             }
 
             minWidth.set((float) BeamProfile.MIN_WIDTH);
             referenceRadius.set((float) LaserBeamBrightness.REFERENCE_RADIUS);
-            binding = new ShaderBinding(shader, fog);
+            binding = new ShaderBinding(shader, fog, cloudForeground);
         });
+        try {
+            event.registerShader(new ShaderInstance(event.getResourceProvider(), CLOUD_SHADER_ID, DefaultVertexFormat.BLIT_SCREEN), shader -> cloudShader = shader);
+        }
+        catch (IOException failure) {
+            CCBAPI.LOGGER.warn("Could not load laser cloud shader '{}'; disabling laser effects until the next resource reload.", CLOUD_SHADER_ID, failure);
+        }
     }
 
     private static RenderType createLaser(String name, boolean ponder) {
@@ -90,6 +130,6 @@ final class LaserRenderTypes {
         return RenderType.create(name, DefaultVertexFormat.POSITION_TEX_COLOR, Mode.QUADS, 256, false, false, state);
     }
 
-    private record ShaderBinding(ShaderInstance shader, Uniform fog) {
+    private record ShaderBinding(ShaderInstance shader, Uniform fog, Uniform cloudForeground) {
     }
 }

@@ -12,9 +12,11 @@ import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
@@ -47,6 +49,7 @@ import java.util.function.Supplier;
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
 final class LaserBeamCoverageRenderer {
     private static final Map<LaserEmitterBlockEntity, Submission> PENDING = new LinkedHashMap<>();
+    private static final List<CloudDraw> CLOUD_DRAWS = new ArrayList<>();
     private static @Nullable RenderTarget coverage;
     private static @Nullable ClientLevel frameLevel;
 
@@ -61,9 +64,56 @@ final class LaserBeamCoverageRenderer {
         PENDING.remove(owner);
     }
 
+    static boolean hasCloudDraws() {
+        return !CLOUD_DRAWS.isEmpty();
+    }
+
+    static void renderCloudForeground(RenderTarget clouds, RenderTarget foreground) {
+        RenderTarget target = coverage;
+        if (target == null) {
+            return;
+        }
+
+        Minecraft minecraft = Minecraft.getInstance();
+        ShaderInstance shader = LaserRenderTypes.prepareCloudForegroundShader(clouds);
+        try {
+            for (CloudDraw draw : CLOUD_DRAWS) {
+                BufferBuilder builder = RenderSystem.renderThreadTesselator().begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                draw.vertices().render(builder, draw.pose());
+                MeshData mesh = builder.build();
+                if (mesh == null) {
+                    continue;
+                }
+
+                target.bindWrite(true);
+                draw.prepare(shader, minecraft);
+                RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
+                BufferUploader.draw(mesh);
+                shader.clear();
+                RenderSystem.blendEquation(GL14.GL_FUNC_ADD);
+                foreground.bindWrite(true);
+                RenderSystem.disableDepthTest();
+                RenderSystem.depthMask(false);
+                RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                ShaderInstance blit = minecraft.gameRenderer.blitShader;
+                if (blit == null) {
+                    throw new IllegalStateException("Laser cloud rendering requires the blit shader.");
+                }
+
+                blit.setSampler("DiffuseSampler", target.getColorTextureId());
+                LaserCloudOcclusion.drawScreen(blit);
+            }
+        }
+        finally {
+            CLOUD_DRAWS.clear();
+        }
+    }
+
     static void clear() {
         RenderSystem.assertOnRenderThread();
         PENDING.clear();
+        CLOUD_DRAWS.clear();
+        LaserCloudOcclusion.clear();
         frameLevel = null;
         RenderTarget target = coverage;
         coverage = null;
@@ -79,6 +129,7 @@ final class LaserBeamCoverageRenderer {
     @SubscribeEvent
     private static void onFrame(Pre event) {
         PENDING.clear();
+        CLOUD_DRAWS.clear();
         ClientLevel level = Minecraft.getInstance().level;
         ClientLevel previousLevel = frameLevel;
         if (previousLevel != level) {
@@ -101,6 +152,15 @@ final class LaserBeamCoverageRenderer {
     @SubscribeEvent
     private static void onShutdown(GameShuttingDownEvent event) {
         LaserEmitterRenderer.clearCaches();
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    private static void prepareDepth(RenderLevelStageEvent event) {
+        if (event.getStage() != Stage.AFTER_BLOCK_ENTITIES || PENDING.isEmpty() || !LaserRenderTypes.isAvailable()) {
+            return;
+        }
+
+        Minecraft.getInstance().renderBuffers().bufferSource().endBatch(RenderType.cutoutMipped());
     }
 
     @SubscribeEvent
@@ -173,22 +233,13 @@ final class LaserBeamCoverageRenderer {
                     }
 
                     target.bindWrite(true);
-                    RenderSystem.enableScissor(scissor.x(), scissor.y(), scissorWidth, scissorHeight);
-                    RenderSystem.clearColor(0, 0, 0, 0);
-                    RenderSystem.colorMask(true, true, true, true);
+                    CloudDraw draw = new CloudDraw(vertices, pose, modelView, projection, scissor);
+                    draw.prepare(shader, minecraft);
                     RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
-                    RenderSystem.enableDepthTest();
-                    RenderSystem.depthFunc(GL11.GL_LEQUAL);
-                    RenderSystem.depthMask(false);
-                    RenderSystem.disableCull();
-                    RenderSystem.enableBlend();
-                    RenderSystem.defaultBlendFunc();
-                    shader.setDefaultUniforms(Mode.QUADS, modelView, projection, minecraft.getWindow());
-                    shader.apply();
-                    RenderSystem.blendEquation(GL14.GL_MAX);
                     BufferUploader.draw(mesh);
                     shader.clear();
                     RenderSystem.blendEquation(GL14.GL_FUNC_ADD);
+                    CLOUD_DRAWS.add(draw);
 
                     main.bindWrite(true);
                     RenderSystem.defaultBlendFunc();
@@ -203,7 +254,24 @@ final class LaserBeamCoverageRenderer {
 
     private record Submission(Matrix4f pose, Matrix4f modelView, Matrix4f projection, Supplier<List<Layer>> layers) {}
 
-    private static final class DrawState implements AutoCloseable {
+    private record CloudDraw(Layer vertices, Matrix4f pose, Matrix4f modelView, Matrix4f projection, LaserBeamScissor scissor) {
+        private void prepare(ShaderInstance shader, Minecraft minecraft) {
+            RenderSystem.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+            RenderSystem.clearColor(0, 0, 0, 0);
+            RenderSystem.colorMask(true, true, true, true);
+            RenderSystem.enableDepthTest();
+            RenderSystem.depthFunc(GL11.GL_LEQUAL);
+            RenderSystem.depthMask(false);
+            RenderSystem.disableCull();
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            shader.setDefaultUniforms(Mode.QUADS, modelView, projection, minecraft.getWindow());
+            shader.apply();
+            RenderSystem.blendEquation(GL14.GL_MAX);
+        }
+    }
+
+    static final class DrawState implements AutoCloseable {
         private final boolean depth = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
         private final boolean cull = GL11.glIsEnabled(GL11.GL_CULL_FACE);
         private final boolean blend = GL11.glIsEnabled(GL11.GL_BLEND);
@@ -224,9 +292,9 @@ final class LaserBeamCoverageRenderer {
         private final int[] scissorBox = new int[4];
         private final float[] clearColor = new float[4];
         private final boolean[] colorWrite = new boolean[4];
-        private final int texture;
+        private final int[] textures = new int[2];
 
-        private DrawState() {
+        DrawState() {
             GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
             GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, scissorBox);
             GL11.glGetFloatv(GL11.GL_COLOR_CLEAR_VALUE, clearColor);
@@ -238,8 +306,10 @@ final class LaserBeamCoverageRenderer {
                 }
             }
 
-            RenderSystem.activeTexture(GL13.GL_TEXTURE0);
-            texture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+            for (int unit = 0; unit < textures.length; unit++) {
+                RenderSystem.activeTexture(GL13.GL_TEXTURE0 + unit);
+                textures[unit] = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+            }
             RenderSystem.activeTexture(activeTexture);
         }
 
@@ -255,8 +325,10 @@ final class LaserBeamCoverageRenderer {
             RenderSystem.depthMask(depthWrite);
             RenderSystem.colorMask(colorWrite[0], colorWrite[1], colorWrite[2], colorWrite[3]);
             RenderSystem.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
-            RenderSystem.activeTexture(GL13.GL_TEXTURE0);
-            GlStateManager._bindTexture(texture);
+            for (int unit = 0; unit < textures.length; unit++) {
+                RenderSystem.activeTexture(GL13.GL_TEXTURE0 + unit);
+                GlStateManager._bindTexture(textures[unit]);
+            }
             RenderSystem.activeTexture(activeTexture);
             GlStateManager._glUseProgram(program);
             if (depth) {

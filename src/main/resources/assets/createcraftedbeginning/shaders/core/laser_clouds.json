@@ -1,0 +1,9 @@
+{
+  "vertex": "minecraft:blit_screen",
+  "fragment": "createcraftedbeginning:laser_clouds",
+  "samplers": [
+    { "name": "CloudsSampler" },
+    { "name": "ForegroundSampler" }
+  ],
+  "uniforms": []
+}
