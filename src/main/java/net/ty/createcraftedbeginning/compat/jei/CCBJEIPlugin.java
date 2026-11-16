@@ -59,6 +59,7 @@ import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackHelper;
 import net.ty.createcraftedbeginning.compat.jei.category.gas.GasStackRenderer;
 import net.ty.createcraftedbeginning.compat.jei.functionalstorage.FunctionalStorageJEICompat;
 import net.ty.createcraftedbeginning.compat.jei.ghost.AirtightHandheldDrillGhostIngredientHandler;
+import net.ty.createcraftedbeginning.compat.jei.ghost.GasFactoryGaugeGhostIngredientHandler;
 import net.ty.createcraftedbeginning.compat.jei.ghost.GasFilterGhostIngredientHandler;
 import net.ty.createcraftedbeginning.compat.jei.ghost.RedstoneRequesterGhostIngredientHandler;
 import net.ty.createcraftedbeginning.compat.jei.recipe.FanProcessingFilterRecipes;
@@ -68,6 +69,8 @@ import net.ty.createcraftedbeginning.compat.jei.stockkeeper.StockKeeperRequestGa
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightforgingpress.AirtightForgingPressRecipeLookup;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.AirtightHandheldDrillScreen;
+import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeScreen;
+import net.ty.createcraftedbeginning.content.airtights.gasfactorygauge.GasFactoryGaugeSetGasScreen;
 import net.ty.createcraftedbeginning.content.airtights.gasfilter.GasFilterScreen;
 import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.management.ChunkStabilizerScreen;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
@@ -197,7 +200,11 @@ public class CCBJEIPlugin implements IModPlugin {
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registration) {
         registration.addGuiScreenHandler(ChunkStabilizerScreen.class, new ChunkStabilizerScreenHandler());
+        GasFactoryGaugeScreenHandler gasGaugeHandler = new GasFactoryGaugeScreenHandler();
+        registration.addGuiScreenHandler(GasFactoryGaugeScreen.class, gasGaugeHandler);
+        registration.addGlobalGuiHandler(gasGaugeHandler);
         registration.addGhostIngredientHandler(AirtightHandheldDrillScreen.class, new AirtightHandheldDrillGhostIngredientHandler());
+        registration.addGhostIngredientHandler(GasFactoryGaugeSetGasScreen.class, new GasFactoryGaugeGhostIngredientHandler());
         registration.addGhostIngredientHandler(GasFilterScreen.class, new GasFilterGhostIngredientHandler());
         registration.addGhostIngredientHandler(RedstoneRequesterScreen.class, new RedstoneRequesterGhostIngredientHandler());
 
