@@ -7,16 +7,19 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseArea;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseContext;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseHandlers;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.config.CCBGas.EntityPush;
+import net.ty.createcraftedbeginning.gas.visual.GasIntakeOutlinePacket;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -40,7 +43,7 @@ public final class GasFlowForces {
     }
 
     public static void intake(Level level, BlockPos pos, Direction direction, long amount) {
-        if (!(level instanceof ServerLevel serverLevel) || amount <= 0 || !CCBConfig.server().gas.itemSuction.enableItemSuction.get()) {
+        if (!(level instanceof ServerLevel serverLevel) || amount <= 0 || !CCBConfig.server().gas.intakeSuction.enableIntakeSuction.get()) {
             return;
         }
 
@@ -52,6 +55,22 @@ public final class GasFlowForces {
     public static boolean shouldSyncItemPosition(Entity entity) {
         Set<ItemEntity> items = POSITION_SYNC.get(entity.level());
         return items != null && items.contains(entity);
+    }
+
+    public static void outline(GasReleaseContext context) {
+        if (!(context.level() instanceof ServerLevel level)) {
+            return;
+        }
+
+        Pending pending = PENDING.computeIfAbsent(level, ignored -> new Pending());
+        Outlet outlet = new Outlet(context.sourcePos(), context.direction(), false);
+        GasReleaseArea area = context.releaseArea();
+        Outline previous = pending.outlines.get(outlet);
+        if (previous != null && previous.area().sideLength() > area.sideLength()) {
+            return;
+        }
+
+        pending.outlines.put(outlet, new Outline(area, context.gas().getHint()));
     }
 
     static void synchronizePosition(ItemEntity item) {
@@ -73,13 +92,20 @@ public final class GasFlowForces {
                 source.collect(level, multiplier, targets);
             }
         }
-        if (CCBConfig.server().gas.itemSuction.enableItemSuction.get()) {
-            for (GasIntakeFlow source : pending.intakes.values()) {
-                source.collect(level, targets);
+        if (CCBConfig.server().gas.intakeSuction.enableIntakeSuction.get()) {
+            for (Entry<Inlet, GasIntakeFlow> entry : pending.intakes.entrySet()) {
+                entry.getValue().collect(level, targets);
+                Inlet inlet = entry.getKey();
+                GasIntakeOutlinePacket.send(level, inlet.pos(), inlet.direction());
             }
         }
         for (Entry<Entity, GasFlowTarget> entry : targets.entrySet()) {
             entry.getValue().apply(entry.getKey());
+        }
+        for (Entry<Outlet, Outline> entry : pending.outlines.entrySet()) {
+            Outlet outlet = entry.getKey();
+            Outline outline = entry.getValue();
+            GasReleaseHandlers.showOutline(level, outlet.pos(), outlet.direction(), outline.area(), outline.color());
         }
     }
 
@@ -97,8 +123,11 @@ public final class GasFlowForces {
 
     private record Inlet(BlockPos pos, Direction direction) {}
 
+    private record Outline(GasReleaseArea area, int color) {}
+
     private static final class Pending {
         private final Map<Outlet, GasReleaseFlow> releases = new LinkedHashMap<>();
         private final Map<Inlet, GasIntakeFlow> intakes = new LinkedHashMap<>();
+        private final Map<Outlet, Outline> outlines = new LinkedHashMap<>();
     }
 }

@@ -1,15 +1,22 @@
 package net.ty.createcraftedbeginning.gas.flow;
 
+import com.simibubi.create.content.logistics.box.PackageEntity;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.gas.release.GasReleasePushPacket;
-import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.CoordinateTransform;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.platform.access.PlayerFlightCheckAccess;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -19,6 +26,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 final class GasFlowTarget {
     private Vec3 continuous = Vec3.ZERO;
     private Vec3 burst = Vec3.ZERO;
+
+    static boolean canAffect(Entity entity) {
+        if (!entity.isAlive() || entity.isSpectator() || entity instanceof ArmorStand) {
+            return false;
+        }
+
+        if (entity instanceof Player player && player.isCreative() && player.getAbilities().flying) {
+            return false;
+        }
+
+        return entity instanceof LivingEntity || entity instanceof ItemEntity || entity instanceof ExperienceOrb || entity instanceof PackageEntity || entity instanceof Boat || entity instanceof AbstractMinecart;
+    }
 
     void add(Vec3 impulse, boolean sustained) {
         if (sustained) {

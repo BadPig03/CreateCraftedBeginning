@@ -2,14 +2,17 @@ package net.ty.createcraftedbeginning.platform.client;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.phys.AABB;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseArea;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -45,8 +48,12 @@ public final class ClientRenderBridge {
         service.showPlacementBounds(player, outlineId, placementPos, bounds, warningKey);
     }
 
-    public static void showGasAreaOutline(Player player, BlockPos effectPos, float inflation, int color) {
-        service.showGasAreaOutline(player, effectPos, inflation, color);
+    public static void showGasAreaOutline(Player player, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color) {
+        service.showGasAreaOutline(player, sourcePos, direction, area, color);
+    }
+
+    public static void showGasIntakeOutline(Player player, BlockPos sourcePos, Direction direction) {
+        service.showGasIntakeOutline(player, sourcePos, direction);
     }
 
     public interface Service {
@@ -60,7 +67,10 @@ public final class ClientRenderBridge {
         default void showPlacementBounds(Player player, String outlineId, BlockPos placementPos, AABB bounds, String warningKey) {
         }
 
-        default void showGasAreaOutline(Player player, BlockPos effectPos, float inflation, int color) {
+        default void showGasAreaOutline(Player player, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color) {
+        }
+
+        default void showGasIntakeOutline(Player player, BlockPos sourcePos, Direction direction) {
         }
     }
 }

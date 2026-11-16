@@ -1,28 +1,28 @@
 package net.ty.createcraftedbeginning.gas.flow;
 
-import com.simibubi.create.content.logistics.box.PackageEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.vehicle.AbstractMinecart;
-import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseArea;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseContext;
-import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.CoordinateTransform;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.EntityArea;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,8 +41,9 @@ final class GasReleaseFlow {
     private final BlockPos sourcePos;
     private final Vec3 direction;
     private final boolean continuous;
+    private final Map<GasReleaseArea, Emission> emissions = new LinkedHashMap<>();
     private double amount;
-    private double weightedPressure;
+    private GasReleaseArea largestArea = new GasReleaseArea(1);
 
     GasReleaseFlow(GasReleaseContext context, boolean continuous) {
         frame = GasFlowFrame.capture(context.level(), context.sourcePos());
@@ -51,49 +52,46 @@ final class GasReleaseFlow {
         this.continuous = continuous;
     }
 
-    static boolean canPush(Entity entity) {
-        if (!entity.isAlive() || entity.isSpectator() || entity instanceof ArmorStand) {
-            return false;
-        }
-
-        if (entity instanceof Player player && player.isCreative() && player.getAbilities().flying) {
-            return false;
-        }
-
-        return entity instanceof LivingEntity || entity instanceof ItemEntity || entity instanceof ExperienceOrb || entity instanceof PackageEntity || entity instanceof Boat || entity instanceof AbstractMinecart;
-    }
-
     void add(GasReleaseContext context) {
         double released = context.gasAmount();
         double pressureDelta = context.pressureDeltaPa().orElse(0);
         double pressure = Mth.clamp(Math.log1p(pressureDelta / GasPressure.REFERENCE_PRESSURE_PA) / LOG_2 / PRESSURE_STEPS, 0, 1);
         amount += released;
-        weightedPressure += released * pressure;
+        GasReleaseArea area = context.releaseArea();
+        Emission emission = emissions.computeIfAbsent(area, ignored -> new Emission());
+        emission.amount += released;
+        emission.weightedPressure += released * pressure;
+        if (area.sideLength() <= largestArea.sideLength()) {
+            return;
+        }
+
+        largestArea = area;
     }
 
     void collect(ServerLevel level, double multiplier, Map<Entity, GasFlowTarget> targets) {
-        double pressure = weightedPressure / amount;
         boolean directional = direction.lengthSqr() > 0;
-        double range = directional ? 2 + 2 * pressure : 1.5 + 1.5 * pressure;
         Vec3 halfSize = frame.halfSize();
         Vec3 face = direction.multiply(halfSize);
-        AABB localBounds = new AABB(-range, -range, -range, range, range, range);
-        if (directional) {
-            localBounds = frame.directionalBounds(direction, range);
-        }
-
-        EntityArea area = SubLevelBridge.createEntityArea(level, frame, localBounds);
+        AABB localBounds = largestArea.bounds(Vec3.ZERO, halfSize, direction);
         AABB worldBounds = frame.worldBounds(localBounds);
         Vec3 origin = frame.center();
         Vec3 worldDirection = frame.transformNormal(direction);
         Vec3 mouth = frame.transformPosition(face);
         double referenceAmount = continuous ? REFERENCE_FLOW_GU_PER_TICK : REFERENCE_BURST_GU;
         double base = continuous ? BASE_ACCELERATION : BASE_IMPULSE;
-        double strength = base * amount / (amount + referenceAmount) * (0.5 + 0.5 * pressure) * multiplier;
+        List<Contribution> contributions = new ArrayList<>(emissions.size());
+        for (Entry<GasReleaseArea, Emission> entry : emissions.entrySet()) {
+            GasReleaseArea area = entry.getKey();
+            Emission emission = entry.getValue();
+            double pressure = emission.weightedPressure / emission.amount;
+            double strength = base * emission.amount / (amount + referenceAmount) * (0.5 + 0.5 * pressure) * multiplier;
+            EntityArea targetsArea = SubLevelBridge.createEntityArea(level, frame, area.bounds(Vec3.ZERO, halfSize, direction));
+            contributions.add(new Contribution(targetsArea, halfSize.scale(area.sideLength()), strength));
+        }
         Set<Entity> processed = new HashSet<>();
         for (Entity candidate : level.getEntitiesOfClass(Entity.class, worldBounds)) {
             Entity entity = candidate.getRootVehicle();
-            if (!processed.add(entity) || !canPush(entity) || !area.intersects(entity)) {
+            if (!processed.add(entity) || !GasFlowTarget.canAffect(entity)) {
                 continue;
             }
 
@@ -102,10 +100,9 @@ final class GasReleaseFlow {
             Vec3 offset = point.subtract(origin);
             Vec3 pushDirection = worldDirection;
             Vec3 rayStart = mouth.add(worldDirection.scale(RAY_EPSILON));
-            double distance = point.subtract(mouth).dot(worldDirection);
             if (!directional) {
-                distance = offset.length();
-                if (distance <= RAY_EPSILON || distance >= range) {
+                double distance = offset.length();
+                if (distance <= RAY_EPSILON) {
                     continue;
                 }
 
@@ -115,8 +112,7 @@ final class GasReleaseFlow {
                 rayStart = origin.add(offset.scale(1 / Math.max(1, exitScale))).add(pushDirection.scale(RAY_EPSILON));
             }
 
-            double attenuation = 1 - Mth.clamp(distance / range, 0, 1);
-            if (attenuation <= 0 || !GasFlowGeometry.canSee(level, entity, sourcePos, rayStart, point)) {
+            if (!GasFlowGeometry.canSee(level, entity, sourcePos, rayStart, point)) {
                 continue;
             }
 
@@ -129,8 +125,36 @@ final class GasReleaseFlow {
                 entityMultiplier *= 0.25;
             }
 
-            Vec3 impulse = pushDirection.scale(strength * attenuation * entityMultiplier);
-            targets.computeIfAbsent(entity, ignored -> new GasFlowTarget()).add(impulse, continuous);
+            Vec3 localPoint = frame.inverseTransformPosition(point);
+            Vec3 crossPoint = localPoint.subtract(direction.scale(localPoint.dot(direction)));
+            double strength = 0;
+            for (Contribution contribution : contributions) {
+                if (!contribution.area().intersects(entity)) {
+                    continue;
+                }
+
+                Vec3 extent = contribution.halfSize();
+                double distance = Math.max(Math.abs(localPoint.x) / extent.x, Math.max(Math.abs(localPoint.y) / extent.y, Math.abs(localPoint.z) / extent.z));
+                if (directional) {
+                    double axial = localPoint.subtract(face).dot(direction) / (2 * extent.dot(direction.multiply(direction)));
+                    double lateral = Math.max(Math.abs(crossPoint.x) / extent.x, Math.max(Math.abs(crossPoint.y) / extent.y, Math.abs(crossPoint.z) / extent.z));
+                    distance = Math.max(axial, lateral);
+                }
+
+                strength += contribution.strength() * (1 - Mth.clamp(distance, 0, 1));
+            }
+            if (strength <= 0) {
+                continue;
+            }
+
+            targets.computeIfAbsent(entity, ignored -> new GasFlowTarget()).add(pushDirection.scale(strength * entityMultiplier), continuous);
         }
+    }
+
+    private record Contribution(EntityArea area, Vec3 halfSize, double strength) {}
+
+    private static final class Emission {
+        private double amount;
+        private double weightedPressure;
     }
 }

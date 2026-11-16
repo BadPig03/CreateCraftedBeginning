@@ -41,9 +41,12 @@ public final class GasReleaseService {
         }
 
         GasReleaseHandler releaseHandler = GasReleaseHandlers.resolve(gas, context.sourcePressurePa().orElse(GasPressure.REFERENCE_PRESSURE_PA));
+        if (releaseHandler.shouldShowOutline()) {
+            GasFlowForces.outline(context);
+        }
         GasReleaseFeedback feedback = GasReleaseFeedback.of(context);
         boolean effectDue = gas.getAmount() >= releaseHandler.getEffectInterval(gas);
-        applyFeedback(context, releaseHandler, feedback, false);
+        applyFeedback(context, feedback, false);
         if (effectDue) {
             releaseHandler.apply(context);
         }
@@ -64,10 +67,13 @@ public final class GasReleaseService {
         long sourcePressurePa = context.sourcePressurePa().orElse(GasPressure.REFERENCE_PRESSURE_PA);
         boolean feedbackDue = state.recordFeedback(gameTime);
         GasReleaseHandler releaseHandler = GasReleaseHandlers.resolve(gas, sourcePressurePa);
+        if (releaseHandler.shouldShowOutline()) {
+            GasFlowForces.outline(context);
+        }
         boolean effectDue = state.recordEffect(gas, sourcePressurePa, gas.getAmount(), gameTime, releaseHandler.getEffectInterval(gas), releaseHandler.getEffectCooldown(gas));
         GasReleaseFeedback feedback = GasReleaseFeedback.of(context);
         if (feedbackDue) {
-            applyFeedback(context, releaseHandler, feedback, true);
+            applyFeedback(context, feedback, true);
         }
 
         if (effectDue) {
@@ -87,12 +93,8 @@ public final class GasReleaseService {
         return new GasReleaseContext(level, gas, request.sourcePos(), effectPos, request.direction(), request.cause(), request.mode(), request.sourcePressurePa(), AtmosphereStateResolver.resolve(level, effectPos).pressurePa());
     }
 
-    private static void applyFeedback(GasReleaseContext context, GasReleaseHandler releaseHandler, GasReleaseFeedback feedback, boolean continuous) {
+    private static void applyFeedback(GasReleaseContext context, GasReleaseFeedback feedback, boolean continuous) {
         Level level = context.level();
-        if (releaseHandler.shouldShowOutline()) {
-            GasReleaseHandlers.showOutline(level, context.effectPos(), feedback.outlineInflation(), context.gas().getHint());
-        }
-
         if (continuous && level.getGameTime() % CONTINUOUS_SOUND_PERIOD_TICKS != CONTINUOUS_SOUND_PHASE_TICKS) {
             return;
         }

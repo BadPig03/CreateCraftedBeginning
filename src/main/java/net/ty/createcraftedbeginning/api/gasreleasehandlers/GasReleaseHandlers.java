@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.api.gasreleasehandlers;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -13,13 +14,14 @@ import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfile;
 import net.ty.createcraftedbeginning.api.gas.pressure.GameplayPressureProfiles;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasReleaseHandlers {
     private static final GasReleaseHandler DEFAULT_HANDLER = new GasReleaseHandler() {};
     private static final GameplayPressureHandlerRegistry<GasReleaseHandler> HANDLERS = GameplayPressureHandlerRegistry.create();
-    private static volatile OutlineSender outlineSender = (level, effectPos, inflation, color) -> {};
+    private static volatile OutlineSender outlineSender = (level, sourcePos, direction, area, color) -> {};
 
     private GasReleaseHandlers() {
     }
@@ -68,16 +70,16 @@ public final class GasReleaseHandlers {
         outlineSender = sender;
     }
 
-    public static void showOutline(Level level, BlockPos effectPos, float inflation, int color) {
+    public static void showOutline(Level level, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
 
-        outlineSender.send(serverLevel, effectPos, inflation, color);
+        outlineSender.send(serverLevel, sourcePos, direction, area, color);
     }
 
     @FunctionalInterface
     public interface OutlineSender {
-        void send(ServerLevel level, BlockPos effectPos, float inflation, int color);
+        void send(ServerLevel level, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color);
     }
 }

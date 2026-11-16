@@ -7,27 +7,35 @@ import net.createmod.catnip.outliner.Outliner;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseArea;
 import net.ty.createcraftedbeginning.client.gui.TooltipBarAlignment;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtightcannon.AirtightCannonRenderHandler;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
+import net.ty.createcraftedbeginning.gas.flow.GasIntakeArea;
+import net.ty.createcraftedbeginning.gas.visual.GasAreaOutline;
 import net.ty.createcraftedbeginning.gas.visual.GasAreaOutlinePacket;
+import net.ty.createcraftedbeginning.gas.visual.GasIntakeOutlinePacket;
 import net.ty.createcraftedbeginning.platform.client.ClientRenderBridge.Service;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @OnlyIn(Dist.CLIENT)
 public final class ClientRenderService implements Service {
     private static final int COLOR_RED = 0xFFFF5D6C;
+    private static final int COLOR_INTAKE = 0x78D8E8;
 
     @Override
     public boolean addAlignedTooltipBars(List<Component> tooltip, int indent, List<? extends Component> labels, List<? extends Component> bars) {
@@ -51,13 +59,24 @@ public final class ClientRenderService implements Service {
     }
 
     @Override
-    public void showGasAreaOutline(Player player, BlockPos effectPos, float inflation, int color) {
+    public void showGasAreaOutline(Player player, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color) {
         if (!GogglesItem.isWearingGoggles(player) || !CCBConfig.client().outlines.showGasReleaseAreas.get()) {
             return;
         }
 
-        AABB outlineBounds = new AABB(effectPos).inflate(inflation);
-        Object outlineSlot = Pair.of(GasAreaOutlinePacket.class, effectPos);
-        Outliner.getInstance().chaseAABB(outlineSlot, outlineBounds).colored(color).withFaceTextures(AllSpecialTextures.CHECKERED, AllSpecialTextures.HIGHLIGHT_CHECKERED).lineWidth(0.0625F);
+        Object outlineSlot = Pair.of(GasAreaOutlinePacket.class, Pair.of(sourcePos, direction));
+        AABB localBounds = area.bounds(Vec3.ZERO, new Vec3(0.5, 0.5, 0.5), direction.map(value -> Vec3.atLowerCornerOf(value.getNormal())).orElse(Vec3.ZERO));
+        Outliner.getInstance().showOutline(outlineSlot, new GasAreaOutline(player.level(), sourcePos, localBounds, CCBConfig.client().outlines.showGasReleaseAreas::get)).colored(color).withFaceTexture(AllSpecialTextures.CHECKERED).lineWidth(0.0625F);
+    }
+
+    @Override
+    public void showGasIntakeOutline(Player player, BlockPos sourcePos, Direction direction) {
+        if (!GogglesItem.isWearingGoggles(player) || !CCBConfig.client().outlines.showGasIntakeAreas.get()) {
+            return;
+        }
+
+        Object outlineSlot = Pair.of(GasIntakeOutlinePacket.class, Pair.of(sourcePos, direction));
+        AABB localBounds = GasIntakeArea.bounds(new Vec3(0.5, 0.5, 0.5), Vec3.atLowerCornerOf(direction.getNormal()));
+        Outliner.getInstance().showOutline(outlineSlot, new GasAreaOutline(player.level(), sourcePos, localBounds, CCBConfig.client().outlines.showGasIntakeAreas::get)).colored(COLOR_INTAKE).withFaceTexture(AllSpecialTextures.THIN_CHECKERED).disableCull().lineWidth(0.0625F);
     }
 }

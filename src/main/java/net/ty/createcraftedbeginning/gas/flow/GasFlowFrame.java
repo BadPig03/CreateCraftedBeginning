@@ -44,11 +44,6 @@ record GasFlowFrame(Vec3 center, Vec3 axisX, Vec3 axisY, Vec3 axisZ, Vec3 halfSi
         return new Vec3(vector.dot(axisX), vector.dot(axisY), vector.dot(axisZ));
     }
 
-    AABB directionalBounds(Vec3 direction, double range) {
-        Vec3 face = direction.multiply(halfSize);
-        return new AABB(face, face.add(direction.scale(range))).inflate(0.5 * (1 - Math.abs(direction.x)), 0.5 * (1 - Math.abs(direction.y)), 0.5 * (1 - Math.abs(direction.z)));
-    }
-
     AABB worldBounds(AABB bounds) {
         Vec3 middle = transformPosition(bounds.getCenter());
         double x = bounds.getXsize() * 0.5;

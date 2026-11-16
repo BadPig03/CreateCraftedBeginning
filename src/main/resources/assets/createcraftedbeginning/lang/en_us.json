@@ -426,6 +426,7 @@
   "createcraftedbeginning.configuration.show_chestplate_first_person_arm": "Show chestplate first person arm",
   "createcraftedbeginning.configuration.show_chestplate_jetpack_particles": "Show chestplate jetpack particles",
   "createcraftedbeginning.configuration.show_current_gas_info": "Show current gas info",
+  "createcraftedbeginning.configuration.show_gas_intake_areas": "Show gas intake areas",
   "createcraftedbeginning.configuration.show_gas_release_areas": "Show gas release areas",
   "createcraftedbeginning.configuration.storage": "Storage",
   "createcraftedbeginning.configuration.stress_capacity": "Stress Capacity",
@@ -1710,6 +1711,6 @@
   "advancement.createcraftedbeginning.high_precision_chimney.desc": "Build an Airtight Fractionation Tower at its maximum height",
   "advancement.createcraftedbeginning.golden_delight": "Golden Delight",
   "advancement.createcraftedbeginning.golden_delight.desc": "Feed a golden food to a Breeze Chamber",
-  "createcraftedbeginning.configuration.item_suction": "Item Suction",
-  "createcraftedbeginning.configuration.enable_item_suction": "Enable item suction"
+  "createcraftedbeginning.configuration.item_suction": "Intake Suction",
+  "createcraftedbeginning.configuration.enable_item_suction": "Enable intake suction"
 }

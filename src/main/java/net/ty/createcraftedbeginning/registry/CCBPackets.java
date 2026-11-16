@@ -49,6 +49,7 @@ import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserDisp
 import net.ty.createcraftedbeginning.gas.mounted.MountedGasStorageSyncPacket;
 import net.ty.createcraftedbeginning.gas.release.GasReleasePushPacket;
 import net.ty.createcraftedbeginning.gas.visual.GasAreaOutlinePacket;
+import net.ty.createcraftedbeginning.gas.visual.GasIntakeOutlinePacket;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -76,6 +77,7 @@ public enum CCBPackets implements PacketTypeProvider {
     GAS_CANISTER_OVERLAY(GasCanisterOverlayPacket.class, GasCanisterOverlayPacket.STREAM_CODEC),
     GAS_CANISTER_PACK_MENU_SYNC(GasCanisterPackMenuSyncPacket.class, GasCanisterPackMenuSyncPacket.STREAM_CODEC),
     GAS_AREA_OUTLINE(GasAreaOutlinePacket.class, GasAreaOutlinePacket.STREAM_CODEC),
+    GAS_INTAKE_OUTLINE(GasIntakeOutlinePacket.class, GasIntakeOutlinePacket.STREAM_CODEC),
     GAS_RELEASE_PUSH(GasReleasePushPacket.class, GasReleasePushPacket.STREAM_CODEC),
     CANISTER_CONTAINER_CLIENT(CanisterContainerClientPacket.class, CanisterContainerClientPacket.STREAM_CODEC),
 
@@ -113,7 +115,7 @@ public enum CCBPackets implements PacketTypeProvider {
     }
 
     public static void register() {
-        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 48);
+        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 50);
         Arrays.stream(values()).map(packet -> packet.type).forEach(packetRegistry::registerPacket);
         packetRegistry.registerAllPackets();
         GasReleaseHandlers.registerOutlineSender(GasAreaOutlinePacket::send);

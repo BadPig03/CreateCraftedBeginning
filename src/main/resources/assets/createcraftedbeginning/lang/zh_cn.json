@@ -324,6 +324,7 @@
   "createcraftedbeginning.configuration.show_amethyst_sound_suppressor_chunks": "显示紫晶抑声体的抑声范围",
   "createcraftedbeginning.configuration.show_amethyst_sound_suppressor_particles": "显示抑声体与水晶生长粒子",
   "createcraftedbeginning.configuration.show_cased_airtight_pipe_sides": "显示包壳气密管道接口",
+  "createcraftedbeginning.configuration.show_gas_intake_areas": "显示进气作用范围",
   "createcraftedbeginning.display_source.airtight_flowmeter_flow_rate": "流量",
   "createcraftedbeginning.display_source.airtight_manometer_max_pressure": "最大压力",
   "createcraftedbeginning.display_source.airtight_manometer_pressure_difference": "压力差",
@@ -1601,6 +1602,6 @@
   "createcraftedbeginning.configuration.entity_push": "实体推动",
   "createcraftedbeginning.configuration.enable_entity_push": "启用实体推动",
   "createcraftedbeginning.configuration.strength_multiplier": "推力倍率",
-  "createcraftedbeginning.configuration.item_suction": "物品吸附",
-  "createcraftedbeginning.configuration.enable_item_suction": "启用进气物品吸附"
+  "createcraftedbeginning.configuration.item_suction": "进气吸附",
+  "createcraftedbeginning.configuration.enable_item_suction": "启用进气吸附"
 }

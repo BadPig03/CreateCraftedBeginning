@@ -34,6 +34,7 @@ public final class CCBClient extends ConfigBase {
         public final ConfigBool showAmethystSoundSuppressorChunks = b(true, "show_amethyst_sound_suppressor_chunks", "Show the chunk columns affected by the Amethyst Sound Suppressor when its range display is enabled and the player is wearing Engineer's Goggles.");
         public final ConfigBool showChunkStabilizerChunks = b(true, "show_chunk_stabilizer_chunks", "Show the current chunk of active Chunk Stabilizers when their range display is enabled and the player is wearing Engineer's Goggles.");
         public final ConfigBool showGasReleaseAreas = b(true, "show_gas_release_areas", "Show gas release area outlines while wearing Engineer's Goggles.");
+        public final ConfigBool showGasIntakeAreas = b(true, "show_gas_intake_areas", "Show active gas intake area outlines while wearing Engineer's Goggles. Disabling this option does not affect suction.");
 
         @Override
         public String getName() {
