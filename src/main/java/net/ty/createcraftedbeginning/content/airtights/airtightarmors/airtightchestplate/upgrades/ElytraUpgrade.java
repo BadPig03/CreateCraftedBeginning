@@ -39,9 +39,9 @@ public enum ElytraUpgrade implements AirtightUpgrade {
     private static final ResourceLocation ID = CCBAPI.asResource("elytra");
     private static final Couple<Integer> OFFSET = Couple.create(36, 31);
     private static final int BOOST_COOLDOWN_TICKS = 40;
-    private static final double BOOST_FORWARD_IMPULSE = 0.1;
-    private static final double BOOST_TARGET_SPEED = 1.5;
-    private static final double BOOST_ALIGNMENT_FACTOR = 0.8;
+    private static final double BOOST_SPEED_IMPULSE = 0.5;
+    private static final double BOOST_TURN_WEIGHT = 0.5;
+    private static final double MIN_DIRECTION_LENGTH_SQR = 1.0E-12;
 
     public static boolean shouldInterceptBoostInput(Player player) {
         if (!player.isFallFlying() || !player.getMainHandItem().isEmpty()) {
@@ -120,16 +120,27 @@ public enum ElytraUpgrade implements AirtightUpgrade {
         }
 
         double directionLengthSqr = lookDirection.lengthSqr();
-        if (!Double.isFinite(directionLengthSqr) || directionLengthSqr <= 1.0E-12) {
+        if (!Double.isFinite(directionLengthSqr) || directionLengthSqr <= MIN_DIRECTION_LENGTH_SQR) {
+            return null;
+        }
+
+        double currentSpeed = currentMovement.length();
+        if (!Double.isFinite(currentSpeed)) {
             return null;
         }
 
         Vec3 forward = lookDirection.scale(1.0 / Math.sqrt(directionLengthSqr));
-        double forwardSpeed = currentMovement.dot(forward);
-        Vec3 lateralMovement = currentMovement.subtract(forward.scale(forwardSpeed));
-        double alignment = Math.min(BOOST_ALIGNMENT_FACTOR * boostMultiplier, 1);
-        double forwardImpulse = (BOOST_FORWARD_IMPULSE + BOOST_ALIGNMENT_FACTOR * Math.max(0, BOOST_TARGET_SPEED - forwardSpeed)) * boostMultiplier;
-        Vec3 nextMovement = currentMovement.subtract(lateralMovement.scale(alignment)).add(forward.scale(forwardImpulse));
+        Vec3 boostDirection = forward;
+        if (currentSpeed > 0) {
+            Vec3 blendedDirection = currentMovement.scale((1 - BOOST_TURN_WEIGHT) / currentSpeed).add(forward.scale(BOOST_TURN_WEIGHT));
+            double blendedLengthSqr = blendedDirection.lengthSqr();
+            if (blendedLengthSqr > MIN_DIRECTION_LENGTH_SQR) {
+                boostDirection = blendedDirection.scale(1.0 / Math.sqrt(blendedLengthSqr));
+            }
+        }
+
+        double speedImpulse = BOOST_SPEED_IMPULSE * boostMultiplier;
+        Vec3 nextMovement = boostDirection.scale(currentSpeed + speedImpulse);
         if (!Double.isFinite(nextMovement.x) || !Double.isFinite(nextMovement.y) || !Double.isFinite(nextMovement.z)) {
             return null;
         }
