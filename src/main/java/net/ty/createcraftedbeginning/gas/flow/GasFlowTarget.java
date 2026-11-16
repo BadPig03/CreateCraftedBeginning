@@ -1,11 +1,13 @@
-package net.ty.createcraftedbeginning.gas.release;
+package net.ty.createcraftedbeginning.gas.flow;
 
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.phys.Vec3;
+import net.ty.createcraftedbeginning.gas.release.GasReleasePushPacket;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.CoordinateTransform;
 import net.ty.createcraftedbeginning.platform.access.PlayerFlightCheckAccess;
@@ -14,7 +16,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasReleasePushTarget {
+final class GasFlowTarget {
     private Vec3 continuous = Vec3.ZERO;
     private Vec3 burst = Vec3.ZERO;
 
@@ -33,7 +35,7 @@ final class GasReleasePushTarget {
         }
 
         CoordinateTransform transform = SubLevelBridge.createEntityTransform(entity);
-        GasReleasePushMotion motion = new GasReleasePushMotion(continuous, burst);
+        GasFlowMotion motion = new GasFlowMotion(continuous, burst);
         Vec3 nativeMovement = entity.getDeltaMovement();
         if (entity instanceof ServerPlayer player) {
             nativeMovement = player.getKnownMovement();
@@ -54,6 +56,9 @@ final class GasReleasePushTarget {
             entity.setDeltaMovement(transform.inverseTransformNormal(nextMovement));
             entity.hasImpulse = true;
             entity.hurtMarked = true;
+            if (entity instanceof ItemEntity item) {
+                GasFlowForces.synchronizePosition(item);
+            }
         }
         if (impulse.y > 0 && nextMovement.y > 0) {
             entity.setOnGround(false);

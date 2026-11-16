@@ -11,6 +11,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorRotationRay;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserBlockClip;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserCollisionContext;
+import net.ty.createcraftedbeginning.gas.flow.GasFlowCollisionContext;
 import net.ty.createcraftedbeginning.mixin.common.accessor.ClipContextAccessor;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,6 +26,10 @@ public interface BlockGetterMixin {
     private @Nullable BlockHitResult ccb$lambda$clip$2(ClipContext context, BlockPos pos, Operation<BlockHitResult> original) {
         BlockGetter world = (BlockGetter) this;
         CollisionContext collision = ((ClipContextAccessor) context).ccb$getCollisionContext();
+        if (collision instanceof GasFlowCollisionContext flow && flow.isSource(pos)) {
+            return null;
+        }
+
         if (collision instanceof AmethystMirrorRotationRay ray) {
             BlockHitResult unavailable = ray.stopAtUnloadedCell(world, context, pos);
             if (unavailable != null) {

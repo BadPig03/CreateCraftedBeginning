@@ -20,6 +20,7 @@ import net.ty.createcraftedbeginning.compat.sable.SableRenderRaycast;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorRotationRay;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserBlockClip;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserCollisionContext;
+import net.ty.createcraftedbeginning.gas.flow.GasFlowCollisionContext;
 import net.ty.createcraftedbeginning.mixin.common.accessor.ClipContextAccessor;
 import net.ty.createcraftedbeginning.platform.SkyLightCollisionContext;
 import org.jetbrains.annotations.Nullable;
@@ -56,14 +57,21 @@ public interface BlockGetterMixin {
     @WrapOperation(method = "originalClip", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/BlockGetter;traverseBlocks(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Ljava/lang/Object;Ljava/util/function/BiFunction;Ljava/util/function/Function;)Ljava/lang/Object;", remap = false), remap = false)
     private static Object ccb$originalClip$traverseBlocks(Vec3 start, Vec3 end, Object context, BiFunction<ClipContext, BlockPos, @Nullable BlockHitResult> tester, Function<ClipContext, BlockHitResult> miss, Operation<Object> original, @Local(argsOnly = true) BlockGetter world) {
         ClipContext clip = (ClipContext) context;
-        if (!(((ClipContextAccessor) clip).ccb$getCollisionContext() instanceof AmethystMirrorRotationRay ray)) {
+        CollisionContext collision = ((ClipContextAccessor) clip).ccb$getCollisionContext();
+        if (!(collision instanceof AmethystMirrorRotationRay) && !(collision instanceof GasFlowCollisionContext)) {
             return original.call(start, end, context, tester, miss);
         }
 
         BiFunction<ClipContext, BlockPos, @Nullable BlockHitResult> guarded = (active, pos) -> {
-            BlockHitResult unavailable = ray.stopAtUnloadedCell(world, active, pos);
-            if (unavailable != null) {
-                return unavailable;
+            if (collision instanceof GasFlowCollisionContext flow && flow.isSource(pos)) {
+                return null;
+            }
+
+            if (collision instanceof AmethystMirrorRotationRay ray) {
+                BlockHitResult unavailable = ray.stopAtUnloadedCell(world, active, pos);
+                if (unavailable != null) {
+                    return unavailable;
+                }
             }
 
             return tester.apply(active, pos);

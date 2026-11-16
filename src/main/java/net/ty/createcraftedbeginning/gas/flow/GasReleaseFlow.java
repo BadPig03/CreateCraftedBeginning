@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.gas.release;
+package net.ty.createcraftedbeginning.gas.flow;
 
 import com.simibubi.create.content.logistics.box.PackageEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -13,11 +13,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.entity.vehicle.Boat;
-import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.ClipContext.Block;
-import net.minecraft.world.level.ClipContext.Fluid;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseContext;
@@ -32,7 +28,7 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasReleasePushSource {
+final class GasReleaseFlow {
     private static final double LOG_2 = Math.log(2);
     private static final double PRESSURE_STEPS = 3;
     private static final double REFERENCE_FLOW_GU_PER_TICK = 1000;
@@ -41,14 +37,16 @@ final class GasReleasePushSource {
     private static final double BASE_IMPULSE = 0.8;
     private static final double RAY_EPSILON = 0.0001;
 
-    private final GasReleasePushFrame frame;
+    private final GasFlowFrame frame;
+    private final BlockPos sourcePos;
     private final Vec3 direction;
     private final boolean continuous;
     private double amount;
     private double weightedPressure;
 
-    GasReleasePushSource(GasReleaseContext context, boolean continuous) {
-        frame = GasReleasePushFrame.capture(context);
+    GasReleaseFlow(GasReleaseContext context, boolean continuous) {
+        frame = GasFlowFrame.capture(context.level(), context.sourcePos());
+        sourcePos = context.sourcePos().immutable();
         direction = context.direction().map(value -> Vec3.atLowerCornerOf(value.getNormal())).orElse(Vec3.ZERO);
         this.continuous = continuous;
     }
@@ -65,25 +63,6 @@ final class GasReleasePushSource {
         return entity instanceof LivingEntity || entity instanceof ItemEntity || entity instanceof ExperienceOrb || entity instanceof PackageEntity || entity instanceof Boat || entity instanceof AbstractMinecart;
     }
 
-    private static Vec3 closestPoint(Entity entity, CoordinateTransform transform, Vec3 worldPoint) {
-        AABB bounds = entity.getBoundingBox();
-        Vec3 local = transform.inverseTransformPosition(worldPoint);
-        return transform.transformPosition(new Vec3(Mth.clamp(local.x, bounds.minX + RAY_EPSILON, bounds.maxX - RAY_EPSILON), Mth.clamp(local.y, bounds.minY + RAY_EPSILON, bounds.maxY - RAY_EPSILON), Mth.clamp(local.z, bounds.minZ + RAY_EPSILON, bounds.maxZ - RAY_EPSILON)));
-    }
-
-    private static boolean canSee(ServerLevel level, Entity entity, Vec3 start, Vec3 end) {
-        int steps = Math.max(1, Mth.ceil(start.distanceTo(end) * 2));
-        for (int step = 0; step <= steps; step++) {
-            if (level.isLoaded(BlockPos.containing(start.lerp(end, (double) step / steps)))) {
-                continue;
-            }
-
-            return false;
-        }
-
-        return level.clip(new ClipContext(start, end, Block.COLLIDER, Fluid.NONE, entity)).getType() == Type.MISS;
-    }
-
     void add(GasReleaseContext context) {
         double released = context.gasAmount();
         double pressureDelta = context.pressureDeltaPa().orElse(0);
@@ -92,7 +71,7 @@ final class GasReleasePushSource {
         weightedPressure += released * pressure;
     }
 
-    void collect(ServerLevel level, double multiplier, Map<Entity, GasReleasePushTarget> targets) {
+    void collect(ServerLevel level, double multiplier, Map<Entity, GasFlowTarget> targets) {
         double pressure = weightedPressure / amount;
         boolean directional = direction.lengthSqr() > 0;
         double range = directional ? 2 + 2 * pressure : 1.5 + 1.5 * pressure;
@@ -100,7 +79,7 @@ final class GasReleasePushSource {
         Vec3 face = direction.multiply(halfSize);
         AABB localBounds = new AABB(-range, -range, -range, range, range, range);
         if (directional) {
-            localBounds = new AABB(face, face.add(direction.scale(range))).inflate(0.5 * (1 - Math.abs(direction.x)), 0.5 * (1 - Math.abs(direction.y)), 0.5 * (1 - Math.abs(direction.z)));
+            localBounds = frame.directionalBounds(direction, range);
         }
 
         EntityArea area = SubLevelBridge.createEntityArea(level, frame, localBounds);
@@ -119,7 +98,7 @@ final class GasReleasePushSource {
             }
 
             CoordinateTransform transform = SubLevelBridge.createEntityTransform(entity);
-            Vec3 point = closestPoint(entity, transform, directional ? mouth : origin);
+            Vec3 point = GasFlowGeometry.closestPoint(entity, transform, directional ? mouth : origin);
             Vec3 offset = point.subtract(origin);
             Vec3 pushDirection = worldDirection;
             Vec3 rayStart = mouth.add(worldDirection.scale(RAY_EPSILON));
@@ -137,7 +116,7 @@ final class GasReleasePushSource {
             }
 
             double attenuation = 1 - Mth.clamp(distance / range, 0, 1);
-            if (attenuation <= 0 || !canSee(level, entity, rayStart, point)) {
+            if (attenuation <= 0 || !GasFlowGeometry.canSee(level, entity, sourcePos, rayStart, point)) {
                 continue;
             }
 
@@ -151,7 +130,7 @@ final class GasReleasePushSource {
             }
 
             Vec3 impulse = pushDirection.scale(strength * attenuation * entityMultiplier);
-            targets.computeIfAbsent(entity, ignored -> new GasReleasePushTarget()).add(impulse, continuous);
+            targets.computeIfAbsent(entity, ignored -> new GasFlowTarget()).add(impulse, continuous);
         }
     }
 }

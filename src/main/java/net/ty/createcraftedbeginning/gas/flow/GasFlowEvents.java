@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.gas.release;
+package net.ty.createcraftedbeginning.gas.flow;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.server.level.ServerLevel;
@@ -15,8 +15,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID)
-public final class GasReleasePushEvents {
-    private GasReleasePushEvents() {
+public final class GasFlowEvents {
+    private GasFlowEvents() {
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -25,7 +25,7 @@ public final class GasReleasePushEvents {
             return;
         }
 
-        GasReleasePush.tick(level);
+        GasFlowForces.tick(level);
     }
 
     @SubscribeEvent
@@ -34,11 +34,11 @@ public final class GasReleasePushEvents {
             return;
         }
 
-        GasReleasePush.removeLevel(level);
+        GasFlowForces.removeLevel(level);
     }
 
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
-        GasReleasePush.clear();
+        GasFlowForces.clear();
     }
 }

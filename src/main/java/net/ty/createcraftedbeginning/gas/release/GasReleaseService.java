@@ -9,6 +9,7 @@ import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseContext;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseHandler;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseHandlers;
 import net.ty.createcraftedbeginning.gas.atmosphere.AtmosphereStateResolver;
+import net.ty.createcraftedbeginning.gas.flow.GasFlowForces;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
@@ -36,7 +37,7 @@ public final class GasReleaseService {
         }
 
         if (!knockbackHandled) {
-            GasReleasePush.submit(context, false);
+            GasFlowForces.release(context, false);
         }
 
         GasReleaseHandler releaseHandler = GasReleaseHandlers.resolve(gas, context.sourcePressurePa().orElse(GasPressure.REFERENCE_PRESSURE_PA));
@@ -57,7 +58,7 @@ public final class GasReleaseService {
             return new GasReleaseResult(context, false, false);
         }
 
-        GasReleasePush.submit(context, true);
+        GasFlowForces.release(context, true);
 
         long gameTime = level.getGameTime();
         long sourcePressurePa = context.sourcePressurePa().orElse(GasPressure.REFERENCE_PRESSURE_PA);

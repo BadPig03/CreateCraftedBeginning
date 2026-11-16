@@ -1,10 +1,11 @@
-package net.ty.createcraftedbeginning.gas.release;
+package net.ty.createcraftedbeginning.gas.flow;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Position;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseContext;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.CoordinateTransform;
 
@@ -12,14 +13,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-record GasReleasePushFrame(Vec3 center, Vec3 axisX, Vec3 axisY, Vec3 axisZ, Vec3 halfSize) implements CoordinateTransform {
-    static GasReleasePushFrame capture(GasReleaseContext context) {
-        Vec3 localCenter = context.sourcePos().getCenter();
-        CoordinateTransform transform = SubLevelBridge.createLogicalTransform(context.level(), localCenter);
+record GasFlowFrame(Vec3 center, Vec3 axisX, Vec3 axisY, Vec3 axisZ, Vec3 halfSize) implements CoordinateTransform {
+    static GasFlowFrame capture(Level level, BlockPos pos) {
+        Vec3 localCenter = pos.getCenter();
+        CoordinateTransform transform = SubLevelBridge.createLogicalTransform(level, localCenter);
         Vec3 x = transform.transformNormal(new Vec3(1, 0, 0));
         Vec3 y = transform.transformNormal(new Vec3(0, 1, 0));
         Vec3 z = transform.transformNormal(new Vec3(0, 0, 1));
-        return new GasReleasePushFrame(transform.transformPosition(localCenter), x.normalize(), y.normalize(), z.normalize(), new Vec3(x.length() * 0.5, y.length() * 0.5, z.length() * 0.5));
+        return new GasFlowFrame(transform.transformPosition(localCenter), x.normalize(), y.normalize(), z.normalize(), new Vec3(x.length() * 0.5, y.length() * 0.5, z.length() * 0.5));
     }
 
     @Override
@@ -41,6 +42,11 @@ record GasReleasePushFrame(Vec3 center, Vec3 axisX, Vec3 axisY, Vec3 axisZ, Vec3
     public Vec3 inverseTransformNormal(Position normal) {
         Vec3 vector = new Vec3(normal.x(), normal.y(), normal.z());
         return new Vec3(vector.dot(axisX), vector.dot(axisY), vector.dot(axisZ));
+    }
+
+    AABB directionalBounds(Vec3 direction, double range) {
+        Vec3 face = direction.multiply(halfSize);
+        return new AABB(face, face.add(direction.scale(range))).inflate(0.5 * (1 - Math.abs(direction.x)), 0.5 * (1 - Math.abs(direction.y)), 0.5 * (1 - Math.abs(direction.z)));
     }
 
     AABB worldBounds(AABB bounds) {

@@ -20,6 +20,8 @@ import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseCause;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.gas.atmosphere.AtmosphereStateResolver;
+import net.ty.createcraftedbeginning.gas.flow.GasFlowForces;
+import net.ty.createcraftedbeginning.gas.flow.GasIntakeListener;
 import net.ty.createcraftedbeginning.gas.network.GasTransportNode;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
@@ -91,7 +93,16 @@ public final class AtmosphericGasEndpoint extends GasConnectionEndpoint {
         return releaseState.write(provider);
     }
 
-    private class AtmosphericGasHandler implements GasPressureBoundary {
+    private class AtmosphericGasHandler implements GasPressureBoundary, GasIntakeListener {
+        @Override
+        public void onGasIntake(long amount) {
+            if (level == null) {
+                return;
+            }
+
+            GasFlowForces.intake(level, pos, direction, amount);
+        }
+
         @Override
         public boolean isGasValid(int tank, GasStack stack) {
             return tank == 0 && !stack.isEmpty();

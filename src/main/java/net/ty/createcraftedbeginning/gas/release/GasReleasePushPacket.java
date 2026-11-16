@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.ty.createcraftedbeginning.gas.flow.GasFlowMotion;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.CoordinateTransform;
 import net.ty.createcraftedbeginning.registry.CCBPackets;
@@ -29,7 +30,7 @@ public record GasReleasePushPacket(ResourceLocation dimension, Vec3 continuous, 
             return;
         }
 
-        GasReleasePushMotion motion = new GasReleasePushMotion(continuous, burst);
+        GasFlowMotion motion = new GasFlowMotion(continuous, burst);
         CoordinateTransform transform = SubLevelBridge.createEntityTransform(player);
         Vec3 movement = transform.transformNormal(player.getDeltaMovement());
         Vec3 impulse = motion.impulseFor(movement);

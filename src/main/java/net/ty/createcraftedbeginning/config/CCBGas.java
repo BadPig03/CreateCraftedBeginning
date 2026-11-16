@@ -12,6 +12,7 @@ public final class CCBGas extends ConfigBase {
     public final PressureRupture pressureRupture = nested(0, PressureRupture::new, "Pressure Rupture");
     public final Atmosphere atmosphere = nested(0, Atmosphere::new, "Atmosphere");
     public final EntityPush entityPush = nested(0, EntityPush::new, "Entity Push");
+    public final ItemSuction itemSuction = nested(0, ItemSuction::new, "Item Suction");
 
     @Override
     public String getName() {
@@ -47,6 +48,15 @@ public final class CCBGas extends ConfigBase {
         @Override
         public String getName() {
             return "entity_push";
+        }
+    }
+
+    public static final class ItemSuction extends ConfigBase {
+        public final ConfigBool enableItemSuction = b(true, "enable_item_suction", "Allow actual atmospheric intake to attract dropped items to open pipe mouths without inserting them into pipes or inventories. Disabling this does not change gas transfer, gas-specific effects or exhaust pushing.");
+
+        @Override
+        public String getName() {
+            return "item_suction";
         }
     }
 }

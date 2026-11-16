@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.gas.release;
+package net.ty.createcraftedbeginning.gas.flow;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.phys.Vec3;
@@ -7,12 +7,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-record GasReleasePushMotion(Vec3 continuous, Vec3 burst) {
+public record GasFlowMotion(Vec3 continuous, Vec3 burst) {
     private static final double MAX_ACCELERATION = 0.12;
     private static final double CONTINUOUS_SPEED_LIMIT = 0.35;
     private static final double MAX_IMPULSE = 0.8;
 
-    Vec3 impulseFor(Vec3 movement) {
+    public Vec3 impulseFor(Vec3 movement) {
         Vec3 continuousImpulse = continuous;
         double continuousLength = continuousImpulse.length();
         if (continuousLength > 0) {
@@ -41,7 +41,7 @@ record GasReleasePushMotion(Vec3 continuous, Vec3 burst) {
         return impulse;
     }
 
-    boolean isUpdraft(Vec3 impulse) {
+    public boolean isUpdraft(Vec3 impulse) {
         return continuous.y > 0 && impulse.y > 0;
     }
 }

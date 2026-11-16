@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.gas.flow.GasIntakeListener;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasFlowRouting.Route;
 import net.ty.createcraftedbeginning.gas.network.solver.graph.GasFlowRouting.RoutedPlan;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferExecutor.PooledTransferExecutionResult;
@@ -52,6 +53,9 @@ public final class GasRoutedTransferExecutor {
             }
             ExecutedRoute transfer = new ExecutedRoute(route, filled);
             executed.add(transfer);
+            if (route.source().access().drainHandler() instanceof GasIntakeListener listener) {
+                listener.onGasIntake(filled);
+            }
             onExecuted.accept(transfer);
         }
         catch (RuntimeException | Error caught) {

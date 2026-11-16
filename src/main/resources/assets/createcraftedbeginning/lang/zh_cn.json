@@ -1600,5 +1600,7 @@
   "advancement.createcraftedbeginning.golden_delight.desc": "向旋风人蓄风室投喂一种金色食物",
   "createcraftedbeginning.configuration.entity_push": "实体推动",
   "createcraftedbeginning.configuration.enable_entity_push": "启用实体推动",
-  "createcraftedbeginning.configuration.strength_multiplier": "推力倍率"
+  "createcraftedbeginning.configuration.strength_multiplier": "推力倍率",
+  "createcraftedbeginning.configuration.item_suction": "物品吸附",
+  "createcraftedbeginning.configuration.enable_item_suction": "启用进气物品吸附"
 }

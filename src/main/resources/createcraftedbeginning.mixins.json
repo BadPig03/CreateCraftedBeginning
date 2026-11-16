@@ -53,6 +53,7 @@
     "common.minecraft.LevelChunkSectionMixin",
     "common.minecraft.MobEffectInstanceMixin",
     "common.minecraft.PlayerMixin",
+    "common.minecraft.ServerEntityMixin",
     "common.minecraft.ServerPlayerGameModeMixin",
     "common.minecraft.ShapesMixin",
     "common.minecraft.TagsProviderMixin",

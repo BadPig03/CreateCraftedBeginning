@@ -1709,5 +1709,7 @@
   "advancement.createcraftedbeginning.high_precision_chimney": "High-Precision Chimney",
   "advancement.createcraftedbeginning.high_precision_chimney.desc": "Build an Airtight Fractionation Tower at its maximum height",
   "advancement.createcraftedbeginning.golden_delight": "Golden Delight",
-  "advancement.createcraftedbeginning.golden_delight.desc": "Feed a golden food to a Breeze Chamber"
+  "advancement.createcraftedbeginning.golden_delight.desc": "Feed a golden food to a Breeze Chamber",
+  "createcraftedbeginning.configuration.item_suction": "Item Suction",
+  "createcraftedbeginning.configuration.enable_item_suction": "Enable item suction"
 }
