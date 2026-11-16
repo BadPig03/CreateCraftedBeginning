@@ -1293,7 +1293,7 @@
   "createcraftedbeginning.recipe.forging_press": "锻造机",
   "createcraftedbeginning.recipe.forging_press_auto_crushing": "锻造机自动粉碎",
   "createcraftedbeginning.recipe.forging_press_auto_crushing.press_head": "沉重核心不会被消耗。",
-  "createcraftedbeginning.recipe.forging_press_auto_pressing": "锻造机自动辊压",
+  "createcraftedbeginning.recipe.forging_press_auto_pressing": "锻造机自动冲压",
   "createcraftedbeginning.recipe.forging_press_auto_smithing": "锻造机自动锻造",
   "createcraftedbeginning.recipe.fractionation_tower_condensation": "冷凝",
   "createcraftedbeginning.recipe.fractionation_tower_fractionation": "分馏",
