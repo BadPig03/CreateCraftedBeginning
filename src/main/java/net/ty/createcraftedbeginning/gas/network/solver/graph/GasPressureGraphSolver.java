@@ -19,6 +19,7 @@ import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.GasFlowResistance;
 import net.ty.createcraftedbeginning.gas.network.GasTransportEdgeProperties;
+import net.ty.createcraftedbeginning.gas.network.GasTransportPressureDrive;
 import net.ty.createcraftedbeginning.gas.network.math.GasFlowMath;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology.Snapshot;
 import net.ty.createcraftedbeginning.gas.network.solver.GasSolverProfiler;
@@ -243,7 +244,7 @@ public final class GasPressureGraphSolver {
 
             List<EndpointNodeBinding> terminals = new ArrayList<>();
             for (GasNetworkPressureEndpoint endpoint : endpoints) {
-                EndpointNodeBinding terminal = addEndpointNode(endpoint);
+                EndpointNodeBinding terminal = addEndpointNode(endpoint, transportBudget);
                 if (terminal == null) {
                     continue;
                 }
@@ -505,7 +506,7 @@ public final class GasPressureGraphSolver {
         }
 
         @Nullable
-        private EndpointNodeBinding addEndpointNode(GasNetworkPressureEndpoint endpoint) {
+        private EndpointNodeBinding addEndpointNode(GasNetworkPressureEndpoint endpoint, GasTransportFlowBudget transportBudget) {
             TransferLimits transferLimits = endpoint.transferLimits();
             TransferAccess access = endpoint.access();
             Map<PortKey, Integer> portNodes = template.portNodes();
@@ -560,7 +561,22 @@ public final class GasPressureGraphSolver {
                 graph.addEdge(manifoldNode, portNode, JUNCTION_RESISTANCE_UNITS, Long.MAX_VALUE, null);
             }
             for (int portNode : fillPortNodes) {
-                graph.addEdge(portNode, manifoldNode, JUNCTION_RESISTANCE_UNITS, Long.MAX_VALUE, null);
+                PortKey port = template.ports().get(portNode);
+                GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, port.pos());
+                boolean internalBoundary = behaviour != null && behaviour.getInternalPressureBoundary(port.face()) == access.fillHandler();
+                long flowLimit = Long.MAX_VALUE;
+                BlockPos budgetPos = null;
+                PipeSegment segment = null;
+                if (internalBoundary) {
+                    budgetPos = port.pos();
+                    flowLimit = transferLimits.fillLimit();
+                    if (transportBudget.remaining(budgetPos, flowLimit) <= 0) {
+                        flowLimit = 0;
+                    }
+                    segment = PipeSegment.inboundSpoke(port.pos(), port.face());
+                }
+                GasTransportEdgeProperties properties = new GasTransportEdgeProperties(JUNCTION_RESISTANCE_UNITS, GasTransportPressureDrive.pressureBoost(0), flowLimit, 0, Double.NaN, internalBoundary, false);
+                graph.addEdge(portNode, manifoldNode, properties, segment, budgetPos);
             }
             boolean fixedPressure = pressureState.fixedPressure();
             FlowResistance flowResistance = endpoint.flowResistance();

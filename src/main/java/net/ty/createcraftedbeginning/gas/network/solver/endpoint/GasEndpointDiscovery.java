@@ -1,9 +1,11 @@
 package net.ty.createcraftedbeginning.gas.network.solver.endpoint;
 
 import com.simibubi.create.foundation.ICapabilityProvider;
+import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.ty.createcraftedbeginning.api.atmosphere.AtmosphereState;
@@ -69,6 +71,21 @@ public final class GasEndpointDiscovery {
             }
 
             accesses.add(new PressureBoundaryAccess(endpointFace, handler));
+        }
+        for (BlockPos pipePos : topology.pipePositions()) {
+            GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pipePos);
+            if (behaviour == null) {
+                continue;
+            }
+
+            for (Direction face : Iterate.directions) {
+                GasPressureBoundary boundary = behaviour.getInternalPressureBoundary(face);
+                if (boundary == null || behaviour.getConnection(face) == null) {
+                    continue;
+                }
+
+                accesses.add(new PressureBoundaryAccess(new BlockFace(pipePos, face), boundary));
+            }
         }
         return List.copyOf(accesses);
     }

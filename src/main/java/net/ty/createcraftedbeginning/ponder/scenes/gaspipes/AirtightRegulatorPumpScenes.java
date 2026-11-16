@@ -190,7 +190,7 @@ public class AirtightRegulatorPumpScenes {
 
         scene.idle(77);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetReachedFlowObject, flowStartArea, 3);
-        scene.overlay().showText(60).text("Once the outlet reaches the set pressure, the regulator stops adding gas").colored(PonderPalette.GREEN).pointAt(outletTankVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("At the set pressure, regulation pauses until the pressure changes").colored(PonderPalette.GREEN).pointAt(outletTankVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetReachedFlowObject, targetReachedFlowArea, 21);
@@ -207,22 +207,30 @@ public class AirtightRegulatorPumpScenes {
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, loweredOutputObject, connectionArea.move(0.5, 0, 0), 60);
         scene.overlay().showCenteredScrollInput(regulatorPos, Direction.UP, 60);
         scene.overlay().showControls(panelVec, Pointing.DOWN, 60).scroll();
-        scene.overlay().showText(60).text("Lowering the set pressure below the current outlet pressure does not vent gas or cause backflow").colored(PonderPalette.RED).pointAt(panelVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Above the set pressure, the pump extracts excess outlet gas and releases it into the surroundings").colored(PonderPalette.RED).pointAt(panelVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(3);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, loweredPressureObject, outletPressureArea, 57);
+        scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, loweredPressureObject, outletPressureArea, 57);
 
         scene.idle(4);
         scene.world().modifyBlockEntity(regulatorPos, AirtightRegulatorPumpBlockEntity.class, pump -> pump.setOutletSetPressurePa(loweredSetPressurePa));
 
         scene.idle(73);
+        scene.overlay().showCenteredScrollInput(regulatorPos, Direction.UP, 60);
+        scene.overlay().showControls(panelVec, Pointing.DOWN, 60).scroll();
+        scene.overlay().showText(60).text("Set the pressure to 0 atm to actively evacuate a sealed outlet tank").colored(PonderPalette.BLUE).pointAt(panelVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(7);
+        scene.world().modifyBlockEntity(regulatorPos, AirtightRegulatorPumpBlockEntity.class, pump -> pump.setOutletSetPressurePa(0));
+
+        scene.idle(67);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, directionInputObject, connectionArea, 3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, directionOutputObject, connectionArea, 3);
 
         scene.idle(3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, directionInputObject, connectionArea.move(-0.5, 0, 0), 7);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, directionOutputObject, connectionArea.move(0.5, 0, 0), 7);
-        scene.overlay().showText(60).text("Use a Wrench to swap the inlet and outlet sides").colored(PonderPalette.BLUE).pointAt(regulatorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Use a Wrench on the pump body, away from the gas ports, to swap the inlet and outlet sides").colored(PonderPalette.BLUE).pointAt(regulatorVec).placeNearTarget().attachKeyFrame();
         scene.overlay().showControls(panelVec, Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);

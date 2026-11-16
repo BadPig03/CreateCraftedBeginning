@@ -15,6 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseCause;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.gas.network.GasConnectable;
@@ -210,6 +211,10 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
 
     public GasTransportEdgeProperties getTransportEdgeProperties(BlockState state, Direction entryFace, Direction exitFace, GasStack gasStack) {
         return GasTransportEdgeProperties.passive(getFlowResistanceUnits(state, entryFace, exitFace));
+    }
+
+    public @Nullable GasPressureBoundary getInternalPressureBoundary(Direction face) {
+        return null;
     }
 
     public long getManifoldSpokeResistanceUnits(BlockState state, Direction face) {
