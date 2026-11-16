@@ -2,7 +2,7 @@
 layout: home
 hero:
   name: Create Crafted Beginning Wiki
-  text: 气体与光
+  text: 从前有人说，一定要有气体，还有光
 features:
   - title: 面向玩家
     details: 查阅入门指南、玩法介绍与常见问题。
