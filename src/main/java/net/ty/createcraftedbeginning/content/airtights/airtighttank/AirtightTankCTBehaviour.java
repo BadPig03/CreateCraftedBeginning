@@ -9,6 +9,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.ty.createcraftedbeginning.client.render.CCBSpriteShifts;
 import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +28,15 @@ public class AirtightTankCTBehaviour extends Base {
     public CTSpriteShiftEntry getShift(BlockState state, Direction direction, @Nullable TextureAtlasSprite sprite) {
         if (direction.getAxis() != Axis.Y) {
             return CCBSpriteShifts.AIRTIGHT_TANK;
+        }
+
+        BooleanProperty endProperty = AirtightTankBlock.TOP;
+        if (direction == Direction.DOWN) {
+            endProperty = AirtightTankBlock.BOTTOM;
+        }
+
+        if (!state.getValue(endProperty)) {
+            return CCBSpriteShifts.AIRTIGHT_TANK_TOP_INNER;
         }
 
         return CCBSpriteShifts.AIRTIGHT_TANK_TOP;

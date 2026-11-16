@@ -10,6 +10,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.ty.createcraftedbeginning.client.render.CCBSpriteShifts;
 import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
 import org.jetbrains.annotations.Nullable;
@@ -33,6 +34,15 @@ public class HorizontalAirtightTankCTBehaviour extends Base {
         }
 
         if (directionAxis == tankAxis) {
+            BooleanProperty endProperty = AirtightTankBlock.TOP;
+            if (direction.getAxisDirection() == AxisDirection.NEGATIVE) {
+                endProperty = AirtightTankBlock.BOTTOM;
+            }
+
+            if (!state.getValue(endProperty)) {
+                return CCBSpriteShifts.AIRTIGHT_TANK_TOP_INNER;
+            }
+
             return CCBSpriteShifts.AIRTIGHT_TANK_TOP;
         }
 

@@ -24,7 +24,8 @@ public class CCBSpriteShifts {
     public static final CTSpriteShiftEntry AIRTIGHT_PIPE_CASING = getCT("airtight_pipe/casing_single", "airtight_pipe/casing");
     public static final CTSpriteShiftEntry AIRTIGHT_METER_CASING = AIRTIGHT_PIPE_CASING;
 
-    public static final CTSpriteShiftEntry AIRTIGHT_TANK_TOP = rectangle("airtight_tank/top");
+    public static final CTSpriteShiftEntry AIRTIGHT_TANK_TOP = rectangle("airtight_tank/top_outer");
+    public static final CTSpriteShiftEntry AIRTIGHT_TANK_TOP_INNER = CTSpriteShifter.getCT(AllCTTypes.RECTANGLE, CCBAPI.asResource("block/airtight_tank/top_outer"), CCBAPI.asResource("block/airtight_tank/top_connected"));
     public static final CTSpriteShiftEntry AIRTIGHT_TANK = rectangle("airtight_tank/vertical");
     public static final CTSpriteShiftEntry AIRTIGHT_FRACTIONATION_TOWER_TOP = CTSpriteShifter.getCT(AllCTTypes.RECTANGLE, CCBAPI.asResource("block/airtight_fractionation_tower/top_connected"), CCBAPI.asResource("block/airtight_fractionation_tower/top_connected"));
     public static final CTSpriteShiftEntry AIRTIGHT_FRACTIONATION_TOWER = CTSpriteShifter.getCT(AllCTTypes.RECTANGLE, CCBAPI.asResource("block/airtight_fractionation_tower/vertical_connected"), CCBAPI.asResource("block/airtight_fractionation_tower/vertical_connected"));
