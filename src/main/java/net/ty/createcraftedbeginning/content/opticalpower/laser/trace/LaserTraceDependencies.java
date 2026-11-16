@@ -27,13 +27,21 @@ import java.util.UUID;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-record LaserTraceDependencies(List<BlockSample> blocks, List<LoadSample> loading, List<AABB> bounds, List<AABB> paths, Map<UUID, RenderGeometry> subLevels, Map<UUID, Pose> contraptions) {
+record LaserTraceDependencies(List<BlockSample> blocks, List<LoadSample> loading, List<AABB> bounds, List<AABB> paths, List<AABB> contraptionBounds, Map<UUID, RenderGeometry> subLevels, Map<UUID, Pose> contraptions, @Nullable LaserWorldSections sections, @Nullable LaserAirRegions air, List<BlockSample> guarded) {
+    LaserTraceDependencies(List<BlockSample> blocks, List<LoadSample> loading, List<AABB> bounds, List<AABB> paths, List<AABB> contraptionBounds, Map<UUID, RenderGeometry> subLevels, Map<UUID, Pose> contraptions, @Nullable LaserWorldSections sections, @Nullable LaserAirRegions air) {
+        this(blocks, loading, bounds, paths, contraptionBounds, subLevels, contraptions, sections, air, blocks.stream().filter(sample -> sample.owner() != null || sample.state() == null || sample.optical() != null || !LaserWorldSections.stable(sample.state())).toList());
+    }
+
     static boolean isStaticWorld(Level level, List<AABB> bounds) {
         return isStaticWorld(level, bounds, 1);
     }
 
     static boolean isStaticWorld(Level level, List<AABB> bounds, float partialTick) {
-        if (!LaserContraptionBounds.isClear(level, bounds, partialTick)) {
+        return isStaticWorld(level, bounds, bounds, partialTick);
+    }
+
+    static boolean isStaticWorld(Level level, List<AABB> bounds, List<AABB> contraptionBounds, float partialTick) {
+        if (!LaserContraptionBounds.isClear(level, contraptionBounds, partialTick)) {
             return false;
         }
 
@@ -65,9 +73,9 @@ record LaserTraceDependencies(List<BlockSample> blocks, List<LoadSample> loading
         }
 
         List<LaserQuerySpace> spaces = List.of();
-        if (!contraptions.isEmpty() || !LaserContraptionBounds.isClear(level, bounds, partialTick)) {
+        if (!contraptions.isEmpty() || !LaserContraptionBounds.isClear(level, contraptionBounds, partialTick)) {
             spaces = LaserQuerySpace.mounted(level, partialTick);
-            if (!contraptions.equals(poses(spaces, bounds))) {
+            if (!contraptions.equals(poses(spaces, contraptionBounds))) {
                 return false;
             }
         }
@@ -76,22 +84,39 @@ record LaserTraceDependencies(List<BlockSample> blocks, List<LoadSample> loading
     }
 
     boolean matchesStaticWorld(Level level) {
-        return isStaticWorld(level, bounds) && matchesBlocks(level, 1, List.of());
+        return isStaticWorld(level, bounds, contraptionBounds, 1) && matchesBlocks(level, 1, List.of());
     }
 
     private boolean matchesBlocks(Level level, float partialTick, List<LaserQuerySpace> spaces) {
-        for (LoadSample sample : loading) {
-            if (level.isLoaded(sample.pos()) != sample.loaded()) {
+        if (air != null && !air.matches(level)) {
+            return false;
+        }
+
+        boolean staticSections = sections != null && subLevels.isEmpty() && contraptions.isEmpty() && spaces.isEmpty();
+        if (staticSections) {
+            if (!sections.matches(level)) {
                 return false;
             }
         }
+        else {
+            for (LoadSample sample : loading) {
+                if (level.isLoaded(sample.pos()) != sample.loaded()) {
+                    return false;
+                }
+            }
+        }
+        List<BlockSample> samples = staticSections ? guarded : blocks;
+        if (samples.isEmpty()) {
+            return true;
+        }
+
         LaserCollisionContext collision = new LaserCollisionContext(partialTick);
         ClipContext clip = new ClipContext(Vec3.ZERO, Vec3.ZERO, Block.COLLIDER, Fluid.NONE, collision);
         Map<UUID, LaserQuerySpace> owners = new LinkedHashMap<>();
         for (LaserQuerySpace space : spaces) {
             owners.put(space.id(), space);
         }
-        for (BlockSample sample : blocks) {
+        for (BlockSample sample : samples) {
             BlockState expected = sample.state();
             PreparedBlock current;
             UUID owner = sample.owner();

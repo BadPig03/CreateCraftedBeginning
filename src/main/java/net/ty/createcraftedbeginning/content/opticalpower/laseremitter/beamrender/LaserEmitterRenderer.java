@@ -20,17 +20,14 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation.Segment;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalHit;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalSurface;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalTarget;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamContext;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayInput;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayMesh;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayMesh.Cache;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayMesh.Result;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamDisplayMesh.Status;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamMesh.DrawSection;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamParticles.FlowPoint;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamParticles.ShellSampler;
@@ -163,12 +160,11 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
         try {
             Minecraft minecraft = Minecraft.getInstance();
             BeamState source = blockEntity.createBeamSource();
-            LaserDisplaySnapshot synchronizedInput = LaserBeamSync.current(blockEntity, level, source, partialTick);
-            CachedMesh mesh;
+            LaserDisplaySnapshot synchronizedInput = state.sync.current(blockEntity, level, source, partialTick);
             LaserBeamContext context;
             LaserBeamContext rigidSnapshotContext = null;
             if (synchronizedInput != null) {
-                mesh = LaserBeamMeshCache.requestSynchronized(blockEntity, state, synchronizedInput, blockOrigin);
+                LaserBeamMeshCache.requestSynchronized(blockEntity, state, synchronizedInput, blockOrigin);
                 context = synchronizedInput.input().context();
                 if (synchronizedInput.rigid() != null) {
                     rigidSnapshotContext = context;
@@ -181,7 +177,6 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
                 BeamPropagation propagation = snapshot.propagation();
                 List<Segment> segments = propagation.segments();
                 double radius = source.profile().radius();
-                mesh = state.mesh;
                 if (state.checkedSnapshot != snapshot || state.checkedRadius != radius) {
                     state.context = LaserBeamContext.from(snapshot);
                     state.checkedSnapshot = snapshot;
@@ -190,49 +185,10 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
                         OpticalTarget target = hit.target();
                         return target.contraptionId() != null || target.inSubLevel();
                     });
-                    state.cacheEligible = state.staticWorldPath && LaserBeamMeshCache.supports(snapshot);
                 }
 
                 context = Objects.requireNonNull(state.context, "Local laser rendering requires a display context.");
-                if (state.cacheEligible) {
-                    mesh = LaserBeamMeshCache.request(blockEntity, state, snapshot, blockOrigin, radius);
-                }
-                else {
-                    LaserBeamMeshCache.detach(blockEntity);
-                    if (mesh == null || mesh.snapshot != snapshot) {
-                        List<DrawSection> inputSections = LaserBeamMesh.create(snapshot);
-                        boolean staticWorldPath = state.staticWorldPath;
-                        List<DrawSection> sections;
-                        List<OpticalSurface> optics = segments.stream().map(Segment::hit).filter(Objects::nonNull).map(OpticalHit::surface).filter(surface -> surface.aperture() != null).toList();
-                        List<OpticalPlane> contacts = segments.stream().map(Segment::hit).filter(Objects::nonNull).map(hit -> new OpticalPlane(hit.position(), hit.surface().normal())).toList();
-                        ShellMesh shells;
-                        ShellSampler particles;
-                        LaserBeamVertices vertices;
-                        Status displayStatus;
-                        String displayReason;
-                        if (mesh != null && mesh.geometrySnapshot == mesh.snapshot && mesh.staticWorldPath == staticWorldPath && mesh.inputSections.equals(inputSections) && mesh.contacts.equals(contacts) && mesh.optics.equals(optics) && mesh.radius == radius) {
-                            sections = mesh.sections;
-                            displayStatus = mesh.displayStatus;
-                            displayReason = mesh.displayReason;
-                            shells = mesh.shells;
-                            particles = mesh.particles;
-                            vertices = mesh.vertices;
-                        }
-                        else {
-                            Result display = LaserBeamDisplayMesh.create(LaserBeamDisplayMesh.prepare(snapshot, inputSections));
-
-                            sections = display.sections();
-                            shells = display.shells();
-                            displayStatus = display.status();
-                            displayReason = display.reason();
-                            particles = null;
-                            vertices = null;
-                        }
-
-                        mesh = new CachedMesh(snapshot, inputSections, sections, contacts, optics, radius, shells, particles, vertices, displayStatus, displayReason, staticWorldPath);
-                        state.mesh = mesh;
-                    }
-                }
+                LaserBeamMeshCache.request(blockEntity, state, snapshot, blockOrigin, radius);
             }
             pose = poseStack.last().pose();
             Vec3 xAxis = context.xAxis();
@@ -245,56 +201,28 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
                 pose = new Matrix4f(pose).scale((float) (1 / scaleX), (float) (1 / scaleY), (float) (1 / scaleZ));
             }
 
-            Camera camera = minecraft.gameRenderer.getMainCamera();
-            Vec3 cameraPosition = camera.getPosition();
-            Vec3 viewPosition = cameraPosition;
-            if (rigidSnapshotContext != null) {
-                viewPosition = rigidSnapshotContext.toWorldPosition(context.toLocalPosition(cameraPosition));
-            }
-            double widthPixels = Double.POSITIVE_INFINITY;
+            RenderState current = state;
+            LaserBeamContext currentContext = context;
+            LaserBeamContext rigidContext = rigidSnapshotContext;
             if (!ponder) {
-                widthPixels = mesh.view.radiusDistanceRatio(viewPosition) * minecraft.getWindow().getHeight() / Math.tan(Math.toRadians(minecraft.options.fov().get()) * 0.5);
+                LaserBeamCoverageRenderer.submit(blockEntity, pose, () -> current.layers(blockEntity, minecraft, null, currentContext, rigidContext, blockOrigin, partialTick));
+                return;
             }
 
-            List<List<Face>> surfacesByLayer = state.display.select(mesh.shells, widthPixels);
-            List<Face> surfaces = surfacesByLayer.getFirst();
-            LaserBeamVertices vertices = mesh.vertices;
-            if (vertices == null || !vertices.matchesOrigin(blockOrigin)) {
-                vertices = new LaserBeamVertices(blockOrigin);
-                mesh.vertices = vertices;
-            }
-
-            if (mesh.impact == null) {
-                mesh.impact = LaserBeamImpact.create(mesh.particleContext, mesh.sections, blockOrigin);
-            }
-            layers = mesh.impact.attach(vertices.select(surfacesByLayer));
-            state.updateParticles(minecraft, ponderLevel, context, cameraPosition, mesh, surfaces, blockPos.asLong(), partialTick);
+            LaserBeamMeshCache.advance();
+            layers = state.layers(blockEntity, minecraft, ponderLevel, context, rigidSnapshotContext, blockOrigin, partialTick);
         }
         catch (RuntimeException failure) {
-            if (retryAtNs == Long.MIN_VALUE) {
-                CCBAPI.LOGGER.warn("Failed to prepare the laser display at {} in dimension '{}'; pausing this display and retrying after {} ms.", blockPos, level.dimension().location(), DISPLAY_RETRY_DELAY_NS / 1000000, failure);
-            }
-
-            state.retryAtNs = System.nanoTime() + DISPLAY_RETRY_DELAY_NS;
-            state.clearGeometry(blockEntity);
-            state.particleFlow.clear();
-            state.impactParticles.clear();
-            state.lastParticleTick = Long.MIN_VALUE;
+            state.fail(blockEntity, failure);
             return;
         }
 
-        state.retryAtNs = Long.MIN_VALUE;
         VertexConsumer buffer;
         if (ponder && bufferSource instanceof SuperRenderTypeBuffer ponderBuffer) {
             buffer = ponderBuffer.getLateBuffer(LaserRenderTypes.PONDER_LASER);
         }
         else {
             buffer = bufferSource.getBuffer(ponder ? LaserRenderTypes.PONDER_LASER : LaserRenderTypes.LASER);
-        }
-
-        if (!ponder) {
-            LaserBeamCoverageRenderer.submit(blockEntity, pose, layers);
-            return;
         }
 
         for (Layer layer : layers) {
@@ -315,6 +243,7 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
     static final class RenderState {
         private final WeakReference<Level> ownerLevel;
         final LaserRenderTraceCache traceCache = new LaserRenderTraceCache();
+        private final LaserBeamSync sync = new LaserBeamSync();
         private final LaserBeamDisplayState display = new LaserBeamDisplayState();
         private final LaserBeamParticleFlow particleFlow = new LaserBeamParticleFlow();
         private final LaserBeamImpactParticles impactParticles = new LaserBeamImpactParticles();
@@ -325,17 +254,82 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
         private long lastParticleTick = Long.MIN_VALUE;
         private long retryAtNs = Long.MIN_VALUE;
         private double checkedRadius;
-        private boolean staticWorldPath;
-        private boolean cacheEligible;
+        boolean staticWorldPath;
         private @Nullable UUID requestedInstance;
 
         private RenderState(Level level) {
             ownerLevel = new WeakReference<>(level);
         }
 
+        void fail(LaserEmitterBlockEntity owner, RuntimeException failure) {
+            Level level = owner.getLevel();
+            BlockPos blockPos = owner.getBlockPos();
+            if (level != null && retryAtNs == Long.MIN_VALUE) {
+                CCBAPI.LOGGER.warn("Failed to prepare the laser display at {} in dimension '{}'; pausing this display and retrying after {} ms.", blockPos, level.dimension().location(), DISPLAY_RETRY_DELAY_NS / 1000000, failure);
+            }
+
+            retryAtNs = System.nanoTime() + DISPLAY_RETRY_DELAY_NS;
+            clearGeometry(owner);
+            particleFlow.clear();
+            impactParticles.clear();
+            lastParticleTick = Long.MIN_VALUE;
+        }
+
+        private List<Layer> layers(LaserEmitterBlockEntity owner, Minecraft minecraft, @Nullable PonderLevel ponderLevel, LaserBeamContext context, @Nullable LaserBeamContext rigidSnapshotContext, Vec3 blockOrigin, float partialTick) {
+            if (retryAtNs != Long.MIN_VALUE && System.nanoTime() - retryAtNs < 0) {
+                return List.of();
+            }
+
+            try {
+                List<Layer> layers = prepareLayers(minecraft, ponderLevel, context, rigidSnapshotContext, blockOrigin, owner.getBlockPos(), partialTick);
+                retryAtNs = Long.MIN_VALUE;
+                return layers;
+            }
+            catch (RuntimeException failure) {
+                fail(owner, failure);
+                return List.of();
+            }
+        }
+
+        private List<Layer> prepareLayers(Minecraft minecraft, @Nullable PonderLevel ponderLevel, LaserBeamContext context, @Nullable LaserBeamContext rigidSnapshotContext, Vec3 blockOrigin, BlockPos blockPos, float partialTick) {
+            CachedMesh mesh = this.mesh;
+            if (mesh == null) {
+                particleFlow.detach(partialTick);
+                return List.of();
+            }
+
+            boolean ponder = ponderLevel != null;
+            Camera camera = minecraft.gameRenderer.getMainCamera();
+            Vec3 cameraPosition = camera.getPosition();
+            Vec3 viewPosition = cameraPosition;
+            if (rigidSnapshotContext != null) {
+                viewPosition = rigidSnapshotContext.toWorldPosition(context.toLocalPosition(cameraPosition));
+            }
+            double widthPixels = Double.POSITIVE_INFINITY;
+            if (!ponder) {
+                widthPixels = mesh.view.radiusDistanceRatio(viewPosition) * minecraft.getWindow().getHeight() / Math.tan(Math.toRadians(minecraft.options.fov().get()) * 0.5);
+            }
+
+            List<List<Face>> surfacesByLayer = display.select(mesh.shells, widthPixels);
+            List<Face> surfaces = surfacesByLayer.getFirst();
+            LaserBeamVertices vertices = mesh.vertices;
+            if (vertices == null || !vertices.matchesOrigin(blockOrigin)) {
+                vertices = new LaserBeamVertices(blockOrigin);
+                mesh.vertices = vertices;
+            }
+
+            if (mesh.impact == null) {
+                mesh.impact = LaserBeamImpact.create(mesh.particleContext, mesh.sections, blockOrigin);
+            }
+            List<Layer> layers = mesh.impact.attach(vertices.select(surfacesByLayer));
+            updateParticles(minecraft, ponderLevel, context, cameraPosition, mesh, surfaces, blockPos.asLong(), partialTick);
+            return layers;
+        }
+
         private void clearGeometry(LaserEmitterBlockEntity owner) {
             LaserBeamMeshCache.remove(owner);
             traceCache.clear();
+            sync.clear();
             mesh = null;
             checkedSnapshot = null;
             context = null;
@@ -411,10 +405,6 @@ public class LaserEmitterRenderer extends SafeBlockEntityRenderer<LaserEmitterBl
         @Nullable ShellSampler particles;
         @Nullable LaserBeamVertices vertices;
         private @Nullable LaserBeamImpact impact;
-
-        private CachedMesh(LaserRenderSnapshot snapshot, List<DrawSection> inputSections, List<DrawSection> sections, List<OpticalPlane> contacts, List<OpticalSurface> optics, double radius, ShellMesh shells, @Nullable ShellSampler particles, @Nullable LaserBeamVertices vertices, Status displayStatus, String displayReason, boolean staticWorldPath) {
-            this(snapshot, inputSections, sections, contacts, optics, radius, shells, particles, vertices, displayStatus, displayReason, staticWorldPath, LaserBeamView.create(LaserBeamContext.from(snapshot), sections), snapshot, null);
-        }
 
         CachedMesh(LaserRenderSnapshot snapshot, List<DrawSection> inputSections, List<DrawSection> sections, List<OpticalPlane> contacts, List<OpticalSurface> optics, double radius, ShellMesh shells, @Nullable ShellSampler particles, @Nullable LaserBeamVertices vertices, Status displayStatus, String displayReason, boolean staticWorldPath, LaserBeamView view, @Nullable LaserRenderSnapshot geometrySnapshot, @Nullable Cache geometryCache) {
             this.snapshot = snapshot;

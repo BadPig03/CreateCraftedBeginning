@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Internal
 @ParametersAreNonnullByDefault
@@ -126,23 +127,11 @@ public final class LaserBeamMesh {
     }
 
     public static @Unmodifiable List<DrawSection> create(LaserRenderSnapshot snapshot, double layerScale) {
-        return create(snapshot.propagation(), layerScale).stream().map(section -> {
-            Section geometry = section.geometry();
-            List<Vec3> starts = geometry.starts().stream().map(snapshot::toLocalPosition).toList();
-            List<Vec3> ends = geometry.ends().stream().map(snapshot::toLocalPosition).toList();
-            LaserBeamFade fade = section.fade();
-            if (fade != null) {
-                fade = new LaserBeamFade(snapshot.toLocalPosition(fade.origin()), snapshot.toLocalDirection(fade.direction()), fade.remainingRange(), fade.length());
-            }
-            LaserBeamBrightness brightness = section.brightness();
-            if (brightness != null) {
-                BeamProfile profile = brightness.profile();
-                if (profile.widthSlope() != 0) {
-                    brightness = new LaserBeamBrightness(snapshot.toLocalPosition(brightness.origin()), snapshot.toLocalDirection(brightness.direction()), profile);
-                }
-            }
-            return new DrawSection(new Section(starts, ends, geometry.fadesAtEnd(), geometry.variableWidth()), section.appearance(), section.segmentIndex(), section.pathDistance(), fade, section.samplingDomain(), section.grazingTerminal(), brightness);
-        }).toList();
+        return create(snapshot.propagation(), layerScale).stream().map(section -> local(snapshot, section)).toList();
+    }
+
+    static LaserBeamWork<List<DrawSection>> begin(LaserRenderSnapshot snapshot) {
+        return new SectionWork(snapshot);
     }
 
     static List<DrawSection> split(DrawSection draw) {
@@ -242,6 +231,24 @@ public final class LaserBeamMesh {
         return List.copyOf(vertices);
     }
 
+    private static DrawSection local(LaserRenderSnapshot snapshot, DrawSection section) {
+        Section geometry = section.geometry();
+        List<Vec3> starts = geometry.starts().stream().map(snapshot::toLocalPosition).toList();
+        List<Vec3> ends = geometry.ends().stream().map(snapshot::toLocalPosition).toList();
+        LaserBeamFade fade = section.fade();
+        if (fade != null) {
+            fade = new LaserBeamFade(snapshot.toLocalPosition(fade.origin()), snapshot.toLocalDirection(fade.direction()), fade.remainingRange(), fade.length());
+        }
+        LaserBeamBrightness brightness = section.brightness();
+        if (brightness != null) {
+            BeamProfile profile = brightness.profile();
+            if (profile.widthSlope() != 0) {
+                brightness = new LaserBeamBrightness(snapshot.toLocalPosition(brightness.origin()), snapshot.toLocalDirection(brightness.direction()), profile);
+            }
+        }
+        return new DrawSection(new Section(starts, ends, geometry.fadesAtEnd(), geometry.variableWidth()), section.appearance(), section.segmentIndex(), section.pathDistance(), fade, section.samplingDomain(), section.grazingTerminal(), brightness);
+    }
+
     public record DrawSection(Section geometry, LaserBeamAppearance appearance, int segmentIndex, double pathDistance, @Nullable LaserBeamFade fade, SamplingDomain samplingDomain, boolean grazingTerminal, @Nullable LaserBeamBrightness brightness) {
 
         public double fadeAt(Vec3 point) {
@@ -281,6 +288,161 @@ public final class LaserBeamMesh {
 
         public SamplingDomain(double minU, double minV, double maxU, double maxV) {
             this(minU, minV, maxU, maxV, null);
+        }
+    }
+
+    private static final class SectionWork implements LaserBeamWork<List<DrawSection>> {
+        private final LaserRenderSnapshot snapshot;
+        private final List<Segment> segments;
+        private final List<DrawSection> output = new ArrayList<>();
+        private List<Vec3> previousEnd = List.of();
+        private List<Vec3> starts = List.of();
+        private List<Point> boundary = List.of();
+        private List<Contact> contacts = List.of();
+        private List<Double> samples = List.of();
+        private @Nullable LaserBeamDisplayProfile display;
+        private @Nullable BeamRegion domain;
+        private @Nullable LaserBeamFade fade;
+        private @Nullable LaserBeamAppearance appearance;
+        private @Nullable LaserBeamBrightness brightness;
+        private @Nullable SamplingDomain sampling;
+        private @Nullable LaserBeamWork<List<DrawSection>> terminalWork;
+        private @Nullable List<DrawSection> terminalSections;
+        private @Nullable List<DrawSection> result;
+        private double pathDistance;
+        private int index;
+        private int sample;
+        private int terminalIndex;
+
+        private SectionWork(LaserRenderSnapshot snapshot) {
+            this.snapshot = snapshot;
+            segments = snapshot.propagation().segments();
+        }
+
+        @Override
+        public boolean step() {
+            if (result != null) {
+                return true;
+            }
+
+            if (index >= segments.size()) {
+                result = List.copyOf(output);
+                return true;
+            }
+
+            Segment segment = segments.get(index);
+            BeamState beam = segment.start();
+            LaserBeamDisplayProfile display = this.display;
+            if (display == null) {
+                if (segment.parentIndex() != index - 1) {
+                    throw new IllegalArgumentException("Whole-beam display requires a single ordered chain at segment " + index + '.');
+                }
+
+                display = LaserBeamDisplayProfile.fromBeam(beam);
+                this.display = display;
+                domain = beam.footprint().domain().clip(-1, 0, -1).clip(1, 0, -1).clip(0, -1, -1).clip(0, 1, -1);
+                boundary = domain.vertices();
+                if (boundary.size() < 3) {
+                    throw new IllegalArgumentException("Whole-beam display has an empty cross section at segment " + index + '.');
+                }
+
+                double length = segment.length();
+                double range = segment.remainingRange();
+                Boundary cutoff = segment.boundary();
+                OpticalPlane plane = cutoff == null ? null : cutoff.cutoffPlane();
+                contacts = new ArrayList<>();
+                if (plane != null && cutoff.opticalInteraction()) {
+                    Terminal terminal = display.createTerminal(beam, range, plane, boundary);
+                    for (Point point : boundary) {
+                        Contact contact = terminal.intersect(point.u(), point.v());
+                        if (contact == null) {
+                            throw new IllegalStateException("Whole-beam optical joint has no boundary contact at segment " + index + '.');
+                        }
+
+                        contacts.add(contact);
+                        length = Math.max(length, contact.distance());
+                    }
+                }
+
+                double emission = index == 0 ? Math.min(EMISSION_OFFSET, segment.length() * 0.25) : 0;
+                LaserBeamDisplayProfile profile = display;
+                starts = boundary.stream().map(point -> profile.point(emission, point.u(), point.v())).toList();
+                BeamFrame frame = beam.frame();
+                if (index > 0) {
+                    Segment parent = segments.get(index - 1);
+                    Boundary joint = parent.boundary();
+                    if (joint == null || !joint.opticalInteraction() || previousEnd.size() != boundary.size()) {
+                        throw new IllegalStateException("Whole-beam display requires a complete optical joint before segment " + index + '.');
+                    }
+
+                    Vec3 normal = joint.cutoffPlane().normal();
+                    boolean reflected = parent.start().frame().direction().dot(normal) * frame.direction().dot(normal) < 0;
+                    starts = reflected ? previousEnd.reversed() : previousEnd;
+                }
+
+                fade = new LaserBeamFade(frame.origin(), frame.direction(), range, Math.min(LaserBeamGeometry.TERMINAL_FADE_LENGTH, pathDistance + range));
+                appearance = LaserBeamAppearance.fromBeam(beam);
+                brightness = LaserBeamBrightness.fromBeam(beam);
+                sampling = sampling(domain);
+                samples = display.sampleDistances(length);
+                sample = 1;
+                return false;
+            }
+
+            LaserBeamFade fade = Objects.requireNonNull(this.fade, "Section preparation requires its fade field.");
+            BeamTerminal terminal = segment.terminal();
+            if (sample < samples.size()) {
+                double from = samples.get(sample - 1);
+                double to = samples.get(sample);
+                List<Vec3> ends = section(display, to, boundary, contacts);
+                if (sample == samples.size() - 1 && terminal != null && !terminal.faces().isEmpty()) {
+                    ends = boundary.stream().map(point -> BeamContact.point(beam, segment.length(), point.u(), point.v())).toList();
+                }
+
+                Section geometry = new Section(starts, ends, ends.stream().anyMatch(point -> fade.at(point) < 1), beam.profile().widthSlope() != 0);
+                DrawSection draw = new DrawSection(geometry, Objects.requireNonNull(appearance, "Section preparation requires its appearance."), index, pathDistance + from, fade, Objects.requireNonNull(sampling, "Section preparation requires its sampling domain."), false, brightness);
+                output.add(local(snapshot, draw));
+                starts = ends;
+                sample++;
+                return false;
+            }
+
+            if (terminal != null && !terminal.faces().isEmpty()) {
+                List<DrawSection> completed = terminalSections;
+                if (completed == null) {
+                    LaserBeamWork<List<DrawSection>> work = terminalWork;
+                    if (work == null) {
+                        terminalWork = LaserBeamTerminalMesh.begin(segment, index, pathDistance, Objects.requireNonNull(domain, "Terminal preparation requires its footprint domain."), fade);
+                        return false;
+                    }
+
+                    if (!work.step()) {
+                        return false;
+                    }
+
+                    terminalSections = work.result();
+                    terminalWork = null;
+                    return false;
+                }
+
+                if (terminalIndex < completed.size()) {
+                    output.add(local(snapshot, completed.get(terminalIndex++)));
+                    return false;
+                }
+            }
+
+            previousEnd = starts;
+            pathDistance += segment.length();
+            index++;
+            this.display = null;
+            terminalSections = null;
+            terminalIndex = 0;
+            return false;
+        }
+
+        @Override
+        public List<DrawSection> result() {
+            return Objects.requireNonNull(result, "Laser beam section preparation has not completed.");
         }
     }
 }

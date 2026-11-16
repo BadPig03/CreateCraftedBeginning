@@ -98,7 +98,7 @@ public final class LaserRenderTraceCache {
                     return cached.snapshot();
                 }
 
-                LaserTraceMotion motion = new LaserTraceMotion(dependencies.bounds(), dependencies.paths(), dependencies.subLevels(), dependencies.contraptions());
+                LaserTraceMotion motion = new LaserTraceMotion(dependencies.bounds(), dependencies.paths(), dependencies.contraptionBounds(), dependencies.subLevels(), dependencies.contraptions());
                 LaserTraceMotion current = motion.observe(level, partialTick);
                 if (current != null && !motion.equals(current)) {
                     entry = null;

@@ -19,6 +19,7 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBea
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamPathSignature.Input;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.display.LaserBeamWork;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserCollisionContext;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserRenderGeometry;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserRenderSnapshot;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserRigidDisplay.Candidate;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserRigidDisplay;
@@ -199,6 +200,7 @@ final class LaserServerDisplayQueue {
         private final Map<UUID, Delivery> deliveries = new HashMap<>();
         private @Nullable BeamPropagation propagation;
         private @Nullable LaserStaticDependencies dependencies;
+        private @Nullable LaserRenderGeometry geometry;
         private @Nullable LaserRigidDisplay rigid;
         private @Nullable Vec3 lastScale;
         private @Nullable LaserRenderSnapshot reference;
@@ -253,6 +255,7 @@ final class LaserServerDisplayQueue {
                 lastScale = null;
                 dependencies = observation.staticDependencies();
                 if (dependencies != null) {
+                    geometry = new LaserRenderGeometry(level, dependencies);
                     Vec3 origin = Vec3.atLowerCornerOf(pos);
                     reference = new LaserRenderSnapshot(propagation, origin, origin, new Vec3(1, 0, 0), new Vec3(0, 1, 0), new Vec3(0, 0, 1));
                 }
@@ -273,9 +276,7 @@ final class LaserServerDisplayQueue {
             }
 
             if (checkDependencies && !matches()) {
-                clearPreparation();
-                this.dependencies = null;
-                rigid = null;
+                discard(world);
                 return new PreparedDisplay(Mode.LOCAL, NO_DATA);
             }
 
@@ -285,6 +286,11 @@ final class LaserServerDisplayQueue {
             }
 
             LaserBeamDisplayInput input = work.result();
+            if (!matches()) {
+                discard(world);
+                return new PreparedDisplay(Mode.LOCAL, NO_DATA);
+            }
+
             clearPreparation();
             if (rigid != null && !input.base().isComplete()) {
                 return new PreparedDisplay(Mode.LOCAL, NO_DATA);
@@ -294,6 +300,11 @@ final class LaserServerDisplayQueue {
             BeamFrame frame = local.frame();
             LaserDisplaySnapshot snapshot = new LaserDisplaySnapshot(frame.origin(), frame.direction(), local.fluxLm(), range, dependencies, input, Input.from(reference), rigid);
             byte[] data = LaserDisplayCodec.encode(snapshot);
+            if (!matches()) {
+                discard(world);
+                return new PreparedDisplay(Mode.LOCAL, NO_DATA);
+            }
+
             if (data == null) {
                 return new PreparedDisplay(Mode.TOO_LARGE, NO_DATA);
             }
@@ -332,6 +343,7 @@ final class LaserServerDisplayQueue {
             propagation = null;
             localSource = null;
             dependencies = null;
+            geometry = null;
             rigid = null;
             clearPreparation();
         }
@@ -350,15 +362,16 @@ final class LaserServerDisplayQueue {
         }
 
         private boolean matches() {
-            if (dependencies == null) {
+            BlockPos pos = owner.getBlockPos();
+            if (dependencies == null || owner.isRemoved() || owner.getLevel() != level || !level.isLoaded(pos) || level.getBlockEntity(pos) != owner || !owner.isLaserActive() || range != owner.getLaserRange() || !owner.createBeamSource().equals(localSource)) {
                 return false;
             }
 
             if (rigid != null) {
-                return rigid.matches(level, owner.getBlockPos(), dependencies, 1);
+                return rigid.matches(level, pos, dependencies, 1);
             }
 
-            return dependencies.matches(level, 1);
+            return geometry != null && geometry.matches(level);
         }
 
         private void publish(Mode mode, byte[] data) {

@@ -10,6 +10,9 @@ import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.map.Ch
 import net.ty.createcraftedbeginning.content.opticalpower.chunkstabilizer.map.ChunkStabilizerMapSectionAccess;
 import net.ty.createcraftedbeginning.content.opticalpower.experiencecrystal.ExperienceCrystalSectionAccess;
 import net.ty.createcraftedbeginning.content.opticalpower.experiencecrystal.ExperienceCrystalSectionIndex;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserSectionAccess;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserSectionCandidates;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserSectionChanges;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -24,7 +27,13 @@ import java.lang.ref.WeakReference;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(LevelChunkSection.class)
-public abstract class LevelChunkSectionMixin implements ExperienceCrystalSectionAccess, AmethystMirrorSectionAccess, ChunkStabilizerMapSectionAccess {
+public abstract class LevelChunkSectionMixin implements ExperienceCrystalSectionAccess, AmethystMirrorSectionAccess, ChunkStabilizerMapSectionAccess, LaserSectionAccess {
+    @Unique
+    @Nullable
+    private LaserSectionCandidates ccb$laserCandidates;
+    @Unique
+    @Nullable
+    private WeakReference<LaserSectionChanges> ccb$laserChanges;
     @Unique
     @Nullable
     private ExperienceCrystalSectionIndex ccb$crystalIndex;
@@ -34,6 +43,26 @@ public abstract class LevelChunkSectionMixin implements ExperienceCrystalSection
     @Unique
     @Nullable
     private WeakReference<ChunkStabilizerMapChanges> ccb$mapChanges;
+
+    @Override
+    public LaserSectionCandidates ccb$getLaserCandidates() {
+        LaserSectionCandidates candidates = ccb$laserCandidates;
+        if (candidates == null) {
+            candidates = new LaserSectionCandidates((LevelChunkSection) (Object) this);
+            ccb$laserCandidates = candidates;
+        }
+        return candidates;
+    }
+
+    @Override
+    public LaserSectionChanges ccb$getLaserChanges() {
+        LaserSectionChanges changes = ccb$laserChanges == null ? null : ccb$laserChanges.get();
+        if (changes == null) {
+            changes = new LaserSectionChanges();
+            ccb$laserChanges = new WeakReference<>(changes);
+        }
+        return changes;
+    }
 
     @Override
     public ChunkStabilizerMapChanges ccb$getMapChanges() {
@@ -72,6 +101,16 @@ public abstract class LevelChunkSectionMixin implements ExperienceCrystalSection
             return;
         }
 
+        LaserSectionCandidates candidates = ccb$laserCandidates;
+        if (candidates != null) {
+            candidates.changed(x, y, z, state);
+        }
+
+        LaserSectionChanges laserChanges = ccb$laserChanges == null ? null : ccb$laserChanges.get();
+        if (laserChanges != null) {
+            laserChanges.changed(x, y, z);
+        }
+
         if (ccb$crystalIndex != null) {
             ccb$crystalIndex.changed(x, y, z, state);
         }
@@ -88,6 +127,8 @@ public abstract class LevelChunkSectionMixin implements ExperienceCrystalSection
 
     @Inject(method = "read", at = @At("RETURN"))
     private void ccb$read(FriendlyByteBuf buffer, CallbackInfo callback) {
+        ccb$laserChanges = null;
+        ccb$laserCandidates = null;
         ccb$crystalIndex = null;
         ccb$mirrorIndex = null;
         ccb$mapChanges = null;
@@ -95,6 +136,8 @@ public abstract class LevelChunkSectionMixin implements ExperienceCrystalSection
 
     @Inject(method = "recalcBlockCounts", at = @At("RETURN"))
     private void ccb$recalcBlockCounts(CallbackInfo callback) {
+        ccb$laserChanges = null;
+        ccb$laserCandidates = null;
         ccb$crystalIndex = null;
         ccb$mirrorIndex = null;
         ccb$mapChanges = null;

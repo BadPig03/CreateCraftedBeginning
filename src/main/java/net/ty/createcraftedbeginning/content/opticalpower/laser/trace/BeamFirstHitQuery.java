@@ -38,6 +38,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -127,12 +129,29 @@ final class BeamFirstHitQuery implements Query {
             }
             BeamVolumeCells cells = new BeamVolumeCells(local.stream().map(BeamSweepSection::points).toList(), localBounds);
             ClipContext context = new ClipContext(localOrigin, space.localPosition(origin.add(direction.scale(range))), Block.COLLIDER, Fluid.NONE, collision);
-            for (BlockPos cursor : cells) {
+            BeamCandidateCursor cursor = BeamCandidateCursor.create(level, geometry, cells, beam, range, spaces.size() == 1 && mountedBlocks == null && !space.inSubLevel() && !collision.hasOverride());
+            Iterator<BlockPos> fallback = cursor == null ? cells.iterator() : Collections.emptyIterator();
+            while (true) {
+                BlockPos candidate;
+                if (cursor == null) {
+                    if (!fallback.hasNext()) {
+                        break;
+                    }
+
+                    candidate = fallback.next();
+                }
+                else {
+                    candidate = cursor.next(nearest.distance());
+                    if (candidate == null) {
+                        break;
+                    }
+                }
+
                 if (candidates >= maxCandidates) {
                     return new Result(0, null, null, Reason.OCCLUSION_LIMIT);
                 }
                 candidates++;
-                BlockPos pos = cursor.immutable();
+                BlockPos pos = candidate.immutable();
                 PreparedBlock block;
                 if (mountedBlocks != null) {
                     block = geometry.getMountedBlock(space.owner(), mountedBlocks, pos, collision);

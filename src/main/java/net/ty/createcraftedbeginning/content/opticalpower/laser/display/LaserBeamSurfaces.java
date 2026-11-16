@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,6 +137,10 @@ public final class LaserBeamSurfaces {
             }
         }
         return new SurfaceBuild(List.copyOf(caps), resolved.reason());
+    }
+
+    static LaserBeamWork<SurfaceBuild> begin(List<DrawSection> sections, Budget budget) {
+        return new SurfaceWork(sections, budget);
     }
 
     static List<Vec3> validPolygon(List<Vec3> vertices) {
@@ -552,53 +557,65 @@ public final class LaserBeamSurfaces {
         private final @Nullable PlaneGroup[] slots;
         private final int mask;
 
-        private PlaneLookup(Map<PlaneKey, List<Face>> planes) {
-            int capacity = HashCommon.arraySize(planes.size(), LOAD_FACTOR);
+        private PlaneLookup(int size) {
+            int capacity = HashCommon.arraySize(size, LOAD_FACTOR);
             slots = new PlaneGroup[capacity];
             mask = capacity - 1;
+        }
+
+        private PlaneLookup(Map<PlaneKey, List<Face>> planes) {
+            this(planes.size());
             for (Entry<PlaneKey, List<Face>> entry : planes.entrySet()) {
-                PlaneKey key = entry.getKey();
-                long keyX = key.x();
-                long keyY = key.y();
-                long keyZ = key.z();
-                int slot = hash(keyX, keyY, keyZ) & mask;
-                PlaneGroup group = slots[slot];
-                while (group != null && (group.key.x() != keyX || group.key.y() != keyY || group.key.z() != keyZ)) {
-                    slot = slot + 1 & mask;
-                    group = slots[slot];
-                }
-                if (group == null) {
-                    group = new PlaneGroup(key);
-                    slots[slot] = group;
-                }
-                group.faces.put(key.distance(), entry.getValue());
+                add(entry);
             }
             for (PlaneGroup group : slots) {
                 if (group == null) {
                     continue;
                 }
 
-                PlaneKey key = group.key;
-                long keyX = key.x();
-                long keyY = key.y();
-                long keyZ = key.z();
-                for (int x = -1; x <= 1; x++) {
-                    for (int y = -1; y <= 1; y++) {
-                        for (int z = -1; z <= 1; z++) {
-                            PlaneGroup neighbor = get(-keyX + x, -keyY + y, -keyZ + z);
-                            if (neighbor == null) {
-                                continue;
-                            }
-
-                            group.neighbors.add(neighbor);
-                        }
-                    }
-                }
+                connect(group);
             }
         }
 
         private static int hash(long x, long y, long z) {
             return (int) HashCommon.mix(x * X_HASH_MULTIPLIER ^ y * Y_HASH_MULTIPLIER ^ z * Z_HASH_MULTIPLIER);
+        }
+
+        private void add(Entry<PlaneKey, List<Face>> entry) {
+            PlaneKey key = entry.getKey();
+            long keyX = key.x();
+            long keyY = key.y();
+            long keyZ = key.z();
+            int slot = hash(keyX, keyY, keyZ) & mask;
+            PlaneGroup group = slots[slot];
+            while (group != null && (group.key.x() != keyX || group.key.y() != keyY || group.key.z() != keyZ)) {
+                slot = slot + 1 & mask;
+                group = slots[slot];
+            }
+            if (group == null) {
+                group = new PlaneGroup(key);
+                slots[slot] = group;
+            }
+            group.faces.put(key.distance(), entry.getValue());
+        }
+
+        private void connect(PlaneGroup group) {
+            PlaneKey key = group.key;
+            long keyX = key.x();
+            long keyY = key.y();
+            long keyZ = key.z();
+            for (int x = -1; x <= 1; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        PlaneGroup neighbor = get(-keyX + x, -keyY + y, -keyZ + z);
+                        if (neighbor == null) {
+                            continue;
+                        }
+
+                        group.neighbors.add(neighbor);
+                    }
+                }
+            }
         }
 
         private @Nullable PlaneGroup get(long x, long y, long z) {
@@ -630,4 +647,390 @@ public final class LaserBeamSurfaces {
     }
 
     private record PlaneKey(long x, long y, long z, long distance) {}
+
+    private static final class SurfaceWork implements LaserBeamWork<SurfaceBuild> {
+        private final List<DrawSection> input;
+        private final Budget budget;
+        private final List<DrawSection> sections = new ArrayList<>();
+        private final Map<PlaneKey, List<Face>> planes = new LinkedHashMap<>();
+        private final Map<List<VertexKey>, Face> paired = new LinkedHashMap<>();
+        private final Set<Face> internal = new HashSet<>();
+        private final List<Face> output = new ArrayList<>();
+        private final ClipWorkspace workspace = new ClipWorkspace();
+        private final List<Face> candidates = new ArrayList<>();
+        private List<List<Vec3>> fragments = new ArrayList<>();
+        private List<List<Vec3>> remaining = new ArrayList<>();
+        private Iterator<Entry<PlaneKey, List<Face>>> entries = List.<Entry<PlaneKey, List<Face>>>of().iterator();
+        private Iterator<Face> faces = List.<Face>of().iterator();
+        private Iterator<PlaneGroup> neighbors = List.<PlaneGroup>of().iterator();
+        private @Nullable Entry<PlaneKey, List<Face>> entry;
+        private @Nullable PlaneLookup lookup;
+        private @Nullable PlaneGroup neighbor;
+        private @Nullable Face current;
+        private @Nullable Face cutter;
+        private @Nullable AABB bounds;
+        private @Nullable SurfaceBuild result;
+        private SurfaceReason reason = SurfaceReason.COMPLETE;
+        private Vec3 anchor = Vec3.ZERO;
+        private int phase;
+        private int index;
+        private int candidate;
+        private int fragment;
+        private int vertices;
+        private int distance;
+
+        private SurfaceWork(List<DrawSection> sections, Budget budget) {
+            input = sections;
+            this.budget = budget;
+        }
+
+        @Override
+        public boolean step() {
+            if (result != null) {
+                return true;
+            }
+
+            if (phase == 0) {
+                if (index == 0) {
+                    if (input.isEmpty()) {
+                        result = new SurfaceBuild(List.of(), SurfaceReason.EMPTY);
+                        return true;
+                    }
+
+                    if (!budget.spend(input.size())) {
+                        result = new SurfaceBuild(List.of(), SurfaceReason.OPERATION_BUDGET);
+                        return true;
+                    }
+                }
+
+                if (index < input.size()) {
+                    sections.addAll(LaserBeamMesh.split(input.get(index++)));
+                    return false;
+                }
+
+                index = 0;
+                phase = 1;
+                return false;
+            }
+
+            if (phase == 1) {
+                if (index < sections.size()) {
+                    List<Vec3> cap = sections.get(index++).geometry().getStartCap();
+                    if (cap.isEmpty()) {
+                        return false;
+                    }
+
+                    anchor = cap.getFirst();
+                }
+                index = 0;
+                phase = 2;
+                return false;
+            }
+
+            if (phase == 2) {
+                if (index >= sections.size()) {
+                    entries = planes.entrySet().iterator();
+                    phase = 3;
+                    return false;
+                }
+
+                DrawSection draw = sections.get(index++);
+                Section geometry = draw.geometry();
+                List<List<Vec3>> sides = geometry.createSides(draw.getReferenceWidth());
+                if (sides.isEmpty()) {
+                    List<Vec3> cap = geometry.getStartCap();
+                    if (cap.isEmpty()) {
+                        return false;
+                    }
+
+                    Vec3 center = Section.center(cap);
+                    Section capped = new Section(cap, cap, false);
+                    DrawSection cappedDraw = new DrawSection(capped, draw.appearance(), draw.segmentIndex(), draw.pathDistance(), null, draw.samplingDomain(), false, draw.brightness());
+                    add(planes, anchor, cap, cappedDraw, center, center);
+                    return false;
+                }
+
+                Vec3 startCenter = Section.center(geometry.starts());
+                Vec3 endCenter = Section.center(geometry.ends());
+                LaserBeamFade fade = draw.fade();
+                for (List<Vec3> side : sides) {
+                    if (fade == null || !geometry.fadesAtEnd()) {
+                        add(planes, anchor, side, draw, startCenter, endCenter);
+                        continue;
+                    }
+
+                    add(planes, anchor, clip(side, fade.start(), fade.direction(), true), draw, startCenter, endCenter);
+                    add(planes, anchor, clip(side, fade.start(), fade.direction(), false), draw, startCenter, endCenter);
+                }
+                return false;
+            }
+
+            if (phase == 3) {
+                if (!faces.hasNext()) {
+                    if (entries.hasNext()) {
+                        faces = entries.next().getValue().iterator();
+                        return false;
+                    }
+
+                    entries = planes.entrySet().iterator();
+                    phase = 4;
+                    return false;
+                }
+
+                Face face = faces.next();
+                List<Vec3> points = face.vertices();
+                List<VertexKey> key = new ArrayList<>(points.size());
+                for (Vec3 point : points) {
+                    key.add(new VertexKey(Math.round((point.x - anchor.x) / EPSILON), Math.round((point.y - anchor.y) / EPSILON), Math.round((point.z - anchor.z) / EPSILON)));
+                }
+                key.sort(VERTEX_ORDER);
+                Face other = paired.get(key);
+                if (other == null || face.normal().dot(other.normal()) > -1 + EPSILON || !face.draw().appearance().equals(other.draw().appearance()) || points.stream().anyMatch(point -> Math.abs(face.fadeAt(point) - other.fadeAt(point)) > EPSILON)) {
+                    paired.put(key, face);
+                    return false;
+                }
+
+                internal.add(face);
+                internal.add(other);
+                paired.remove(key);
+                return false;
+            }
+
+            if (phase == 4) {
+                if (faces.hasNext()) {
+                    Face face = faces.next();
+                    if (!internal.contains(face)) {
+                        candidates.add(face);
+                    }
+                    return false;
+                }
+
+                if (entry != null) {
+                    entry.setValue(new ArrayList<>(candidates));
+                    entry = null;
+                    candidates.clear();
+                }
+                if (entries.hasNext()) {
+                    entry = entries.next();
+                    faces = entry.getValue().iterator();
+                    return false;
+                }
+
+                lookup = new PlaneLookup(planes.size());
+                entries = planes.entrySet().iterator();
+                phase = 5;
+                index = 0;
+                return false;
+            }
+
+            PlaneLookup lookup = this.lookup;
+            if (phase == 5) {
+                PlaneLookup active = Objects.requireNonNull(lookup, "Surface preparation requires its plane lookup.");
+                if (entries.hasNext()) {
+                    active.add(entries.next());
+                    return false;
+                }
+
+                if (index < active.slots.length) {
+                    PlaneGroup group = active.slots[index++];
+                    if (group != null) {
+                        active.connect(group);
+                    }
+                    return false;
+                }
+
+                entries = planes.entrySet().iterator();
+                phase = 6;
+                return false;
+            }
+
+            if (phase == 6) {
+                if (!entries.hasNext()) {
+                    if (output.size() > LaserBeamContours.MAX_FACES) {
+                        fail(SurfaceReason.FACE_LIMIT);
+                        return false;
+                    }
+
+                    phase = 12;
+                    index = 0;
+                    return false;
+                }
+
+                entry = entries.next();
+                PlaneKey key = entry.getKey();
+                PlaneGroup source = Objects.requireNonNull(Objects.requireNonNull(lookup, "Surface preparation requires its plane lookup.").get(key.x(), key.y(), key.z()), "Surface preparation requires its current normal group.");
+                candidates.clear();
+                neighbors = source.neighbors.iterator();
+                neighbor = null;
+                faces = entry.getValue().iterator();
+                phase = 7;
+                return false;
+            }
+
+            if (phase == 7) {
+                PlaneGroup neighbor = this.neighbor;
+                if (neighbor == null) {
+                    if (!neighbors.hasNext()) {
+                        phase = 8;
+                        return false;
+                    }
+
+                    this.neighbor = neighbors.next();
+                    distance = -1;
+                    return false;
+                }
+
+                PlaneKey key = Objects.requireNonNull(entry, "Surface preparation requires its current plane entry.").getKey();
+                candidates.addAll(neighbor.faces.getOrDefault(-key.distance() + distance, List.of()));
+                distance++;
+                if (distance > 1) {
+                    this.neighbor = null;
+                }
+                return false;
+            }
+
+            if (phase == 8) {
+                if (!faces.hasNext()) {
+                    phase = 6;
+                    return false;
+                }
+
+                current = faces.next();
+                bounds = current.bounds().inflate(EPSILON);
+                fragments.clear();
+                fragments.add(current.vertices());
+                candidate = 0;
+                phase = 9;
+                return false;
+            }
+
+            if (phase == 9) {
+                if (candidate >= candidates.size() || fragments.isEmpty()) {
+                    fragment = 0;
+                    phase = 11;
+                    return false;
+                }
+
+                if (!budget.spend(1)) {
+                    fail(SurfaceReason.OPERATION_BUDGET);
+                    return false;
+                }
+
+                Face face = Objects.requireNonNull(current, "Surface subtraction requires its current face.");
+                Face other = candidates.get(candidate++);
+                Vec3 normal = face.normal();
+                if (face == other || !Objects.requireNonNull(bounds, "Surface subtraction requires current bounds.").intersects(other.bounds()) || normal.dot(other.normal()) > -1 + EPSILON || !face.draw().appearance().equals(other.draw().appearance())) {
+                    return false;
+                }
+
+                Vec3 reference = face.vertices().getFirst();
+                for (Vec3 point : other.vertices()) {
+                    if (Math.abs(point.subtract(reference).dot(normal)) > PLANE_TOLERANCE || Math.abs(face.fadeAt(point) - other.fadeAt(point)) > EPSILON) {
+                        return false;
+                    }
+                }
+                if (fragments.size() > MAX_FRAGMENTS) {
+                    fail(SurfaceReason.FRAGMENT_LIMIT);
+                    return false;
+                }
+
+                cutter = other;
+                remaining.clear();
+                fragment = 0;
+                phase = 10;
+                return false;
+            }
+
+            if (phase == 10) {
+                if (fragment < fragments.size()) {
+                    if (!budget.spend(1)) {
+                        fail(SurfaceReason.OPERATION_BUDGET);
+                        return false;
+                    }
+
+                    Face other = Objects.requireNonNull(cutter, "Surface subtraction requires its cutter.");
+                    subtract(fragments.get(fragment++), other.vertices(), other.normal(), workspace, remaining);
+                    return false;
+                }
+
+                List<List<Vec3>> previous = fragments;
+                fragments = remaining;
+                remaining = previous;
+                phase = 9;
+                return false;
+            }
+
+            if (phase == 11) {
+                if (fragment < fragments.size()) {
+                    Face face = Objects.requireNonNull(current, "Surface output requires its current face.");
+                    output.add(new Face(List.copyOf(fragments.get(fragment++)), face.normal(), face.draw(), face.startCenter(), face.endCenter(), face.bounds()));
+                    return false;
+                }
+
+                phase = 8;
+                return false;
+            }
+
+            if (phase == 12) {
+                if (index < output.size()) {
+                    vertices += LaserBeamContours.submittedVertices(List.of(output.get(index++)));
+                    return false;
+                }
+                if (vertices > LaserBeamContours.MAX_VERTICES) {
+                    fail(SurfaceReason.VERTEX_LIMIT);
+                    return false;
+                }
+
+                result = new SurfaceBuild(List.copyOf(output), SurfaceReason.COMPLETE);
+                return true;
+            }
+
+            if (index >= sections.size()) {
+                result = new SurfaceBuild(List.copyOf(output), reason);
+                return true;
+            }
+
+            DrawSection draw = sections.get(index++);
+            double pathDistance = draw.pathDistance();
+            if (pathDistance > EPSILON) {
+                return false;
+            }
+
+            List<Vec3> cap = draw.geometry().getStartCap();
+            if (cap.isEmpty()) {
+                return false;
+            }
+
+            Vec3 center = Section.center(cap);
+            Section capped = new Section(cap, cap, false);
+            DrawSection cappedDraw = new DrawSection(capped, draw.appearance(), draw.segmentIndex(), pathDistance, null, draw.samplingDomain(), false, draw.brightness());
+            Map<PlaneKey, List<Face>> fallback = new LinkedHashMap<>();
+            add(fallback, anchor, cap, cappedDraw, center, center);
+            for (List<Face> group : fallback.values()) {
+                for (Face face : group) {
+                    int submitted = LaserBeamContours.submittedVertices(List.of(face));
+                    if (output.size() + 1 > LaserBeamContours.MAX_FACES || vertices + submitted > LaserBeamContours.MAX_VERTICES) {
+                        continue;
+                    }
+
+                    output.add(face);
+                    vertices += submitted;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public SurfaceBuild result() {
+            return Objects.requireNonNull(result, "Laser beam surface preparation has not completed.");
+        }
+
+        private void fail(SurfaceReason reason) {
+            this.reason = reason;
+            phase = 20;
+            output.clear();
+            vertices = 0;
+            index = 0;
+        }
+    }
 }

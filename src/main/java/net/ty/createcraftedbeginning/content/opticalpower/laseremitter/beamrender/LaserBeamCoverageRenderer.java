@@ -36,9 +36,11 @@ import org.lwjgl.system.MemoryStack;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -51,7 +53,7 @@ final class LaserBeamCoverageRenderer {
     private LaserBeamCoverageRenderer() {
     }
 
-    static void submit(LaserEmitterBlockEntity emitter, Matrix4f pose, List<Layer> layers) {
+    static void submit(LaserEmitterBlockEntity emitter, Matrix4f pose, Supplier<List<Layer>> layers) {
         PENDING.put(emitter, new Submission(new Matrix4f(pose), new Matrix4f(RenderSystem.getModelViewMatrix()), new Matrix4f(RenderSystem.getProjectionMatrix()), layers));
     }
 
@@ -112,6 +114,7 @@ final class LaserBeamCoverageRenderer {
             return;
         }
 
+        LaserBeamMeshCache.advance();
         Minecraft minecraft = Minecraft.getInstance();
         RenderTarget main = minecraft.getMainRenderTarget();
         try (DrawState ignored = new DrawState()) {
@@ -139,11 +142,11 @@ final class LaserBeamCoverageRenderer {
             }
 
             boolean depthReady = false;
-            for (Submission submission : PENDING.values()) {
+            for (Submission submission : new ArrayList<>(PENDING.values())) {
                 Matrix4f pose = submission.pose();
                 Matrix4f modelView = submission.modelView();
                 Matrix4f projection = submission.projection();
-                for (Layer vertices : submission.layers()) {
+                for (Layer vertices : submission.layers().get()) {
                     if (vertices.isEmpty()) {
                         continue;
                     }
@@ -198,7 +201,7 @@ final class LaserBeamCoverageRenderer {
         }
     }
 
-    private record Submission(Matrix4f pose, Matrix4f modelView, Matrix4f projection, List<Layer> layers) {}
+    private record Submission(Matrix4f pose, Matrix4f modelView, Matrix4f projection, Supplier<List<Layer>> layers) {}
 
     private static final class DrawState implements AutoCloseable {
         private final boolean depth = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);

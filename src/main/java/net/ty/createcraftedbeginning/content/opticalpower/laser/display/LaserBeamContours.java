@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,7 +130,12 @@ public final class LaserBeamContours {
         private int cursor;
         private int stage;
         private boolean complete = true;
-        private Result result;
+        private @Nullable Result result;
+        private @Nullable MergeBoundaryWork boundaryWork;
+        private @Nullable NormalKey groupKey;
+        private final NavigableMap<Integer, Integer> candidates = new TreeMap<>();
+        private Iterator<Integer> candidateBucket = List.<Integer>of().iterator();
+        private int bucket;
 
         private MergeWork(List<Face> faces, List<DisplaySegment> segments, Budget budget) {
             this.faces = faces;
@@ -163,7 +169,7 @@ public final class LaserBeamContours {
 
             if (stage == 1) {
                 if (cursor < faces.size()) {
-                    return group(faces.get(cursor++));
+                    return group(faces.get(cursor));
                 }
 
                 cursor = 0;
@@ -172,15 +178,21 @@ public final class LaserBeamContours {
             }
 
             if (cursor < groups.size()) {
-                List<Face> group = groups.get(cursor++);
-                List<Face> merged = boundary(group, budget);
-                if (merged == null) {
-                    output.addAll(group);
-                    complete = false;
+                List<Face> group = groups.get(cursor);
+                MergeBoundaryWork work = boundaryWork;
+                if (work == null) {
+                    boundaryWork = new MergeBoundaryWork(group, budget);
+                    return false;
                 }
-                else {
-                    output.addAll(merged);
+                if (!work.step()) {
+                    return false;
                 }
+
+                Result merged = work.result();
+                output.addAll(merged.faces());
+                complete &= merged.complete();
+                boundaryWork = null;
+                cursor++;
 
                 return false;
             }
@@ -195,50 +207,58 @@ public final class LaserBeamContours {
         }
 
         private boolean group(Face face) {
-            Vec3 normal = face.normal();
-            DrawSection draw = face.draw();
-            DisplayKey display = new DisplayKey(draw.appearance(), draw.brightness());
-
-            long x = Math.round(normal.x * NORMAL_SCALE);
-            long y = Math.round(normal.y * NORMAL_SCALE);
-            long z = Math.round(normal.z * NORMAL_SCALE);
-            long distance = Math.round(face.vertices().getFirst().subtract(anchor).dot(normal) * planeScale);
-            List<Integer> candidates = new ArrayList<>();
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    for (int dz = -1; dz <= 1; dz++) {
-                        for (int offset = -1; offset <= 1; offset++) {
-                            candidates.addAll(index.getOrDefault(new NormalKey(x + dx, y + dy, z + dz, distance + offset, display), List.of()));
-                        }
-                    }
-                }
+            NormalKey key = groupKey;
+            if (key == null) {
+                Vec3 normal = face.normal();
+                DrawSection draw = face.draw();
+                DisplayKey display = new DisplayKey(draw.appearance(), draw.brightness());
+                groupKey = new NormalKey(Math.round(normal.x * NORMAL_SCALE), Math.round(normal.y * NORMAL_SCALE), Math.round(normal.z * NORMAL_SCALE), Math.round(face.vertices().getFirst().subtract(anchor).dot(normal) * planeScale), display);
+                bucket = 0;
+                return false;
             }
 
-            candidates.sort(Integer::compareTo);
-            List<Face> group = null;
-            for (int candidateIndex : candidates) {
-                List<Face> candidate = groups.get(candidateIndex);
+            if (candidateBucket.hasNext()) {
+                int candidate = candidateBucket.next();
+                candidates.put(candidate, candidate);
+                return false;
+            }
+
+            if (bucket < 81) {
+                int offset = bucket % 3 - 1;
+                int dz = bucket / 3 % 3 - 1;
+                int dy = bucket / 9 % 3 - 1;
+                int dx = bucket / 27 - 1;
+                bucket++;
+                candidateBucket = index.getOrDefault(new NormalKey(key.x() + dx, key.y() + dy, key.z() + dz, key.distance() + offset, key.display()), List.of()).iterator();
+                return false;
+            }
+
+            Entry<Integer, Integer> candidateIndex = candidates.pollFirstEntry();
+            if (candidateIndex != null) {
                 if (!budget.spend(1)) {
                     result = new Result(faces, false);
                     return true;
                 }
 
-                Face first = candidate.getFirst();
-                if (compatible(first, face, segments)) {
-                    group = candidate;
-                    break;
+                List<Face> candidate = groups.get(candidateIndex.getValue());
+                if (!compatible(candidate.getFirst(), face, segments)) {
+                    return false;
                 }
-            }
 
-            if (group == null) {
-                group = new ArrayList<>();
-                index.computeIfAbsent(new NormalKey(x, y, z, distance, display), ignored -> new ArrayList<>()).add(groups.size());
+                candidate.add(face);
+            }
+            else {
+                List<Face> group = new ArrayList<>();
+                group.add(face);
+                index.computeIfAbsent(key, ignored -> new ArrayList<>()).add(groups.size());
                 groups.add(group);
             }
-
-            group.add(face);
+            candidates.clear();
+            groupKey = null;
+            cursor++;
             return false;
         }
+
     }
 
     static @Nullable Face polygon(Face original, List<Vec3> vertices) {
@@ -490,6 +510,287 @@ public final class LaserBeamContours {
         }
 
         return List.copyOf(result);
+    }
+
+    private static final class MergeBoundaryWork implements LaserBeamWork<Result> {
+        private final List<Face> group;
+        private final Budget budget;
+        private final Face reference;
+        private final Vec3 anchor;
+        private final Vec3 along;
+        private final Vec3 across;
+        private final Map<PointKey, Vec3> points = new LinkedHashMap<>();
+        private final NavigableMap<Double, List<PointSample>> alongIndex = new TreeMap<>();
+        private final NavigableMap<Double, List<PointSample>> acrossIndex = new TreeMap<>();
+        private final Map<Edge, Boolean> edges = new LinkedHashMap<>();
+        private final Map<PointKey, PointKey> next = new LinkedHashMap<>();
+        private final NavigableMap<Integer, PointSample> candidates = new TreeMap<>();
+        private final NavigableMap<Double, PointKey> split = new TreeMap<>();
+        private final List<Face> output = new ArrayList<>();
+        private final List<Vec3> loop = new ArrayList<>();
+        private Iterator<Entry<PointKey, Vec3>> pointIterator = Map.<PointKey, Vec3>of().entrySet().iterator();
+        private Iterator<List<PointSample>> buckets = List.<List<PointSample>>of().iterator();
+        private Iterator<PointSample> bucket = List.<PointSample>of().iterator();
+        private Iterator<Edge> edgeIterator = List.<Edge>of().iterator();
+        private @Nullable PointKey previous;
+        private @Nullable PointKey loopStart;
+        private @Nullable PointKey loopCursor;
+        private Vec3 start = Vec3.ZERO;
+        private Vec3 delta = Vec3.ZERO;
+        private double lengthSqr;
+        private double before;
+        private double after;
+        private int faceIndex;
+        private int vertexIndex;
+        private int ordinal;
+        private int phase;
+        private int edgePhase;
+        private @Nullable Result result;
+
+        private MergeBoundaryWork(List<Face> group, Budget budget) {
+            this.group = group;
+            this.budget = budget;
+            reference = group.getFirst();
+            anchor = reference.vertices().getFirst();
+            Vec3 direction = reference.endCenter().subtract(reference.startCenter()).normalize();
+            if (direction.lengthSqr() <= EPSILON) {
+                direction = reference.vertices().get(1).subtract(anchor).normalize();
+            }
+
+            along = direction;
+            across = reference.normal().cross(along).normalize();
+        }
+
+        @Override
+        public boolean step() {
+            if (result != null) {
+                return true;
+            }
+
+            if (group.size() == 1) {
+                result = new Result(List.copyOf(group), true);
+                return true;
+            }
+
+            if (phase == 0) {
+                if (faceIndex >= group.size()) {
+                    pointIterator = points.entrySet().iterator();
+                    faceIndex = 0;
+                    phase = 1;
+                    return false;
+                }
+
+                List<Vec3> vertices = group.get(faceIndex).vertices();
+                if (vertexIndex >= vertices.size()) {
+                    faceIndex++;
+                    vertexIndex = 0;
+                    return false;
+                }
+
+                Vec3 vertex = vertices.get(vertexIndex++);
+                Vec3 existing = points.putIfAbsent(PointKey.from(vertex.subtract(anchor)), vertex);
+                if (existing != null && existing.distanceToSqr(vertex) > EPSILON * EPSILON) {
+                    result = new Result(group, false);
+                }
+                return result != null;
+            }
+
+            if (phase == 1) {
+                if (!pointIterator.hasNext()) {
+                    phase = 2;
+                    return false;
+                }
+
+                Entry<PointKey, Vec3> entry = pointIterator.next();
+                Vec3 point = entry.getValue();
+                Vec3 offset = point.subtract(anchor);
+                PointSample sample = new PointSample(ordinal++, entry.getKey(), point);
+                alongIndex.computeIfAbsent(offset.dot(along), ignored -> new ArrayList<>()).add(sample);
+                acrossIndex.computeIfAbsent(offset.dot(across), ignored -> new ArrayList<>()).add(sample);
+                return false;
+            }
+
+            if (phase == 2) {
+                if (faceIndex >= group.size()) {
+                    edgeIterator = edges.keySet().iterator();
+                    phase = 3;
+                    return false;
+                }
+
+                return edge();
+            }
+
+            if (phase == 3) {
+                if (!edgeIterator.hasNext()) {
+                    phase = 4;
+                    return false;
+                }
+
+                Edge edge = edgeIterator.next();
+                if (next.put(edge.start(), edge.end()) != null) {
+                    result = new Result(group, false);
+                }
+                return result != null;
+            }
+
+            if (phase == 4) {
+                if (loopStart == null) {
+                    if (next.isEmpty()) {
+                        faceIndex = 0;
+                        phase = 5;
+                        return false;
+                    }
+
+                    loopStart = next.keySet().iterator().next();
+                    loopCursor = loopStart;
+                }
+                if (loop.size() >= MAX_LOOP_VERTICES || loopCursor == null || !budget.spend(1)) {
+                    result = new Result(group, false);
+                    return true;
+                }
+
+                loop.add(points.get(loopCursor));
+                loopCursor = next.remove(loopCursor);
+                if (!loopStart.equals(loopCursor)) {
+                    return false;
+                }
+
+                Face polygon = planarPolygon(reference, loop);
+                if (polygon == null) {
+                    result = new Result(group, false);
+                    return true;
+                }
+
+                output.add(polygon);
+                loop.clear();
+                loopStart = null;
+                return false;
+            }
+
+            if (phase == 5) {
+                if (faceIndex < group.size()) {
+                    before += area(group.get(faceIndex++));
+                    return false;
+                }
+
+                faceIndex = 0;
+                phase = 6;
+                return false;
+            }
+
+            if (faceIndex < output.size()) {
+                after += area(output.get(faceIndex++));
+                return false;
+            }
+
+            if (Math.abs(before - after) > EPSILON * Math.max(EPSILON, before)) {
+                result = new Result(group, false);
+                return true;
+            }
+
+            result = new Result(List.copyOf(output), true);
+            return true;
+        }
+
+        @Override
+        public Result result() {
+            return Objects.requireNonNull(result, "Laser contour boundary preparation has not completed.");
+        }
+
+        private boolean edge() {
+            List<Vec3> vertices = group.get(faceIndex).vertices();
+            if (vertexIndex >= vertices.size()) {
+                faceIndex++;
+                vertexIndex = 0;
+                return false;
+            }
+
+            if (edgePhase == 0) {
+                start = vertices.get(vertexIndex);
+                Vec3 end = vertices.get((vertexIndex + 1) % vertices.size());
+                delta = end.subtract(start);
+                lengthSqr = delta.lengthSqr();
+                split.put(0.0, PointKey.from(start.subtract(anchor)));
+                split.put(1.0, PointKey.from(end.subtract(anchor)));
+                Vec3 projection = along;
+                NavigableMap<Double, List<PointSample>> pointIndex = alongIndex;
+                if (Math.abs(delta.dot(across)) < Math.abs(delta.dot(along))) {
+                    projection = across;
+                    pointIndex = acrossIndex;
+                }
+
+                double from = start.subtract(anchor).dot(projection);
+                double to = end.subtract(anchor).dot(projection);
+                buckets = pointIndex.subMap(Math.min(from, to) - EPSILON, true, Math.max(from, to) + EPSILON, true).values().iterator();
+                edgePhase = 1;
+                return false;
+            }
+
+            if (edgePhase == 1) {
+                if (bucket.hasNext()) {
+                    PointSample sample = bucket.next();
+                    candidates.put(sample.ordinal(), sample);
+                    return false;
+                }
+
+                if (buckets.hasNext()) {
+                    bucket = buckets.next().iterator();
+                    return false;
+                }
+
+                edgePhase = 2;
+                return false;
+            }
+
+            if (edgePhase == 2) {
+                Entry<Integer, PointSample> entry = candidates.pollFirstEntry();
+                if (entry == null) {
+                    edgePhase = 3;
+                    return false;
+                }
+
+                if (!budget.spend(1)) {
+                    result = new Result(group, false);
+                    return true;
+                }
+
+                PointSample sample = entry.getValue();
+                Vec3 point = sample.point();
+                double distance = point.subtract(start).dot(delta) / lengthSqr;
+                if (distance <= 0 || distance >= 1 || start.add(delta.scale(distance)).distanceToSqr(point) > EPSILON * EPSILON) {
+                    return false;
+                }
+
+                split.put(distance, sample.key());
+                return false;
+            }
+
+            Entry<Double, PointKey> entry = split.pollFirstEntry();
+            if (entry == null) {
+                previous = null;
+                edgePhase = 0;
+                vertexIndex++;
+                return false;
+            }
+
+            PointKey key = entry.getValue();
+            if (previous == null) {
+                previous = key;
+                return false;
+            }
+
+            if (previous.equals(key)) {
+                return false;
+            }
+
+            Edge edge = new Edge(previous, key);
+            Edge reverse = new Edge(key, previous);
+            previous = key;
+            if (edges.remove(reverse) == null && edges.put(edge, true) != null) {
+                result = new Result(group, false);
+            }
+            return result != null;
+        }
     }
 
     record Result(List<Face> faces, boolean complete) {}

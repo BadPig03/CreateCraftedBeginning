@@ -18,6 +18,7 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamCon
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamTerminal;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamTerminal.Face;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.OpticalPlane;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -111,5 +112,129 @@ final class LaserBeamTerminalMesh {
             }
         }
         return List.copyOf(result);
+    }
+
+    static LaserBeamWork<List<DrawSection>> begin(Segment segment, int index, double pathDistance, BeamRegion domain, LaserBeamFade fade) {
+        return new TerminalWork(segment, index, pathDistance, domain, fade);
+    }
+
+    private static final class TerminalWork implements LaserBeamWork<List<DrawSection>> {
+        private final Segment segment;
+        private final int index;
+        private final double pathDistance;
+        private final BeamRegion domain;
+        private final LaserBeamFade fade;
+        private final List<DrawSection> output = new ArrayList<>();
+        private int faceIndex;
+        private int patchIndex;
+        private @Nullable List<DrawSection> result;
+
+        private TerminalWork(Segment segment, int index, double pathDistance, BeamRegion domain, LaserBeamFade fade) {
+            this.segment = segment;
+            this.index = index;
+            this.pathDistance = pathDistance;
+            this.domain = domain;
+            this.fade = fade;
+        }
+
+        @Override
+        public boolean step() {
+            if (result != null) {
+                return true;
+            }
+
+            BeamTerminal terminal = Objects.requireNonNull(segment.terminal(), "Terminal display requires a captured receiving footprint.");
+            BeamState beam = segment.start();
+            BeamFrame frame = beam.frame();
+            BeamProfile profile = beam.profile();
+            BeamFootprint footprint = beam.footprint();
+            List<Span> spans = profile.spans(segment.remainingRange());
+            Vec3 relativeOrigin = terminal.worldOrigin().subtract(frame.origin());
+            Vec3 x = terminal.axisX();
+            Vec3 y = terminal.axisY();
+            Vec3 z = terminal.axisZ();
+            if (faceIndex >= terminal.faces().size()) {
+                result = List.copyOf(output);
+                return true;
+            }
+
+            Face face = terminal.faces().get(faceIndex);
+            if (patchIndex >= face.patches().size()) {
+                faceIndex++;
+                patchIndex = 0;
+                return false;
+            }
+
+            Patch patch = face.patches().get(patchIndex++);
+            Vec3 localNormal = Vec3.atLowerCornerOf(face.direction().getNormal());
+            Vec3 normal = y.cross(z).scale(localNormal.x).add(z.cross(x).scale(localNormal.y)).add(x.cross(y).scale(localNormal.z)).normalize();
+            List<Point> projected = new ArrayList<>();
+            for (Vec3 vertex : patch.vertices()) {
+                Vec3 delta = relativeOrigin.add(x.scale(vertex.x)).add(y.scale(vertex.y)).add(z.scale(vertex.z));
+                double distance = Math.max(0, delta.dot(frame.direction()));
+                double radius = profile.advance(distance).radius();
+                projected.add(new Point((delta.dot(frame.transverseAxis()) + profile.radius() * footprint.horizontalOffset()) / radius, (delta.dot(frame.getSecondTransverseAxis()) + profile.radius() * footprint.verticalOffset()) / radius));
+            }
+
+            BeamRegion region = new BeamRegion(projected);
+            List<Point> limits = domain.vertices();
+            for (int edge = 0; edge < limits.size(); edge++) {
+                Point first = limits.get(edge);
+                Point second = limits.get((edge + 1) % limits.size());
+                double u = second.v() - first.v();
+                double v = first.u() - second.u();
+                region = region.clip(u, v, -u * first.u() - v * first.v());
+            }
+            List<Point> boundary = region.vertices();
+            if (boundary.size() < 3 || region.area() <= EPSILON * EPSILON) {
+                return false;
+            }
+
+            OpticalPlane plane = new OpticalPlane(terminal.worldPoint(patch.vertices().getFirst()), normal);
+            List<Vertex> contacts = new ArrayList<>();
+            double end = segment.length();
+            for (Point point : boundary) {
+                Vertex contact = BeamContact.intersect(beam, spans, plane, point.u(), point.v());
+                if (contact == null) {
+                    throw new IllegalStateException("Captured terminal footprint has no physical display intersection at segment " + index + '.');
+                }
+
+                contacts.add(contact);
+                end = Math.max(end, contact.distance());
+            }
+            double cutoff = segment.length();
+            if (end <= cutoff + LaserBeamSurfaces.EPSILON) {
+                return false;
+            }
+
+            List<Double> samples = new ArrayList<>();
+            samples.add(cutoff);
+            for (Span span : profile.spans(end)) {
+                double distance = span.to();
+                if (distance > cutoff + EPSILON) {
+                    samples.add(distance);
+                }
+            }
+            List<Vec3> starts = boundary.stream().map(point -> BeamContact.point(beam, cutoff, point.u(), point.v())).toList();
+            for (int step = 1; step < samples.size(); step++) {
+                double to = samples.get(step);
+                List<Vec3> ends = new ArrayList<>();
+                for (int corner = 0; corner < boundary.size(); corner++) {
+                    Vertex contact = contacts.get(corner);
+                    Point point = boundary.get(corner);
+                    ends.add(to >= contact.distance() - EPSILON ? contact.position() : BeamContact.point(beam, to, point.u(), point.v()));
+                }
+
+                Section geometry = new Section(starts, ends, ends.stream().anyMatch(point -> fade.at(point) < 1), true);
+                output.add(new DrawSection(geometry, LaserBeamAppearance.fromBeam(beam), index, pathDistance + samples.get(step - 1), fade, LaserBeamMesh.sampling(region), false, LaserBeamBrightness.fromBeam(beam)));
+                starts = ends;
+            }
+            return false;
+        }
+
+        @Override
+        public List<DrawSection> result() {
+            return Objects.requireNonNull(result, "Laser terminal preparation has not completed.");
+        }
     }
 }

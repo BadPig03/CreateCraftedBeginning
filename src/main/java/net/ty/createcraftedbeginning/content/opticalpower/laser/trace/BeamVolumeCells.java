@@ -20,6 +20,46 @@ import java.util.List;
 record BeamVolumeCells(List<List<Vec3>> volumes, @Nullable AABB bounds) implements Iterable<BlockPos> {
     private static final double BOUNDARY_TOLERANCE = 1.0E-7;
 
+    private static AABB slice(List<Vec3> points, Axis axis, double low, double high) {
+        double[] bounds = {Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY};
+        int size = points.size();
+        for (int first = 0; first < size; first++) {
+            Vec3 start = points.get(first);
+            double from = axis.choose(start.x, start.y, start.z);
+            if (from >= low && from <= high) {
+                include(bounds, start);
+            }
+            for (int second = first + 1; second < size; second++) {
+                Vec3 end = points.get(second);
+                double to = axis.choose(end.x, end.y, end.z);
+                if (from == to) {
+                    continue;
+                }
+
+                double minimum = Math.min(from, to);
+                double maximum = Math.max(from, to);
+                if (minimum < low && maximum > low) {
+                    include(bounds, start.lerp(end, Math.clamp((low - from) / (to - from), 0, 1)));
+                }
+                if (minimum >= high || maximum <= high) {
+                    continue;
+                }
+
+                include(bounds, start.lerp(end, Math.clamp((high - from) / (to - from), 0, 1)));
+            }
+        }
+        return new AABB(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
+    }
+
+    private static void include(double[] bounds, Vec3 point) {
+        bounds[0] = Math.min(bounds[0], point.x);
+        bounds[1] = Math.min(bounds[1], point.y);
+        bounds[2] = Math.min(bounds[2], point.z);
+        bounds[3] = Math.max(bounds[3], point.x);
+        bounds[4] = Math.max(bounds[4], point.y);
+        bounds[5] = Math.max(bounds[5], point.z);
+    }
+
     @Override
     public Iterator<BlockPos> iterator() {
         int lowerX = Integer.MIN_VALUE;
@@ -61,46 +101,6 @@ record BeamVolumeCells(List<List<Vec3>> volumes, @Nullable AABB bounds) implemen
             private int x = 1;
             private int endX;
             private int gap;
-
-            private static AABB slice(List<Vec3> points, Axis axis, double low, double high) {
-                double[] bounds = {Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY};
-                int size = points.size();
-                for (int first = 0; first < size; first++) {
-                    Vec3 start = points.get(first);
-                    double from = axis.choose(start.x, start.y, start.z);
-                    if (from >= low && from <= high) {
-                        include(bounds, start);
-                    }
-                    for (int second = first + 1; second < size; second++) {
-                        Vec3 end = points.get(second);
-                        double to = axis.choose(end.x, end.y, end.z);
-                        if (from == to) {
-                            continue;
-                        }
-
-                        double minimum = Math.min(from, to);
-                        double maximum = Math.max(from, to);
-                        if (minimum < low && maximum > low) {
-                            include(bounds, start.lerp(end, Math.clamp((low - from) / (to - from), 0, 1)));
-                        }
-                        if (minimum >= high || maximum <= high) {
-                            continue;
-                        }
-
-                        include(bounds, start.lerp(end, Math.clamp((high - from) / (to - from), 0, 1)));
-                    }
-                }
-                return new AABB(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-            }
-
-            private static void include(double[] bounds, Vec3 point) {
-                bounds[0] = Math.min(bounds[0], point.x);
-                bounds[1] = Math.min(bounds[1], point.y);
-                bounds[2] = Math.min(bounds[2], point.z);
-                bounds[3] = Math.max(bounds[3], point.x);
-                bounds[4] = Math.max(bounds[4], point.y);
-                bounds[5] = Math.max(bounds[5], point.z);
-            }
 
             @Override
             @Nullable
@@ -195,6 +195,42 @@ record BeamVolumeCells(List<List<Vec3>> volumes, @Nullable AABB bounds) implemen
                 }
             }
         };
+    }
+
+    boolean contains(BlockPos pos) {
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+        if (bounds != null && (x < Math.floor(bounds.minX) || x >= Math.ceil(bounds.maxX) || y < Math.floor(bounds.minY) || y >= Math.ceil(bounds.maxY) || z < Math.floor(bounds.minZ) || z >= Math.ceil(bounds.maxZ))) {
+            return false;
+        }
+
+        for (List<Vec3> points : volumes) {
+            Vec3 first = points.getFirst();
+            AABB extent = new AABB(first, first);
+            for (Vec3 point : points) {
+                extent = extent.minmax(new AABB(point, point));
+            }
+            Axis axis = Axis.X;
+            double span = extent.getXsize();
+            if (extent.getYsize() > span) {
+                axis = Axis.Y;
+                span = extent.getYsize();
+            }
+            if (extent.getZsize() > span) {
+                axis = Axis.Z;
+            }
+            int position = axis.choose(x, y, z);
+            int minimum = Math.max(position - 2, (int) Math.floor(axis.choose(extent.minX, extent.minY, extent.minZ)));
+            int maximum = Math.min(position + 2, (int) Math.floor(axis.choose(extent.maxX, extent.maxY, extent.maxZ)));
+            for (int slab = minimum; slab <= maximum; slab++) {
+                AABB slice = slice(points, axis, slab, slab + 1.0).inflate(LaserBlockClip.NEIGHBOR_REACH + BOUNDARY_TOLERANCE);
+                if (x >= Math.floor(slice.minX) && x <= Math.floor(slice.maxX) && y >= Math.floor(slice.minY) && y <= Math.floor(slice.maxY) && z >= Math.floor(slice.minZ) && z <= Math.floor(slice.maxZ)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static final class Row {

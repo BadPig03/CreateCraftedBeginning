@@ -22,10 +22,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.TreeMap;
 import java.util.function.ToDoubleFunction;
 
@@ -253,6 +256,11 @@ public final class LaserBeamShells {
         private final Map<DrawSection, Boolean> renderability = new IdentityHashMap<>();
         private final Map<Vec3, @Nullable Vec3> offsets = new LinkedHashMap<>();
         private ContourPointIndex pointIndex;
+        private @Nullable PointIndexWork pointIndexWork;
+        private final NavigableMap<Double, List<Face>> ordered = new TreeMap<>(Comparator.reverseOrder());
+        private Iterator<List<Face>> orderedBuckets = List.<List<Face>>of().iterator();
+        private Iterator<Face> orderedFaces = List.<Face>of().iterator();
+        private int preparationPhase;
         private @Nullable BoundaryWork boundaryWork;
         private final List<Face> outer = new ArrayList<>();
         private final List<Face> inner = new ArrayList<>();
@@ -325,21 +333,62 @@ public final class LaserBeamShells {
                     return false;
                 }
 
-                if (partial || !merged.complete()) {
-                    candidates.sort(Comparator.comparingDouble(LaserBeamContours::area).reversed());
-                }
-
+                index = 0;
                 phase = 2;
                 return false;
             }
 
             if (phase == 2) {
-                List<Face> contour = List.copyOf(candidates);
-                pointIndex = new ContourPointIndex(context, contour);
-                for (Face face : contour) {
-                    pending.addLast(new PendingPatch(face, 0));
+                if (preparationPhase == 0) {
+                    if ((partial || !merged.complete()) && index < candidates.size()) {
+                        Face face = candidates.get(index++);
+                        ordered.computeIfAbsent(LaserBeamContours.area(face), ignored -> new ArrayList<>()).add(face);
+                        return false;
+                    }
+
+                    if (!ordered.isEmpty()) {
+                        candidates.clear();
+                        orderedBuckets = ordered.values().iterator();
+                    }
+                    preparationPhase = 1;
+                    return false;
                 }
 
+                if (preparationPhase == 1) {
+                    if (orderedFaces.hasNext()) {
+                        candidates.add(orderedFaces.next());
+                        return false;
+                    }
+
+                    if (orderedBuckets.hasNext()) {
+                        orderedFaces = orderedBuckets.next().iterator();
+                        return false;
+                    }
+
+                    pointIndexWork = new PointIndexWork(context, List.copyOf(candidates));
+                    preparationPhase = 2;
+                    index = 0;
+                    return false;
+                }
+
+                if (preparationPhase == 2) {
+                    PointIndexWork work = Objects.requireNonNull(pointIndexWork, "Shell preparation requires a point index build.");
+                    if (!work.step()) {
+                        return false;
+                    }
+
+                    pointIndex = work.result();
+                    pointIndexWork = null;
+                    preparationPhase = 3;
+                    return false;
+                }
+
+                if (index < candidates.size()) {
+                    pending.addLast(new PendingPatch(candidates.get(index++), 0));
+                    return false;
+                }
+
+                ordered.clear();
                 phase = 3;
                 return false;
             }
@@ -893,9 +942,19 @@ public final class LaserBeamShells {
         private final List<List<FaceProjection>> projections;
         private final int[] candidates;
         private final int[] offsetCandidates;
-        private final IndexedFace[] indexed;
-        private final int[] unindexed;
-        private final @Nullable PointNode root;
+        private IndexedFace[] indexed = new IndexedFace[0];
+        private int[] unindexed = new int[0];
+        private @Nullable PointNode root;
+
+        private ContourPointIndex(List<Face> faces) {
+            this.faces = faces;
+            int size = faces.size();
+            planeMinimum = new double[size];
+            planeMaximum = new double[size];
+            projections = new ArrayList<>(size);
+            candidates = new int[size];
+            offsetCandidates = new int[size];
+        }
 
         private ContourPointIndex(LaserBeamContext context, List<Face> faces) {
             this.faces = faces;
@@ -904,71 +963,11 @@ public final class LaserBeamShells {
             planeMaximum = new double[size];
             projections = new ArrayList<>(size);
             for (int index = 0; index < size; index++) {
-                Face face = faces.get(index);
-                List<Vec3> vertices = face.vertices();
-                Vec3 first = vertices.getFirst();
-                Vec3 normal = face.normal();
-                double padding = EPSILON * Math.max(1, normal.length());
-                double minimum = 0;
-                double maximum = 0;
-                for (Vec3 vertex : face.vertices()) {
-                    double distance = vertex.subtract(first).dot(normal);
-                    minimum = Math.min(minimum, distance);
-                    maximum = Math.max(maximum, distance);
-                }
-
-                planeMinimum[index] = minimum - padding;
-                planeMaximum[index] = maximum + padding;
-                Vec3 longest = Vec3.ZERO;
-                for (int edge = 0; edge < vertices.size(); edge++) {
-                    Vec3 delta = vertices.get((edge + 1) % vertices.size()).subtract(vertices.get(edge));
-                    if (!(delta.lengthSqr() > longest.lengthSqr())) {
-                        continue;
-                    }
-
-                    longest = delta;
-                }
-
-                Vec3 along = longest.scale(1 / longest.length());
-                Vec3 across = normal.cross(along);
-                List<FaceProjection> bounds = new ArrayList<>();
-                for (Vec3 axis : List.of(along, across)) {
-                    double lower = 0;
-                    double upper = 0;
-                    for (Vec3 vertex : vertices) {
-                        double distance = vertex.subtract(first).dot(axis);
-                        lower = Math.min(lower, distance);
-                        upper = Math.max(upper, distance);
-                    }
-
-                    double margin = EPSILON * axis.length();
-                    bounds.add(new FaceProjection(axis, lower - margin, upper + margin));
-                }
-
-                projections.add(List.copyOf(bounds));
+                project(index);
             }
 
-            List<DisplaySegment> segments = context.segments();
-            for (int index = 0; index < segments.size(); index++) {
-                List<OpticalPlane> boundaries = new ArrayList<>();
-                for (int owner : new int[]{index, segments.get(index).parentIndex()}) {
-                    if (owner < 0) {
-                        continue;
-                    }
-
-                    OpticalPlane hit = segments.get(owner).contact();
-                    if (hit == null) {
-                        continue;
-                    }
-
-                    boundaries.add(new OpticalPlane(context.toLocalPosition(hit.point()), context.toLocalDirection(hit.normal())));
-                }
-
-                if (boundaries.isEmpty()) {
-                    continue;
-                }
-
-                contacts.put(index, List.copyOf(boundaries));
+            for (int index = 0; index < context.segments().size(); index++) {
+                contact(context, index);
             }
 
             candidates = new int[size];
@@ -1005,6 +1004,74 @@ public final class LaserBeamShells {
             }
 
             root = new PointNode(indexed, 0, indexed.length);
+        }
+
+        private void project(int index) {
+            Face face = faces.get(index);
+            List<Vec3> vertices = face.vertices();
+            Vec3 first = vertices.getFirst();
+            Vec3 normal = face.normal();
+            double padding = EPSILON * Math.max(1, normal.length());
+            double minimum = 0;
+            double maximum = 0;
+            for (Vec3 vertex : face.vertices()) {
+                double distance = vertex.subtract(first).dot(normal);
+                minimum = Math.min(minimum, distance);
+                maximum = Math.max(maximum, distance);
+            }
+
+            planeMinimum[index] = minimum - padding;
+            planeMaximum[index] = maximum + padding;
+            Vec3 longest = Vec3.ZERO;
+            for (int edge = 0; edge < vertices.size(); edge++) {
+                Vec3 delta = vertices.get((edge + 1) % vertices.size()).subtract(vertices.get(edge));
+                if (!(delta.lengthSqr() > longest.lengthSqr())) {
+                    continue;
+                }
+
+                longest = delta;
+            }
+
+            Vec3 along = longest.scale(1 / longest.length());
+            Vec3 across = normal.cross(along);
+            List<FaceProjection> bounds = new ArrayList<>();
+            for (Vec3 axis : List.of(along, across)) {
+                double lower = 0;
+                double upper = 0;
+                for (Vec3 vertex : vertices) {
+                    double distance = vertex.subtract(first).dot(axis);
+                    lower = Math.min(lower, distance);
+                    upper = Math.max(upper, distance);
+                }
+
+                double margin = EPSILON * axis.length();
+                bounds.add(new FaceProjection(axis, lower - margin, upper + margin));
+            }
+
+            projections.add(List.copyOf(bounds));
+        }
+
+        private void contact(LaserBeamContext context, int index) {
+            List<DisplaySegment> segments = context.segments();
+            List<OpticalPlane> boundaries = new ArrayList<>();
+            for (int owner : new int[]{index, segments.get(index).parentIndex()}) {
+                if (owner < 0) {
+                    continue;
+                }
+
+                OpticalPlane hit = segments.get(owner).contact();
+                if (hit == null) {
+                    continue;
+                }
+
+                boundaries.add(new OpticalPlane(context.toLocalPosition(hit.point()), context.toLocalDirection(hit.normal())));
+            }
+
+            if (boundaries.isEmpty()) {
+                return;
+            }
+
+            contacts.put(index, List.copyOf(boundaries));
         }
 
         private @Nullable List<Vec3> boundary(Face face, Budget budget) {
@@ -1058,6 +1125,204 @@ public final class LaserBeamShells {
             int count = root.collect(indexed, start, end, candidates, unindexed.length);
             Arrays.sort(candidates, 0, count);
             return count;
+        }
+    }
+
+    private static final class PointIndexWork implements LaserBeamWork<ContourPointIndex> {
+        private final LaserBeamContext context;
+        private final ContourPointIndex index;
+        private final List<IndexedFace> finite = new ArrayList<>();
+        private final int[] other;
+        private final ArrayDeque<PointNodeWork> nodes = new ArrayDeque<>();
+        private int otherCount;
+        private int cursor;
+        private int phase;
+        private boolean complete;
+
+        private PointIndexWork(LaserBeamContext context, List<Face> faces) {
+            this.context = context;
+            index = new ContourPointIndex(faces);
+            other = new int[faces.size()];
+        }
+
+        @Override
+        public boolean step() {
+            if (complete) {
+                return true;
+            }
+
+            if (phase == 0) {
+                if (cursor < index.faces.size()) {
+                    index.project(cursor);
+                    index.candidates[cursor] = cursor;
+                    cursor++;
+                    return false;
+                }
+
+                cursor = 0;
+                phase = 1;
+                return false;
+            }
+
+            if (phase == 1) {
+                if (cursor < context.segments().size()) {
+                    index.contact(context, cursor++);
+                    return false;
+                }
+
+                if (index.faces.size() <= POINT_QUERY_LEAF_SIZE) {
+                    complete = true;
+                    return true;
+                }
+
+                cursor = 0;
+                phase = 2;
+                return false;
+            }
+
+            if (phase == 2) {
+                if (cursor < index.faces.size()) {
+                    AABB bounds = index.faces.get(cursor).bounds();
+                    if (!Double.isFinite(bounds.minX) || !Double.isFinite(bounds.minY) || !Double.isFinite(bounds.minZ) || !Double.isFinite(bounds.maxX) || !Double.isFinite(bounds.maxY) || !Double.isFinite(bounds.maxZ)) {
+                        other[otherCount++] = cursor++;
+                        return false;
+                    }
+
+                    finite.add(new IndexedFace(cursor++, bounds));
+                    return false;
+                }
+
+                index.indexed = finite.toArray(IndexedFace[]::new);
+                index.unindexed = Arrays.copyOf(other, otherCount);
+                if (index.indexed.length == 0) {
+                    complete = true;
+                    return true;
+                }
+
+                nodes.addLast(new PointNodeWork(index.indexed, 0, index.indexed.length));
+                phase = 3;
+                return false;
+            }
+
+            PointNodeWork work = nodes.getLast();
+            if (!work.step()) {
+                return false;
+            }
+
+            if (work.children.size() < 2 && work.end - work.first > POINT_QUERY_LEAF_SIZE) {
+                int middle = work.first + (work.end - work.first) / 2;
+                if (work.children.isEmpty()) {
+                    nodes.addLast(new PointNodeWork(index.indexed, work.first, middle));
+                }
+                else {
+                    nodes.addLast(new PointNodeWork(index.indexed, middle, work.end));
+                }
+                return false;
+            }
+
+            PointNode node = work.result();
+            nodes.removeLast();
+            if (!nodes.isEmpty()) {
+                nodes.getLast().children.add(node);
+                return false;
+            }
+
+            index.root = node;
+            complete = true;
+            return true;
+        }
+
+        @Override
+        public ContourPointIndex result() {
+            if (!complete) {
+                throw new IllegalStateException("Shell point index preparation has not completed.");
+            }
+
+            return index;
+        }
+    }
+
+    private static final class PointNodeWork {
+        private final IndexedFace[] indexed;
+        private final int first;
+        private final int end;
+        private final List<PointNode> children = new ArrayList<>(2);
+        private final NavigableMap<Double, List<IndexedFace>> ordered = new TreeMap<>();
+        private Iterator<List<IndexedFace>> buckets = List.<List<IndexedFace>>of().iterator();
+        private Iterator<IndexedFace> bucket = List.<IndexedFace>of().iterator();
+        private AABB bounds;
+        private ToDoubleFunction<IndexedFace> center = face -> 0;
+        private int cursor;
+        private int phase;
+
+        private PointNodeWork(IndexedFace[] indexed, int first, int end) {
+            this.indexed = indexed;
+            this.first = first;
+            this.end = end;
+            bounds = indexed[first].bounds();
+            cursor = first + 1;
+        }
+
+        private boolean step() {
+            if (phase == 0) {
+                if (cursor < end) {
+                    bounds = bounds.minmax(indexed[cursor++].bounds());
+                    return false;
+                }
+
+                if (end - first <= POINT_QUERY_LEAF_SIZE) {
+                    phase = 3;
+                    return true;
+                }
+
+                double extent = bounds.maxX - bounds.minX;
+                center = face -> (face.bounds().minX + face.bounds().maxX) * 0.5;
+                if (bounds.maxY - bounds.minY > extent) {
+                    extent = bounds.maxY - bounds.minY;
+                    center = face -> (face.bounds().minY + face.bounds().maxY) * 0.5;
+                }
+
+                if (bounds.maxZ - bounds.minZ > extent) {
+                    center = face -> (face.bounds().minZ + face.bounds().maxZ) * 0.5;
+                }
+
+                cursor = first;
+                phase = 1;
+                return false;
+            }
+
+            if (phase == 1) {
+                if (cursor < end) {
+                    IndexedFace face = indexed[cursor++];
+                    ordered.computeIfAbsent(center.applyAsDouble(face), ignored -> new ArrayList<>()).add(face);
+                    return false;
+                }
+
+                buckets = ordered.values().iterator();
+                cursor = first;
+                phase = 2;
+                return false;
+            }
+
+            if (phase == 2) {
+                if (bucket.hasNext()) {
+                    indexed[cursor++] = bucket.next();
+                    return false;
+                }
+
+                if (buckets.hasNext()) {
+                    bucket = buckets.next().iterator();
+                    return false;
+                }
+
+                ordered.clear();
+                phase = 3;
+            }
+            return true;
+        }
+
+        private PointNode result() {
+            return new PointNode(first, end, bounds, List.copyOf(children));
         }
     }
 
@@ -1180,6 +1445,13 @@ public final class LaserBeamShells {
         private final AABB bounds;
         private final List<PointNode> children;
 
+        private PointNode(int first, int end, AABB bounds, List<PointNode> children) {
+            this.first = first;
+            this.end = end;
+            this.bounds = bounds;
+            this.children = children;
+        }
+
         private PointNode(IndexedFace[] indexed, int first, int end) {
             this.first = first;
             this.end = end;
@@ -1300,7 +1572,8 @@ public final class LaserBeamShells {
         LOCAL_FALLBACK,
         FULL,
         LOCAL_NARROWED,
-        PARTIAL
+        PARTIAL,
+        PREPARING
     }
 
     public record ShellMesh(List<List<Face>> layers, int quality, ShellReason reason) {

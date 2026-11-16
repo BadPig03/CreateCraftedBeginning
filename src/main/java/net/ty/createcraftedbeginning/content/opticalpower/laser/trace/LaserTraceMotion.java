@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-record LaserTraceMotion(List<AABB> bounds, List<AABB> paths, Map<UUID, RenderGeometry> subLevels, Map<UUID, Pose> contraptions) {
+record LaserTraceMotion(List<AABB> bounds, List<AABB> paths, List<AABB> contraptionBounds, Map<UUID, RenderGeometry> subLevels, Map<UUID, Pose> contraptions) {
     @Nullable LaserTraceMotion observe(Level level, float partialTick) {
         Map<UUID, RenderGeometry> currentSubLevels = SubLevelBridge.captureRenderGeometry(level, bounds, paths, partialTick);
         if (currentSubLevels == null) {
@@ -23,9 +23,9 @@ record LaserTraceMotion(List<AABB> bounds, List<AABB> paths, Map<UUID, RenderGeo
         }
 
         Map<UUID, Pose> currentContraptions = Map.of();
-        if (!contraptions.isEmpty() || !LaserContraptionBounds.isClear(level, bounds, partialTick)) {
-            currentContraptions = LaserTraceDependencies.poses(LaserQuerySpace.mounted(level, partialTick), bounds);
+        if (!contraptions.isEmpty() || !LaserContraptionBounds.isClear(level, contraptionBounds, partialTick)) {
+            currentContraptions = LaserTraceDependencies.poses(LaserQuerySpace.mounted(level, partialTick), contraptionBounds);
         }
-        return new LaserTraceMotion(bounds, paths, currentSubLevels, currentContraptions);
+        return new LaserTraceMotion(bounds, paths, contraptionBounds, currentSubLevels, currentContraptions);
     }
 }

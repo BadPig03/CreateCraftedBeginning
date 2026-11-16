@@ -17,8 +17,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystlens.AmethystLensBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystmirror.AmethystMirrorBlock;
 import net.ty.createcraftedbeginning.content.opticalpower.amethystsoundsuppressor.AmethystSoundSuppressorBlock;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation.Segment;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation.Reason;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation.Segment;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalElement;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalGeometry;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalHit;
@@ -27,14 +28,15 @@ import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFrame;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamProfile.Span;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamRegion.Point;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamState;
-import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact.Patch;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.geometry.BeamContact.Patch;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserQuerySpace.Pose;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserTraceDependencies.BlockSample;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.trace.LaserTraceDependencies.LoadSample;
 import net.ty.createcraftedbeginning.content.opticalpower.photothermalchamber.PhotothermalChamberBlock;
 import net.ty.createcraftedbeginning.mixin.common.accessor.ClipContextAccessor;
-import net.ty.createcraftedbeginning.platform.SubLevelBridge.RenderGeometry;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge.RenderGeometry;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -43,8 +45,8 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -55,6 +57,7 @@ import java.util.function.Supplier;
 final class LaserTraceGeometry {
     private static final int MAX_CACHED_BLOCKS = 4096;
     private static final int MAX_CACHED_CELLS = 256;
+    private static final int MAX_DEPENDENCIES = 65536;
 
     private final Map<BlockGetter, Long2ObjectOpenHashMap<PreparedBlock>> blocks = new IdentityHashMap<>();
     private final Map<BlockGetter, Long2ObjectOpenHashMap<List<BlockPos>>> cells = new IdentityHashMap<>();
@@ -63,6 +66,10 @@ final class LaserTraceGeometry {
     private final Long2BooleanOpenHashMap loaded = new Long2BooleanOpenHashMap();
     private final boolean tracking;
     private int cachedBlocks;
+    private int observedBlocks;
+    private final Map<BlockGetter, Long2ObjectOpenHashMap<PreparedBlock>> observed = new IdentityHashMap<>();
+    private @Nullable LaserWorldSections sections;
+    private @Nullable LaserAirRegions air;
     private boolean complete = true;
     private final Set<AABB> bounds = new LinkedHashSet<>();
 
@@ -151,8 +158,12 @@ final class LaserTraceGeometry {
     boolean isLoaded(Level level, BlockPos pos) {
         boolean available = level.isLoaded(pos);
         if (tracking && complete) {
+            if (sections == null) {
+                sections = new LaserWorldSections(level);
+            }
+            sections.include(level, pos);
             long position = pos.asLong();
-            if (loaded.size() >= MAX_CACHED_BLOCKS && !loaded.containsKey(position)) {
+            if (loaded.size() >= MAX_DEPENDENCIES && !loaded.containsKey(position)) {
                 complete = false;
                 return available;
             }
@@ -160,6 +171,17 @@ final class LaserTraceGeometry {
             loaded.put(position, available);
         }
         return available;
+    }
+
+    void includeIndexed(Level level, BlockPos minimum, BlockPos maximum, BeamVolumeCells cells) {
+        if (!tracking) {
+            return;
+        }
+
+        if (air == null) {
+            air = new LaserAirRegions(level);
+        }
+        air.include(level, minimum, maximum, cells);
     }
 
     void includeBounds(AABB queryBounds) {
@@ -177,7 +199,66 @@ final class LaserTraceGeometry {
     }
 
     @Nullable LaserTraceDependencies capture(Level level, BeamPropagation propagation, float partialTick, boolean rendering) {
-        if (!tracking || !complete || bounds.isEmpty()) {
+        if (!tracking || !complete || bounds.isEmpty() || air != null && !air.matches(level)) {
+            return null;
+        }
+
+        boolean boundedContraptions = (level.isClientSide || !rendering) && propagation.terminations().stream().allMatch(termination -> termination.reason() == Reason.ABSORBED || termination.reason() == Reason.RANGE_EXHAUSTED || termination.reason() == Reason.BELOW_MIN_POWER);
+        Map<AABB, AABB> paths = new LinkedHashMap<>();
+        List<AABB> serverMotionBounds = !rendering && boundedContraptions ? new ArrayList<>() : List.of();
+        List<Segment> segments = propagation.segments();
+        AABB[] terminalBounds = null;
+        if (rendering || boundedContraptions) {
+            terminalBounds = new AABB[segments.size()];
+        }
+        for (int index = 0; index < segments.size(); index++) {
+            Segment segment = segments.get(index);
+            BeamState beam = segment.start();
+            BeamFrame frame = beam.frame();
+            Vec3 start = frame.origin();
+            BeamState incident = segment.incident();
+            Vec3 end = incident.frame().origin();
+            BeamFootprint footprint = beam.footprint();
+            double margin = Math.max(beam.profile().radius(), incident.profile().radius()) * (footprint.horizontalScale() + footprint.verticalScale() + Math.abs(footprint.horizontalOffset()) + Math.abs(footprint.verticalOffset()));
+            AABB path = new AABB(start, end).inflate(margin);
+            AABB physicalPath = path;
+            if (terminalBounds != null) {
+                AABB terminal = terminalBounds(segment);
+                terminalBounds[index] = terminal;
+                if (terminal != null) {
+                    path = path.minmax(terminal);
+                }
+                int parentIndex = segment.parentIndex();
+                if (parentIndex >= 0 && parentIndex < index) {
+                    AABB parent = terminalBounds[parentIndex];
+                    if (parent != null) {
+                        path = path.minmax(parent);
+                    }
+                }
+            }
+            if (!rendering && boundedContraptions) {
+                serverMotionBounds.add(path.inflate(BeamSweepSection.CONTACT_TOLERANCE));
+                path = physicalPath;
+            }
+            AABB cell = new AABB(Math.floor(path.minX), Math.floor(path.minY), Math.floor(path.minZ), Math.ceil(path.maxX), Math.ceil(path.maxY), Math.ceil(path.maxZ));
+            paths.merge(cell, path, AABB::minmax);
+        }
+        if (paths.isEmpty()) {
+            return null;
+        }
+
+        List<AABB> queries = List.copyOf(bounds);
+        List<AABB> tracedPaths = List.copyOf(paths.values());
+        List<AABB> contraptionBounds = queries;
+        if (boundedContraptions) {
+            if (rendering) {
+                contraptionBounds = tracedPaths.stream().map(path -> path.inflate(BeamSweepSection.CONTACT_TOLERANCE)).toList();
+            }
+            else {
+                contraptionBounds = List.copyOf(serverMotionBounds);
+            }
+        }
+        if (!rendering && !LaserTraceDependencies.isStaticWorld(level, queries, contraptionBounds, 1)) {
             return null;
         }
 
@@ -186,16 +267,24 @@ final class LaserTraceGeometry {
         for (LaserQuerySpace space : mounted(level, partialTick)) {
             owners.put(space.owner(), space.id());
         }
-        for (Entry<BlockGetter, Long2ObjectOpenHashMap<PreparedBlock>> entry : blocks.entrySet()) {
+        for (Entry<BlockGetter, Long2ObjectOpenHashMap<PreparedBlock>> entry : observed.entrySet()) {
             BlockGetter owner = entry.getKey();
             UUID id = owners.get(owner);
             if (owner != level && id == null) {
                 return null;
             }
 
+            if (!rendering && owner != level) {
+                if (!boundedContraptions) {
+                    return null;
+                }
+
+                continue;
+            }
+
             Long2ObjectOpenHashMap<PreparedBlock> ownerBlocks = entry.getValue();
             for (long position : ownerBlocks.keySet()) {
-                if (!rendering && (owner != level || SubLevelBridge.resolve(level, BlockPos.of(position)).inSubLevel())) {
+                if (!rendering && SubLevelBridge.resolve(level, BlockPos.of(position)).inSubLevel()) {
                     return null;
                 }
 
@@ -232,51 +321,13 @@ final class LaserTraceGeometry {
 
             loading.add(new LoadSample(BlockPos.of(position), available));
         }
-        Map<AABB, AABB> paths = new LinkedHashMap<>();
-        List<Segment> segments = propagation.segments();
-        AABB[] terminalBounds = null;
-        if (rendering) {
-            terminalBounds = new AABB[segments.size()];
-        }
-        for (int index = 0; index < segments.size(); index++) {
-            Segment segment = segments.get(index);
-            BeamState beam = segment.start();
-            BeamFrame frame = beam.frame();
-            Vec3 start = frame.origin();
-            BeamState incident = segment.incident();
-            Vec3 end = incident.frame().origin();
-            BeamFootprint footprint = beam.footprint();
-            double margin = Math.max(beam.profile().radius(), incident.profile().radius()) * (footprint.horizontalScale() + footprint.verticalScale() + Math.abs(footprint.horizontalOffset()) + Math.abs(footprint.verticalOffset()));
-            AABB path = new AABB(start, end).inflate(margin);
-            if (terminalBounds != null) {
-                AABB terminal = terminalBounds(segment);
-                terminalBounds[index] = terminal;
-                if (terminal != null) {
-                    path = path.minmax(terminal);
-                }
-                int parentIndex = segment.parentIndex();
-                if (parentIndex >= 0 && parentIndex < index) {
-                    AABB parent = terminalBounds[parentIndex];
-                    if (parent != null) {
-                        path = path.minmax(parent);
-                    }
-                }
-            }
-            AABB cell = new AABB(Math.floor(path.minX), Math.floor(path.minY), Math.floor(path.minZ), Math.ceil(path.maxX), Math.ceil(path.maxY), Math.ceil(path.maxZ));
-            paths.merge(cell, path, AABB::minmax);
-        }
-        if (paths.isEmpty()) {
-            return null;
-        }
-
-        List<AABB> queries = List.copyOf(bounds);
-        List<AABB> tracedPaths = List.copyOf(paths.values());
+        LaserWorldSections sections = this.sections;
         if (!rendering) {
-            if (!LaserTraceDependencies.isStaticWorld(level, queries)) {
+            if (sections != null && !sections.matches(level)) {
                 return null;
             }
 
-            return new LaserTraceDependencies(List.copyOf(samples), List.copyOf(loading), queries, tracedPaths, Map.of(), Map.of());
+            return new LaserTraceDependencies(List.copyOf(samples), List.copyOf(loading), queries, tracedPaths, contraptionBounds, Map.of(), Map.of(), sections, air);
         }
 
         Map<UUID, RenderGeometry> subLevels = SubLevelBridge.captureRenderGeometry(level, queries, tracedPaths, partialTick);
@@ -284,7 +335,18 @@ final class LaserTraceGeometry {
             return null;
         }
 
-        return new LaserTraceDependencies(List.copyOf(samples), List.copyOf(loading), queries, tracedPaths, subLevels, LaserTraceDependencies.poses(mounted(level, partialTick), queries));
+        Map<UUID, Pose> contraptions = LaserTraceDependencies.poses(mounted(level, partialTick), contraptionBounds);
+        if (contraptionBounds != queries) {
+            samples.removeIf(sample -> sample.owner() != null && !contraptions.containsKey(sample.owner()));
+        }
+        if (!subLevels.isEmpty() || !contraptions.isEmpty()) {
+            sections = null;
+        }
+        else if (sections != null && !sections.matches(level)) {
+            return null;
+        }
+
+        return new LaserTraceDependencies(List.copyOf(samples), List.copyOf(loading), queries, tracedPaths, contraptionBounds, subLevels, contraptions, sections, air);
     }
 
     List<BlockPos> getWorldCandidates(BlockGetter level, BlockPos cell, ClipContext context, float partialTick) {
@@ -292,7 +354,15 @@ final class LaserTraceGeometry {
     }
 
     @Nullable PreparedBlock getWorldBlock(BlockGetter level, BlockPos pos, ClipContext context, float partialTick) {
-        return getBlock(level, pos, () -> prepareWorldBlock(level, pos, context, partialTick));
+        return getBlock(level, pos, () -> {
+            if (tracking && complete && level instanceof Level world) {
+                if (sections == null) {
+                    sections = new LaserWorldSections(world);
+                }
+                sections.include(world, pos);
+            }
+            return prepareWorldBlock(level, pos, context, partialTick);
+        });
     }
 
     @Nullable PreparedBlock getMountedBlock(BlockGetter level, Map<BlockPos, StructureBlockInfo> mountedBlocks, BlockPos pos, LaserCollisionContext context) {
@@ -361,8 +431,19 @@ final class LaserTraceGeometry {
         }
 
         PreparedBlock block = prepare.get();
+        if (tracking && complete) {
+            Long2ObjectOpenHashMap<PreparedBlock> ownerObserved = observed.computeIfAbsent(owner, ignored -> new Long2ObjectOpenHashMap<>());
+            if (!ownerObserved.containsKey(key)) {
+                if (observedBlocks >= MAX_DEPENDENCIES) {
+                    complete = false;
+                }
+                else {
+                    ownerObserved.put(key, block);
+                    observedBlocks++;
+                }
+            }
+        }
         if (cachedBlocks >= MAX_CACHED_BLOCKS) {
-            complete = false;
             blocks.clear();
             cachedBlocks = 0;
             ownerBlocks = null;

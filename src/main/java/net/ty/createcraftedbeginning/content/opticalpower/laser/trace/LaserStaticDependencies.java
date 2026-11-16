@@ -1,5 +1,7 @@
 package net.ty.createcraftedbeginning.content.opticalpower.laser.trace;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ClipContext;
@@ -60,7 +62,31 @@ public record LaserStaticDependencies(List<Sample> blocks, List<BlockPos> loaded
             return null;
         }
 
-        return new LaserStaticDependencies(samples, loading.stream().map(LoadSample::pos).toList(), paths);
+        List<BlockPos> loaded = loading.stream().map(LoadSample::pos).toList();
+        LaserAirRegions air = dependencies.air();
+        if (air != null) {
+            Long2ObjectOpenHashMap<Sample> expanded = new Long2ObjectOpenHashMap<>();
+            for (Sample sample : samples) {
+                expanded.put(sample.pos().asLong(), sample);
+            }
+            if (!air.expand(paths, expanded)) {
+                return null;
+            }
+
+            samples = List.copyOf(expanded.values());
+            List<BlockPos> completeLoading = new ArrayList<>(loaded);
+            LongOpenHashSet loadingKeys = new LongOpenHashSet();
+            for (BlockPos pos : loaded) {
+                loadingKeys.add(pos.asLong());
+            }
+            for (Sample sample : samples) {
+                if (loadingKeys.add(sample.pos().asLong())) {
+                    completeLoading.add(sample.pos());
+                }
+            }
+            loaded = List.copyOf(completeLoading);
+        }
+        return new LaserStaticDependencies(samples, loaded, paths);
     }
 
     private static boolean contains(List<AABB> bounds, BlockPos pos) {
@@ -73,12 +99,16 @@ public record LaserStaticDependencies(List<Sample> blocks, List<BlockPos> loaded
     }
 
     public boolean matches(Level level, float partialTick) {
+        return matchesWorld(level, partialTick) && matchesBlocks(level, partialTick);
+    }
+
+    boolean matchesWorld(Level level, float partialTick) {
         if (!LaserTraceDependencies.isStaticWorld(level, bounds, partialTick)) {
             return false;
         }
 
         Map<?, ?> subLevels = level.isClientSide ? SubLevelBridge.captureRenderGeometry(level, bounds, bounds, partialTick) : Map.of();
-        return subLevels != null && subLevels.isEmpty() && matchesBlocks(level, partialTick);
+        return subLevels != null && subLevels.isEmpty();
     }
 
     boolean matchesBlocks(Level level, float partialTick) {
@@ -87,9 +117,17 @@ public record LaserStaticDependencies(List<Sample> blocks, List<BlockPos> loaded
                 return false;
             }
         }
+        return matchesSamples(level, partialTick, blocks);
+    }
+
+    boolean matchesSamples(Level level, float partialTick, List<Sample> samples) {
+        if (samples.isEmpty()) {
+            return true;
+        }
+
         LaserCollisionContext collision = new LaserCollisionContext(partialTick);
         ClipContext clip = new ClipContext(Vec3.ZERO, Vec3.ZERO, Block.COLLIDER, Fluid.NONE, collision);
-        for (Sample sample : blocks) {
+        for (Sample sample : samples) {
             if (sample.state().is(Blocks.AIR) && sample.boxes().isEmpty() && !sample.precise() && sample.optical() == null) {
                 if (level.getBlockState(sample.pos()) != sample.state()) {
                     return false;

@@ -82,6 +82,10 @@ public final class LaserCollisionContext extends EntityCollisionContext {
         };
     }
 
+    boolean hasOverride() {
+        return overrideGeometry != null;
+    }
+
     LaserTraceGeometry getGeometry() {
         return geometry;
     }

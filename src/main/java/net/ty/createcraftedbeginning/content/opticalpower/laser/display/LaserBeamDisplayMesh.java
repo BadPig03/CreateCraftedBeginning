@@ -58,18 +58,41 @@ public final class LaserBeamDisplayMesh {
 
     private static final class Preparation implements LaserBeamWork<LaserBeamDisplayInput> {
         private final LaserRenderSnapshot snapshot;
+        private final LaserBeamWork<List<DrawSection>> sectionWork;
+        private final Budget budget = new Budget();
+        private @Nullable List<DrawSection> sections;
+        private @Nullable LaserBeamWork<SurfaceBuild> surfaceWork;
         private @Nullable LaserBeamDisplayInput result;
 
         private Preparation(LaserRenderSnapshot snapshot) {
             this.snapshot = snapshot;
+            sectionWork = LaserBeamMesh.begin(snapshot);
         }
 
         @Override
         public boolean step() {
-            if (result == null) {
-                result = prepare(snapshot, LaserBeamMesh.create(snapshot));
+            if (result != null) {
+                return true;
             }
 
+            LaserBeamWork<SurfaceBuild> work = surfaceWork;
+            if (work == null) {
+                if (!sectionWork.step()) {
+                    return false;
+                }
+
+                sections = sectionWork.result();
+                surfaceWork = LaserBeamSurfaces.begin(sections, budget);
+                return false;
+            }
+
+            if (!work.step()) {
+                return false;
+            }
+
+            SurfaceBuild surfaces = work.result();
+            Base base = new Base(Objects.requireNonNull(sections, "Surface preparation requires completed sections."), surfaces.faces(), surfaces.reason(), budget.remaining());
+            result = new LaserBeamDisplayInput(LaserBeamContext.from(snapshot), base);
             return true;
         }
 
@@ -126,6 +149,7 @@ public final class LaserBeamDisplayMesh {
 
     public enum Status {
         READY,
+        PREPARING,
         UNSUPPORTED
     }
 
