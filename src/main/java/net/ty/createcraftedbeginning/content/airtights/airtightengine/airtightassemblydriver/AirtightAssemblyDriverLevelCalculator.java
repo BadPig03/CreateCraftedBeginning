@@ -83,11 +83,15 @@ class AirtightAssemblyDriverLevelCalculator {
     }
 
     int getCurrentLevel() {
+        return getCurrentLevel(residueLevel);
+    }
+
+    int getCurrentLevel(int availableResidueLevel) {
         if (!driverCore.getStructureManager().isActive()) {
             return 0;
         }
 
-        return Mth.floor(getMinimumLevel());
+        return Mth.floor(Math.min(supplyLevel, Math.min(windChargingLevel, availableResidueLevel)));
     }
 
     void reset() {

@@ -118,7 +118,7 @@ public class ResidueOutletScenes {
 
         scene.idle(80);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, outletObject, outletArea, 60);
-        scene.overlay().showText(60).text("If no Outlet can accept more Residue, the Driver's output falls over time").colored(PonderPalette.RED).pointAt(outletVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Blocked Residue lowers the Exhaust level and limits the Driver's output").colored(PonderPalette.RED).pointAt(outletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
         scene.world().hideSection(funnelSelection, Direction.NORTH);
@@ -142,7 +142,23 @@ public class ResidueOutletScenes {
         scene.world().setKineticSpeed(engineSelection, 0);
         scene.effects().rotationSpeedIndicator(enginePos);
 
-        scene.idle(5);
+        scene.idle(25);
+        scene.world().showSection(funnelSelection, Direction.SOUTH);
+        scene.world().showSection(fluidPipeSelection, Direction.DOWN);
+
+        scene.idle(20);
+        scene.overlay().showText(60).text("Clear enough space for a full batch to restart; steady discharge gradually restores the Exhaust level").colored(PonderPalette.GREEN).pointAt(outletVec).placeNearTarget().attachKeyFrame();
+
+        scene.idle(7);
+        scene.world().createItemEntity(funnelVec, Vec3.ZERO, clayBall.copy());
+        scene.world().setKineticSpeed(engineSelection, 16);
+        scene.effects().rotationSpeedIndicator(enginePos);
+
+        scene.idle(36);
+        scene.world().setKineticSpeed(engineSelection, 32);
+        scene.effects().rotationSpeedIndicator(enginePos);
+
+        scene.idle(17);
         scene.markAsFinished();
     }
 

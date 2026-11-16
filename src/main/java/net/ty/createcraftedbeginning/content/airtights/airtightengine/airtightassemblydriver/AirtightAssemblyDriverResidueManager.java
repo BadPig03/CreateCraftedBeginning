@@ -15,7 +15,6 @@ import net.ty.createcraftedbeginning.recipe.ResidueRecipeLookup.ResidueOutput;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -27,6 +26,7 @@ class AirtightAssemblyDriverResidueManager {
     private static final int BASE_FLUID_RESIDUE_PER_LEVEL = 8;
     private static final int BASE_ITEM_RESIDUE_COEFFICIENT = 8;
     private static final int ITEM_GENERATION_DENOMINATOR = MAX_LEVEL * MAX_LEVEL;
+    private static final int STARTUP_RESIDUE_LEVEL = MAX_LEVEL / 2;
     private static final int GENERATION_INTERVAL_TICKS = 12;
     private static final int FAILURE_PENALTY_TICKS = 120;
     private static final int CONSECUTIVE_SUCCESSES_COUNT = 20;
@@ -36,11 +36,9 @@ class AirtightAssemblyDriverResidueManager {
     private static final String COMPOUND_KEY_SUCCESS_COUNT = "SuccessCount";
     private static final String COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR = "ItemDistributionCursor";
     private static final String COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR = "FluidDistributionCursor";
-    private static final String COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS = "VerifiedOutletPositions";
 
     private final AirtightAssemblyDriverCore driverCore;
     private List<BlockPos> outletsPositions = List.of();
-    private Set<BlockPos> verifiedOutletPositions = Set.of();
 
     private int successCount;
     private int generationCooldown = GENERATION_INTERVAL_TICKS;
@@ -54,19 +52,6 @@ class AirtightAssemblyDriverResidueManager {
 
     private static int readBoundedInt(CompoundTag compoundTag, String key, int fallback, int max) {
         return Mth.clamp(NbtValues.getIntOrDefault(compoundTag, key, fallback), 0, max);
-    }
-
-    private static Set<BlockPos> readOutletPositions(CompoundTag compoundTag) {
-        long[] storedPositions = compoundTag.getLongArray(COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS);
-        if (storedPositions.length == 0) {
-            return Set.of();
-        }
-
-        Set<BlockPos> positions = new HashSet<>(storedPositions.length);
-        for (long storedPosition : storedPositions) {
-            positions.add(BlockPos.of(storedPosition));
-        }
-        return Set.copyOf(positions);
     }
 
     void tick(Level level) {
@@ -87,9 +72,8 @@ class AirtightAssemblyDriverResidueManager {
     }
 
     void reset() {
-        boolean hadResidueState = successCount != 0 || generationCooldown != GENERATION_INTERVAL_TICKS || consecutiveFailureTicks != 0 || itemDistributionCursor != 0 || fluidDistributionCursor != 0 || !outletsPositions.isEmpty() || !verifiedOutletPositions.isEmpty();
+        boolean hadResidueState = successCount != 0 || generationCooldown != GENERATION_INTERVAL_TICKS || consecutiveFailureTicks != 0 || itemDistributionCursor != 0 || fluidDistributionCursor != 0 || !outletsPositions.isEmpty();
         outletsPositions = List.of();
-        verifiedOutletPositions = Set.of();
         successCount = 0;
         generationCooldown = GENERATION_INTERVAL_TICKS;
         consecutiveFailureTicks = 0;
@@ -104,7 +88,6 @@ class AirtightAssemblyDriverResidueManager {
 
     void loadEmptyPersistentState() {
         outletsPositions = List.of();
-        verifiedOutletPositions = Set.of();
         successCount = 0;
         generationCooldown = GENERATION_INTERVAL_TICKS;
         consecutiveFailureTicks = 0;
@@ -117,10 +100,7 @@ class AirtightAssemblyDriverResidueManager {
     }
 
     void updateOutletsPositions(Set<BlockPos> newPositions) {
-        Set<BlockPos> normalizedPositions = Set.copyOf(newPositions);
-        boolean topologyChanged = driverCore.getLevelCalculator().getResidueLevel() > 0 && !verifiedOutletPositions.equals(normalizedPositions);
-
-        List<BlockPos> sortedPositions = new ArrayList<>(normalizedPositions);
+        List<BlockPos> sortedPositions = new ArrayList<>(newPositions);
         sortedPositions.sort(Comparator.comparingLong(BlockPos::asLong));
         outletsPositions = List.copyOf(sortedPositions);
         int previousItemCursor = itemDistributionCursor;
@@ -132,11 +112,6 @@ class AirtightAssemblyDriverResidueManager {
         else {
             itemDistributionCursor = Mth.positiveModulo(itemDistributionCursor, outletsPositions.size());
             fluidDistributionCursor = Mth.positiveModulo(fluidDistributionCursor, outletsPositions.size());
-        }
-
-        if (topologyChanged) {
-            removeResidueLevel(false);
-            verifiedOutletPositions = normalizedPositions;
         }
 
         if (previousItemCursor == itemDistributionCursor && previousFluidCursor == fluidDistributionCursor) {
@@ -157,13 +132,11 @@ class AirtightAssemblyDriverResidueManager {
         tag.putInt(COMPOUND_KEY_SUCCESS_COUNT, successCount);
         tag.putInt(COMPOUND_KEY_ITEM_DISTRIBUTION_CURSOR, itemDistributionCursor);
         tag.putInt(COMPOUND_KEY_FLUID_DISTRIBUTION_CURSOR, fluidDistributionCursor);
-        tag.putLongArray(COMPOUND_KEY_VERIFIED_OUTLET_POSITIONS, verifiedOutletPositions.stream().mapToLong(BlockPos::asLong).sorted().toArray());
         return tag;
     }
 
     void readPersistent(CompoundTag compoundTag) {
         outletsPositions = List.of();
-        verifiedOutletPositions = readOutletPositions(compoundTag);
         generationCooldown = readBoundedInt(compoundTag, COMPOUND_KEY_GENERATION_COOLDOWN, GENERATION_INTERVAL_TICKS, GENERATION_INTERVAL_TICKS);
         consecutiveFailureTicks = readBoundedInt(compoundTag, COMPOUND_KEY_CONSECUTIVE_FAILURE_TICKS, 0, FAILURE_PENALTY_TICKS);
         successCount = readBoundedInt(compoundTag, COMPOUND_KEY_SUCCESS_COUNT, 0, CONSECUTIVE_SUCCESSES_COUNT);
@@ -191,8 +164,16 @@ class AirtightAssemblyDriverResidueManager {
             return;
         }
 
-        int generatedAmount = fluidResidue ? getTotalFluidGenerationAmount() : getTotalItemGenerationUnits();
-        int requiredCapacity = Math.max(1, generatedAmount);
+        AirtightAssemblyDriverLevelCalculator levelCalculator = driverCore.getLevelCalculator();
+        boolean starting = levelCalculator.getResidueLevel() == 0;
+        int generationLevel = starting ? levelCalculator.getCurrentLevel(STARTUP_RESIDUE_LEVEL) : levelCalculator.getCurrentLevel();
+        if (generationLevel <= 0) {
+            handleGenerationFailure();
+            return;
+        }
+
+        int requiredCapacity = fluidResidue ? getTotalFluidGenerationAmount(generationLevel) : getTotalItemGenerationUnits(generationLevel);
+        int generatedAmount = starting ? 0 : requiredCapacity;
         boolean useRoundRobin = fluidResidue ? CCBConfig.server().machines.airtightAssemblyDriver.useFluidResidueRoundRobin.get() : CCBConfig.server().machines.airtightAssemblyDriver.useItemResidueRoundRobin.get();
         int distributionCursor = fluidResidue ? fluidDistributionCursor : itemDistributionCursor;
         int startIndex = useRoundRobin ? Mth.positiveModulo(distributionCursor, outletCount) : 0;
@@ -230,8 +211,7 @@ class AirtightAssemblyDriverResidueManager {
         }
 
         if (residueLevel == 0) {
-            verifiedOutletPositions = Set.copyOf(outletsPositions);
-            addResidueLevel(MAX_LEVEL / 2);
+            addResidueLevel(STARTUP_RESIDUE_LEVEL);
             return;
         }
 
@@ -305,8 +285,7 @@ class AirtightAssemblyDriverResidueManager {
         driverCore.markForSave();
     }
 
-    private int getTotalFluidGenerationAmount() {
-        int currentLevel = driverCore.getLevelCalculator().getCurrentLevel();
+    private int getTotalFluidGenerationAmount(int currentLevel) {
         if (currentLevel == 0) {
             return 0;
         }
@@ -314,8 +293,7 @@ class AirtightAssemblyDriverResidueManager {
         return Math.max(0, (int) (currentLevel * BASE_FLUID_RESIDUE_PER_LEVEL * (double) CCBConfig.server().machines.airtightAssemblyDriver.fluidResidueQuantityMultiplier.getF()));
     }
 
-    private int getTotalItemGenerationUnits() {
-        int currentLevel = driverCore.getLevelCalculator().getCurrentLevel();
+    private int getTotalItemGenerationUnits(int currentLevel) {
         if (currentLevel == 0) {
             return 0;
         }
