@@ -17,6 +17,7 @@ public enum CCBCompatMods {
     CURIOS("curios"),
     DNDESIRES("dndesires"),
     FUNCTIONAL_STORAGE("functionalstorage"),
+    IRIS("iris"),
     JADE("jade"),
     JEI("jei"),
     KUBEJS("kubejs"),

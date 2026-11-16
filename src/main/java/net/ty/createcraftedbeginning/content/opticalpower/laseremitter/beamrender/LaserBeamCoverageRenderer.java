@@ -25,6 +25,7 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
 import net.neoforged.neoforge.event.GameShuttingDownEvent;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.compat.CCBCompatMods;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.LaserEmitterBlockEntity;
 import net.ty.createcraftedbeginning.content.opticalpower.laseremitter.beamrender.LaserBeamVertices.Layer;
 import org.jetbrains.annotations.Nullable;
@@ -47,13 +48,21 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
-final class LaserBeamCoverageRenderer {
+public final class LaserBeamCoverageRenderer {
     private static final Map<LaserEmitterBlockEntity, Submission> PENDING = new LinkedHashMap<>();
     private static final List<CloudDraw> CLOUD_DRAWS = new ArrayList<>();
     private static @Nullable RenderTarget coverage;
     private static @Nullable ClientLevel frameLevel;
 
     private LaserBeamCoverageRenderer() {
+    }
+
+    public static void renderBeforeTranslucent() {
+        if (!CCBCompatMods.IRIS.isLoaded()) {
+            return;
+        }
+
+        renderPending();
     }
 
     static void submit(LaserEmitterBlockEntity emitter, Matrix4f pose, Supplier<List<Layer>> layers) {
@@ -156,7 +165,7 @@ final class LaserBeamCoverageRenderer {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     private static void prepareDepth(RenderLevelStageEvent event) {
-        if (event.getStage() != Stage.AFTER_BLOCK_ENTITIES || PENDING.isEmpty() || !LaserRenderTypes.isAvailable()) {
+        if (event.getStage() != Stage.AFTER_BLOCK_ENTITIES || CCBCompatMods.IRIS.isLoaded() || PENDING.isEmpty() || !LaserRenderTypes.isAvailable()) {
             return;
         }
 
@@ -165,7 +174,15 @@ final class LaserBeamCoverageRenderer {
 
     @SubscribeEvent
     private static void render(RenderLevelStageEvent event) {
-        if (event.getStage() != Stage.AFTER_BLOCK_ENTITIES || PENDING.isEmpty()) {
+        if (event.getStage() != Stage.AFTER_BLOCK_ENTITIES || CCBCompatMods.IRIS.isLoaded()) {
+            return;
+        }
+
+        renderPending();
+    }
+
+    private static void renderPending() {
+        if (PENDING.isEmpty()) {
             return;
         }
 
