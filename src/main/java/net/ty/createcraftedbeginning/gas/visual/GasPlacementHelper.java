@@ -1,21 +1,26 @@
 package net.ty.createcraftedbeginning.gas.visual;
 
+import com.simibubi.create.content.decoration.bracket.BracketedBlockEntityBehaviour;
+import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
-import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ty.createcraftedbeginning.api.gas.GasCapabilities;
-import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeBlock;
+import net.ty.createcraftedbeginning.content.airtights.airtightpipe.AirtightPipeConnections;
+import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumSet;
 import java.util.Set;
+import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -29,9 +34,16 @@ public final class GasPlacementHelper {
             BlockPos adjacentPos = pos.relative(direction);
             BlockState adjacentState = level.getBlockState(adjacentPos);
             Direction oppositeDirection = direction.getOpposite();
-            GasTransportBehaviour transport = BlockEntityBehaviour.get(level, adjacentPos, GasTransportBehaviour.TYPE);
-            boolean hasConnection = transport != null && transport.canConnectOnFace(adjacentState, oppositeDirection);
-            if (!hasConnection && !GasCapabilities.hasBlockHandler(level, adjacentPos, oppositeDirection)) {
+            if (adjacentState.getBlock() instanceof AirtightPipeBlock) {
+                BracketedBlockEntityBehaviour bracket = BlockEntityBehaviour.get(level, adjacentPos, BracketedBlockEntityBehaviour.TYPE);
+                boolean fixed = adjacentState.getValue(AirtightPipeBlock.CASED) || bracket != null && bracket.isBracketPresent();
+                if (!fixed || AirtightPipeConnections.isOpen(adjacentState, oppositeDirection)) {
+                    directions.add(direction);
+                }
+                continue;
+            }
+
+            if (!(adjacentState.getBlock() instanceof GasConnectable connectable && connectable.canConnectOnFace(adjacentPos, adjacentState, oppositeDirection)) && !GasCapabilities.hasBlockHandler(level, adjacentPos, oppositeDirection)) {
                 continue;
             }
 
@@ -49,79 +61,73 @@ public final class GasPlacementHelper {
     }
 
     public static Axis chooseAxis(BlockPlaceContext context, Set<Axis> availableAxes) {
-        Axis lookingAxis = context.getNearestLookingDirection().getAxis();
-        if (availableAxes.isEmpty()) {
-            return chooseUnconnectedAxis(context);
+        if (availableAxes.size() == 1) {
+            return availableAxes.iterator().next();
         }
 
-        if (availableAxes.contains(lookingAxis)) {
-            return lookingAxis;
-        }
-
-        Axis clickedAxis = context.getClickedFace().getAxis();
-        if (availableAxes.contains(clickedAxis)) {
-            return clickedAxis;
-        }
-
-        for (Direction direction : context.getNearestLookingDirections()) {
-            if (!availableAxes.contains(direction.getAxis())) {
-                continue;
-            }
-
-            return direction.getAxis();
-        }
-        return chooseUnconnectedAxis(context);
-    }
-
-    public static Direction chooseOutputDirection(BlockPlaceContext context, Axis axis, Set<Direction> connectedDirections, boolean preferAwayFromSingleConnection) {
-        if (preferAwayFromSingleConnection) {
-            Direction onlyConnection = null;
-            for (Direction direction : connectedDirections) {
-                if (direction.getAxis() != axis) {
-                    continue;
-                }
-
-                if (onlyConnection != null) {
-                    onlyConnection = null;
-                    break;
-                }
-
-                onlyConnection = direction;
-            }
-
-            if (onlyConnection != null) {
-                return onlyConnection.getOpposite();
-            }
-        }
-
-        Direction horizontalDirection = context.getHorizontalDirection();
-        if (axis != Axis.Y && horizontalDirection.getAxis() != axis) {
-            Direction right = horizontalDirection.getClockWise();
-            if (right.getAxis() == axis) {
-                return right;
-            }
-        }
-
-        for (Direction direction : context.getNearestLookingDirections()) {
-            if (direction.getAxis() != axis) {
-                continue;
-            }
-
-            return direction;
-        }
-        return Direction.fromAxisAndDirection(axis, AxisDirection.POSITIVE);
-    }
-
-    private static Axis chooseUnconnectedAxis(BlockPlaceContext context) {
-        Axis lookingAxis = context.getNearestLookingDirection().getAxis();
-        if (lookingAxis == Axis.Y) {
+        if (context.getNearestLookingDirections()[0].getAxis().isHorizontal()) {
             return Axis.Y;
         }
 
-        if (context.getHorizontalDirection().getAxis() == Axis.X) {
-            return Axis.Z;
+        return context.getHorizontalDirection().getAxis();
+    }
+
+    public static @Nullable Direction getPreferredShaft(Level level, BlockPos pos) {
+        Direction preferred = null;
+        for (Direction side : Iterate.directions) {
+            BlockPos neighborPos = pos.relative(side);
+            BlockState neighbor = level.getBlockState(neighborPos);
+            if (!(neighbor.getBlock() instanceof IRotate rotating) || !rotating.hasShaftTowards(level, neighborPos, neighbor, side.getOpposite())) {
+                continue;
+            }
+
+            if (preferred != null && preferred.getAxis() != side.getAxis()) {
+                return null;
+            }
+
+            preferred = side;
+        }
+        return preferred;
+    }
+
+    public static Direction choosePumpFacing(BlockPlaceContext context) {
+        return choosePumpFacing(context, true);
+    }
+
+    public static Direction choosePumpFacing(BlockPlaceContext context, boolean alignShaft) {
+        boolean sneaking = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
+        Direction looking = context.getNearestLookingDirection();
+        if (sneaking) {
+            return looking;
         }
 
-        return Axis.X;
+        Direction target = looking.getOpposite();
+        Direction facing = target;
+        Level level = context.getLevel();
+        BlockPos pos = context.getClickedPos();
+        Direction shaft = null;
+        if (alignShaft) {
+            shaft = getPreferredShaft(level, pos);
+        }
+        if (alignShaft && shaft != null) {
+            facing = shaft.getOpposite();
+        }
+
+        Direction best = null;
+        int bestDistance = Integer.MAX_VALUE;
+        for (Direction side : getConnectableDirections(level, pos)) {
+            int distance = side.getNormal().distManhattan(target.getNormal());
+            if (distance > bestDistance) {
+                continue;
+            }
+
+            bestDistance = distance;
+            best = side;
+        }
+        if (best != null && best.getAxis() != target.getAxis()) {
+            return best;
+        }
+
+        return facing;
     }
 }

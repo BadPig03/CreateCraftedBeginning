@@ -1,0 +1,11 @@
+{
+  "parent": "createcraftedbeginning:block/airtight_valve/block_closed",
+  "transform": {
+    "rotation": [
+      0,
+      90,
+      0
+    ],
+    "origin": "center"
+  }
+}

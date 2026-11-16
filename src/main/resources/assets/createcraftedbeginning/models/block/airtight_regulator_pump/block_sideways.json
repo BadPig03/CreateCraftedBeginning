@@ -1,0 +1,11 @@
+{
+  "parent": "createcraftedbeginning:block/airtight_regulator_pump/block",
+  "transform": {
+    "rotation": [
+      0,
+      90,
+      0
+    ],
+    "origin": "center"
+  }
+}

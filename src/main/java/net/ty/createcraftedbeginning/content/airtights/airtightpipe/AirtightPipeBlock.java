@@ -9,6 +9,7 @@ import com.simibubi.create.content.fluids.pipes.FluidPipeBlockRotation;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -28,6 +29,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.Rotation;
@@ -50,14 +52,12 @@ import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
-import net.ty.createcraftedbeginning.gas.visual.GasPlacementHelper;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.EnumSet;
 import java.util.Optional;
 
 @ParametersAreNonnullByDefault
@@ -105,31 +105,17 @@ public class AirtightPipeBlock extends PipeBlock implements IBE<AirtightPipeBloc
             return InteractionResult.SUCCESS;
         }
 
-        Direction face = context.getClickedFace();
-        boolean wasOpen = AirtightPipeConnections.isOpen(state, face);
-        level.setBlockAndUpdate(pos, state.setValue(PROPERTY_BY_DIRECTION.get(face), !wasOpen));
-        if (wasOpen) {
-            CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1, 1);
-        }
-        else {
-            CCBSoundEvents.SHEET_REMOVED.playOnServer(level, pos, 1, 1);
-        }
-        return InteractionResult.SUCCESS;
-    }
+        Axis preferredAxis = Axis.Y;
+        for (Direction face : Iterate.directions) {
+            if (!AirtightPipeConnections.isOpen(state, face)) {
+                continue;
+            }
 
-    @Override
-    public InteractionResult onSneakWrenched(BlockState state, UseOnContext context) {
-        if (!state.getValue(CASED)) {
-            return IWrenchableWithBracket.super.onSneakWrenched(state, context);
+            preferredAxis = face.getAxis();
+            break;
         }
-
-        Level level = context.getLevel();
-        if (level.isClientSide) {
-            return InteractionResult.SUCCESS;
-        }
-
-        BlockPos pos = context.getClickedPos();
-        BlockState bare = AirtightPipeConnections.update(state.setValue(CASED, false), level, pos, context.getClickedFace().getAxis());
+        level.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, pos, Block.getId(state));
+        BlockState bare = AirtightPipeConnections.update(state.setValue(CASED, false), level, pos, preferredAxis);
         level.setBlockAndUpdate(pos, bare);
         CCBSoundEvents.SHEET_REMOVED.playOnServer(level, pos, 1, 1);
         return InteractionResult.SUCCESS;
@@ -158,7 +144,7 @@ public class AirtightPipeBlock extends PipeBlock implements IBE<AirtightPipeBloc
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (!stack.is(CCBItems.AIRTIGHT_SHEET) || state.getValue(CASED)) {
+        if (!stack.is(CCBItems.AIRTIGHT_SHEET)) {
             return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
         }
 
@@ -166,11 +152,20 @@ public class AirtightPipeBlock extends PipeBlock implements IBE<AirtightPipeBloc
             return ItemInteractionResult.sidedSuccess(true);
         }
 
-        removeBracket(level, pos, false).ifPresent(bracket -> {
-            if (!player.isCreative()) {
-                player.getInventory().placeItemBackInInventory(bracket);
+        if (state.getValue(CASED)) {
+            Direction face = hitResult.getDirection();
+            boolean wasOpen = AirtightPipeConnections.isOpen(state, face);
+            level.setBlockAndUpdate(pos, state.setValue(PROPERTY_BY_DIRECTION.get(face), !wasOpen));
+            if (wasOpen) {
+                CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1, 1);
             }
-        });
+            else {
+                CCBSoundEvents.SHEET_REMOVED.playOnServer(level, pos, 1, 1);
+            }
+            return ItemInteractionResult.sidedSuccess(false);
+        }
+
+        removeBracket(level, pos, false).ifPresent(bracket -> popResource(level, pos, bracket));
         level.setBlockAndUpdate(pos, state.setValue(CASED, true).setValue(BlockStateProperties.WATERLOGGED, false));
         AirtightPipeAdvancement.awardCasing(level, pos, player);
         CCBSoundEvents.SHEET_ADDED.playOnServer(level, pos, 1, 1);
@@ -203,7 +198,7 @@ public class AirtightPipeBlock extends PipeBlock implements IBE<AirtightPipeBloc
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        Axis axis = GasPlacementHelper.chooseAxis(context, EnumSet.noneOf(Axis.class));
+        Axis axis = context.getNearestLookingDirection().getAxis();
         BlockState state = AirtightPipeConnections.straight(defaultBlockState(), axis);
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();

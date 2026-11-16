@@ -86,11 +86,11 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
 
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
-        if (!tryRemoveBracket(context)) {
-            return InteractionResult.FAIL;
+        if (tryRemoveBracket(context)) {
+            return InteractionResult.SUCCESS;
         }
 
-        return InteractionResult.SUCCESS;
+        return IWrenchableWithBracket.super.onWrenched(state, context);
     }
 
     @Override
@@ -115,13 +115,6 @@ public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterl
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         BlockState state = super.getStateForPlacement(context);
-        Axis preferredAxis = context.getNearestLookingDirection().getAxis();
-        Player player = context.getPlayer();
-        if (player != null && player.isShiftKeyDown()) {
-            state = state.setValue(AXIS, preferredAxis);
-            return ProperWaterloggedBlock.withWater(level, state, pos);
-        }
-
         state = state.setValue(AXIS, GasPlacementHelper.chooseAxis(context, GasPlacementHelper.getConnectableAxes(GasPlacementHelper.getConnectableDirections(level, pos))));
         return ProperWaterloggedBlock.withWater(level, state, pos);
     }

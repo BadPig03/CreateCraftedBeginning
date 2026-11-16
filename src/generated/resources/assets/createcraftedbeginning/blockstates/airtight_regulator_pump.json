@@ -1,137 +1,157 @@
 {
   "variants": {
-    "directional_facing=east,facing=down": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "y": 90
-    },
-    "directional_facing=east,facing=east": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 90
-    },
-    "directional_facing=east,facing=north": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 180
-    },
-    "directional_facing=east,facing=south": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 180
-    },
-    "directional_facing=east,facing=up": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "y": 90
-    },
-    "directional_facing=east,facing=west": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 90
-    },
-    "directional_facing=north,facing=down": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block"
-    },
-    "directional_facing=north,facing=east": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 90
-    },
-    "directional_facing=north,facing=north": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 180
-    },
-    "directional_facing=north,facing=south": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 180
-    },
-    "directional_facing=north,facing=up": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block"
-    },
-    "directional_facing=north,facing=west": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 90
-    },
-    "directional_facing=null,facing=down": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block"
-    },
-    "directional_facing=null,facing=east": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 90
-    },
-    "directional_facing=null,facing=north": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 180
-    },
-    "directional_facing=null,facing=south": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 180
-    },
-    "directional_facing=null,facing=up": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block"
-    },
-    "directional_facing=null,facing=west": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 90
-    },
-    "directional_facing=south,facing=down": {
+    "facing=down,panel_facing=down": {
       "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
       "y": 180
     },
-    "directional_facing=south,facing=east": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 90
-    },
-    "directional_facing=south,facing=north": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 180
-    },
-    "directional_facing=south,facing=south": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 180
-    },
-    "directional_facing=south,facing=up": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "y": 180
-    },
-    "directional_facing=south,facing=west": {
-      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
-      "x": 90,
-      "y": 90
-    },
-    "directional_facing=west,facing=down": {
+    "facing=down,panel_facing=east": {
       "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
       "y": 270
     },
-    "directional_facing=west,facing=east": {
+    "facing=down,panel_facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 180
+    },
+    "facing=down,panel_facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block"
+    },
+    "facing=down,panel_facing=up": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 180
+    },
+    "facing=down,panel_facing=west": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 90
+    },
+    "facing=east,panel_facing=down": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 270,
+      "y": 90
+    },
+    "facing=east,panel_facing=east": {
       "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
       "x": 90,
       "y": 90
     },
-    "directional_facing=west,facing=north": {
+    "facing=east,panel_facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block_sideways",
+      "x": 90,
+      "y": 270
+    },
+    "facing=east,panel_facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block_sideways",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,panel_facing=up": {
       "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,panel_facing=west": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north,panel_facing=down": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 270
+    },
+    "facing=north,panel_facing=east": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block_sideways",
+      "x": 90
+    },
+    "facing=north,panel_facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90
+    },
+    "facing=north,panel_facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90
+    },
+    "facing=north,panel_facing=up": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90
+    },
+    "facing=north,panel_facing=west": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block_sideways",
       "x": 90,
       "y": 180
     },
-    "directional_facing=west,facing=south": {
+    "facing=south,panel_facing=down": {
       "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 270
+    },
+    "facing=south,panel_facing=east": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block_sideways",
+      "x": 90
+    },
+    "facing=south,panel_facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90
+    },
+    "facing=south,panel_facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90
+    },
+    "facing=south,panel_facing=up": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90
+    },
+    "facing=south,panel_facing=west": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block_sideways",
       "x": 90,
       "y": 180
     },
-    "directional_facing=west,facing=up": {
+    "facing=up,panel_facing=down": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 180
+    },
+    "facing=up,panel_facing=east": {
       "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
       "y": 270
     },
-    "directional_facing=west,facing=west": {
+    "facing=up,panel_facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 180
+    },
+    "facing=up,panel_facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block"
+    },
+    "facing=up,panel_facing=up": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 180
+    },
+    "facing=up,panel_facing=west": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "y": 90
+    },
+    "facing=west,panel_facing=down": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 270,
+      "y": 90
+    },
+    "facing=west,panel_facing=east": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "facing=west,panel_facing=north": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block_sideways",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,panel_facing=south": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block_sideways",
+      "x": 90,
+      "y": 90
+    },
+    "facing=west,panel_facing=up": {
+      "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
+      "x": 90,
+      "y": 90
+    },
+    "facing=west,panel_facing=west": {
       "model": "createcraftedbeginning:block/airtight_regulator_pump/block",
       "x": 90,
       "y": 90

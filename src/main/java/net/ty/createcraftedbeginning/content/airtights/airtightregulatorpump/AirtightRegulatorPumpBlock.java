@@ -1,9 +1,12 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightregulatorpump;
 
 import com.mojang.serialization.MapCodec;
+import com.simibubi.create.api.contraption.transformable.TransformableBlock;
+import com.simibubi.create.content.contraptions.StructureTransform;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.content.kinetics.base.KineticBlock;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -15,7 +18,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
@@ -40,29 +42,27 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
-import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
-import net.ty.createcraftedbeginning.gas.network.DirectionalGasPipe;
 import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeOrientation;
 import net.ty.createcraftedbeginning.gas.visual.GasPlacementHelper;
 import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.EnumSet;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightRegulatorPumpBlock extends KineticBlock implements IBE<AirtightRegulatorPumpBlockEntity>, SimpleWaterloggedBlock, IWrenchable, IAxisPipe, DirectionalGasPipe, GasConnectable {
+public class AirtightRegulatorPumpBlock extends KineticBlock implements IBE<AirtightRegulatorPumpBlockEntity>, SimpleWaterloggedBlock, IWrenchable, IAxisPipe, GasConnectable, TransformableBlock {
     private static final DirectionProperty FACING = BlockStateProperties.FACING;
     private static final SpeedLevel MINIMUM_REQUIRED_SPEED_LEVEL = SpeedLevel.MEDIUM;
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AirtightRegulatorPumpBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(FACING, Direction.NORTH).setValue(DIRECTIONAL_FACING, DirectionalFacing.NULL).setValue(WATERLOGGED, false));
+        registerDefaultState(defaultBlockState().setValue(FACING, Direction.NORTH).setValue(GasPipeOrientation.PANEL_FACING, Direction.UP).setValue(WATERLOGGED, false));
     }
 
     static Direction getOutputDirection(BlockState state) {
@@ -74,34 +74,12 @@ public class AirtightRegulatorPumpBlock extends KineticBlock implements IBE<Airt
     }
 
     static Axis getShaftAxis(BlockState state) {
-        Axis gasAxis = getOutputDirection(state).getAxis();
-        Axis panelAxis = getPanelDirection(state).getAxis();
-        if (gasAxis != Axis.X && panelAxis != Axis.X) {
-            return Axis.X;
-        }
-
-        if (gasAxis != Axis.Y && panelAxis != Axis.Y) {
-            return Axis.Y;
-        }
-
-        return Axis.Z;
-    }
-
-    private static Direction getPanelDirection(BlockState state) {
-        Axis gasAxis = getOutputDirection(state).getAxis();
-        if (gasAxis != Axis.Y) {
-            return Direction.UP;
-        }
-
-        return DirectionalFacing.getDirection(state.getValue(DIRECTIONAL_FACING)).getOpposite();
+        Axis axis = getOutputDirection(state).getAxis();
+        return GasPipeOrientation.shaft(axis, GasPipeOrientation.panel(state, axis));
     }
 
     private static boolean isGasFace(BlockState state, Direction direction) {
         return direction.getAxis() == getOutputDirection(state).getAxis();
-    }
-
-    private static BlockState setDirectionalFacing(BlockState state, Direction direction) {
-        return state.setValue(DIRECTIONAL_FACING, DirectionalFacing.getFacingDirection(direction));
     }
 
     @Override
@@ -113,20 +91,55 @@ public class AirtightRegulatorPumpBlock extends KineticBlock implements IBE<Airt
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        Player player = context.getPlayer();
-        boolean isSneaking = player != null && player.isShiftKeyDown();
-        EnumSet<Direction> connectedDirections = GasPlacementHelper.getConnectableDirections(level, pos);
-        Axis gasAxis = isSneaking ? context.getNearestLookingDirection().getAxis() : GasPlacementHelper.chooseAxis(context, GasPlacementHelper.getConnectableAxes(connectedDirections));
-        Direction outputDirection = GasPlacementHelper.chooseOutputDirection(context, gasAxis, connectedDirections, !isSneaking);
-        DirectionalFacing panelFacing = DirectionalFacing.getFacingDirection(context.getHorizontalDirection());
-        BlockState state = defaultBlockState().setValue(FACING, outputDirection).setValue(DIRECTIONAL_FACING, panelFacing);
+        Direction outputDirection = GasPlacementHelper.choosePumpFacing(context, false);
+        Direction preferredShaft = null;
+        boolean sneaking = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
+        if (!sneaking) {
+            preferredShaft = GasPlacementHelper.getPreferredShaft(level, pos);
+        }
+        Axis shaftAxis = preferredShaft == null ? null : preferredShaft.getAxis();
+        if (shaftAxis == outputDirection.getAxis() && GasPlacementHelper.getConnectableDirections(level, pos).isEmpty()) {
+            for (Direction direction : context.getNearestLookingDirections()) {
+                if (direction.getAxis() == shaftAxis) {
+                    continue;
+                }
+
+                outputDirection = direction.getOpposite();
+                break;
+            }
+        }
+        Axis gasAxis = outputDirection.getAxis();
+        Direction panel = gasAxis == Axis.Y ? context.getHorizontalDirection().getOpposite() : Direction.UP;
+        if (shaftAxis != null && shaftAxis != gasAxis) {
+            for (Direction direction : context.getNearestLookingDirections()) {
+                if (direction.getAxis() == shaftAxis || direction.getAxis() == gasAxis) {
+                    continue;
+                }
+
+                panel = direction.getOpposite();
+                break;
+            }
+        }
+        BlockState state = defaultBlockState().setValue(FACING, outputDirection).setValue(GasPipeOrientation.PANEL_FACING, panel);
         return ProperWaterloggedBlock.withWater(level, state, pos);
     }
 
     @Override
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        builder.add(FACING, DIRECTIONAL_FACING, WATERLOGGED);
+        builder.add(FACING, GasPipeOrientation.PANEL_FACING, WATERLOGGED);
         super.createBlockStateDefinition(builder);
+    }
+
+    @Override
+    public BlockState getRotatedBlockState(BlockState originalState, Direction targetedFace) {
+        Direction output = getOutputDirection(originalState);
+        Axis gasAxis = output.getAxis();
+        if (targetedFace.getAxis() == gasAxis) {
+            Direction panel = GasPipeOrientation.panel(originalState, gasAxis);
+            return originalState.setValue(GasPipeOrientation.PANEL_FACING, panel.getClockWise(gasAxis));
+        }
+
+        return originalState.setValue(FACING, output.getOpposite());
     }
 
     @Override
@@ -137,7 +150,7 @@ public class AirtightRegulatorPumpBlock extends KineticBlock implements IBE<Airt
             return InteractionResult.sidedSuccess(true);
         }
 
-        level.setBlockAndUpdate(pos, state.setValue(FACING, state.getValue(FACING).getOpposite()));
+        KineticBlockEntity.switchToBlockState(level, pos, getRotatedBlockState(state, context.getClickedFace()));
         GasNetworkTopology.invalidate(level, pos);
         level.scheduleTick(pos, this, 1, TickPriority.HIGH);
         IWrenchable.playRotateSound(level, pos);
@@ -199,34 +212,29 @@ public class AirtightRegulatorPumpBlock extends KineticBlock implements IBE<Airt
 
     @Override
     protected BlockState rotate(BlockState state, Rotation rotation) {
-        BlockState rotated = state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
-        DirectionalFacing facing = state.getValue(DIRECTIONAL_FACING);
-        if (facing == DirectionalFacing.NULL) {
-            return rotated;
-        }
-
-        return setDirectionalFacing(rotated, rotation.rotate(DirectionalFacing.getDirection(facing)));
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING))).setValue(GasPipeOrientation.PANEL_FACING, rotation.rotate(GasPipeOrientation.panel(state, getOutputDirection(state).getAxis())));
     }
 
     @Override
     protected BlockState mirror(BlockState state, Mirror mirror) {
-        BlockState mirrored = state.setValue(FACING, mirror.mirror(state.getValue(FACING)));
-        DirectionalFacing facing = state.getValue(DIRECTIONAL_FACING);
-        if (facing == DirectionalFacing.NULL) {
-            return mirrored;
-        }
+        return state.setValue(FACING, mirror.mirror(state.getValue(FACING))).setValue(GasPipeOrientation.PANEL_FACING, mirror.mirror(GasPipeOrientation.panel(state, getOutputDirection(state).getAxis())));
+    }
 
-        return setDirectionalFacing(mirrored, mirror.mirror(DirectionalFacing.getDirection(facing)));
+    @Override
+    public BlockState transform(BlockState state, StructureTransform transform) {
+        if (transform.mirror != null) {
+            state = mirror(state, transform.mirror);
+        }
+        Axis axis = getOutputDirection(state).getAxis();
+        Direction direction = state.getValue(FACING);
+        Direction panel = GasPipeOrientation.panel(state, axis);
+        return state.setValue(FACING, transform.rotateFacing(direction)).setValue(GasPipeOrientation.PANEL_FACING, transform.rotateFacing(panel));
     }
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos blockPos, CollisionContext context) {
-        Axis gasAxis = getOutputDirection(state).getAxis();
-        if (gasAxis != Axis.Y) {
-            return CCBShapes.AIRTIGHT_REGULATOR_PUMP.get(gasAxis);
-        }
-
-        return CCBShapes.AIRTIGHT_REGULATOR_PUMP_VERTICAL.get(getPanelDirection(state));
+        Axis axis = getOutputDirection(state).getAxis();
+        return GasPipeOrientation.shape(axis, GasPipeOrientation.panel(state, axis));
     }
 
     @Override

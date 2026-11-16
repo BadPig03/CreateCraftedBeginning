@@ -1,0 +1,11 @@
+{
+  "parent": "createcraftedbeginning:block/smart_airtight_pipe/block",
+  "transform": {
+    "rotation": [
+      0,
+      90,
+      0
+    ],
+    "origin": "center"
+  }
+}

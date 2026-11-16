@@ -1,70 +1,80 @@
 {
   "variants": {
-    "axis=x,directional_facing=east": {
+    "axis=x,panel_facing=down": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 270,
+      "y": 90
+    },
+    "axis=x,panel_facing=east": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
       "x": 90,
       "y": 90
     },
-    "axis=x,directional_facing=north": {
+    "axis=x,panel_facing=north": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_sideways",
+      "x": 90,
+      "y": 270
+    },
+    "axis=x,panel_facing=south": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_sideways",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,panel_facing=up": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
       "x": 90,
       "y": 90
     },
-    "axis=x,directional_facing=null": {
+    "axis=x,panel_facing=west": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
       "x": 90,
       "y": 90
     },
-    "axis=x,directional_facing=south": {
-      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
-      "x": 90,
-      "y": 90
-    },
-    "axis=x,directional_facing=west": {
-      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
-      "x": 90,
-      "y": 90
-    },
-    "axis=y,directional_facing=east": {
-      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
-      "y": 90
-    },
-    "axis=y,directional_facing=north": {
-      "model": "createcraftedbeginning:block/smart_airtight_pipe/block"
-    },
-    "axis=y,directional_facing=null": {
-      "model": "createcraftedbeginning:block/smart_airtight_pipe/block"
-    },
-    "axis=y,directional_facing=south": {
+    "axis=y,panel_facing=down": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
       "y": 180
     },
-    "axis=y,directional_facing=west": {
+    "axis=y,panel_facing=east": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
       "y": 270
     },
-    "axis=z,directional_facing=east": {
+    "axis=y,panel_facing=north": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
-      "x": 90,
       "y": 180
     },
-    "axis=z,directional_facing=north": {
+    "axis=y,panel_facing=south": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block"
+    },
+    "axis=y,panel_facing=up": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
-      "x": 90,
       "y": 180
     },
-    "axis=z,directional_facing=null": {
+    "axis=y,panel_facing=west": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
-      "x": 90,
-      "y": 180
+      "y": 90
     },
-    "axis=z,directional_facing=south": {
+    "axis=z,panel_facing=down": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
-      "x": 90,
-      "y": 180
+      "x": 270
     },
-    "axis=z,directional_facing=west": {
+    "axis=z,panel_facing=east": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_sideways",
+      "x": 90
+    },
+    "axis=z,panel_facing=north": {
       "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90
+    },
+    "axis=z,panel_facing=south": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90
+    },
+    "axis=z,panel_facing=up": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block",
+      "x": 90
+    },
+    "axis=z,panel_facing=west": {
+      "model": "createcraftedbeginning:block/smart_airtight_pipe/block_sideways",
       "x": 90,
       "y": 180
     }

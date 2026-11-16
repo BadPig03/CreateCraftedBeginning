@@ -16,8 +16,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.common.Tags.Items;
 import net.ty.createcraftedbeginning.config.CCBConfig;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -39,7 +39,7 @@ public final class AirtightPipeOutlineRenderer {
             return;
         }
 
-        if (!CCBConfig.client().outlines.showCasedAirtightPipeSides.get() || !player.getMainHandItem().is(Items.TOOLS_WRENCH) && !player.getOffhandItem().is(Items.TOOLS_WRENCH) || !GogglesItem.isWearingGoggles(player)) {
+        if (!CCBConfig.client().outlines.showCasedAirtightPipeSides.get() || !player.getMainHandItem().is(CCBItems.AIRTIGHT_SHEET) && !player.getOffhandItem().is(CCBItems.AIRTIGHT_SHEET) || !GogglesItem.isWearingGoggles(player)) {
             return;
         }
 

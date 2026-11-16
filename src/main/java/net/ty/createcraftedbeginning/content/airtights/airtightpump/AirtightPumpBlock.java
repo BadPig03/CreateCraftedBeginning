@@ -12,7 +12,6 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -42,7 +41,6 @@ import net.ty.createcraftedbeginning.registry.CCBBlockEntities;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.EnumSet;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -85,11 +83,7 @@ public class AirtightPumpBlock extends DirectionalKineticBlock implements IBE<Ai
 
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        Player player = context.getPlayer();
-        boolean isSneaking = player != null && player.isShiftKeyDown();
-        EnumSet<Direction> connectedDirections = GasPlacementHelper.getConnectableDirections(level, pos);
-        Axis gasAxis = isSneaking ? context.getNearestLookingDirection().getAxis() : GasPlacementHelper.chooseAxis(context, GasPlacementHelper.getConnectableAxes(connectedDirections));
-        Direction outputDirection = GasPlacementHelper.chooseOutputDirection(context, gasAxis, connectedDirections, !isSneaking);
+        Direction outputDirection = GasPlacementHelper.choosePumpFacing(context);
         state = state.setValue(FACING, outputDirection);
         return ProperWaterloggedBlock.withWater(level, state, pos);
     }

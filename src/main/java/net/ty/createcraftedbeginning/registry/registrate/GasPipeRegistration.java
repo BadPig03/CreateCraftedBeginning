@@ -27,6 +27,7 @@ import net.ty.createcraftedbeginning.content.airtights.smartairtightpipe.SmartAi
 import net.ty.createcraftedbeginning.foundation.block.CCBSharedProperties;
 import net.ty.createcraftedbeginning.gas.network.DirectionalGasPipe;
 import net.ty.createcraftedbeginning.gas.network.DirectionalGasPipe.DirectionalFacing;
+import net.ty.createcraftedbeginning.gas.visual.GasPipeOrientation;
 import net.ty.createcraftedbeginning.registry.CCBDisplaySources;
 import net.ty.createcraftedbeginning.registry.CCBTags.CCBItemTags;
 import org.jetbrains.annotations.Contract;
@@ -87,15 +88,11 @@ public final class GasPipeRegistration {
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> smartAirtightPipe() {
         return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> {
             Axis axis = state.getValue(SmartAirtightPipeBlock.AXIS);
-            ModelFile model = provider.models().getExistingFile(provider.modLoc("block/smart_airtight_pipe/block"));
-            if (axis == Axis.Y) {
-                DirectionalFacing facing = state.getValue(DirectionalGasPipe.DIRECTIONAL_FACING);
-                int rotationY = BlockModelRotation.horizontal(DirectionalFacing.getDirection(facing));
-                return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationY(rotationY).build();
-            }
-
-            int rotationY = axis == Axis.X ? 90 : 180;
-            return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationX(90).rotationY(rotationY).build();
+            Direction panel = GasPipeOrientation.panel(state, axis);
+            boolean sideways = axis != Axis.Y && panel.getAxis() != Axis.Y;
+            String modelPath = sideways ? "block/smart_airtight_pipe/block_sideways" : "block/smart_airtight_pipe/block";
+            ModelFile model = provider.models().getExistingFile(provider.modLoc(modelPath));
+            return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationX(GasPipeOrientation.rotationX(axis, panel)).rotationY(GasPipeOrientation.rotationY(axis, panel)).build();
         }, BlockStateProperties.WATERLOGGED)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
@@ -117,34 +114,27 @@ public final class GasPipeRegistration {
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> airtightRegulatorPump() {
         return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> {
-            Axis gasAxis = state.getValue(BlockStateProperties.FACING).getAxis();
-            ModelFile model = provider.models().getExistingFile(provider.modLoc("block/airtight_regulator_pump/block"));
-            if (gasAxis == Axis.Y) {
-                DirectionalFacing facing = state.getValue(DirectionalGasPipe.DIRECTIONAL_FACING);
-                int rotationY = BlockModelRotation.horizontal(DirectionalFacing.getDirection(facing));
-                return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationY(rotationY).build();
-            }
-
-            int rotationY = gasAxis == Axis.X ? 90 : 180;
-            return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationX(90).rotationY(rotationY).build();
+            Axis axis = state.getValue(BlockStateProperties.FACING).getAxis();
+            Direction panel = GasPipeOrientation.panel(state, axis);
+            boolean sideways = axis != Axis.Y && panel.getAxis() != Axis.Y;
+            String modelPath = sideways ? "block/airtight_regulator_pump/block_sideways" : "block/airtight_regulator_pump/block";
+            ModelFile model = provider.models().getExistingFile(provider.modLoc(modelPath));
+            return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationX(GasPipeOrientation.rotationX(axis, panel)).rotationY(GasPipeOrientation.rotationY(axis, panel)).build();
         }, BlockStateProperties.WATERLOGGED)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> airtightValve() {
         return builder -> builder.blockstate((context, provider) -> provider.getVariantBuilder(context.getEntry()).forAllStatesExcept(state -> {
-            Axis gasAxis = state.getValue(AirtightValveBlock.AXIS);
+            Axis axis = state.getValue(AirtightValveBlock.AXIS);
+            Direction panel = GasPipeOrientation.panel(state, axis);
+            boolean sideways = axis != Axis.Y && panel.getAxis() != Axis.Y;
             String stateName = state.getValue(AirtightValveBlock.OPEN) ? "open" : "closed";
-            String modelPath = "block/airtight_valve/block_" + stateName;
-            ModelFile model = provider.models().getExistingFile(provider.modLoc(modelPath));
-            if (gasAxis == Axis.Y) {
-                DirectionalFacing facing = state.getValue(DirectionalGasPipe.DIRECTIONAL_FACING);
-                int rotationY = BlockModelRotation.horizontal(DirectionalFacing.getDirection(facing));
-                return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationY(rotationY).build();
+            if (sideways) {
+                stateName += "_sideways";
             }
-
-            int rotationY = gasAxis == Axis.X ? 90 : 180;
-            return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationX(90).rotationY(rotationY).build();
+            ModelFile model = provider.models().getExistingFile(provider.modLoc("block/airtight_valve/block_" + stateName));
+            return ConfiguredModel.builder().modelFile(model).uvLock(false).rotationX(GasPipeOrientation.rotationX(axis, panel)).rotationY(GasPipeOrientation.rotationY(axis, panel)).build();
         }, BlockStateProperties.WATERLOGGED)).item().properties(Properties::fireResistant).transform(itemBuilder -> itemBuilder.model(AssetLookup::customItemModel)).tag(CCBItemTags.AIRTIGHT_COMPONENTS.tag).build();
     }
 

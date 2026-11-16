@@ -8,7 +8,9 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.neoforge.common.Tags.Items;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
@@ -30,7 +32,7 @@ final class AirtightRegulatorPumpPressureBehaviour extends ScrollValueBehaviour 
         super(CCBLang.translateDirect("gui.airtight_regulator_pump.outlet_set_pressure_scroll"), owner, new AirtightRegulatorPumpPressureValueBox());
         this.owner = owner;
         between(0, MAX_OUTLET_SET_PRESSURE_STEPS);
-        withCallback(ignored -> owner.applyOutletSetPressureFromBehaviour(pressurePaForStep(value)));
+        withCallback($ -> owner.applyOutletSetPressureFromBehaviour(pressurePaForStep(value)));
         withFormatter(AirtightRegulatorPumpPressureBehaviour::formatPressureStep);
         value = pressureStepForPa(owner.getOutletSetPressurePa());
     }
@@ -71,6 +73,11 @@ final class AirtightRegulatorPumpPressureBehaviour extends ScrollValueBehaviour 
 
     private static long pressurePaForUnclampedStep(int pressureStep) {
         return Math.round((double) Math.max(0, pressureStep) * GasPressure.REFERENCE_PRESSURE_PA / STEPS_PER_ATMOSPHERE);
+    }
+
+    @Override
+    public boolean bypassesInput(ItemStack stack) {
+        return stack.is(Items.TOOLS_WRENCH);
     }
 
     @Override

@@ -103,15 +103,15 @@ public class AirtightPipeScenes {
         scene.world().hideSection(frontPipeSelection, Direction.NORTH);
 
         scene.idle(20);
-        scene.overlay().showControls(northFaceVec, Pointing.RIGHT, 60).rightClick().withItem(wrenchItem.copy());
-        scene.overlay().showText(60).text("Right-click a face with a Wrench to open that port and connect the branch").colored(PonderPalette.BLUE).pointAt(northFaceVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showControls(northFaceVec, Pointing.RIGHT, 60).rightClick().withItem(airtightSheetItem.copy());
+        scene.overlay().showText(60).text("Right-click a face with an Airtight Sheet to open that port and connect the branch").colored(PonderPalette.BLUE).pointAt(northFaceVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
         scene.world().modifyBlock(middlePipePos, state -> state.setValue(AirtightPipeBlock.NORTH, true), false);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, connectionObject, connectionArea, 53);
 
         scene.idle(73);
-        scene.overlay().showControls(northFaceVec, Pointing.RIGHT, 60).rightClick().withItem(wrenchItem.copy());
+        scene.overlay().showControls(northFaceVec, Pointing.RIGHT, 60).rightClick().withItem(airtightSheetItem.copy());
         scene.overlay().showText(60).text("Click again to close only that face; the other connections stay open").colored(PonderPalette.BLUE).pointAt(northFaceVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
@@ -123,8 +123,8 @@ public class AirtightPipeScenes {
         scene.overlay().showText(60).text("Cased Airtight Pipes cannot be waterlogged").colored(PonderPalette.RED).pointAt(middlePipeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
-        scene.overlay().showControls(middlePipeTopVec, Pointing.DOWN, 60).rightClick().whileSneaking().withItem(wrenchItem.copy());
-        scene.overlay().showText(60).text("Sneak with a Wrench to remove the casing and automatically reconnect nearby components").colored(PonderPalette.BLUE).pointAt(middlePipeVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showControls(middlePipeTopVec, Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
+        scene.overlay().showText(60).text("Use a Wrench to remove the casing and automatically reconnect nearby components").colored(PonderPalette.BLUE).pointAt(middlePipeVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
         scene.world().modifyBlock(middlePipePos, state -> state.setValue(AirtightPipeBlock.CASED, false), false);

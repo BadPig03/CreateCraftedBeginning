@@ -25,10 +25,6 @@ public class CCBShapes {
     public static final VoxelShaper RESIDUE_OUTLET = shape(0, 0, 0, 16, 2, 16).add(3, 2, 3, 13, 13, 13).add(4, 13, 4, 12, 15, 12).add(4, 4, 1, 12, 12, 3).add(1, 4, 4, 3, 12, 12).add(13, 4, 4, 15, 12, 12).add(4, 4, 13, 12, 12, 15).forDirectional(Direction.UP);
     public static final VoxelShaper BOILER_STEAM_OUTLET = shape(1, 0, 1, 15, 3, 15).add(3, 2, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).forDirectional(Direction.UP);
     public static final VoxelShaper PORTABLE_GAS_INTERFACE = shape(0, 0, 0, 16, 14, 16).forDirectional(Direction.UP);
-    public static final VoxelShaper AIRTIGHT_REGULATOR_PUMP = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).add(4, 4, 1, 12, 12, 3).forAxis();
-    public static final VoxelShaper AIRTIGHT_REGULATOR_PUMP_VERTICAL = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).add(4, 4, 1, 12, 12, 3).forDirectional(Direction.NORTH);
-    public static final VoxelShaper SMART_AIRTIGHT_PIPE = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).add(4, 4, 1, 12, 12, 3).forAxis();
-    public static final VoxelShaper SMART_AIRTIGHT_PIPE_VERTICAL = shape(4, 0, 4, 12, 3, 12).add(3, 3, 3, 13, 13, 13).add(4, 13, 4, 12, 16, 12).add(4, 4, 1, 12, 12, 3).forDirectional(Direction.NORTH);
     public static final VoxelShaper TESLA_TURBINE = shape(0, 1, 0, 16, 15, 16).forAxis();
     public static final VoxelShaper TESLA_TURBINE_NOZZLE = shape(0, -0.1, -0.1, 7, 16.1, 16.1).add(7, 1, 1, 12, 15, 15).add(12, -0.1, -0.1, 19, 16.1, 16.1).forDirectional(Direction.WEST);
     public static final VoxelShaper TESLA_TURBINE_NOZZLE_VERTICAL = shape(-0.1, 0, -0.1, 16.1, 7, 16.1).add(1, 7, 1, 15, 12, 15).add(-0.1, 12, -0.1, 16.1, 19, 16.1).forDirectional(Direction.DOWN);
