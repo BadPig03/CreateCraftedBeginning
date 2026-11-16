@@ -28,7 +28,7 @@ public class CCBChillingRecipes extends ChillingRecipeGen {
     private final GeneratedRecipe PACKED_ICE = create("packed_ice", builder -> builder.require(Blocks.ICE).output(Blocks.PACKED_ICE));
     private final GeneratedRecipe BLUE_ICE = create("blue_ice", builder -> builder.require(Blocks.PACKED_ICE).output(Blocks.BLUE_ICE));
     private final GeneratedRecipe OBSIDIAN_FROM_MAGMA_BLOCK = create("obsidian_from_magma_block", builder -> builder.require(Blocks.MAGMA_BLOCK).output(Blocks.OBSIDIAN));
-    private final GeneratedRecipe OBSIDIAN_FROM_LAVA_BUCKET = create("obsidian_from_lava_bucket", builder -> builder.require(Items.LAVA_BUCKET).output(Blocks.OBSIDIAN).output(Items.BUCKET));
+    private final GeneratedRecipe MAGMA_BLOCK = create("magma_block", builder -> builder.require(Items.LAVA_BUCKET).output(Blocks.MAGMA_BLOCK).output(Items.BUCKET));
     private final GeneratedRecipe NETHERRACK_FROM_BRIMSTONE_BUCKET = create("netherrack_from_brimstone_bucket", builder -> builder.require(CCBFluids.BRIMSTONE.getBucket().orElseThrow()).output(Blocks.NETHERRACK).output(Items.BUCKET));
     private final GeneratedRecipe SLIME_BALL_FROM_MAGMA_CREAM = create("slime_ball_from_magma_cream", builder -> builder.require(Items.MAGMA_CREAM).output(Items.SLIME_BALL));
     private final GeneratedRecipe POWDERED_AMETHYST_FROM_SUSPENSION_BUCKET = create("powdered_amethyst_from_suspension_bucket", builder -> builder.require(CCBFluids.AMETHYST_SUSPENSION.getBucket().orElseThrow()).output(CCBItems.POWDERED_AMETHYST, 4).output(Items.BUCKET));

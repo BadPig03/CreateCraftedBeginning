@@ -4,7 +4,7 @@
   "cookingtime": 200,
   "experience": 0.3,
   "ingredient": {
-    "tag": "c:dusts/crying_obsidian"
+    "item": "createcraftedbeginning:crying_obsidian_chunk"
   },
   "result": {
     "id": "createcraftedbeginning:crying_obsidian_brick"
