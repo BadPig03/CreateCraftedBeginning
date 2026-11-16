@@ -96,8 +96,18 @@ public final class SableSubLevelCompat implements Service {
             }
 
             @Override
+            public Vec3 inverseTransformPosition(Position position) {
+                return pose.transformPositionInverse(new Vec3(position.x(), position.y(), position.z()));
+            }
+
+            @Override
             public Vec3 transformNormal(Position normal) {
                 return pose.transformNormal(new Vec3(normal.x(), normal.y(), normal.z()));
+            }
+
+            @Override
+            public Vec3 inverseTransformNormal(Position normal) {
+                return pose.transformNormalInverse(new Vec3(normal.x(), normal.y(), normal.z()));
             }
 
             @Override
@@ -124,6 +134,13 @@ public final class SableSubLevelCompat implements Service {
         double scaleY = transformedY.length();
         double scaleZ = transformedZ.length();
         return new OrientedBox(pose.transformPosition(center), normalizeOrFallback(transformedX, X_AXIS), normalizeOrFallback(transformedY, Y_AXIS), normalizeOrFallback(transformedZ, Z_AXIS), extentX * scaleX, extentY * scaleY, extentZ * scaleZ);
+    }
+
+    private static OrientedBox createOrientedBox(AABB bounds, CoordinateTransform transform) {
+        Vec3 transformedX = transform.transformNormal(X_AXIS);
+        Vec3 transformedY = transform.transformNormal(Y_AXIS);
+        Vec3 transformedZ = transform.transformNormal(Z_AXIS);
+        return new OrientedBox(transform.transformPosition(bounds.getCenter()), normalizeOrFallback(transformedX, X_AXIS), normalizeOrFallback(transformedY, Y_AXIS), normalizeOrFallback(transformedZ, Z_AXIS), bounds.getXsize() * transformedX.length() * 0.5, bounds.getYsize() * transformedY.length() * 0.5, bounds.getZsize() * transformedZ.length() * 0.5);
     }
 
     private static Vec3 normalizeOrFallback(Vec3 vector, Vec3 fallback) {
@@ -283,6 +300,16 @@ public final class SableSubLevelCompat implements Service {
     }
 
     @Override
+    public CoordinateTransform createEntityTransform(Entity entity) {
+        SubLevelAccess subLevel = SableCompanion.INSTANCE.getContaining(entity);
+        if (subLevel == null) {
+            return Service.super.createEntityTransform(entity);
+        }
+
+        return createTransform(subLevel.logicalPose());
+    }
+
+    @Override
     public CoordinateTransform createRenderTransform(Level level, Position anchor, float partialTicks) {
         SubLevelAccess subLevel = SableCompanion.INSTANCE.getContaining(level, anchor);
         if (subLevel == null) {
@@ -423,6 +450,11 @@ public final class SableSubLevelCompat implements Service {
     public EntityArea createEntityArea(Level level, BlockPos origin, AABB localBounds) {
         SubLevelAccess subLevel = SableCompanion.INSTANCE.getContaining(level, origin);
         return new SableEntityArea(createOrientedBox(localBounds, subLevel));
+    }
+
+    @Override
+    public EntityArea createEntityArea(Level level, CoordinateTransform transform, AABB localBounds) {
+        return new SableEntityArea(createOrientedBox(localBounds, transform));
     }
 
     private static final class SableEntityArea implements EntityArea {

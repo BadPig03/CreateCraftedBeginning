@@ -52,6 +52,7 @@ public final class PressureRuptureService {
             return;
         }
 
-        GasReleaseService.release(level, GasReleaseRequest.radial(releasedGas, rupturePos, GasReleaseCause.RUPTURE, sourcePressurePa));
+        boolean knockbackHandled = CCBConfig.server().gas.pressureRupture.explosionStrength.getF() > 0;
+        GasReleaseService.release(level, GasReleaseRequest.radial(releasedGas, rupturePos, GasReleaseCause.RUPTURE, sourcePressurePa), knockbackHandled);
     }
 }

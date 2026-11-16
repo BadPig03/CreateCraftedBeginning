@@ -73,6 +73,10 @@ public final class SubLevelBridge {
         return service.createLogicalTransform(level, anchor);
     }
 
+    public static CoordinateTransform createEntityTransform(Entity entity) {
+        return service.createEntityTransform(entity);
+    }
+
     public static CoordinateTransform createRenderTransform(Level level, Position anchor, float partialTicks) {
         return service.createRenderTransform(level, anchor, partialTicks);
     }
@@ -107,6 +111,10 @@ public final class SubLevelBridge {
 
     public static EntityArea createEntityArea(Level level, BlockPos origin, AABB localBounds) {
         return service.createEntityArea(level, origin, localBounds);
+    }
+
+    public static EntityArea createEntityArea(Level level, CoordinateTransform transform, AABB localBounds) {
+        return service.createEntityArea(level, transform, localBounds);
     }
 
     public static <T> @Nullable T findAt(Level level, BlockPos origin, BlockPos sample, Function<BlockPos, @Nullable T> query) {
@@ -168,7 +176,15 @@ public final class SubLevelBridge {
     public interface CoordinateTransform {
         Vec3 transformPosition(Position position);
 
+        default Vec3 inverseTransformPosition(Position position) {
+            return new Vec3(position.x(), position.y(), position.z());
+        }
+
         default Vec3 transformNormal(Position normal) {
+            return new Vec3(normal.x(), normal.y(), normal.z());
+        }
+
+        default Vec3 inverseTransformNormal(Position normal) {
             return new Vec3(normal.x(), normal.y(), normal.z());
         }
 
@@ -238,6 +254,10 @@ public final class SubLevelBridge {
             return position -> new Vec3(position.x(), position.y(), position.z());
         }
 
+        default CoordinateTransform createEntityTransform(Entity entity) {
+            return createLogicalTransform(entity.level(), entity.position());
+        }
+
         default CoordinateTransform createRenderTransform(Level level, Position anchor, float partialTicks) {
             return position -> new Vec3(position.x(), position.y(), position.z());
         }
@@ -264,6 +284,13 @@ public final class SubLevelBridge {
 
         default EntityArea createEntityArea(Level level, BlockPos origin, AABB localBounds) {
             return (entity, entityBounds) -> localBounds.intersects(entityBounds);
+        }
+
+        default EntityArea createEntityArea(Level level, CoordinateTransform transform, AABB localBounds) {
+            Vec3 first = transform.transformPosition(new Vec3(localBounds.minX, localBounds.minY, localBounds.minZ));
+            Vec3 second = transform.transformPosition(new Vec3(localBounds.maxX, localBounds.maxY, localBounds.maxZ));
+            AABB worldBounds = new AABB(first, second);
+            return (entity, entityBounds) -> worldBounds.intersects(entityBounds);
         }
     }
 

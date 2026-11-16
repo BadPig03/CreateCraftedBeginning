@@ -25,10 +25,18 @@ public final class GasReleaseService {
     }
 
     public static GasReleaseResult release(Level level, GasReleaseRequest request) {
+        return release(level, request, false);
+    }
+
+    public static GasReleaseResult release(Level level, GasReleaseRequest request, boolean knockbackHandled) {
         GasStack gas = request.gas();
         GasReleaseContext context = createContext(level, request, gas);
         if (gas.isEmpty()) {
             return new GasReleaseResult(context, false, false);
+        }
+
+        if (!knockbackHandled) {
+            GasReleasePush.submit(context, false);
         }
 
         GasReleaseHandler releaseHandler = GasReleaseHandlers.resolve(gas, context.sourcePressurePa().orElse(GasPressure.REFERENCE_PRESSURE_PA));
@@ -48,6 +56,8 @@ public final class GasReleaseService {
         if (gas.isEmpty()) {
             return new GasReleaseResult(context, false, false);
         }
+
+        GasReleasePush.submit(context, true);
 
         long gameTime = level.getGameTime();
         long sourcePressurePa = context.sourcePressurePa().orElse(GasPressure.REFERENCE_PRESSURE_PA);

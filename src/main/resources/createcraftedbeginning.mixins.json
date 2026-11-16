@@ -14,6 +14,7 @@
     "common.accessor.ControlledContraptionEntityAccessor",
     "common.accessor.HoglinAccessor",
     "common.accessor.PotionMixingRecipesAccessor",
+    "common.accessor.ServerGamePacketListenerImplAccessor",
     "common.accessor.SmithingTransformRecipeAccessor",
     "common.accessor.SmithingTrimRecipeAccessor",
     "common.accessor.ZombieAccessor",

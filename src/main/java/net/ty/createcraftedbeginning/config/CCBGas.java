@@ -11,6 +11,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public final class CCBGas extends ConfigBase {
     public final PressureRupture pressureRupture = nested(0, PressureRupture::new, "Pressure Rupture");
     public final Atmosphere atmosphere = nested(0, Atmosphere::new, "Atmosphere");
+    public final EntityPush entityPush = nested(0, EntityPush::new, "Entity Push");
 
     @Override
     public String getName() {
@@ -36,6 +37,16 @@ public final class CCBGas extends ConfigBase {
         @Override
         public String getName() {
             return "atmosphere";
+        }
+    }
+
+    public static final class EntityPush extends ConfigBase {
+        public final ConfigBool enableEntityPush = b(true, "enable_entity_push", "Allow released gas to push nearby entities. Disabling this does not change gas consumption, gas-specific effects or pressure rupture explosions.");
+        public final ConfigFloat strengthMultiplier = f(1, 0, 4, "strength_multiplier", "[Unit: multiplier]", "Multiplier for gas-release acceleration and impulses, within their speed limits. Set to 0 to disable gas pushing without changing gas-specific effects.");
+
+        @Override
+        public String getName() {
+            return "entity_push";
         }
     }
 }
