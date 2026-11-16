@@ -193,7 +193,8 @@ dependencies {
     compatRuntime("curse.maven:functional-storage-556861:6930104")
     compatRuntime("com.hrznstudio:titanium:1.21-4.0.42")
 
-    compileOnly("mezz.jei:jei-1.21.1-neoforge:${jei_version}")
+    compileOnly("mezz.jei:jei-1.21.1-common-api:${jei_version}")
+    compileOnly("mezz.jei:jei-1.21.1-neoforge-api:${jei_version}")
     developmentRuntime("mezz.jei:jei-1.21.1-neoforge:${jei_version}")
 }
 
@@ -209,7 +210,6 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
                              mod_version            : mod_version,
                              mod_authors            : mod_authors,
                              mod_description        : mod_description,
-                             jei_version            : jei_version,
                              kubejs_version         : kubejs_version,
                              curios_version         : curios_version,
                              sable_version          : sable_version,

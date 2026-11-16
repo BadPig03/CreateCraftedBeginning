@@ -36,7 +36,7 @@ config="createcraftedbeginning.mixins.json"
 [[dependencies.createcraftedbeginning]]
     modId = "jei"
     type = "optional"
-    versionRange = "[19.24.0.317,19.64.0.453)"
+    versionRange = "[19.24.0.317,)"
     ordering = "AFTER"
     side = "CLIENT"
 

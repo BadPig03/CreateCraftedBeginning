@@ -12,8 +12,6 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
-import mezz.jei.common.util.ImmutableRect2i;
-import mezz.jei.library.gui.widgets.ScrollGridRecipeWidget;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -39,7 +37,6 @@ import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 import net.ty.createcraftedbeginning.recipe.temperature.TemperatureCondition;
 import net.ty.createcraftedbeginning.recipe.temperature.TemperatureMatching;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Arrays;
@@ -51,22 +48,18 @@ import static com.simibubi.create.compat.jei.category.CreateRecipeCategory.addFl
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class FractionationTowerCategory extends CCBRecipeCategory<FractionationTowerRecipe> {
-    private final AnimatedAirtightFractionationTower tower = new AnimatedAirtightFractionationTower();
+    private static final int VISIBLE_ROWS = 4;
+    private static final int SLOT_SIZE = 18;
 
-    private int layoutHeight = 103;
+    private final AnimatedAirtightFractionationTower tower = new AnimatedAirtightFractionationTower();
 
     public FractionationTowerCategory(Info<FractionationTowerRecipe> info) {
         super(info);
     }
 
     @Override
-    public int getHeight() {
-        return layoutHeight;
-    }
-
-    @Override
     protected List<Component> getTooltipStrings(FractionationTowerRecipe recipe, IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
-        int temperatureY = layoutHeight - 22;
+        int temperatureY = getHeight() - 22;
         if (mouseX < 4 || mouseX >= 129 || mouseY < temperatureY || mouseY >= temperatureY + 19) {
             return List.of();
         }
@@ -78,7 +71,8 @@ public final class FractionationTowerCategory extends CCBRecipeCategory<Fraction
 
     @Override
     protected void draw(FractionationTowerRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
-        int temperatureY = layoutHeight - 22;
+        int height = getHeight();
+        int temperatureY = height - 22;
         TemperatureCondition condition = recipe.getTemperatureCondition();
         int color = condition.getColor();
         CCBJEITextures.JEI_HEAT_BAR.render(graphics, 4, temperatureY, new Color(color));
@@ -89,38 +83,38 @@ public final class FractionationTowerCategory extends CCBRecipeCategory<Fraction
         }
         graphics.drawString(font, temperature, 9, temperatureY + 6, color, false);
         int towerX = getWidth() / 2;
-        int towerY = layoutHeight - 25;
+        int towerY = height - 25;
         tower.draw(graphics, towerX, towerY, recipe.getRequiredHeight(), towerY - 1);
     }
 
     @Override
     protected void setRecipe(IRecipeLayoutBuilder builder, FractionationTowerRecipe recipe, IFocusGroup focuses) {
-        int temperatureY = layoutHeight - 22;
+        int temperatureY = getHeight() - 22;
         int outputX = getOutputX(recipe);
         List<Ingredient> itemIngredients = recipe.getIngredients();
         List<SizedFluidIngredient> fluidIngredients = recipe.getFluidIngredients();
         List<GasRecipeRequirement> gasRequirements = recipe.getGasRequirements();
         int inputCount = itemIngredients.size() + fluidIngredients.size() + gasRequirements.size();
         int inputRows = (inputCount + 1) / 2;
-        int inputX = inputCount == 1 ? 25 : 5;
+        int inputX = inputCount == 1 ? 5 + SLOT_SIZE : 5;
         int inputY = getColumnY(recipe, inputRows);
         Component inputLayer = CCBLang.translateDirect("jei.fractionation_tower.input_layer").withStyle(ChatFormatting.GRAY);
         int inputIndex = 0;
         for (Ingredient ingredient : itemIngredients) {
-            int x = inputX + inputIndex % 2 * 20;
-            int y = inputY + inputIndex / 2 * 20;
+            int x = inputX + inputIndex % 2 * SLOT_SIZE;
+            int y = inputY + inputIndex / 2 * SLOT_SIZE;
             builder.addSlot(RecipeIngredientRole.INPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addIngredients(ingredient).addRichTooltipCallback((view, tooltip) -> tooltip.add(inputLayer));
             inputIndex++;
         }
         for (SizedFluidIngredient ingredient : fluidIngredients) {
-            int x = inputX + inputIndex % 2 * 20;
-            int y = inputY + inputIndex / 2 * 20;
+            int x = inputX + inputIndex % 2 * SLOT_SIZE;
+            int y = inputY + inputIndex / 2 * SLOT_SIZE;
             addFluidSlot(builder, x, y, ingredient).addRichTooltipCallback((view, tooltip) -> tooltip.add(inputLayer));
             inputIndex++;
         }
         for (GasRecipeRequirement requirement : gasRequirements) {
-            int x = inputX + inputIndex % 2 * 20;
-            int y = inputY + inputIndex / 2 * 20;
+            int x = inputX + inputIndex % 2 * SLOT_SIZE;
+            int y = inputY + inputIndex / 2 * SLOT_SIZE;
             List<GasStack> gases = Arrays.stream(requirement.getGases()).map(GasStack::copy).toList();
             builder.addSlot(RecipeIngredientRole.INPUT, x, y).setBackground(getRenderedSlot(), -1, -1).addIngredients(CCBJEIPlugin.GAS_STACK, gases).addRichTooltipCallback((view, tooltip) -> {
                 addGasRequirementTooltip(tooltip, requirement);
@@ -137,7 +131,7 @@ public final class FractionationTowerCategory extends CCBRecipeCategory<Fraction
         int outputY = getColumnY(recipe, outputs.size());
         for (int index = 0; index < outputs.size(); index++) {
             FractionationTowerOutput output = outputs.get(index);
-            int y = outputY + index * 20;
+            int y = outputY + index * SLOT_SIZE;
             ItemStack item = output.item();
             FluidStack fluid = output.fluid();
             GasStack gas = output.gas();
@@ -172,97 +166,42 @@ public final class FractionationTowerCategory extends CCBRecipeCategory<Fraction
     public void createRecipeExtras(IRecipeExtrasBuilder builder, RecipeHolder<FractionationTowerRecipe> holder, IFocusGroup focuses) {
         FractionationTowerRecipe recipe = holder.value();
         boolean condensation = recipe.isCondensation();
-        int visibleRows = getVisibleRows();
         IRecipeSlotDrawablesView recipeSlots = builder.getRecipeSlots();
         List<IRecipeSlotDrawable> inputs = recipeSlots.getSlots(RecipeIngredientRole.INPUT);
-        if (inputs.size() > 2 * visibleRows) {
-            SpacedScrollGrid inputGrid = new SpacedScrollGrid(inputs, 2, visibleRows);
-            int inputY = getColumnY(recipe, visibleRows);
-            inputGrid.setPosition(4, inputY - 1);
-            builder.addSlottedWidget(inputGrid, inputs);
-            builder.addInputHandler(inputGrid);
+        if (inputs.size() > 2 * VISIBLE_ROWS) {
+            int inputY = getColumnY(recipe, VISIBLE_ROWS);
+            builder.addScrollGridWidget(inputs, 2, VISIBLE_ROWS).setPosition(4, inputY - 1);
         }
 
         List<IRecipeSlotDrawable> outputs = recipeSlots.getSlots(RecipeIngredientRole.OUTPUT);
-        int outputRows = Math.min(outputs.size(), visibleRows);
+        int outputRows = Math.min(outputs.size(), VISIBLE_ROWS);
         int outputX = getOutputX(recipe);
         int outputY = getColumnY(recipe, outputRows);
-        if (outputs.size() > visibleRows) {
-            SpacedScrollGrid outputGrid = new SpacedScrollGrid(outputs, 1, visibleRows);
-            outputGrid.setPosition(outputX - 1, outputY - 1);
-            builder.addSlottedWidget(outputGrid, outputs);
-            builder.addInputHandler(outputGrid);
+        if (outputs.size() > VISIBLE_ROWS) {
+            builder.addScrollGridWidget(outputs, 1, VISIBLE_ROWS).setPosition(outputX - 1, outputY - 1);
         }
 
         CCBJEITextures arrowTexture = condensation ? CCBJEITextures.JEI_CONDENSATION_ARROW : CCBJEITextures.JEI_FRACTIONATION_ARROW;
         CCBJEITextures modeIcon = condensation ? CCBJEITextures.JEI_CONDENSATION : CCBJEITextures.JEI_FRACTIONATION;
-        OutputArrow arrow = new OutputArrow(outputRows * 20 - 2, arrowTexture, modeIcon, !condensation);
+        OutputArrow arrow = new OutputArrow(outputRows * SLOT_SIZE, arrowTexture, modeIcon, !condensation);
         builder.addDrawable(arrow).setPosition(outputX - arrow.getWidth() - 5, outputY - 1);
     }
 
-    @Internal
-    public boolean updateAvailableHeight(int availableHeight, int minRecipePadding) {
-        int height = Math.clamp((availableHeight - minRecipePadding) / 2 - 8, 48, 103);
-        if (layoutHeight == height) {
-            return false;
-        }
-
-        layoutHeight = height;
-        return true;
-    }
-
     private int getOutputX(FractionationTowerRecipe recipe) {
-        if (recipe.getLayerOutputs().size() > getVisibleRows()) {
+        if (recipe.getLayerOutputs().size() > VISIBLE_ROWS) {
             return getWidth() - 37;
         }
 
         return getWidth() - 21;
     }
 
-    private int getVisibleRows() {
-        int rows = (layoutHeight - 50) / 20 + 2;
-        int availableRows = (layoutHeight - 43) / 20 + 1;
-        return Math.clamp(rows, 1, Math.min(8, availableRows));
-    }
-
     private int getColumnY(FractionationTowerRecipe recipe, int count) {
-        int bottomY = layoutHeight - 42;
-        int visibleRows = getVisibleRows();
+        int bottomY = getHeight() - 42;
         if (!recipe.isCondensation()) {
-            return bottomY - Math.clamp(count, 1, visibleRows) * 20 + 20;
+            return bottomY - Math.clamp(count, 1, VISIBLE_ROWS) * SLOT_SIZE + SLOT_SIZE;
         }
 
-        return bottomY - visibleRows * 20 + 20;
-    }
-
-    private static final class SpacedScrollGrid extends ScrollGridRecipeWidget {
-        private final List<IRecipeSlotDrawable> slots;
-        private final int columns;
-
-        private SpacedScrollGrid(List<IRecipeSlotDrawable> slots, int columns, int visibleRows) {
-            super(new ImmutableRect2i(0, 0, columns * 20 - 2 + getScrollBoxScrollbarExtraWidth(), visibleRows * 20 - 2), columns, visibleRows, slots);
-            this.slots = slots;
-            this.columns = columns;
-        }
-
-        @Override
-        protected void drawContents(GuiGraphics graphics, double mouseX, double mouseY, float scrollOffsetY) {
-            int firstIndex = Math.round(getHiddenAmount() * scrollOffsetY) * columns;
-            int visibleSlots = getVisibleAmount() * columns;
-            for (int index = 0; index < visibleSlots; index++) {
-                int x = index % columns * 20;
-                int y = index / columns * 20;
-                int slotIndex = firstIndex + index;
-                if (slotIndex >= slots.size()) {
-                    getRenderedSlot().draw(graphics, x, y);
-                    continue;
-                }
-
-                IRecipeSlotDrawable slot = slots.get(slotIndex);
-                slot.setPosition(x + 1, y + 1);
-                slot.draw(graphics);
-            }
-        }
+        return bottomY - VISIBLE_ROWS * SLOT_SIZE + SLOT_SIZE;
     }
 
     private record OutputArrow(int height, CCBJEITextures texture, CCBJEITextures modeIcon, boolean upward) implements IDrawable {

@@ -79,7 +79,6 @@
     "client.accessor.RedstoneRequesterScreenAccessor",
     "client.accessor.StockKeeperRequestScreenAccessor",
     "compat.jei.BasinCategoryMixin",
-    "compat.jei.RecipeGuiLogicMixin",
     "compat.jei.StockKeeperTransferHandlerMixin",
     "client.create.BeltRendererMixin",
     "client.create.ChainConveyorRendererMixin",
