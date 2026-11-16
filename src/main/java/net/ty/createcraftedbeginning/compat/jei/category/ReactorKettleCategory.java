@@ -8,7 +8,6 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.createmod.catnip.data.Pair;
-import net.createmod.catnip.theme.Color;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -21,6 +20,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEICompat;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightReactorKettle;
@@ -157,8 +157,9 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         CCBJEITextures.JEI_SHADOW.render(graphics, 76, 66);
 
         TemperatureCondition condition = recipe.getTemperatureCondition();
-        int color = condition.getColor();
-        CCBJEITextures.JEI_HEAT_BAR.render(graphics, 4, 80, new Color(color));
+        int color = CCBJEICompat.getTemperatureTextColor(condition);
+        CCBJEITextures heatBar = condition == TemperatureCondition.NONE ? CCBJEITextures.JEI_NO_HEAT_BAR : CCBJEITextures.JEI_HEAT_BAR;
+        heatBar.render(graphics, 4, 80);
         graphics.drawString(Minecraft.getInstance().font, getTemperatureDisplay(recipe), 9, 86, color, false);
         if (recipe.getGasRequirements().isEmpty() && recipe.getGasResults().isEmpty()) {
             reactorKettleOpened.draw(graphics, background.getWidth() / 2 + 6, 58);

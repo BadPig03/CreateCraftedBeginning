@@ -12,7 +12,6 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
-import net.createmod.catnip.theme.Color;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -26,6 +25,7 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEICompat;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightFractionationTower;
@@ -74,8 +74,9 @@ public final class FractionationTowerCategory extends CCBRecipeCategory<Fraction
         int height = getHeight();
         int temperatureY = height - 22;
         TemperatureCondition condition = recipe.getTemperatureCondition();
-        int color = condition.getColor();
-        CCBJEITextures.JEI_HEAT_BAR.render(graphics, 4, temperatureY, new Color(color));
+        int color = CCBJEICompat.getTemperatureTextColor(condition);
+        CCBJEITextures heatBar = condition == TemperatureCondition.NONE ? CCBJEITextures.JEI_NO_HEAT_BAR : CCBJEITextures.JEI_HEAT_BAR;
+        heatBar.render(graphics, 4, temperatureY);
         Font font = Minecraft.getInstance().font;
         Component temperature = CCBLang.translateDirect(condition.getTranslationKey());
         if (recipe.getTemperatureMatching() == TemperatureMatching.COMPATIBLE) {

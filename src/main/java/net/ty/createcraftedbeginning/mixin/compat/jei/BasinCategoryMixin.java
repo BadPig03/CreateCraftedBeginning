@@ -7,11 +7,12 @@ import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
-import net.createmod.catnip.theme.Color;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEICompat;
+import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedBreezeCooler;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.recipe.ChilledBasinProcessing;
@@ -55,8 +56,8 @@ public abstract class BasinCategoryMixin {
         }
 
         TemperatureCondition condition = TemperatureCondition.CHILLED;
-        int color = condition.getColor();
-        AllGuiTextures.JEI_HEAT_BAR.render(graphics, 4, 80, new Color(color));
+        int color = CCBJEICompat.getTemperatureTextColor(condition);
+        CCBJEITextures.JEI_HEAT_BAR.render(graphics, 4, 80);
         AllGuiTextures.JEI_LIGHT.render(graphics, 81, 88);
         graphics.drawString(Minecraft.getInstance().font, CCBLang.translateDirect(condition.getTranslationKey()), 9, 86, color, false);
 
