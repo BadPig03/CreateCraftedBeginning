@@ -4,10 +4,13 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.BeamPropagation.Segment;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalElement;
+import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalGeometry;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalHit;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.OpticalTarget;
 import net.ty.createcraftedbeginning.content.opticalpower.laser.beam.BeamFrame;
@@ -123,6 +126,11 @@ final class AmethystMirrorReflectionPlanner {
             return AmethystMirrorAimResult.failure(AmethystMirrorAimStatus.NO_INPUT);
         }
 
+        BlockState targetState = level.getBlockState(targetPos);
+        OpticalGeometry targetGeometry = null;
+        if (targetState.getBlock() instanceof OpticalElement element) {
+            targetGeometry = element.getOpticalGeometry(level, targetPos, targetState, 1);
+        }
         List<Segment> segments = predicted.segments();
         for (Segment segment : segments) {
             OpticalHit hit = segment.hit();
@@ -132,20 +140,38 @@ final class AmethystMirrorReflectionPlanner {
             }
 
             OpticalTarget hitTarget = hit.target();
-            Vec3 hitPoint = hit.position();
             if (!hitTarget.blockPos().equals(targetPos) || hitTarget.contraptionId() != null || hitTarget.inSubLevel()) {
                 continue;
             }
 
             BeamFrame outgoing = segment.start().frame();
-            Vec3 normal = hit.surface().normal();
-            double incidence = outgoing.direction().dot(normal);
-            if (Math.abs(incidence) < 1.0E-12) {
-                continue;
-            }
+            Vec3 outgoingOrigin = outgoing.origin();
+            Vec3 outgoingDirection = outgoing.direction();
+            Vec3 aimedPoint;
+            if (targetGeometry != null) {
+                double targetDistance = target.subtract(outgoingOrigin).dot(outgoingDirection);
+                if (targetDistance <= 0) {
+                    continue;
+                }
 
-            double targetDistance = hitPoint.subtract(outgoing.origin()).dot(normal) / incidence;
-            Vec3 aimedPoint = outgoing.origin().add(outgoing.direction().scale(targetDistance));
+                Vec3 end = outgoingOrigin.add(outgoingDirection.scale(targetDistance + TARGET_TOLERANCE));
+                BlockHitResult targetHit = targetGeometry.getCollisionShape().clip(outgoingOrigin, end, targetPos);
+                if (targetHit == null || (targetGeometry.getSurface(targetHit, outgoingDirection).aperture() != null) != (hit.surface().aperture() != null)) {
+                    continue;
+                }
+
+                aimedPoint = targetHit.getLocation();
+            }
+            else {
+                Vec3 normal = hit.surface().normal();
+                double incidence = outgoingDirection.dot(normal);
+                if (Math.abs(incidence) < 1.0E-12) {
+                    continue;
+                }
+
+                double targetDistance = hit.position().subtract(outgoingOrigin).dot(normal) / incidence;
+                aimedPoint = outgoingOrigin.add(outgoingDirection.scale(targetDistance));
+            }
             if (aimedPoint.distanceTo(target) > TARGET_TOLERANCE) {
                 continue;
             }

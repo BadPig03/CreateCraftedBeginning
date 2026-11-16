@@ -4,9 +4,6 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.ClipContext.Block;
-import net.minecraft.world.level.ClipContext.Fluid;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -75,7 +72,7 @@ final class AmethystMirrorTargeting {
                 return null;
             }
         }
-        BlockHitResult hit = level.clip(new ClipContext(start, clipEnd, Block.OUTLINE, Fluid.NONE, player));
+        BlockHitResult hit = new AmethystMirrorAimRay(player, start, clipEnd).clip(level);
         if (unloaded != null && hit.getType() != Type.BLOCK) {
             return null;
         }
@@ -84,7 +81,7 @@ final class AmethystMirrorTargeting {
     }
 
     static boolean isValidTarget(Level level, Player player, BlockPos mirror, BlockPos targetPos, Vec3 target) {
-        if (!Double.isFinite(target.x) || !Double.isFinite(target.y) || !Double.isFinite(target.z) || mirror.equals(targetPos) || !level.isLoaded(targetPos) || !new AABB(targetPos).inflate(TARGET_TOLERANCE).contains(target)) {
+        if (!Double.isFinite(target.x) || !Double.isFinite(target.y) || !Double.isFinite(target.z) || mirror.equals(targetPos) || !level.isLoaded(targetPos)) {
             return false;
         }
 
