@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.registry.registrate;
 
-import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllTags.AllBlockTags;
 import com.simibubi.create.foundation.block.connected.CTSpriteShiftEntry;
 import com.simibubi.create.foundation.block.connected.SimpleCTBehaviour;
@@ -8,10 +7,8 @@ import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.data.SharedProperties;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
-import com.tterrag.registrate.util.DataIngredient;
 import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RotatedPillarBlock;
@@ -36,7 +33,7 @@ public final class IndustrialIronRegistration {
         return builder -> builder.initialProperties(SharedProperties::softMetal).properties(properties -> properties.mapColor(MapColor.COLOR_GRAY).sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops()).tag(BlockTags.MINEABLE_WITH_PICKAXE, AllBlockTags.WRENCH_PICKUP.tag).blockstate((context, provider) -> {
             String blockName = context.getName();
             provider.simpleBlock(context.get(), provider.models().cubeAll(blockName, provider.modLoc("block/industrial_iron/" + blockName)));
-        }).loot(RegistrateBlockLootTables::dropSelf).item().recipe((context, provider) -> provider.stonecutting(DataIngredient.items(AllBlocks.INDUSTRIAL_IRON_BLOCK.get()), RecipeCategory.DECORATIONS, context, 1)).model((context, provider) -> {
+        }).loot(RegistrateBlockLootTables::dropSelf).item().model((context, provider) -> {
             String itemName = context.getName();
             provider.withExistingParent(itemName, provider.modLoc("block/" + itemName));
         }).build();

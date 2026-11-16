@@ -40,7 +40,7 @@ public final class GasDrawerLootConditions implements DataProvider {
             try (BufferedReader reader = Files.newBufferedReader(path)) {
                 JsonObject table = JsonParser.parseReader(reader).getAsJsonObject();
                 ICondition.writeConditions(JsonOps.INSTANCE, table, List.of(condition));
-                saves.add(DataProvider.saveStable(output, table, path));
+                saves.add(DataProvider.saveStable(CachedOutput.NO_CACHE, table, path));
             }
             catch (IOException exception) {
                 return CompletableFuture.failedFuture(exception);

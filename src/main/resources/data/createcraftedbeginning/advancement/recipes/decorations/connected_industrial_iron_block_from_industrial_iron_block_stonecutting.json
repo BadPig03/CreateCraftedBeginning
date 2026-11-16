@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "createcraftedbeginning:industrial_iron_block_scaffolding_from_industrial_iron_block_stonecutting"
+        "recipe": "createcraftedbeginning:splashing/connected_industrial_iron_block_from_industrial_iron_block_stonecutting"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -26,7 +26,7 @@
   ],
   "rewards": {
     "recipes": [
-      "createcraftedbeginning:industrial_iron_block_scaffolding_from_industrial_iron_block_stonecutting"
+      "createcraftedbeginning:splashing/connected_industrial_iron_block_from_industrial_iron_block_stonecutting"
     ]
   }
 }

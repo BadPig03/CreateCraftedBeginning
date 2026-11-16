@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "createcraftedbeginning:weathered_industrial_iron_pillar_from_industrial_iron_block_stonecutting"
+        "recipe": "createcraftedbeginning:splashing/industrial_iron_bricks_from_industrial_iron_block_stonecutting"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -26,7 +26,7 @@
   ],
   "rewards": {
     "recipes": [
-      "createcraftedbeginning:weathered_industrial_iron_pillar_from_industrial_iron_block_stonecutting"
+      "createcraftedbeginning:splashing/industrial_iron_bricks_from_industrial_iron_block_stonecutting"
     ]
   }
 }
