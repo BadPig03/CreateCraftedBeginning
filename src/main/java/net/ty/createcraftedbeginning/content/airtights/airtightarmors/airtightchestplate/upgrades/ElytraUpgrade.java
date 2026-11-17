@@ -93,7 +93,7 @@ public enum ElytraUpgrade implements AirtightUpgrade {
         ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
         Optional<AffordableFuel> boostFuel = findBoostFuel(player, chestplate);
         if (boostFuel.isEmpty()) {
-            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas");
+            GasInteractionFeedback.sendInsufficientGasWarning(player, CanisterContainerSuppliers.getFirstAvailableGasContent(player));
             return;
         }
 
@@ -105,7 +105,7 @@ public enum ElytraUpgrade implements AirtightUpgrade {
         }
 
         if (!CanisterContainerConsumers.interactContainer(player, selectedFuel, () -> true, false)) {
-            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", selectedFuel.gasContent().getHoverName());
+            GasInteractionFeedback.sendInsufficientGasWarning(player, selectedFuel.gasContent());
             return;
         }
 

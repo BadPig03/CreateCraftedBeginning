@@ -21,12 +21,10 @@ import net.neoforged.neoforge.event.level.BlockDropsEvent;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.ty.createcraftedbeginning.api.CCBAPI;
-import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.ExperienceConversionUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HarvestOptimizationUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.LiquidReplacementUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.MagnetUpgrade;
-import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.gas.interaction.GasInteractionFeedback;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
@@ -83,13 +81,7 @@ final class AirtightHandheldDrillEvents {
         }
 
         if (drillBreakSpeed == -1) {
-            GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-            if (gasContent.isEmpty()) {
-                GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas");
-            }
-            else {
-                GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
-            }
+            AirtightHandheldDrillFuel.displayInsufficientGasWarning(player);
             return;
         }
 

@@ -13,6 +13,7 @@ import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.registry.CCBItems;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -103,7 +104,7 @@ final class AirtightArmPower {
                 return PowerUseResult.outOfRange();
             }
 
-            return PowerUseResult.insufficient(getSelectedGasType(player));
+            return PowerUseResult.insufficient(CanisterContainerSuppliers.getFirstAvailableGasContent(player));
         }
 
         if (!requiresCurrentPower.getAsBoolean()) {
@@ -121,7 +122,7 @@ final class AirtightArmPower {
     private static ConsumptionResult consumeCurrentFuel(Player player, boolean refreshAfterSuccess) {
         AffordableFuel selectedFuel = ACTIVE_FUELS.get(player);
         if (selectedFuel == null) {
-            return ConsumptionResult.failure(getSelectedGasType(player));
+            return new ConsumptionResult(false, CanisterContainerSuppliers.getFirstAvailableGasContent(player));
         }
 
         GasStack attemptedGas = selectedFuel.gasContent().copy();
@@ -167,14 +168,6 @@ final class AirtightArmPower {
             return new PowerUseResult(PowerUseOutcome.CONSUMED, GasStack.EMPTY);
         }
 
-        private static PowerUseResult insufficient(Gas gasType) {
-            if (gasType.isEmpty()) {
-                return new PowerUseResult(PowerUseOutcome.INSUFFICIENT_GAS, GasStack.EMPTY);
-            }
-
-            return new PowerUseResult(PowerUseOutcome.INSUFFICIENT_GAS, new GasStack(gasType, 1));
-        }
-
         private static PowerUseResult insufficient(GasStack attemptedGas) {
             return new PowerUseResult(PowerUseOutcome.INSUFFICIENT_GAS, attemptedGas);
         }
@@ -195,14 +188,6 @@ final class AirtightArmPower {
     private record ConsumptionResult(boolean success, GasStack attemptedGas) {
         private ConsumptionResult {
             attemptedGas = attemptedGas.copy();
-        }
-
-        private static ConsumptionResult failure(Gas gasType) {
-            if (gasType.isEmpty()) {
-                return new ConsumptionResult(false, GasStack.EMPTY);
-            }
-
-            return new ConsumptionResult(false, new GasStack(gasType, 1));
         }
     }
 }

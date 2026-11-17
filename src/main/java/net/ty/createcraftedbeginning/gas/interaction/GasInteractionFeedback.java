@@ -4,6 +4,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.registry.CCBSoundEvents;
 
@@ -13,6 +14,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class GasInteractionFeedback {
     private GasInteractionFeedback() {
+    }
+
+    public static void sendInsufficientGasWarning(Player player, GasStack attemptedGas) {
+        if (attemptedGas.isEmpty()) {
+            sendWarningFeedback(player, "gui.warnings.no_gas");
+            return;
+        }
+
+        sendWarningFeedback(player, "gui.warnings.insufficient_gas", attemptedGas.getHoverName());
     }
 
     public static void sendWarningFeedback(Player player, String key, Object... args) {

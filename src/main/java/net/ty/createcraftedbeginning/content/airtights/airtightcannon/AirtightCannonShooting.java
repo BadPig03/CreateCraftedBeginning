@@ -5,7 +5,6 @@ import net.createmod.catnip.math.VecHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Holder;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -27,6 +26,7 @@ import net.ty.createcraftedbeginning.content.airtights.airtightcannon.windcharge
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerClients;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers;
 import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerConsumers.AffordableFuel;
+import net.ty.createcraftedbeginning.content.airtights.gascanister.container.CanisterContainerSuppliers;
 import net.ty.createcraftedbeginning.content.airtights.weatherflares.projectile.WeatherFlareProjectileEntity;
 import net.ty.createcraftedbeginning.foundation.transaction.ResourceTransaction;
 import net.ty.createcraftedbeginning.foundation.transaction.TransactionParticipant;
@@ -175,7 +175,7 @@ final class AirtightCannonShooting {
     private static Optional<ShotFuel> findShotFuel(Player player, double chargedRatio, int projectileCount) {
         Optional<ShotFuel> fuel = resolveShotFuel(player, chargedRatio, projectileCount);
         if (fuel.isEmpty()) {
-            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.no_gas");
+            GasInteractionFeedback.sendInsufficientGasWarning(player, CanisterContainerSuppliers.getFirstAvailableGasContent(player));
             return Optional.empty();
         }
 
@@ -190,7 +190,7 @@ final class AirtightCannonShooting {
         }
 
         if (projectiles.isEmpty()) {
-            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", Component.translatable(fuel.gasType().getTranslationKey()));
+            GasInteractionFeedback.sendInsufficientGasWarning(player, fuel.fuel().gasContent());
         }
         return false;
     }

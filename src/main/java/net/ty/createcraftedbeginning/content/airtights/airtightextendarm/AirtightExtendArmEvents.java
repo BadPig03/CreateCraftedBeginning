@@ -17,7 +17,6 @@ import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent.Post;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.canister.event.GasTypeChangedEvent;
-import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.content.airtights.airtightextendarm.AirtightArmPower.PowerUseResult;
 import net.ty.createcraftedbeginning.gas.interaction.GasInteractionFeedback;
 import net.ty.createcraftedbeginning.registry.CCBAdvancements;
@@ -176,13 +175,7 @@ final class AirtightExtendArmEvents {
             return;
         }
 
-        GasStack attemptedGas = powerUseResult.attemptedGas();
-        if (attemptedGas.isEmpty()) {
-            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.no_gas");
-            return;
-        }
-
-        GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", attemptedGas.getHoverName());
+        GasInteractionFeedback.sendInsufficientGasWarning(player, powerUseResult.attemptedGas());
     }
 
     private enum InteractionType {

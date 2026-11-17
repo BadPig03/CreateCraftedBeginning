@@ -47,7 +47,7 @@ final class AirtightHandheldDrillConsumption {
         }
         else if (!attempt.started) {
             failed = true;
-            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", fuel.gasContent().getHoverName());
+            GasInteractionFeedback.sendInsufficientGasWarning(player, fuel.gasContent());
         }
         if (attempt.failure instanceof RuntimeException exception) {
             throw exception;

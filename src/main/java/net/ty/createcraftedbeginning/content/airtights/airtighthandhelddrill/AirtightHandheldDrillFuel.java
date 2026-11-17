@@ -12,7 +12,6 @@ import net.ty.createcraftedbeginning.api.canister.GasConsumptionMath;
 import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandler;
 import net.ty.createcraftedbeginning.api.drillhandlers.AirtightDrillHandlers;
 import net.ty.createcraftedbeginning.api.gas.Gas;
-import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.ExperienceConversionUpgrade;
 import net.ty.createcraftedbeginning.content.airtights.airtighthandhelddrill.upgrades.HarvestOptimizationUpgrade;
@@ -133,13 +132,7 @@ final class AirtightHandheldDrillFuel {
     }
 
     static void displayInsufficientGasWarning(Player player) {
-        GasStack gasContent = CanisterContainerSuppliers.getFirstAvailableGasContent(player);
-        if (gasContent.isEmpty()) {
-            GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas");
-            return;
-        }
-
-        GasInteractionFeedback.sendWarningFeedback(player, "gui.warnings.insufficient_gas", gasContent.getHoverName());
+        GasInteractionFeedback.sendInsufficientGasWarning(player, CanisterContainerSuppliers.getFirstAvailableGasContent(player));
     }
 
     private static double calculateBaseGasConsumption(ItemStack drill, AirtightHandheldDrillMiningContext context) {
