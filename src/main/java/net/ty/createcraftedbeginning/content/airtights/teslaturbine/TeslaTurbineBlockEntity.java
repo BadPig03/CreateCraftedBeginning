@@ -74,6 +74,21 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity {
     }
 
     @Override
+    public void removeSource() {
+        super.removeSource();
+        if (!reActivateSource) {
+            return;
+        }
+
+        TeslaTurbineKineticUpdates.schedule(this);
+    }
+
+    @Override
+    public void updateGeneratedRotation() {
+        TeslaTurbineKineticUpdates.schedule(this);
+    }
+
+    @Override
     public float calculateAddedStressCapacity() {
         float stressCapacity = calculateStressCapacity(getGeneratedSpeed());
         lastCapacityProvided = stressCapacity;
@@ -121,5 +136,10 @@ public class TeslaTurbineBlockEntity extends GeneratingKineticBlockEntity {
 
     void refreshStructure() {
         core.getStructureManager().tick();
+    }
+
+    void applyGeneratedRotation() {
+        super.updateGeneratedRotation();
+        reActivateSource = false;
     }
 }
