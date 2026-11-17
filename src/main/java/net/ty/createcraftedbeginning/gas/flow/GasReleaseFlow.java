@@ -13,17 +13,17 @@ import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseArea;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseContext;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.CoordinateTransform;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge.EntityArea;
-import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 @ParametersAreNonnullByDefault
@@ -117,8 +117,16 @@ final class GasReleaseFlow {
             }
 
             double entityMultiplier = 1;
+            if (continuous && directional) {
+                AABB bounds = entity.getBoundingBox();
+                Vec3 center = transform.transformPosition(bounds.getCenter());
+                double radius = GasFlowGeometry.projectedRadius(bounds, transform, worldDirection);
+                double forwardDistance = center.subtract(mouth).dot(worldDirection);
+                entityMultiplier *= Mth.clamp((forwardDistance + radius) / (2 * radius), 0, 1);
+            }
+
             if (entity instanceof ItemEntity || entity instanceof ExperienceOrb) {
-                entityMultiplier = 0.5;
+                entityMultiplier *= 0.5;
             }
 
             if (entity instanceof Player && entity.isShiftKeyDown()) {

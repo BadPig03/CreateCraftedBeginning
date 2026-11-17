@@ -30,6 +30,10 @@ final class GasFlowGeometry {
         return transform.transformPosition(new Vec3(Mth.clamp(local.x, bounds.minX + RAY_EPSILON, bounds.maxX - RAY_EPSILON), Mth.clamp(local.y, bounds.minY + RAY_EPSILON, bounds.maxY - RAY_EPSILON), Mth.clamp(local.z, bounds.minZ + RAY_EPSILON, bounds.maxZ - RAY_EPSILON)));
     }
 
+    static double projectedRadius(AABB bounds, CoordinateTransform transform, Vec3 axis) {
+        return Math.abs(transform.transformNormal(new Vec3(bounds.getXsize() * 0.5, 0, 0)).dot(axis)) + Math.abs(transform.transformNormal(new Vec3(0, bounds.getYsize() * 0.5, 0)).dot(axis)) + Math.abs(transform.transformNormal(new Vec3(0, 0, bounds.getZsize() * 0.5)).dot(axis));
+    }
+
     static boolean canSee(ServerLevel level, Entity entity, BlockPos sourcePos, Vec3 start, Vec3 end) {
         boolean loaded = BlockGetter.traverseBlocks(start, end, level, (world, pos) -> {
             if (world.isLoaded(pos)) {

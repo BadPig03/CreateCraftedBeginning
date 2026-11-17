@@ -26,6 +26,7 @@ final class GasIntakeFlow {
     private static final double MAX_ACCELERATION = 0.12;
     private static final double APPROACH_SPEED = 0.25;
     private static final double ARRIVAL_RESPONSE = 0.5;
+    private static final double LIVING_ARRIVAL_DISTANCE = 1;
     private static final double MOUTH_CLEARANCE = 0.03;
     private static final double RAY_EPSILON = 0.0001;
 
@@ -62,7 +63,8 @@ final class GasIntakeFlow {
             AABB bounds = entity.getBoundingBox();
             Vec3 center = transform.transformPosition(bounds.getCenter());
             Vec3 point = GasFlowGeometry.closestPoint(entity, transform, mouth);
-            if (center.subtract(mouth).dot(axis) < 0 || !GasFlowGeometry.canSee(level, entity, sourcePos, rayStart, point)) {
+            double forwardDistance = center.subtract(mouth).dot(axis);
+            if (forwardDistance < 0 || !GasFlowGeometry.canSee(level, entity, sourcePos, rayStart, point)) {
                 continue;
             }
 
@@ -83,12 +85,13 @@ final class GasIntakeFlow {
                     multiplier = 0.25;
                 }
 
-                Vec3 impulse = offset.scale(strength * attenuation * multiplier / distance);
+                double arrival = Math.min(1, forwardDistance / LIVING_ARRIVAL_DISTANCE);
+                Vec3 impulse = offset.scale(strength * attenuation * multiplier * arrival / distance);
                 targets.computeIfAbsent(entity, ignored -> new GasFlowTarget()).add(impulse, true);
                 continue;
             }
 
-            double radius = Math.abs(transform.transformNormal(new Vec3(bounds.getXsize() * 0.5, 0, 0)).dot(axis)) + Math.abs(transform.transformNormal(new Vec3(0, bounds.getYsize() * 0.5, 0)).dot(axis)) + Math.abs(transform.transformNormal(new Vec3(0, 0, bounds.getZsize() * 0.5)).dot(axis));
+            double radius = GasFlowGeometry.projectedRadius(bounds, transform, axis);
             Vec3 offset = mouth.add(axis.scale(radius + MOUTH_CLEARANCE)).subtract(center);
             double distance = offset.length();
             Vec3 desired = offset.scale(ARRIVAL_RESPONSE);
@@ -96,20 +99,12 @@ final class GasIntakeFlow {
                 desired = offset.scale(APPROACH_SPEED / distance);
             }
 
-            Vec3 movement = transform.transformNormal(item.getDeltaMovement());
-            Vec3 gravity = transform.transformNormal(new Vec3(0, item.getGravity(), 0));
-            Vec3 impulse = desired.add(gravity).subtract(movement);
             double limit = strength * attenuation;
-            double length = impulse.length();
-            if (length <= 0 || limit <= 0) {
+            if (limit <= 0) {
                 continue;
             }
 
-            if (length > limit) {
-                impulse = impulse.scale(limit / length);
-            }
-
-            targets.computeIfAbsent(item, ignored -> new GasFlowTarget()).add(impulse, true);
+            targets.computeIfAbsent(item, ignored -> new GasFlowTarget()).addItemIntake(desired, limit);
         }
     }
 }

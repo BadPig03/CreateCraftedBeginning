@@ -15,8 +15,8 @@ import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.Vec3;
 import net.ty.createcraftedbeginning.gas.release.GasReleasePushPacket;
-import net.ty.createcraftedbeginning.platform.SubLevelBridge.CoordinateTransform;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
+import net.ty.createcraftedbeginning.platform.SubLevelBridge.CoordinateTransform;
 import net.ty.createcraftedbeginning.platform.access.PlayerFlightCheckAccess;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -26,6 +26,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 final class GasFlowTarget {
     private Vec3 continuous = Vec3.ZERO;
     private Vec3 burst = Vec3.ZERO;
+    private Vec3 weightedIntakeMovement = Vec3.ZERO;
+    private double intakeStrength;
 
     static boolean canAffect(Entity entity) {
         if (!entity.isAlive() || entity.isSpectator() || entity instanceof ArmorStand) {
@@ -48,19 +50,37 @@ final class GasFlowTarget {
         burst = burst.add(impulse);
     }
 
+    void addItemIntake(Vec3 desired, double strength) {
+        weightedIntakeMovement = weightedIntakeMovement.add(desired.scale(strength));
+        intakeStrength += strength;
+    }
+
     void apply(Entity entity) {
         if (!entity.isAlive() || entity.isSpectator()) {
             return;
         }
 
         CoordinateTransform transform = SubLevelBridge.createEntityTransform(entity);
-        GasFlowMotion motion = new GasFlowMotion(continuous, burst);
         Vec3 nativeMovement = entity.getDeltaMovement();
         if (entity instanceof ServerPlayer player) {
             nativeMovement = player.getKnownMovement();
         }
 
         Vec3 movement = transform.transformNormal(nativeMovement);
+        Vec3 combinedContinuous = continuous;
+        if (entity instanceof ItemEntity item && intakeStrength > 0) {
+            Vec3 desired = weightedIntakeMovement.scale(1 / intakeStrength);
+            Vec3 gravity = transform.transformNormal(new Vec3(0, item.getGravity(), 0));
+            Vec3 intake = desired.add(gravity).subtract(movement);
+            double length = intake.length();
+            if (length > intakeStrength) {
+                intake = intake.scale(intakeStrength / length);
+            }
+
+            combinedContinuous = combinedContinuous.add(intake);
+        }
+
+        GasFlowMotion motion = new GasFlowMotion(combinedContinuous, burst);
         Vec3 impulse = motion.impulseFor(movement);
         if (impulse.lengthSqr() <= 0 && !(entity instanceof ServerPlayer)) {
             return;
@@ -68,7 +88,7 @@ final class GasFlowTarget {
 
         Vec3 nextMovement = movement.add(impulse);
         if (entity instanceof ServerPlayer player) {
-            CatnipServices.NETWORK.sendToClient(player, new GasReleasePushPacket(player.level().dimension().location(), continuous, burst));
+            CatnipServices.NETWORK.sendToClient(player, new GasReleasePushPacket(player.level().dimension().location(), combinedContinuous, burst));
             player.serverLevel().getChunkSource().broadcast(player, new ClientboundSetEntityMotionPacket(player.getId(), transform.inverseTransformNormal(nextMovement)));
         }
         else {
