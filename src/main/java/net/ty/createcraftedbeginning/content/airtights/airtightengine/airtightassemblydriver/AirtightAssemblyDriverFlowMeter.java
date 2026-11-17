@@ -146,10 +146,10 @@ class AirtightAssemblyDriverFlowMeter {
         }
 
         if (gasType.isEmpty()) {
-            setFuelMode(resource.copyWithAmount(1), incomingProfile, true);
+            setFuelMode(resource.copyWithAmount(1), incomingProfile);
         }
         else if (switchesPressureProfile) {
-            setFuelMode(resource.copyWithAmount(1), incomingProfile, false);
+            setFuelMode(resource.copyWithAmount(1), incomingProfile);
         }
         gatheredSupply += acceptedAmount;
         gatheredWork += Math.min(remainingWork, acceptedAmount * workFactor);
@@ -229,7 +229,6 @@ class AirtightAssemblyDriverFlowMeter {
         gasType = GasStack.EMPTY;
         pressureProfile = GameplayPressureProfiles.NORMAL;
         driverCore.getLevelCalculator().updateSupplyLevel(0);
-        driverCore.getResidueManager().applyRemovalPenalty();
         if (samplesChanged || gasChanged) {
             driverCore.markForSave();
         }
@@ -248,7 +247,7 @@ class AirtightAssemblyDriverFlowMeter {
         return gasType;
     }
 
-    private void setFuelMode(GasStack gasStack, GameplayPressureProfile newPressureProfile, boolean applyGasChangePenalty) {
+    private void setFuelMode(GasStack gasStack, GameplayPressureProfile newPressureProfile) {
         GasStack normalized = gasStack.isEmpty() ? GasStack.EMPTY : gasStack.copyWithAmount(1);
         GameplayPressureProfile normalizedProfile = normalized.isEmpty() ? GameplayPressureProfiles.NORMAL : newPressureProfile;
         boolean gasChanged = !GasStack.isSameGasSameComponents(gasType, normalized);
@@ -259,9 +258,6 @@ class AirtightAssemblyDriverFlowMeter {
 
         gasType = normalized;
         pressureProfile = normalizedProfile;
-        if (gasChanged && applyGasChangePenalty) {
-            driverCore.getResidueManager().applyRemovalPenalty();
-        }
         driverCore.markForSaveAndClientSync();
     }
 
@@ -335,7 +331,7 @@ class AirtightAssemblyDriverFlowMeter {
             return;
         }
 
-        setFuelMode(GasStack.EMPTY, GameplayPressureProfiles.NORMAL, true);
+        setFuelMode(GasStack.EMPTY, GameplayPressureProfiles.NORMAL);
     }
 
     private void updateDerivedSupply(boolean notifyChanges) {

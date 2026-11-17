@@ -63,10 +63,6 @@ public final class AirtightAssemblyDriverCore {
         return true;
     }
 
-    public boolean addToTooltip(List<Component> tooltip) {
-        return structureManager.isAssembled() && tooltipBuilder.addToTooltip(tooltip);
-    }
-
     public void tick(AirtightTankBlockEntity tankController) {
         controller.tick(tankController);
     }

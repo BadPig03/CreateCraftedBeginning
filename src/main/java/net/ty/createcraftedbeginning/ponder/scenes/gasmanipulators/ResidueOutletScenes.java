@@ -91,7 +91,7 @@ public class ResidueOutletScenes {
         scene.idle(3);
         outletArea = outletArea.inflate(0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.WHITE, outletObject, outletArea, 60);
-        scene.overlay().showText(60).text("Some gases produce Residue while powering the Driver").pointAt(outletVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Install a Residue Outlet to collect byproducts while the Driver runs").pointAt(outletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(funnelSelection, Direction.SOUTH);
@@ -118,47 +118,34 @@ public class ResidueOutletScenes {
 
         scene.idle(80);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, outletObject, outletArea, 60);
-        scene.overlay().showText(60).text("Blocked Residue lowers the Exhaust level and limits the Driver's output").colored(PonderPalette.RED).pointAt(outletVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("A blocked outlet stops collecting Residue, but the Driver keeps running").colored(PonderPalette.RED).pointAt(outletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
         scene.world().hideSection(funnelSelection, Direction.NORTH);
         scene.world().hideSection(fluidPipeSelection, Direction.UP);
-        scene.world().setKineticSpeed(engineSelection, 16);
-        scene.effects().rotationSpeedIndicator(enginePos);
 
-        scene.idle(36);
-        scene.world().setKineticSpeed(engineSelection, 8);
-        scene.effects().rotationSpeedIndicator(enginePos);
+        scene.idle(73);
+        scene.overlay().showText(60).text("Without an outlet, uncollected Residue is discarded").colored(PonderPalette.BLUE).pointAt(outletVec).placeNearTarget().attachKeyFrame();
 
-        scene.idle(37);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, outletObject, outletArea, 60);
-        scene.overlay().showText(60).text("If Residue remains blocked, the Driver eventually stops").colored(PonderPalette.RED).pointAt(outletVec).placeNearTarget().attachKeyFrame();
+        scene.idle(7);
+        scene.world().hideSection(outletSelection, Direction.WEST);
 
-        scene.idle(19);
-        scene.world().setKineticSpeed(engineSelection, 4);
-        scene.effects().rotationSpeedIndicator(enginePos);
+        scene.idle(73);
+        scene.world().showSection(outletSelection, Direction.EAST);
 
-        scene.idle(36);
-        scene.world().setKineticSpeed(engineSelection, 0);
-        scene.effects().rotationSpeedIndicator(enginePos);
-
-        scene.idle(25);
+        scene.idle(3);
         scene.world().showSection(funnelSelection, Direction.SOUTH);
+
+        scene.idle(3);
         scene.world().showSection(fluidPipeSelection, Direction.DOWN);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Clear enough space for a full batch to restart; steady discharge gradually restores the Exhaust level").colored(PonderPalette.GREEN).pointAt(outletVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Reconnect an outlet with space to resume collection; missed Residue is not stored").colored(PonderPalette.GREEN).pointAt(outletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
         scene.world().createItemEntity(funnelVec, Vec3.ZERO, clayBall.copy());
-        scene.world().setKineticSpeed(engineSelection, 16);
-        scene.effects().rotationSpeedIndicator(enginePos);
 
-        scene.idle(36);
-        scene.world().setKineticSpeed(engineSelection, 32);
-        scene.effects().rotationSpeedIndicator(enginePos);
-
-        scene.idle(17);
+        scene.idle(53);
         scene.markAsFinished();
     }
 

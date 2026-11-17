@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightengine.airtighta
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
-import net.ty.createcraftedbeginning.foundation.NbtValues;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -24,8 +23,8 @@ final class AirtightAssemblyDriverSerialization {
     CompoundTag write(Provider provider, boolean clientPacket) {
         CompoundTag compoundTag = new CompoundTag();
         compoundTag.put(COMPOUND_KEY_FLOW_METER, driverCore.getFlowMeter().write(provider, clientPacket));
-        compoundTag.put(COMPOUND_KEY_LEVEL_CALCULATOR, driverCore.getLevelCalculator().write(clientPacket));
         if (clientPacket) {
+            compoundTag.put(COMPOUND_KEY_LEVEL_CALCULATOR, driverCore.getLevelCalculator().writeClient());
             compoundTag.put(COMPOUND_KEY_STRUCTURE_MANAGER, driverCore.getStructureManager().writeClient());
         }
         else {
@@ -55,12 +54,10 @@ final class AirtightAssemblyDriverSerialization {
             return;
         }
 
-        driverCore.getLevelCalculator().read(compoundTag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR), true);
+        driverCore.getLevelCalculator().readClient(compoundTag.getCompound(COMPOUND_KEY_LEVEL_CALCULATOR));
     }
 
     private void readPersistent(CompoundTag compoundTag, Provider provider) {
-        CompoundTag levelTag = NbtValues.getCompoundOrEmpty(compoundTag, COMPOUND_KEY_LEVEL_CALCULATOR);
-        driverCore.getLevelCalculator().read(levelTag, false);
         if (compoundTag.contains(COMPOUND_KEY_FLOW_METER)) {
             driverCore.getFlowMeter().read(compoundTag.getCompound(COMPOUND_KEY_FLOW_METER), provider, false);
         }

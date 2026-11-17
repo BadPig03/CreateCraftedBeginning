@@ -108,7 +108,7 @@ class AirtightAssemblyDriverStructureManager {
     }
 
     boolean isActive() {
-        return isAssembled() && attachedOutlets > 0 && attachedWindChargingLevel > 0;
+        return isAssembled() && attachedWindChargingLevel > 0;
     }
 
     int getAttachedEngines() {

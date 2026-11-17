@@ -48,8 +48,8 @@ class AirtightAssemblyDriverTooltipBuilder {
     private static void addProgressBars(Map<LevelKey, Double> levels, List<Component> tooltip) {
         double minValue = levels.getOrDefault(LevelKey.MIN_VALUE, 0.0);
         double maxValue = levels.getOrDefault(LevelKey.MAX_VALUE, (double) AirtightAssemblyDriverCore.MAX_LEVEL);
-        List<MutableComponent> labels = List.of(createLabel("supply"), createLabel("wind_charging"), createLabel("residue"));
-        List<MutableComponent> bars = List.of(createProgressBar(levels.getOrDefault(LevelKey.SUPPLY, 0.0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.WIND_CHARGING, 0.0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.RESIDUE, 0.0), minValue, maxValue));
+        List<MutableComponent> labels = List.of(createLabel("supply"), createLabel("wind_charging"));
+        List<MutableComponent> bars = List.of(createProgressBar(levels.getOrDefault(LevelKey.SUPPLY, 0.0), minValue, maxValue), createProgressBar(levels.getOrDefault(LevelKey.WIND_CHARGING, 0.0), minValue, maxValue));
         if (ClientRenderBridge.addAlignedTooltipBars(tooltip, 1, labels, bars)) {
             return;
         }
@@ -132,19 +132,8 @@ class AirtightAssemblyDriverTooltipBuilder {
         addDetailedInfo(tooltip);
     }
 
-    boolean addToTooltip(List<Component> tooltip) {
-        if (driverCore.getStructureManager().getAttachedOutlets() > 0) {
-            return false;
-        }
-
-        CCBLang.translate("gui.airtight_assembly_driver.failure").style(ChatFormatting.GOLD).forGoggles(tooltip);
-        CCBLang.addToGoggles(tooltip, "gui.airtight_assembly_driver.failure.no_outlet");
-        return true;
-    }
-
     private void addDetailedInfo(List<Component> tooltip) {
         AirtightAssemblyDriverStructureManager structureManager = driverCore.getStructureManager();
-
         addGasInfo(driverCore.getFlowMeter(), tooltip);
         addOutletInfo(structureManager.getAttachedOutlets(), tooltip);
         if (!StressImpact.isEnabled()) {

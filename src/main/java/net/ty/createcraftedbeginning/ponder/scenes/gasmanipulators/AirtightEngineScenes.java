@@ -99,7 +99,7 @@ public class AirtightEngineScenes {
         scene.idle(3);
         smallTankOutletArea = smallTankOutletArea.inflate(0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, smallTankOutletObject, smallTankOutletArea, 60);
-        scene.overlay().showText(60).text("At least one Residue Outlet is required for the Driver to run").colored(PonderPalette.GREEN).pointAt(smallTankOutletVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Residue Outlets are optional attachments for collecting byproducts").colored(PonderPalette.GREEN).pointAt(smallTankOutletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(smallTankChamberSelection, Direction.DOWN);
@@ -190,11 +190,9 @@ public class AirtightEngineScenes {
         AABB gasSupplyArea = new AABB(outerGasPipeVec, outerGasPipeVec);
         AABB chamberStartArea = new AABB(chamberLeftVec, chamberLeftVec).inflate(0.5);
         AABB chamberArea = new AABB(chamberLeftVec, util.vector().centerOf(chamberRightPos));
-        AABB residueArea = new AABB(outletVec, outletVec);
 
         Object gasSupplyObject = new Object();
         Object chamberObject = new Object();
-        Object residueObject = new Object();
 
         float mediumSpeed = SpeedLevel.MEDIUM.getSpeedValue();
 
@@ -279,12 +277,10 @@ public class AirtightEngineScenes {
         scene.effects().rotationSpeedIndicator(engineBottomPos);
 
         scene.idle(73);
-        scene.overlay().chaseBoundingBoxOutline(PonderPalette.RED, residueObject, residueArea.inflate(0.5), 60);
-        scene.overlay().showText(60).text("Blocked Residue Outlets limit the Driver's output and can eventually stop it").colored(PonderPalette.RED).pointAt(outletVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Removing a Residue Outlet does not affect the Driver's output").colored(PonderPalette.BLUE).pointAt(outletVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
-        scene.world().setKineticSpeed(engineBottomSelection, mediumSpeed / 2);
-        scene.effects().rotationSpeedIndicator(engineBottomPos);
+        scene.world().hideSection(outletSelection, Direction.WEST);
 
         scene.idle(73);
         scene.world().showSection(engineTopSelection, Direction.SOUTH);
@@ -293,8 +289,8 @@ public class AirtightEngineScenes {
         scene.overlay().showText(60).text("Adding another Airtight Engine adds another output point...").colored(PonderPalette.GREEN).pointAt(engineTopVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(7);
-        scene.world().setKineticSpeed(engineBottomSelection, mediumSpeed / 4);
-        scene.world().setKineticSpeed(engineTopSelection, mediumSpeed / 4);
+        scene.world().setKineticSpeed(engineBottomSelection, mediumSpeed / 2);
+        scene.world().setKineticSpeed(engineTopSelection, mediumSpeed / 2);
         scene.effects().rotationSpeedIndicator(engineBottomPos);
         scene.effects().rotationSpeedIndicator(engineTopPos);
 
@@ -306,7 +302,7 @@ public class AirtightEngineScenes {
         scene.overlay().showControls(engineTopFaceVec, Pointing.DOWN, 60).rightClick().withItem(wrenchItem.copy());
 
         scene.idle(7);
-        scene.world().setKineticSpeed(engineTopSelection, -mediumSpeed / 4);
+        scene.world().setKineticSpeed(engineTopSelection, -mediumSpeed / 2);
         scene.effects().rotationSpeedIndicator(engineTopPos);
 
         scene.idle(53);
