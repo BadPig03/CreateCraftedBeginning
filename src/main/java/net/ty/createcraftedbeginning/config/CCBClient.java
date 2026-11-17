@@ -14,6 +14,7 @@ public final class CCBClient extends ConfigBase {
     public final Overlays overlays = nested(0, Overlays::new, "Overlays");
     public final GasRequests gasRequests = nested(0, GasRequests::new, "Gas Requests");
     public final AmethystMirror amethystMirror = nested(0, AmethystMirror::new, "Amethyst Mirror");
+    public final ChunkStabilizer chunkStabilizer = nested(0, ChunkStabilizer::new, "Chunk Stabilizer");
 
     @Override
     public String getName() {
@@ -83,6 +84,15 @@ public final class CCBClient extends ConfigBase {
         @Override
         public String getName() {
             return "amethyst_mirror";
+        }
+    }
+
+    public static final class ChunkStabilizer extends ConfigBase {
+        public final ConfigBool showBeams = b(true, "show_beams", "Show world-space beams from active Chunk Stabilizers, including Create contraptions, trains and Sable structures. Disabling only hides beams on this client; chunk loading, per-device choices, Ponder scenes and color previews are unchanged.");
+
+        @Override
+        public String getName() {
+            return "chunk_stabilizer";
         }
     }
 }

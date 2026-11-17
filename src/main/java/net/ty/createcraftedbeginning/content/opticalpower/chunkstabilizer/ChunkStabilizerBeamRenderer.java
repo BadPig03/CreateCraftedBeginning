@@ -24,6 +24,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.client.render.CCBSpecialTextures;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.platform.SubLevelBridge;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
@@ -44,7 +45,7 @@ import java.util.WeakHashMap;
 @MethodsReturnNonnullByDefault
 @EventBusSubscriber(modid = CCBAPI.MOD_ID, value = Dist.CLIENT)
 final class ChunkStabilizerBeamRenderer {
-    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/beacon_beam.png");
+    private static final ResourceLocation TEXTURE = CCBSpecialTextures.CHUNK_STABILIZER_BEAM.getLocation();
     private static final int HEIGHT = 1024;
     private static final double VIEW_DISTANCE_SQR = 65536;
     private static final Set<ChunkStabilizerBlockEntity> LOADERS = Collections.newSetFromMap(new WeakHashMap<>());
@@ -93,7 +94,7 @@ final class ChunkStabilizerBeamRenderer {
         Minecraft minecraft = Minecraft.getInstance();
         ClientLevel level = minecraft.level;
         LOADERS.removeIf(loader -> loader.isRemoved() || loader.getLevel() != level);
-        if (level == null || !CCBConfig.server().opticalPower.chunkStabilizer.enableChunkLoading.get()) {
+        if (level == null || !CCBConfig.client().chunkStabilizer.showBeams.get() || !CCBConfig.server().opticalPower.chunkStabilizer.enableChunkLoading.get()) {
             return;
         }
 

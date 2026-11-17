@@ -11,6 +11,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public enum CCBSpecialTextures implements BindableTexture {
+    CHUNK_STABILIZER_BEAM,
     LOW_TRANSLUCENT,
     LOW_TRANSLUCENT_HIGHLIGHTED;
 

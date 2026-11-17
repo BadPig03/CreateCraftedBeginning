@@ -23,6 +23,12 @@ META-INF/THIRD_PARTY_NOTICES.md
 META-INF/licenses/Create-LICENSE.md
 ```
 
+## Minecraft
+
+The default texture at `assets/createcraftedbeginning/textures/special/chunk_stabilizer_beam.png` is copied from Minecraft 1.21.1's `assets/minecraft/textures/entity/beacon_beam.png` to preserve the vanilla appearance while allowing independent resource-pack overrides.
+
+Minecraft is developed by Mojang Studios. This Minecraft texture is not covered by this project's MIT License.
+
 ## No endorsement
 
 This project is an independent addon/mod and is not affiliated with, endorsed by, or sponsored by The Create Team / The Creators of Create, unless separately stated by them.

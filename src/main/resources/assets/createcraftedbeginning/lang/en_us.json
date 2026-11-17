@@ -422,6 +422,8 @@
   "createcraftedbeginning.configuration.resistance_gas_multiplier": "Resistance gas multiplier",
   "createcraftedbeginning.configuration.scroll_step": "Scroll step",
   "createcraftedbeginning.configuration.shift_scroll_step": "Shift scroll step",
+  "createcraftedbeginning.configuration.show_beams": "Show beams",
+  "createcraftedbeginning.configuration.show_beams.tooltip": "Show world-space beams from active Chunk Stabilizers, including Create contraptions, trains and Sable structures. Disabling only hides beams on this client; chunk loading, per-device choices, Ponder scenes and color previews are unchanged.",
   "createcraftedbeginning.configuration.show_chunk_stabilizer_chunks": "Show stabilizer chunk outlines",
   "createcraftedbeginning.configuration.show_amethyst_sound_suppressor_chunks": "Show suppression coverage",
   "createcraftedbeginning.configuration.show_amethyst_sound_suppressor_particles": "Show suppressor and crystal growth particles",

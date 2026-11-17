@@ -18,6 +18,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.ty.createcraftedbeginning.client.gui.CCBGUITextures;
+import net.ty.createcraftedbeginning.client.render.CCBSpecialTextures;
 import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -30,7 +31,7 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 final class ChunkStabilizerColorEditor extends ScreenOverlay {
     private static final CCBGUITextures BACKGROUND = CCBGUITextures.CHUNK_STABILIZER_COLOR;
-    private static final ResourceLocation BEAM_TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/beacon_beam.png");
+    private static final ResourceLocation BEAM_TEXTURE = CCBSpecialTextures.CHUNK_STABILIZER_BEAM.getLocation();
     private static final int RGB_MASK = 0xFFFFFF;
     private static final int TEXT_COLOR = 0x363636;
     private static final int INVALID_TEXT_COLOR = 0xFF5555;
