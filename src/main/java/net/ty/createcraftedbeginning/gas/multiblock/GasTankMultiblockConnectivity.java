@@ -154,7 +154,7 @@ public final class GasTankMultiblockConnectivity {
             bestPartCount = partCount;
         }
 
-        if (simulate) {
+        if (simulate || bestPartCount <= 0) {
             return bestPartCount;
         }
 
