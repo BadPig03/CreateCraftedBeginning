@@ -7,19 +7,21 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseArea;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseContext;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseHandlers;
 import net.ty.createcraftedbeginning.config.CCBConfig;
 import net.ty.createcraftedbeginning.config.CCBGas.EntityPush;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.gas.visual.GasIntakeOutlinePacket;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map.Entry;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
@@ -57,7 +59,7 @@ public final class GasFlowForces {
         return items != null && items.contains(entity);
     }
 
-    public static void outline(GasReleaseContext context) {
+    public static void outline(GasReleaseContext context, boolean continuous) {
         if (!(context.level() instanceof ServerLevel level)) {
             return;
         }
@@ -65,12 +67,20 @@ public final class GasFlowForces {
         Pending pending = PENDING.computeIfAbsent(level, ignored -> new Pending());
         Outlet outlet = new Outlet(context.sourcePos(), context.direction(), false);
         GasReleaseArea area = context.releaseArea();
+        GasStack gas = context.gas();
+        int color = gas.getHint();
+        long amount = gas.getAmount();
         Outline previous = pending.outlines.get(outlet);
-        if (previous != null && previous.area().sideLength() > area.sideLength()) {
-            return;
+        if (previous != null) {
+            amount = BoundedMath.saturatedAdd(previous.amount(), amount);
+            continuous &= previous.continuous();
+            if (previous.area().sideLength() > area.sideLength()) {
+                area = previous.area();
+                color = previous.color();
+            }
         }
 
-        pending.outlines.put(outlet, new Outline(area, context.gas().getHint()));
+        pending.outlines.put(outlet, new Outline(area, color, amount, continuous));
     }
 
     static void synchronizePosition(ItemEntity item) {
@@ -94,9 +104,10 @@ public final class GasFlowForces {
         }
         if (CCBConfig.server().gas.intakeSuction.enableIntakeSuction.get()) {
             for (Entry<Inlet, GasIntakeFlow> entry : pending.intakes.entrySet()) {
-                entry.getValue().collect(level, targets);
+                GasIntakeFlow flow = entry.getValue();
+                flow.collect(level, targets);
                 Inlet inlet = entry.getKey();
-                GasIntakeOutlinePacket.send(level, inlet.pos(), inlet.direction());
+                GasIntakeOutlinePacket.send(level, inlet.pos(), inlet.direction(), flow.getAmount());
             }
         }
         for (Entry<Entity, GasFlowTarget> entry : targets.entrySet()) {
@@ -105,7 +116,7 @@ public final class GasFlowForces {
         for (Entry<Outlet, Outline> entry : pending.outlines.entrySet()) {
             Outlet outlet = entry.getKey();
             Outline outline = entry.getValue();
-            GasReleaseHandlers.showOutline(level, outlet.pos(), outlet.direction(), outline.area(), outline.color());
+            GasReleaseHandlers.showOutline(level, outlet.pos(), outlet.direction(), outline.area(), outline.color(), outline.amount(), outline.continuous());
         }
     }
 
@@ -123,7 +134,7 @@ public final class GasFlowForces {
 
     private record Inlet(BlockPos pos, Direction direction) {}
 
-    private record Outline(GasReleaseArea area, int color) {}
+    private record Outline(GasReleaseArea area, int color, long amount, boolean continuous) {}
 
     private static final class Pending {
         private final Map<Outlet, GasReleaseFlow> releases = new LinkedHashMap<>();

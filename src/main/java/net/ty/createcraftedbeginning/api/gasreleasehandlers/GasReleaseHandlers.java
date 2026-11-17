@@ -21,7 +21,7 @@ import java.util.Optional;
 public final class GasReleaseHandlers {
     private static final GasReleaseHandler DEFAULT_HANDLER = new GasReleaseHandler() {};
     private static final GameplayPressureHandlerRegistry<GasReleaseHandler> HANDLERS = GameplayPressureHandlerRegistry.create();
-    private static volatile OutlineSender outlineSender = (level, sourcePos, direction, area, color) -> {};
+    private static volatile OutlineSender outlineSender = (level, sourcePos, direction, area, color, amount, continuous) -> {};
 
     private GasReleaseHandlers() {
     }
@@ -70,16 +70,16 @@ public final class GasReleaseHandlers {
         outlineSender = sender;
     }
 
-    public static void showOutline(Level level, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color) {
+    public static void showOutline(Level level, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color, long amount, boolean continuous) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
 
-        outlineSender.send(serverLevel, sourcePos, direction, area, color);
+        outlineSender.send(serverLevel, sourcePos, direction, area, color, amount, continuous);
     }
 
     @FunctionalInterface
     public interface OutlineSender {
-        void send(ServerLevel level, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color);
+        void send(ServerLevel level, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color, long amount, boolean continuous);
     }
 }

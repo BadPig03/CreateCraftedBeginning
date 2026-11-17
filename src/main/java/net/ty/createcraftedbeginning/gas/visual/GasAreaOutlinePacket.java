@@ -22,17 +22,17 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record GasAreaOutlinePacket(BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color) implements ClientboundPacketPayload {
-    public static final StreamCodec<ByteBuf, GasAreaOutlinePacket> STREAM_CODEC = StreamCodec.composite(BlockPos.STREAM_CODEC, GasAreaOutlinePacket::sourcePos, ByteBufCodecs.optional(Direction.STREAM_CODEC), GasAreaOutlinePacket::direction, ByteBufCodecs.DOUBLE.map(GasReleaseArea::new, GasReleaseArea::sideLength), GasAreaOutlinePacket::area, ByteBufCodecs.VAR_INT, GasAreaOutlinePacket::color, GasAreaOutlinePacket::new);
+public record GasAreaOutlinePacket(BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color, long amount, boolean continuous) implements ClientboundPacketPayload {
+    public static final StreamCodec<ByteBuf, GasAreaOutlinePacket> STREAM_CODEC = StreamCodec.composite(BlockPos.STREAM_CODEC, GasAreaOutlinePacket::sourcePos, ByteBufCodecs.optional(Direction.STREAM_CODEC), GasAreaOutlinePacket::direction, ByteBufCodecs.DOUBLE.map(GasReleaseArea::new, GasReleaseArea::sideLength), GasAreaOutlinePacket::area, ByteBufCodecs.VAR_INT, GasAreaOutlinePacket::color, ByteBufCodecs.VAR_LONG, GasAreaOutlinePacket::amount, ByteBufCodecs.BOOL, GasAreaOutlinePacket::continuous, GasAreaOutlinePacket::new);
 
-    public static void send(ServerLevel level, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color) {
-        CatnipServices.NETWORK.sendToClientsAround(level, SubLevelBridge.resolve(level, sourcePos).blockPos(), 64, new GasAreaOutlinePacket(sourcePos, direction, area, color));
+    public static void send(ServerLevel level, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color, long amount, boolean continuous) {
+        CatnipServices.NETWORK.sendToClientsAround(level, SubLevelBridge.resolve(level, sourcePos).blockPos(), 64, new GasAreaOutlinePacket(sourcePos, direction, area, color, amount, continuous));
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
-        ClientRenderBridge.showGasAreaOutline(player, sourcePos, direction, area, color);
+        ClientRenderBridge.showGasAreaOutline(player, sourcePos, direction, area, color, amount, continuous);
     }
 
     @Override

@@ -41,6 +41,10 @@ final class GasIntakeFlow {
         this.direction = Vec3.atLowerCornerOf(direction.getNormal());
     }
 
+    long getAmount() {
+        return (long) amount;
+    }
+
     void add(long amount) {
         this.amount += amount;
     }

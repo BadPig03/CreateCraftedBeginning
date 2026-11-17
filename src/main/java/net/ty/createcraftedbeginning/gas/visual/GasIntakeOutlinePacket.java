@@ -7,6 +7,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.api.distmarker.Dist;
@@ -19,17 +20,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public record GasIntakeOutlinePacket(BlockPos sourcePos, Direction direction) implements ClientboundPacketPayload {
-    public static final StreamCodec<ByteBuf, GasIntakeOutlinePacket> STREAM_CODEC = StreamCodec.composite(BlockPos.STREAM_CODEC, GasIntakeOutlinePacket::sourcePos, Direction.STREAM_CODEC, GasIntakeOutlinePacket::direction, GasIntakeOutlinePacket::new);
+public record GasIntakeOutlinePacket(BlockPos sourcePos, Direction direction, long amount) implements ClientboundPacketPayload {
+    public static final StreamCodec<ByteBuf, GasIntakeOutlinePacket> STREAM_CODEC = StreamCodec.composite(BlockPos.STREAM_CODEC, GasIntakeOutlinePacket::sourcePos, Direction.STREAM_CODEC, GasIntakeOutlinePacket::direction, ByteBufCodecs.VAR_LONG, GasIntakeOutlinePacket::amount, GasIntakeOutlinePacket::new);
 
-    public static void send(ServerLevel level, BlockPos sourcePos, Direction direction) {
-        CatnipServices.NETWORK.sendToClientsAround(level, SubLevelBridge.resolve(level, sourcePos).blockPos(), 64, new GasIntakeOutlinePacket(sourcePos, direction));
+    public static void send(ServerLevel level, BlockPos sourcePos, Direction direction, long amount) {
+        CatnipServices.NETWORK.sendToClientsAround(level, SubLevelBridge.resolve(level, sourcePos).blockPos(), 64, new GasIntakeOutlinePacket(sourcePos, direction, amount));
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handle(LocalPlayer player) {
-        ClientRenderBridge.showGasIntakeOutline(player, sourcePos, direction);
+        ClientRenderBridge.showGasIntakeOutline(player, sourcePos, direction, amount);
     }
 
     @Override

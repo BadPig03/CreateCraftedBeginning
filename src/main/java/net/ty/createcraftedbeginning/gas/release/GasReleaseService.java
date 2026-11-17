@@ -42,7 +42,7 @@ public final class GasReleaseService {
 
         GasReleaseHandler releaseHandler = GasReleaseHandlers.resolve(gas, context.sourcePressurePa().orElse(GasPressure.REFERENCE_PRESSURE_PA));
         if (releaseHandler.shouldShowOutline()) {
-            GasFlowForces.outline(context);
+            GasFlowForces.outline(context, false);
         }
         GasReleaseFeedback feedback = GasReleaseFeedback.of(context);
         boolean effectDue = gas.getAmount() >= releaseHandler.getEffectInterval(gas);
@@ -68,7 +68,7 @@ public final class GasReleaseService {
         boolean feedbackDue = state.recordFeedback(gameTime);
         GasReleaseHandler releaseHandler = GasReleaseHandlers.resolve(gas, sourcePressurePa);
         if (releaseHandler.shouldShowOutline()) {
-            GasFlowForces.outline(context);
+            GasFlowForces.outline(context, true);
         }
         boolean effectDue = state.recordEffect(gas, sourcePressurePa, gas.getAmount(), gameTime, releaseHandler.getEffectInterval(gas), releaseHandler.getEffectCooldown(gas));
         GasReleaseFeedback feedback = GasReleaseFeedback.of(context);

@@ -48,12 +48,12 @@ public final class ClientRenderBridge {
         service.showPlacementBounds(player, outlineId, placementPos, bounds, warningKey);
     }
 
-    public static void showGasAreaOutline(Player player, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color) {
-        service.showGasAreaOutline(player, sourcePos, direction, area, color);
+    public static void showGasAreaOutline(Player player, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color, long amount, boolean continuous) {
+        service.showGasAreaOutline(player, sourcePos, direction, area, color, amount, continuous);
     }
 
-    public static void showGasIntakeOutline(Player player, BlockPos sourcePos, Direction direction) {
-        service.showGasIntakeOutline(player, sourcePos, direction);
+    public static void showGasIntakeOutline(Player player, BlockPos sourcePos, Direction direction, long amount) {
+        service.showGasIntakeOutline(player, sourcePos, direction, amount);
     }
 
     public interface Service {
@@ -67,10 +67,10 @@ public final class ClientRenderBridge {
         default void showPlacementBounds(Player player, String outlineId, BlockPos placementPos, AABB bounds, String warningKey) {
         }
 
-        default void showGasAreaOutline(Player player, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color) {
+        default void showGasAreaOutline(Player player, BlockPos sourcePos, Optional<Direction> direction, GasReleaseArea area, int color, long amount, boolean continuous) {
         }
 
-        default void showGasIntakeOutline(Player player, BlockPos sourcePos, Direction direction) {
+        default void showGasIntakeOutline(Player player, BlockPos sourcePos, Direction direction, long amount) {
         }
     }
 }

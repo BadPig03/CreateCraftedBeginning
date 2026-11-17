@@ -115,7 +115,7 @@ public enum CCBPackets implements PacketTypeProvider {
     }
 
     public static void register() {
-        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 50);
+        CatnipPacketRegistry packetRegistry = new CatnipPacketRegistry(CCBAPI.MOD_ID, 51);
         Arrays.stream(values()).map(packet -> packet.type).forEach(packetRegistry::registerPacket);
         packetRegistry.registerAllPackets();
         GasReleaseHandlers.registerOutlineSender(GasAreaOutlinePacket::send);
