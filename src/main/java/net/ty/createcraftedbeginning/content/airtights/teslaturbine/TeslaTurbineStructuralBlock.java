@@ -46,6 +46,7 @@ import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbine
 import net.ty.createcraftedbeginning.content.airtights.teslaturbinenozzle.TeslaTurbineNozzleBlock;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
+import net.ty.createcraftedbeginning.registry.CCBItems;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -180,6 +181,16 @@ public class TeslaTurbineStructuralBlock extends RotatedPillarBlock implements I
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        if (stack.is(CCBItems.TESLA_TURBINE_ROTOR)) {
+            BlockPos masterPos = getMaster(pos, state);
+            BlockState masterState = level.getBlockState(masterPos);
+            if (!(masterState.getBlock() instanceof TeslaTurbineBlock) || masterState.getValue(TeslaTurbineBlock.AXIS) != state.getValue(AXIS)) {
+                return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+            }
+
+            return TeslaTurbineBlock.tryInstallRotor(stack, masterState, level, masterPos, player);
+        }
+
         IPlacementHelper placementHelper = PlacementHelpers.get(PLACEMENT_HELPER_ID);
         if (!placementHelper.matchesItem(stack)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;

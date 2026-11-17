@@ -70,6 +70,24 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
         registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false).setValue(ROTOR, 0));
     }
 
+    static ItemInteractionResult tryInstallRotor(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player) {
+        int rotorCount = state.getValue(ROTOR);
+        if (rotorCount >= MAX_ROTORS) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        if (level.isClientSide) {
+            return ItemInteractionResult.SUCCESS;
+        }
+
+        level.setBlockAndUpdate(pos, state.setValue(ROTOR, rotorCount + 1));
+        CCBSoundEvents.ROTOR_ADDED.playOnServer(level, pos, 1, 1);
+        if (!player.isCreative()) {
+            stack.shrink(1);
+        }
+        return ItemInteractionResult.SUCCESS;
+    }
+
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         return InteractionResult.PASS;
@@ -165,20 +183,11 @@ public class TeslaTurbineBlock extends RotatedPillarKineticBlock implements IBE<
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         ItemStack heldItem = player.getItemInHand(hand);
-        int rotorCount = state.getValue(ROTOR);
         if (heldItem.is(CCBItems.TESLA_TURBINE_ROTOR)) {
-            if (rotorCount >= MAX_ROTORS) {
-                return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-            }
-
-            level.setBlockAndUpdate(pos, state.setValue(ROTOR, rotorCount + 1));
-            CCBSoundEvents.ROTOR_ADDED.playOnServer(level, pos, 1, 1);
-            if (!player.isCreative()) {
-                heldItem.shrink(1);
-            }
-            return ItemInteractionResult.SUCCESS;
+            return tryInstallRotor(heldItem, state, level, pos, player);
         }
 
+        int rotorCount = state.getValue(ROTOR);
         if (!heldItem.is(AllItems.WRENCH) || rotorCount == 0) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
