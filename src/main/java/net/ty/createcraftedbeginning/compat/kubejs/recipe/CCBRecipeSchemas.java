@@ -33,9 +33,8 @@ public final class CCBRecipeSchemas {
     static final RecipeKey<List<GasRecipeRequirement>> GAS_INPUTS = CCBRecipeComponents.GAS_INPUT.instance().asList().withBounds(IntBounds.OPTIONAL).inputKey("gas_ingredients").optional(List.of()).functionNames("gasInputs");
     static final RecipeKey<List<FractionationTowerOutput>> LAYER_OUTPUTS = CCBRecipeComponents.LAYER_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("layer_outputs").optional(List.of()).alwaysWrite().functionNames("layerOutputs");
     private static final RecipeKey<List<Ingredient>> ITEM_INPUTS = IngredientComponent.INGREDIENT.instance().asList().inputKey("ingredients");
-    private static final RecipeKey<List<ProcessingOutput>> ITEM_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().outputKey("results");
+    static final RecipeKey<List<ProcessingOutput>> ITEM_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().outputKey("results");
     private static final RecipeKey<List<Either<Ingredient, SizedFluidIngredient>>> INPUTS = IngredientComponent.INGREDIENT.instance().or(CCBRecipeComponents.FLUID_INPUT.instance()).asList().withBounds(IntBounds.OPTIONAL).inputKey("ingredients");
-    private static final RecipeKey<List<Either<Ingredient, SizedFluidIngredient>>> FORGING_INPUTS = IngredientComponent.OPTIONAL_INGREDIENT.instance().or(CCBRecipeComponents.FLUID_INPUT.instance()).asList().withBounds(IntBounds.OPTIONAL).inputKey("ingredients");
     static final RecipeKey<List<Either<FluidStack, ProcessingOutput>>> OUTPUTS = FluidStackComponent.FLUID_STACK.instance().or(CCBRecipeComponents.ITEM_OUTPUT.instance()).asList().outputKey("results");
     private static final RecipeKey<List<ProcessingOutput>> EMPTY_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite().noFunctions();
     private static final RecipeKey<Integer> DURATION = NumberComponent.intRange(1, Integer.MAX_VALUE).otherKey("processing_time").optional(DEFAULT_PROCESSING_TIME).alwaysWrite().functionNames("processingTime");
@@ -60,7 +59,7 @@ public final class CCBRecipeSchemas {
     public static void register(RecipeSchemaRegistry registry) {
         registry.register(CCBRecipeTypes.CHILLING.getId(), new RecipeSchema(ITEM_OUTPUTS, ITEM_INPUTS).factory(MACHINE).constructor(ITEM_OUTPUTS, ITEM_INPUTS));
         registry.register(CCBRecipeTypes.GAS_INJECTION.getId(), GasInjectionKubeRecipe.schema());
-        registry.register(CCBRecipeTypes.FORGING_PRESS.getId(), new RecipeSchema(ITEM_OUTPUTS, FORGING_INPUTS, GAS_INPUTS).factory(MACHINE).constructor(ITEM_OUTPUTS, FORGING_INPUTS).constructor(ITEM_OUTPUTS, FORGING_INPUTS, GAS_INPUTS));
+        registry.register(CCBRecipeTypes.FORGING_PRESS.getId(), ForgingPressKubeRecipe.schema());
         registry.register(CCBRecipeTypes.CHILLED_COMPACTING.getId(), new RecipeSchema(OUTPUTS, INPUTS).factory(MACHINE).constructor(OUTPUTS, INPUTS));
         registry.register(CCBRecipeTypes.CHILLED_MIXING.getId(), new RecipeSchema(OUTPUTS, INPUTS, OPTIONAL_DURATION).factory(MACHINE).constructor(OUTPUTS, INPUTS));
         registry.register(CCBRecipeTypes.COOLING.getId(), new RecipeSchema(INPUTS, COOLING_DURATION, EMPTY_OUTPUTS).factory(MACHINE).constructor(INPUTS, COOLING_DURATION));

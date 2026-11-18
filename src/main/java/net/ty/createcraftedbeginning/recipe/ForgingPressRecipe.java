@@ -88,17 +88,15 @@ public class ForgingPressRecipe extends StandardGasProcessingRecipe<RecipeInput>
     protected void validateSpecial(List<String> errors) {
         NonNullList<Ingredient> itemIngredients = getIngredients();
         boolean usesBaseItem = hasIngredient(itemIngredients, 0);
-        boolean usesPressHead = hasIngredient(itemIngredients, 1);
         boolean usesAdditionItem = hasIngredient(itemIngredients, 2);
-        boolean usesFullItemPattern = usesBaseItem && usesPressHead && usesAdditionItem;
         boolean usesFluid = !getFluidIngredients().isEmpty();
         boolean usesGas = !getGasIngredients().isEmpty();
-        int advancedInputModes = (usesFullItemPattern ? 1 : 0) + (usesFluid ? 1 : 0) + (usesGas ? 1 : 0);
-        if (advancedInputModes > 1) {
-            errors.add("Forging Press recipes may use at most one advanced input mode: a complete three-item pattern, a fluid input, or a gas input.");
+        int additionalInputTypes = (usesAdditionItem ? 1 : 0) + (usesFluid ? 1 : 0) + (usesGas ? 1 : 0);
+        if (additionalInputTypes > 1) {
+            errors.add("Forging press recipes may use at most one additional input type (item, fluid or gas); got " + additionalInputTypes + '.');
         }
-        if (!usesBaseItem && !usesAdditionItem && !usesFluid && !usesGas) {
-            errors.add("Forging Press recipes must define at least one consumable base item, addition item, fluid, or gas input.");
+        if (!usesBaseItem) {
+            errors.add("Forging press base item ingredient must be non-empty; got an empty ingredient in slot 0.");
         }
         if (!getRollableResults().isEmpty()) {
             return;
@@ -109,7 +107,7 @@ public class ForgingPressRecipe extends StandardGasProcessingRecipe<RecipeInput>
 
     @Override
     public boolean matches(RecipeInput input, Level level) {
-        if (!matchesItemInputs(input)) {
+        if (!hasIngredient(getIngredients(), 0) || !matchesItemInputs(input)) {
             return false;
         }
 

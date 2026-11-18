@@ -19,6 +19,10 @@ function sidebar(english: boolean): DefaultTheme.Sidebar {
           {
             text: english ? 'Gas Injection Chamber' : '注气室',
             link: `${prefix}/developers/kubejs/gas-injection`
+          },
+          {
+            text: english ? 'Airtight Forging Press' : '气密锻造机',
+            link: `${prefix}/developers/kubejs/forging-press`
           }
         ]
       }

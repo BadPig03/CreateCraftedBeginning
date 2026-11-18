@@ -135,6 +135,11 @@ public final class ForgingPressCraftPlanner {
     }
 
     @Nullable ForgingOperationPlan planOperation(Level level) {
+        Ingredient inputIngredient = getIngredient(0);
+        if (inputIngredient.isEmpty()) {
+            return null;
+        }
+
         IItemHandler pressHeadInventory = press.getPressHeadInventory();
         if (!matchesNonConsumableSlot(pressHeadInventory, getIngredient(1))) {
             return null;
@@ -144,7 +149,6 @@ public final class ForgingPressCraftPlanner {
         boolean copyInputComponents = !CCBConfig.server().machines.airtightForgingPress.requireSmithingTemplateForComponentCopy.get() || pressHead.getItem() instanceof SmithingTemplateItem;
         IItemHandler additionInventory = press.getAdditionInventory();
         IItemHandler inputInventory = press.getInputInventory();
-        Ingredient inputIngredient = getIngredient(0);
         Ingredient additionIngredient = getIngredient(2);
         int maxCrafts = getMaxItemCrafts(additionInventory, additionIngredient, inputInventory, inputIngredient);
         if (maxCrafts <= 0) {
