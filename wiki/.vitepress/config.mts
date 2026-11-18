@@ -8,7 +8,20 @@ function sidebar(english: boolean): DefaultTheme.Sidebar {
 
   return {
     [`${prefix}/developers/`]: [
-      { text: english ? 'For Developers' : '面向开发者', link: `${prefix}/developers/` }
+      { text: english ? 'For Developers' : '面向开发者', link: `${prefix}/developers/` },
+      {
+        text: 'KubeJS',
+        items: [
+          {
+            text: english ? 'Gas conditions' : '气体条件',
+            link: `${prefix}/developers/kubejs/gas-conditions`
+          },
+          {
+            text: english ? 'Gas Injection Chamber' : '注气室',
+            link: `${prefix}/developers/kubejs/gas-injection`
+          }
+        ]
+      }
     ],
     [`${prefix}/`]: [
       {

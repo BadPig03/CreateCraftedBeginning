@@ -1,10 +1,13 @@
 ---
 title: 面向开发者
-description: 开始认识Create Crafted Beginning。
+description: Create Crafted Beginning的KubeJS接口与整合包定制文档。
 ---
 
 # 面向开发者 {#for-developers}
 
-::: info 示例文档
-这是Wiki首批测试内容。
-:::
+通过KubeJS定制配方、气体和设备行为。这里收录通用气体条件与各类配方用法。
+
+## KubeJS {#kubejs}
+
+- [气体条件](./kubejs/gas-conditions.md)——使用`CCBGas`设置气体种类、气量与压力。
+- [注气室](./kubejs/gas-injection.md)——物品、流体与概率产物的配方示例。
