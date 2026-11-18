@@ -1,5 +1,6 @@
 package net.ty.createcraftedbeginning.client;
 
+import com.simibubi.create.AllSpecialTextures;
 import com.simibubi.create.content.equipment.goggles.GogglesItem;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.outliner.Outliner;
@@ -62,7 +63,7 @@ public final class ClientRenderService implements Service {
         }
 
         AABB localBounds = area.bounds(Vec3.ZERO, new Vec3(0.5, 0.5, 0.5), direction.map(value -> Vec3.atLowerCornerOf(value.getNormal())).orElse(Vec3.ZERO));
-        GasAreaOutline.show(player.level(), sourcePos, direction, localBounds, color, amount, continuous, CCBConfig.client().outlines.showGasReleaseAreas::get);
+        GasAreaOutline.show(player.level(), sourcePos, direction, localBounds, color, AllSpecialTextures.CHECKERED, false, CCBConfig.client().outlines.showGasReleaseAreas::get);
     }
 
     @Override
@@ -72,6 +73,6 @@ public final class ClientRenderService implements Service {
         }
 
         AABB localBounds = GasIntakeArea.bounds(new Vec3(0.5, 0.5, 0.5), Vec3.atLowerCornerOf(direction.getNormal()));
-        GasAreaOutline.show(player.level(), sourcePos, Optional.of(direction), localBounds, COLOR_INTAKE, amount, true, CCBConfig.client().outlines.showGasIntakeAreas::get);
+        GasAreaOutline.show(player.level(), sourcePos, Optional.of(direction), localBounds, COLOR_INTAKE, AllSpecialTextures.THIN_CHECKERED, true, CCBConfig.client().outlines.showGasIntakeAreas::get);
     }
 }
