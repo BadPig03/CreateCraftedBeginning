@@ -61,7 +61,6 @@ public class ResidueGenerationCategory extends CCBRecipeCategory<ResidueGenerati
         if (recipe.getFluidResults().isEmpty()) {
             outputSlot.addItemStack(getResultItem(recipe).copyWithCount(1)).addRichTooltipCallback((view, tooltip) -> {
                 tooltip.add(Component.translatable("createcraftedbeginning.recipe.residue_generation.output_mapping").withStyle(ChatFormatting.GRAY));
-                tooltip.add(Component.translatable("createcraftedbeginning.recipe.residue_generation.production").withStyle(ChatFormatting.GRAY));
             });
             return;
         }
@@ -71,7 +70,6 @@ public class ResidueGenerationCategory extends CCBRecipeCategory<ResidueGenerati
             tooltip.clear();
             tooltip.add(fluid.getHoverName());
             tooltip.add(Component.translatable("createcraftedbeginning.recipe.residue_generation.output_mapping").withStyle(ChatFormatting.GRAY));
-            tooltip.add(Component.translatable("createcraftedbeginning.recipe.residue_generation.production").withStyle(ChatFormatting.GRAY));
         });
     }
 }
