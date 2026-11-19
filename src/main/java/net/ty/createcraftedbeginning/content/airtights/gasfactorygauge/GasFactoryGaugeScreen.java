@@ -272,7 +272,6 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
         }
 
         itemX = x + 9;
-        itemY = y + windowHeight - 24;
         if (mouseX >= itemX && mouseX < itemX + 16 && mouseY >= itemY && mouseY < itemY + 16) {
             sendRedstoneReset = true;
             sendIt(null, false);
@@ -418,7 +417,7 @@ public class GasFactoryGaugeScreen extends AbstractSimiScreen {
 
     private void renderLinks(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
         int itemX = x + 9;
-        int itemY = y + windowHeight - 24;
+        int itemY = y + windowHeight - 8;
         AllGuiTextures.FROGPORT_SLOT.render(graphics, itemX - 1, itemY - 1);
         graphics.renderItem(new ItemStack(AllBlocks.REDSTONE_LINK), itemX, itemY);
         if (mouseX < itemX || mouseX >= itemX + 16 || mouseY < itemY || mouseY >= itemY + 16) {
