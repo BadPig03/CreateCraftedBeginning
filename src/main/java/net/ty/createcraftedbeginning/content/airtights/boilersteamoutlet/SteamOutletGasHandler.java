@@ -165,11 +165,6 @@ final class SteamOutletGasHandler implements GasStorageHandler, GasPressureCompa
         return storedSteam;
     }
 
-    @Override
-    public PressureModel getPressureModel() {
-        return PressureModel.FIXED;
-    }
-
     void addProducedSteam(long producedSteam) {
         if (producedSteam <= 0) {
             return;
