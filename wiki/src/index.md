@@ -9,7 +9,7 @@ features:
     link: /guide/getting-started
     linkText: 开始阅读
   - title: 面向开发者
-    details: 查看项目源码与构建配置，参与模组开发。
+    details: 查看KubeJS接口与配方示例。
     link: /developers/
     linkText: 开始阅读
 ---

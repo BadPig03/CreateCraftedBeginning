@@ -23,6 +23,10 @@ function sidebar(english: boolean): DefaultTheme.Sidebar {
           {
             text: english ? 'Airtight Forging Press' : '气密锻造机',
             link: `${prefix}/developers/kubejs/forging-press`
+          },
+          {
+            text: english ? 'Airtight Reactor Kettle' : '气密反应釜',
+            link: `${prefix}/developers/kubejs/reactor-kettle`
           }
         ]
       }
@@ -40,7 +44,7 @@ function sidebar(english: boolean): DefaultTheme.Sidebar {
 
 export default defineConfig({
   title: 'Create Crafted Beginning Wiki',
-  description: 'Create Crafted Beginning 的中英文玩法指南与机制参考。',
+  description: 'Create Crafted Beginning的中英文玩法指南与机制参考。',
   base,
   srcDir: 'src',
   cleanUrls: false,

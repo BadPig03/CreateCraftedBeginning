@@ -15,12 +15,17 @@ The Airtight Forging Press processes ingredients in its base, press head and add
 **Features:**
 
 - The first input is the required base item. The optional second input can be an item, fluid or gas ingredient.
-- Sets an optional press head with `.pressHead(...)`. The press head is not consumed.
-- Unused press head or additional item slots stay empty.
-- Supports [gas tags and pressure conditions](./gas-conditions.md).
-- Produces 1 to 8 item outputs, including chance-based item outputs.
+- Produces 1 to 8 item outputs.
+- Unused slots stay empty.
+- Supports [press head configuration](#pressHead), [gas tags and pressure conditions](./gas-conditions.md) and chance-based item outputs.
 
-Note: Custom press head items must belong to the `#createcraftedbeginning:press_head_tools` item tag to fit in the press head slot. To use an iron block as a press head, add it to the tag:
+## Press head items {#pressHead}
+
+- Use `.pressHead(...)` to set the press head. The press head is not consumed.
+- Only items in the `#createcraftedbeginning:press_head_tools` item tag fit in the press head slot.
+
+To allow an iron block as a press head, add it to the tag:
+
 ```js
 ServerEvents.tags('item', event => {
     event.add('createcraftedbeginning:press_head_tools', 'minecraft:iron_block')

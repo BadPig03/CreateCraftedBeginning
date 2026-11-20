@@ -15,12 +15,16 @@ editLink: false
 **功能：**
 
 - 输入第一项为必需的基底物品；第二项可选，可使用物品、流体或气体中的一种。
-- 使用`.pressHead(...)`设置可选的压头，压头不会被消耗。
-- 未使用的压头或附加物品槽位会保持为空。
-- 支持[气体标签和压力条件](./gas-conditions.md)。
-- 输出为1~8项物品，支持概率物品产物。
+- 输出为1~8项物品。
+- 未使用的槽位会保持为空。
+- 支持[压头物品](#pressHead)设置、[气体标签和压力条件](./gas-conditions.md)和概率物品产物。
 
-注意：自定义的压头物品必须要有`#createcraftedbeginning:press_head_tools`的物品标签，否则将无法放入压头槽位中。允许铁块作为压头时可使用如下示例：
+## 压头物品 {#pressHead}
+
+- 使用`.pressHead(...)`设置压头物品，压头物品不会被消耗。
+- 压头物品必须要有`#createcraftedbeginning:press_head_tools`的物品标签，否则将无法放入压头槽位中。
+
+允许铁块作为压头时可使用如下示例：
 ```js
 ServerEvents.tags('item', event => {
     event.add('createcraftedbeginning:press_head_tools', 'minecraft:iron_block')

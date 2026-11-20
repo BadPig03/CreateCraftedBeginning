@@ -9,7 +9,7 @@ features:
     link: /en/guide/getting-started
     linkText: Start reading
   - title: For Developers
-    details: Explore the source and build configuration, and contribute to mod development.
+    details: Explore KubeJS interfaces and recipe examples.
     link: /en/developers/
     linkText: Start reading
 ---

@@ -1,6 +1,6 @@
 ---
 title: Gas Injection Chamber
-description: Gas Injection Chamber KubeJS recipes with mixed inputs and item, fluid and chance-based outputs.
+description: Gas Injection Chamber KubeJS recipe examples for items, fluids and chance-based outputs.
 editLink: false
 ---
 
@@ -14,10 +14,9 @@ The Gas Injection Chamber processes items on a Belt or Depot. Recipes involving 
 
 **Features:**
 
-- Takes one item ingredient or fluid ingredient and one gas ingredient.
+- Takes one item or fluid ingredient and one gas ingredient.
 - Produces one item or fluid result.
-- Supports [gas tags and pressure conditions](./gas-conditions.md).
-- Supports chance-based item outputs.
+- Supports [gas tags and pressure conditions](./gas-conditions.md) and chance-based item outputs.
 
 ## Examples {#recipe}
 
@@ -37,8 +36,8 @@ ServerEvents.recipes(event => {
         CCBGas.of('createcraftedbeginning:ultrawarm_air', 75)
     ]).id('tutorial:injection_fluid')
 
-    // 1 sapling + 50 GU energized natural air
-    // → 1 acacia leaf block (50% chance)
+    // 1 sapling of any type + 50 GU energized natural air
+    // → 1 block of acacia leaves (50% chance)
     ccb.gas_injection(CCBItem.of('minecraft:acacia_leaves').withChance(0.5), [
         Ingredient.of('#minecraft:saplings'),
         CCBGas.of('createcraftedbeginning:energized_natural_air', 50)
