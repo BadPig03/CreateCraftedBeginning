@@ -38,8 +38,8 @@ public final class CCBRecipeSchemas {
     static final RecipeKey<List<Either<FluidStack, ProcessingOutput>>> OUTPUTS = FluidStackComponent.FLUID_STACK.instance().or(CCBRecipeComponents.ITEM_OUTPUT.instance()).asList().outputKey("results");
     private static final RecipeKey<List<ProcessingOutput>> EMPTY_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite().noFunctions();
     private static final RecipeKey<Integer> DURATION = NumberComponent.intRange(1, Integer.MAX_VALUE).otherKey("processing_time").optional(DEFAULT_PROCESSING_TIME).alwaysWrite().functionNames("processingTime");
-    private static final RecipeKey<TemperatureCondition> TEMPERATURE = CCBRecipeComponents.TEMPERATURE.otherKey("temperature").optional(TemperatureCondition.NONE);
-    private static final RecipeKey<TemperatureMatching> TEMPERATURE_MATCHING = CCBRecipeComponents.TEMPERATURE_MATCHING.otherKey("temperature_matching").optional(TemperatureMatching.EXACT);
+    static final RecipeKey<TemperatureCondition> TEMPERATURE = CCBRecipeComponents.TEMPERATURE.otherKey("temperature").optional(TemperatureCondition.NONE);
+    static final RecipeKey<TemperatureMatching> TEMPERATURE_MATCHING = CCBRecipeComponents.TEMPERATURE_MATCHING.otherKey("temperature_matching").optional(TemperatureMatching.EXACT);
     private static final RecipeKey<List<Ingredient>> EMPTY_INPUTS = IngredientComponent.INGREDIENT.instance().asList().withBounds(IntBounds.OPTIONAL).inputKey("ingredients").optional(List.of()).alwaysWrite().noFunctions();
     private static final RecipeKey<List<ProcessingOutput>> OPTIONAL_ITEM_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite();
     static final RecipeKey<List<Either<FluidStack, ProcessingOutput>>> OPTIONAL_OUTPUTS = FluidStackComponent.FLUID_STACK.instance().or(CCBRecipeComponents.ITEM_OUTPUT.instance()).asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite();
@@ -66,7 +66,7 @@ public final class CCBRecipeSchemas {
         registry.register(CCBRecipeTypes.DISSIPATION.getId(), new RecipeSchema(GAS_OUTPUTS, GAS_INPUTS, EMPTY_INPUTS, EMPTY_OUTPUTS).factory(MACHINE).constructor(GAS_OUTPUTS, GAS_INPUTS));
         registry.register(CCBRecipeTypes.ENERGIZATION.getId(), new RecipeSchema(GAS_OUTPUTS, GAS_INPUTS, EMPTY_INPUTS, EMPTY_OUTPUTS).factory(MACHINE).constructor(GAS_OUTPUTS, GAS_INPUTS));
         registry.register(CCBRecipeTypes.RESIDUE_GENERATION.getId(), new RecipeSchema(OPTIONAL_OUTPUTS, GAS_INPUTS, EMPTY_INPUTS).factory(RESIDUE).constructor(ResidueKubeRecipe.mappingConstructor()));
-        registry.register(CCBRecipeTypes.REACTOR_KETTLE.getId(), new RecipeSchema(OPTIONAL_OUTPUTS, INPUTS, GAS_INPUTS, GAS_OUTPUTS, OPTIONAL_DURATION, TEMPERATURE, TEMPERATURE_MATCHING).factory(MACHINE).constructor(OPTIONAL_OUTPUTS, INPUTS));
+        registry.register(CCBRecipeTypes.REACTOR_KETTLE.getId(), ReactorKettleKubeRecipe.schema());
         registry.register(CCBRecipeTypes.WIND_CHARGING.getId(), new RecipeSchema(OPTIONAL_ITEM_OUTPUTS, ITEM_INPUTS, WIND_CHARGE_DURATION, WIND_CHARGE_ACTION, PRIORITY).factory(MACHINE).constructor(OPTIONAL_ITEM_OUTPUTS, ITEM_INPUTS));
         registry.register(CCBRecipeTypes.FRACTIONATION_TOWER.getId(), new RecipeSchema(INPUTS, EMPTY_OUTPUTS, GAS_INPUTS, LAYER_OUTPUTS, DURATION, TEMPERATURE, TEMPERATURE_MATCHING).factory(FRACTIONATION).constructor(INPUTS));
     }

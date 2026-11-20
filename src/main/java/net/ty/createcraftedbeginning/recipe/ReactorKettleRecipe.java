@@ -5,6 +5,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
@@ -65,6 +66,12 @@ public class ReactorKettleRecipe extends GasProcessingRecipe<RecipeInput, Reacto
 
     @Override
     protected void validateSpecial(List<String> errors) {
+        if (getFluidIngredients().isEmpty() && getGasIngredients().isEmpty() && getIngredients().stream().allMatch(Ingredient::isEmpty)) {
+            errors.add("Reactor kettle recipes must have at least one item, fluid or gas ingredient; got none.");
+        }
+        if (getRollableResults().isEmpty() && getFluidResults().isEmpty() && getGasResults().isEmpty()) {
+            errors.add("Reactor kettle recipes must have at least one item, fluid or gas output; got none.");
+        }
         if (temperatureRecipeData.isValid()) {
             return;
         }
