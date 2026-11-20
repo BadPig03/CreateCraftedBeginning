@@ -56,6 +56,9 @@ public abstract class AbstractAirtightMeterBlockEntity extends AbstractAirtightP
             return;
         }
 
+        if (!level.isClientSide || isVirtual()) {
+            updateDisplayReading();
+        }
         if (level.isClientSide) {
             needleAngle.chase(getNeedleTargetAngle(), NEEDLE_CHASE_SPEED, Chaser.EXP);
             needleAngle.tickChaser();
@@ -104,6 +107,9 @@ public abstract class AbstractAirtightMeterBlockEntity extends AbstractAirtightP
     public abstract int getComparatorOutput();
 
     protected abstract float getNeedleTargetAngle();
+
+    protected void updateDisplayReading() {
+    }
 
     protected final void markTelemetryDirty(boolean immediate) {
         telemetryDirty = true;

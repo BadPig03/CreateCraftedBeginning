@@ -36,6 +36,8 @@ public enum GasPipeTelemetryTooltipProvider implements IServerDataProvider<Block
     private static final String COMPOUND_KEY_MIN_PRESSURE = "MinPressure";
     private static final String COMPOUND_KEY_MAX_PRESSURE = "MaxPressure";
     private static final String COMPOUND_KEY_FLOW_RATE = "FlowRate";
+    private static final String COMPOUND_KEY_DISPLAY_MAX_PRESSURE = "DisplayMaxPressure";
+    private static final String COMPOUND_KEY_DISPLAY_DIFFERENCE = "DisplayPressureDifference";
     private static final String COMPOUND_KEY_MAX_PRESSURE_BOOST = "MaxPressureBoost";
     private static final String COMPOUND_KEY_MAX_PRESSURE_RISE = "MaxPressureRise";
     private static final String COMPOUND_KEY_OUTLET_SET_PRESSURE = "OutletSetPressure";
@@ -49,7 +51,7 @@ public enum GasPipeTelemetryTooltipProvider implements IServerDataProvider<Block
 
         CompoundTag telemetryData = new CompoundTag();
         switch (readout) {
-            case Flow flow -> telemetryData.putLong(COMPOUND_KEY_FLOW_RATE, flow.flowRate());
+            case Flow flow -> telemetryData.putLong(COMPOUND_KEY_FLOW_RATE, flow.displayFlowRate());
             case Pressure pressure -> {
                 if (!pressure.hasReading()) {
                     return telemetryData;
@@ -57,6 +59,12 @@ public enum GasPipeTelemetryTooltipProvider implements IServerDataProvider<Block
 
                 telemetryData.putLong(COMPOUND_KEY_MIN_PRESSURE, pressure.minPressurePa());
                 telemetryData.putLong(COMPOUND_KEY_MAX_PRESSURE, pressure.maxPressurePa());
+                if (pressure.displayMaxPressurePa() != pressure.maxPressurePa()) {
+                    telemetryData.putLong(COMPOUND_KEY_DISPLAY_MAX_PRESSURE, pressure.displayMaxPressurePa());
+                }
+                if (pressure.displayDifferencePa() != pressure.differencePa()) {
+                    telemetryData.putLong(COMPOUND_KEY_DISPLAY_DIFFERENCE, pressure.displayDifferencePa());
+                }
             }
             case PumpConfiguration pump -> telemetryData.putLong(COMPOUND_KEY_MAX_PRESSURE_BOOST, pump.maxPressureBoostPa());
             case RegulatorConfiguration regulator -> {
@@ -90,12 +98,14 @@ public enum GasPipeTelemetryTooltipProvider implements IServerDataProvider<Block
                 long minPressure = NbtValues.getLongOrDefault(data, COMPOUND_KEY_MIN_PRESSURE, NO_PRESSURE_READING);
                 long maxPressure = NbtValues.getLongOrDefault(data, COMPOUND_KEY_MAX_PRESSURE, NO_PRESSURE_READING);
                 boolean hasPressureReading = minPressure >= GasPressure.VACUUM_PA && maxPressure >= minPressure;
-                Component maxPressureValue = Component.literal(hasPressureReading ? GasPressure.formatAtm(maxPressure) : "--");
+                long displayMax = NbtValues.getLongOrDefault(data, COMPOUND_KEY_DISPLAY_MAX_PRESSURE, maxPressure);
+                long displayDifference = NbtValues.getLongOrDefault(data, COMPOUND_KEY_DISPLAY_DIFFERENCE, maxPressure - minPressure);
+                Component maxPressureValue = Component.literal(hasPressureReading ? GasPressure.formatAtm(displayMax) : "--");
                 if (hasPressureReading && GasPressureLimits.isOverpressure(maxPressure)) {
                     maxPressureValue = maxPressureValue.copy().withStyle(ChatFormatting.RED);
                 }
                 tooltip.add(Component.translatable("jade.gas.max_pressure", maxPressureValue));
-                tooltip.add(Component.translatable("jade.gas.pressure_difference", hasPressureReading ? GasPressure.formatAtm(maxPressure - minPressure) : "--"));
+                tooltip.add(Component.translatable("jade.gas.pressure_difference", hasPressureReading ? GasPressure.formatAtm(displayDifference) : "--"));
             }
             case PumpConfiguration ignored -> {
                 if (data.contains(COMPOUND_KEY_MAX_PRESSURE_BOOST)) {

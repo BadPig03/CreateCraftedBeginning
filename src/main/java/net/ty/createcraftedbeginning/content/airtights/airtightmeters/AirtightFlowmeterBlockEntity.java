@@ -24,13 +24,20 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
     private static final float NEEDLE_MIN_ANGLE = -85;
     private static final float NEEDLE_MAX_ANGLE = 85;
     private static final String COMPOUND_KEY_FLOW_RATE = "MeterFlowRate";
+    private static final String COMPOUND_KEY_AVERAGE_FLOW_RATE = "MeterAverageFlowRate";
 
     private final AirtightFlowmeterDisplay display;
+    private final MeterReadingWindow window = MeterReadingWindow.startingAtZero();
+    private long averageFlowRate;
     private long flowRate;
 
     public AirtightFlowmeterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state, NEEDLE_MIN_ANGLE);
         display = new AirtightFlowmeterDisplay(this);
+    }
+
+    private static float flowProgress(long flowRate) {
+        return Mth.clamp((float) flowRate / MAX_FLOW_RATE, 0, 1);
     }
 
     private static long flowDisplayBucket(long flowRate) {
@@ -61,17 +68,17 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
 
     @Override
     public Flow getGasPipeReadout() {
-        return new Flow(flowRate);
+        return new Flow(flowRate, averageFlowRate);
     }
 
     @Override
     protected float getNeedleTargetAngle() {
-        return Mth.lerp(getFlowProgress(), NEEDLE_MIN_ANGLE, NEEDLE_MAX_ANGLE);
+        return Mth.lerp(flowProgress(averageFlowRate), NEEDLE_MIN_ANGLE, NEEDLE_MAX_ANGLE);
     }
 
     @Override
     public int getComparatorOutput() {
-        return calculateComparatorSignal(getFlowProgress());
+        return calculateComparatorSignal(flowProgress(averageFlowRate));
     }
 
     @Override
@@ -81,29 +88,33 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
 
     @Override
     public void acceptFlowTelemetry(long flowRate) {
-        long nextFlowRate = Math.max(0, flowRate);
-        if (this.flowRate == nextFlowRate) {
-            return;
-        }
+        long previous = this.flowRate;
+        this.flowRate = Math.max(0, flowRate);
+        syncChangedRate(previous, this.flowRate);
+    }
 
-        boolean hadFlow = this.flowRate > 0;
-        long previousDisplayBucket = flowDisplayBucket(this.flowRate);
-        this.flowRate = nextFlowRate;
-        if (previousDisplayBucket == flowDisplayBucket(nextFlowRate)) {
-            return;
-        }
-
-        markTelemetryDirty(hadFlow != nextFlowRate > 0);
+    @Override
+    protected void updateDisplayReading() {
+        long oldAverage = averageFlowRate;
+        averageFlowRate = window.sample(flowRate);
+        syncChangedRate(oldAverage, averageFlowRate);
     }
 
     @Override
     protected void write(CompoundTag compoundTag, Provider provider, boolean clientPacket) {
         super.write(compoundTag, provider, clientPacket);
-        if (!(clientPacket && flowRate > 0)) {
+        if (!clientPacket) {
             return;
         }
 
-        compoundTag.putLong(COMPOUND_KEY_FLOW_RATE, flowRate);
+        if (flowRate > 0) {
+            compoundTag.putLong(COMPOUND_KEY_FLOW_RATE, flowRate);
+        }
+        if (averageFlowRate == 0) {
+            return;
+        }
+
+        compoundTag.putLong(COMPOUND_KEY_AVERAGE_FLOW_RATE, averageFlowRate);
     }
 
     @Override
@@ -114,13 +125,22 @@ public class AirtightFlowmeterBlockEntity extends AbstractAirtightMeterBlockEnti
         }
 
         flowRate = Math.max(0, NbtValues.getLongOrDefault(compoundTag, COMPOUND_KEY_FLOW_RATE, 0));
+        averageFlowRate = Math.max(0, NbtValues.getLongOrDefault(compoundTag, COMPOUND_KEY_AVERAGE_FLOW_RATE, 0));
     }
 
     public long getFlowRate() {
         return flowRate;
     }
 
-    private float getFlowProgress() {
-        return Mth.clamp((float) flowRate / MAX_FLOW_RATE, 0, 1);
+    long getAverageFlowRate() {
+        return averageFlowRate;
+    }
+
+    private void syncChangedRate(long previous, long current) {
+        if (previous == current || flowDisplayBucket(previous) == flowDisplayBucket(current)) {
+            return;
+        }
+
+        markTelemetryDirty(previous == 0 || current == 0);
     }
 }

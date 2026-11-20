@@ -112,14 +112,14 @@ public class AirtightMeterScenes {
 
         scene.idle(60);
         scene.overlay().showControls(meterTopVec, Pointing.DOWN, 60).withItem(gogglesItem.copy());
-        scene.overlay().showText(60).text("Engineer's Goggles show the exact Maximum Pressure and Pressure Difference").colored(PonderPalette.BLUE).pointAt(meterVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Goggles show the 10-tick averages of maximum pressure and pressure difference").colored(PonderPalette.BLUE).pointAt(meterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(80);
         scene.world().showSection(comparatorSelection, Direction.SOUTH);
         scene.world().showSection(redstoneSelection, Direction.SOUTH);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Comparators convert Maximum Pressure into a Redstone Signal from 0 to 15").colored(PonderPalette.BLUE).pointAt(comparatorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Comparators convert average maximum pressure into a Redstone Signal from 0 to 15").colored(PonderPalette.BLUE).pointAt(comparatorVec).placeNearTarget().attachKeyFrame();
         scene.world().toggleRedstonePower(comparatorSelection);
         scene.world().modifyBlock(nearRedstonePos, state -> state.setValue(RedStoneWireBlock.POWER, comparatorSignal), false);
         scene.effects().indicateRedstone(comparatorPos);
@@ -221,14 +221,14 @@ public class AirtightMeterScenes {
 
         scene.idle(60);
         scene.overlay().showControls(meterTopVec, Pointing.DOWN, 60).withItem(gogglesItem.copy());
-        scene.overlay().showText(60).text("Engineer's Goggles show the exact Flow Rate in GU/t").colored(PonderPalette.BLUE).pointAt(meterVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("The dial and goggles show the average flow over the last 10 ticks").colored(PonderPalette.BLUE).pointAt(meterVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(60);
         scene.world().showSection(comparatorSelection, Direction.SOUTH);
         scene.world().showSection(redstoneSelection, Direction.SOUTH);
 
         scene.idle(20);
-        scene.overlay().showText(60).text("Comparators convert Flow Rate into a Redstone Signal from 0 to 15").colored(PonderPalette.BLUE).pointAt(comparatorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("Comparators convert average flow into a Redstone Signal from 0 to 15").colored(PonderPalette.BLUE).pointAt(comparatorVec).placeNearTarget().attachKeyFrame();
         scene.world().toggleRedstonePower(comparatorSelection);
         scene.world().modifyBlock(nearRedstonePos, state -> state.setValue(RedStoneWireBlock.POWER, comparatorSignal), false);
         scene.effects().indicateRedstone(comparatorPos);

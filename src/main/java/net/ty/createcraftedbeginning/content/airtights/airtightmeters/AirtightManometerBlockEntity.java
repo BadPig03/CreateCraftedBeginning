@@ -28,8 +28,14 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
     private static final long PRESSURE_DISPLAY_STEP_PA = GasPressure.REFERENCE_PRESSURE_PA / 100;
     private static final String COMPOUND_KEY_MIN_PRESSURE = "MeterMinPressure";
     private static final String COMPOUND_KEY_MAX_PRESSURE = "MeterMaxPressure";
+    private static final String COMPOUND_KEY_AVERAGE_MAX_PRESSURE = "MeterAverageMaxPressure";
+    private static final String COMPOUND_KEY_AVERAGE_PRESSURE_DIFFERENCE = "MeterAveragePressureDifference";
 
     private final AirtightManometerDisplay display;
+    private final MeterReadingWindow maxWindow = new MeterReadingWindow();
+    private final MeterReadingWindow differenceWindow = new MeterReadingWindow();
+    private long averageMaxPressurePa = NO_PRESSURE_READING;
+    private long averageDifferencePa = NO_PRESSURE_READING;
     private long minPressurePa = NO_PRESSURE_READING;
     private long maxPressurePa = NO_PRESSURE_READING;
 
@@ -66,7 +72,7 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
 
     @Override
     public Pressure getGasPipeReadout() {
-        return new Pressure(minPressurePa, maxPressurePa);
+        return new Pressure(minPressurePa, maxPressurePa, averageMaxPressurePa, averageDifferencePa);
     }
 
     @Override
@@ -99,6 +105,10 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
         long previousDifferenceDisplay = pressureDifferenceDisplayBucket(this.minPressurePa, this.maxPressurePa);
         this.minPressurePa = nextMinPressure;
         this.maxPressurePa = nextMaxPressure;
+        if (!hadReading) {
+            averageMaxPressurePa = nextMaxPressure;
+            averageDifferencePa = nextMaxPressure - nextMinPressure;
+        }
         if (wasOverpressure != GasPressureLimits.isOverpressure(nextMaxPressure)) {
             markTelemetryDirty(true);
         }
@@ -118,7 +128,28 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
 
         minPressurePa = NO_PRESSURE_READING;
         maxPressurePa = NO_PRESSURE_READING;
+        averageMaxPressurePa = NO_PRESSURE_READING;
+        averageDifferencePa = NO_PRESSURE_READING;
+        maxWindow.clear();
+        differenceWindow.clear();
         markTelemetryDirty(true);
+    }
+
+    @Override
+    protected void updateDisplayReading() {
+        if (!hasPressureReading()) {
+            return;
+        }
+
+        long previousMax = averageMaxPressurePa;
+        long previousDifference = averageDifferencePa;
+        averageMaxPressurePa = maxWindow.sample(maxPressurePa);
+        averageDifferencePa = differenceWindow.sample(maxPressurePa - minPressurePa);
+        if (pressureDisplayBucket(previousMax) == pressureDisplayBucket(averageMaxPressurePa) && pressureDisplayBucket(previousDifference) == pressureDisplayBucket(averageDifferencePa)) {
+            return;
+        }
+
+        markTelemetryDirty(false);
     }
 
     @Override
@@ -130,6 +161,8 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
 
         compoundTag.putLong(COMPOUND_KEY_MIN_PRESSURE, minPressurePa);
         compoundTag.putLong(COMPOUND_KEY_MAX_PRESSURE, maxPressurePa);
+        compoundTag.putLong(COMPOUND_KEY_AVERAGE_MAX_PRESSURE, averageMaxPressurePa);
+        compoundTag.putLong(COMPOUND_KEY_AVERAGE_PRESSURE_DIFFERENCE, averageDifferencePa);
     }
 
     @Override
@@ -144,11 +177,15 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
         if (readMinPressure < GasPressure.VACUUM_PA || readMaxPressure < readMinPressure) {
             minPressurePa = NO_PRESSURE_READING;
             maxPressurePa = NO_PRESSURE_READING;
+            averageMaxPressurePa = NO_PRESSURE_READING;
+            averageDifferencePa = NO_PRESSURE_READING;
             return;
         }
 
         minPressurePa = readMinPressure;
         maxPressurePa = readMaxPressure;
+        averageMaxPressurePa = NbtValues.getLongOrDefault(compoundTag, COMPOUND_KEY_AVERAGE_MAX_PRESSURE, NO_PRESSURE_READING);
+        averageDifferencePa = NbtValues.getLongOrDefault(compoundTag, COMPOUND_KEY_AVERAGE_PRESSURE_DIFFERENCE, NO_PRESSURE_READING);
     }
 
     public boolean hasPressureReading() {
@@ -171,11 +208,19 @@ public class AirtightManometerBlockEntity extends AbstractAirtightMeterBlockEnti
         return Math.max(GasPressure.VACUUM_PA, maxPressurePa - minPressurePa);
     }
 
+    long getAverageMaxPressurePa() {
+        return averageMaxPressurePa;
+    }
+
+    long getAverageDifferencePa() {
+        return averageDifferencePa;
+    }
+
     private float getPressureProgress() {
         if (!hasPressureReading()) {
             return 0;
         }
 
-        return GasPressureDisplayScale.fractionForPressure(maxPressurePa);
+        return GasPressureDisplayScale.fractionForPressure(averageMaxPressurePa);
     }
 }
