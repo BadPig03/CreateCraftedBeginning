@@ -35,7 +35,7 @@ import net.ty.createcraftedbeginning.recipe.FractionationTowerOutput;
 import net.ty.createcraftedbeginning.recipe.FractionationTowerRecipe;
 import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 import net.ty.createcraftedbeginning.recipe.temperature.TemperatureCondition;
-import net.ty.createcraftedbeginning.recipe.temperature.TemperatureMatching;
+import net.ty.createcraftedbeginning.recipe.temperature.TemperatureRecipeData;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -64,25 +64,20 @@ public final class FractionationTowerCategory extends CCBRecipeCategory<Fraction
             return List.of();
         }
 
-        TemperatureMatching matching = recipe.getTemperatureMatching();
-        String description = matching == TemperatureMatching.EXACT ? "recipe.temperature_matching.exact.description" : "recipe.temperature_matching.compatible.description";
-        return List.of(CCBLang.translateDirect("recipe.temperature_matching." + matching.getSerializedName()), CCBLang.translateDirect(description).withStyle(ChatFormatting.GRAY));
+        return CCBJEICompat.getTemperatureTooltip(recipe.getTemperatureRecipeData());
     }
 
     @Override
     protected void draw(FractionationTowerRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         int height = getHeight();
         int temperatureY = height - 22;
-        TemperatureCondition condition = recipe.getTemperatureCondition();
+        TemperatureRecipeData temperature = recipe.getTemperatureRecipeData();
+        TemperatureCondition condition = temperature.condition();
         int color = CCBJEICompat.getTemperatureTextColor(condition);
         CCBJEITextures heatBar = condition == TemperatureCondition.NONE ? CCBJEITextures.JEI_NO_HEAT_BAR : CCBJEITextures.JEI_HEAT_BAR;
         heatBar.render(graphics, 4, temperatureY);
         Font font = Minecraft.getInstance().font;
-        Component temperature = CCBLang.translateDirect(condition.getTranslationKey());
-        if (recipe.getTemperatureMatching() == TemperatureMatching.COMPATIBLE) {
-            temperature = CCBLang.translateDirect("recipe.temperature_matching.compatible." + condition.getSerializedName());
-        }
-        graphics.drawString(font, temperature, 9, temperatureY + 6, color, false);
+        graphics.drawString(font, CCBJEICompat.getTemperatureLabel(temperature), 9, temperatureY + 6, color, false);
         int towerX = getWidth() / 2;
         int towerY = height - 25;
         tower.draw(graphics, towerX, towerY, recipe.getRequiredHeight(), towerY - 1);

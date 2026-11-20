@@ -28,10 +28,6 @@ public record TemperatureRecipeData(TemperatureCondition condition, TemperatureM
         return new TemperatureRecipeData(condition, matching);
     }
 
-    public boolean isValid() {
-        return matching.isValidFor(condition);
-    }
-
     public boolean test(float temperature) {
         return matching.test(condition, temperature);
     }

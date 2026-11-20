@@ -61,7 +61,7 @@ public final class ReactorKettleMixingRecipe extends ReactorKettleRecipe {
             condition = TemperatureCondition.CHILLED;
         }
 
-        TemperatureMatching matching = condition.supportsCompatibleMatching() ? TemperatureMatching.COMPATIBLE : TemperatureMatching.EXACT;
+        TemperatureMatching matching = TemperatureMatching.COMPATIBLE.effectiveFor(condition);
         ReactorKettleRecipe converted = new Builder<>(params -> new ReactorKettleMixingRecipe(params, source, brewing), holder.id()).withItemIngredients(source.getIngredients().toArray(Ingredient[]::new)).withItemOutputs(source.getRollableResults().stream().map(output -> new ProcessingOutput(output.getStack().copy(), output.getChance())).toArray(ProcessingOutput[]::new)).withFluidIngredients(source.getFluidIngredients().toArray(SizedFluidIngredient[]::new)).withFluidOutputs(source.getFluidResults().stream().map(FluidStack::copy).toArray(FluidStack[]::new)).temperatureCondition(condition).temperatureMatching(matching).duration(0).build();
         return new RecipeHolder<>(holder.id(), converted);
     }

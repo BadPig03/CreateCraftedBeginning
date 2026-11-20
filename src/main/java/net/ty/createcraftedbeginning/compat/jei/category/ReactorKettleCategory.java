@@ -24,12 +24,11 @@ import net.ty.createcraftedbeginning.compat.jei.CCBJEICompat;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEIPlugin;
 import net.ty.createcraftedbeginning.compat.jei.CCBJEITextures;
 import net.ty.createcraftedbeginning.compat.jei.category.animations.AnimatedAirtightReactorKettle;
-import net.ty.createcraftedbeginning.foundation.lang.CCBLang;
 import net.ty.createcraftedbeginning.gas.visual.GasUnitFormat;
 import net.ty.createcraftedbeginning.recipe.ReactorKettleRecipe;
 import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 import net.ty.createcraftedbeginning.recipe.temperature.TemperatureCondition;
-import net.ty.createcraftedbeginning.recipe.temperature.TemperatureMatching;
+import net.ty.createcraftedbeginning.recipe.temperature.TemperatureRecipeData;
 import net.ty.createcraftedbeginning.registry.CCBBlocks;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -78,20 +77,6 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         return -19 * (outputIndex / 2) + 59;
     }
 
-    private static Component getTemperatureDisplay(ReactorKettleRecipe recipe) {
-        TemperatureCondition condition = recipe.getTemperatureCondition();
-        if (recipe.getTemperatureMatching() != TemperatureMatching.COMPATIBLE) {
-            return CCBLang.translateDirect(condition.getTranslationKey());
-        }
-
-        return switch (condition) {
-            case NONE -> CCBLang.translateDirect("recipe.temperature_matching.compatible.none");
-            case HEATED -> CCBLang.translateDirect("recipe.temperature_matching.compatible.heated");
-            case CHILLED -> CCBLang.translateDirect("recipe.temperature_matching.compatible.chilled");
-            default -> CCBLang.translateDirect(condition.getTranslationKey());
-        };
-    }
-
     private static @Unmodifiable List<Pair<Ingredient, Integer>> collectCondensedIngredients(NonNullList<Ingredient> recipeIngredients) {
         Map<Ingredient, Integer> ingredientCounts = new LinkedHashMap<>();
         for (Ingredient ingredient : recipeIngredients) {
@@ -126,26 +111,7 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
             return List.of();
         }
 
-        TemperatureMatching matching = recipe.getTemperatureMatching();
-        List<Component> tooltip = new ArrayList<>();
-        tooltip.add(CCBLang.translateDirect("recipe.temperature_matching." + matching.getSerializedName()));
-        if (matching == TemperatureMatching.EXACT) {
-            tooltip.add(CCBLang.translateDirect("recipe.temperature_matching.exact.description").withStyle(ChatFormatting.GRAY));
-            return tooltip;
-        }
-
-        TemperatureCondition condition = recipe.getTemperatureCondition();
-        if (!condition.supportsCompatibleMatching()) {
-            return tooltip;
-        }
-
-        if (condition == TemperatureCondition.NONE) {
-            tooltip.add(CCBLang.translateDirect("recipe.temperature_matching.compatible.none.description").withStyle(ChatFormatting.GRAY));
-        }
-        else {
-            tooltip.add(CCBLang.translateDirect("recipe.temperature_matching.compatible.description").withStyle(ChatFormatting.GRAY));
-        }
-        return tooltip;
+        return CCBJEICompat.getTemperatureTooltip(recipe.getTemperatureRecipeData());
     }
 
     @Override
@@ -156,11 +122,12 @@ public class ReactorKettleCategory extends CCBRecipeCategory<ReactorKettleRecipe
         }
         CCBJEITextures.JEI_SHADOW.render(graphics, 76, 66);
 
-        TemperatureCondition condition = recipe.getTemperatureCondition();
+        TemperatureRecipeData temperature = recipe.getTemperatureRecipeData();
+        TemperatureCondition condition = temperature.condition();
         int color = CCBJEICompat.getTemperatureTextColor(condition);
         CCBJEITextures heatBar = condition == TemperatureCondition.NONE ? CCBJEITextures.JEI_NO_HEAT_BAR : CCBJEITextures.JEI_HEAT_BAR;
         heatBar.render(graphics, 4, 80);
-        graphics.drawString(Minecraft.getInstance().font, getTemperatureDisplay(recipe), 9, 86, color, false);
+        graphics.drawString(Minecraft.getInstance().font, CCBJEICompat.getTemperatureLabel(temperature), 9, 86, color, false);
         if (recipe.getGasRequirements().isEmpty() && recipe.getGasResults().isEmpty()) {
             reactorKettleOpened.draw(graphics, background.getWidth() / 2 + 6, 58);
             return;

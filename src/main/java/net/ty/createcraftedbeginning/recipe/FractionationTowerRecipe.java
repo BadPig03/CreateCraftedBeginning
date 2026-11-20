@@ -75,8 +75,8 @@ public final class FractionationTowerRecipe extends GasProcessingRecipe<RecipeIn
 
     @Override
     protected void validateSpecial(List<String> errors) {
-        if (!temperature.isValid() || temperature.condition() == TemperatureCondition.NONE) {
-            errors.add("Fractionation tower temperature must specify valid heating or cooling; got " + temperature + '.');
+        if (temperature.condition() == TemperatureCondition.NONE) {
+            errors.add("Fractionation tower temperature must specify heating or cooling; got " + temperature.condition().getSerializedName() + '.');
         }
         int processingDuration = getProcessingDuration();
         if (processingDuration <= 0) {

@@ -20,10 +20,6 @@ public enum TemperatureMatching implements StringRepresentable {
     public static final StreamCodec<ByteBuf, TemperatureMatching> STREAM_CODEC = CatnipStreamCodecBuilders.ofEnum(TemperatureMatching.class);
 
     public static int getMatchPriority(TemperatureMatching currentMatching, TemperatureCondition requiredCondition, float temperature) {
-        if (!currentMatching.isValidFor(requiredCondition)) {
-            return 0;
-        }
-
         if (requiredCondition.test(temperature)) {
             return 3;
         }
@@ -32,18 +28,17 @@ public enum TemperatureMatching implements StringRepresentable {
             return 0;
         }
 
-        TemperatureCondition actualCondition = TemperatureCondition.getConditionByTemperature(temperature);
         return switch (requiredCondition) {
             case NONE -> 1;
             case HEATED -> {
-                if (actualCondition == TemperatureCondition.SUPERHEATED) {
+                if (TemperatureCondition.SUPERHEATED.test(temperature)) {
                     yield 2;
                 }
 
                 yield 0;
             }
             case CHILLED -> {
-                if (actualCondition == TemperatureCondition.SUPERCHILLED) {
+                if (TemperatureCondition.SUPERCHILLED.test(temperature)) {
                     yield 2;
                 }
 
@@ -58,8 +53,12 @@ public enum TemperatureMatching implements StringRepresentable {
         return Lang.asId(name());
     }
 
-    public boolean isValidFor(TemperatureCondition requiredCondition) {
-        return this != COMPATIBLE || requiredCondition.supportsCompatibleMatching();
+    public TemperatureMatching effectiveFor(TemperatureCondition condition) {
+        if (condition == TemperatureCondition.SUPERCHILLED || condition == TemperatureCondition.SUPERHEATED) {
+            return EXACT;
+        }
+
+        return this;
     }
 
     public boolean test(TemperatureCondition requiredCondition, float temperature) {

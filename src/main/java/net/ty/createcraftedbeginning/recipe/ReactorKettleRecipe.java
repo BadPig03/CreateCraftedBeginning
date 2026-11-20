@@ -72,11 +72,6 @@ public class ReactorKettleRecipe extends GasProcessingRecipe<RecipeInput, Reacto
         if (getRollableResults().isEmpty() && getFluidResults().isEmpty() && getGasResults().isEmpty()) {
             errors.add("Reactor kettle recipes must have at least one item, fluid or gas output; got none.");
         }
-        if (temperatureRecipeData.isValid()) {
-            return;
-        }
-
-        errors.add("Recipe cannot use compatible temperature matching with superheated or superchilled conditions.");
     }
 
     @Override
