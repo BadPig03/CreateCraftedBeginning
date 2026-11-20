@@ -12,4 +12,9 @@ final class AirtightMeterTransportBehaviour extends AxisGasTransportBehaviour {
     AirtightMeterTransportBehaviour(SmartBlockEntity blockEntity) {
         super(blockEntity);
     }
+
+    @Override
+    public boolean isOrdinaryPressurePipe() {
+        return true;
+    }
 }

@@ -19,6 +19,11 @@ public abstract class AxisGasTransportBehaviour extends GasTransportBehaviour {
     }
 
     @Override
+    public boolean usesPassiveAtmosphericMouth() {
+        return true;
+    }
+
+    @Override
     public boolean canConnectOnFace(BlockState state, Direction direction) {
         if (!isConnectionFaceEnabled(state, direction)) {
             return false;

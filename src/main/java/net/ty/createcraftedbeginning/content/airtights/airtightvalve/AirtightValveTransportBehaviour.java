@@ -26,4 +26,9 @@ final class AirtightValveTransportBehaviour extends AxisGasTransportBehaviour {
     public boolean allowsOutboundFlow(BlockState state, Direction direction) {
         return valve.isOpen() && canConnectOnFace(state, direction);
     }
+
+    @Override
+    protected long getFlowResistanceUnits(BlockState state, Direction entryFace, Direction exitFace) {
+        return 0;
+    }
 }

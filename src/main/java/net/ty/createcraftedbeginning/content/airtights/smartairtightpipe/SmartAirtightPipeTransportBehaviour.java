@@ -24,4 +24,9 @@ final class SmartAirtightPipeTransportBehaviour extends AxisGasTransportBehaviou
     public boolean acceptsGas(GasStack gasStack, BlockState state, Direction direction) {
         return (gasStack.isEmpty() || filter != null && filter.test(gasStack)) && super.acceptsGas(gasStack, state, direction);
     }
+
+    @Override
+    protected long getFlowResistanceUnits(BlockState state, Direction entryFace, Direction exitFace) {
+        return 0;
+    }
 }

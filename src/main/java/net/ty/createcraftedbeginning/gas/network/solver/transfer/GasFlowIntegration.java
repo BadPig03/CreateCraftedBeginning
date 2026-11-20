@@ -1,16 +1,21 @@
 package net.ty.createcraftedbeginning.gas.network.solver.transfer;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
+import net.ty.createcraftedbeginning.gas.flow.GasIntakeListener;
 import net.ty.createcraftedbeginning.gas.network.math.GasFlowMath;
+import net.ty.createcraftedbeginning.gas.network.solver.GasSolverProfiler;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
-import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureGraphSolution.EndpointFlow;
-import net.ty.createcraftedbeginning.gas.network.solver.graph.GasPressureGraphSolution.TransferComponent;
-import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasRoutedTransferExecutor.ExecutedRoute;
+import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferPlan.PlannedDrain;
+import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferPlan.PlannedFill;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.LongConsumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -28,54 +33,37 @@ public final class GasFlowIntegration {
         return Math.max(0, GasFlowMath.toWholeAmount(amount.integrated + rate * fraction) - amount.consumed);
     }
 
-    public long available(TransferComponent component, double fraction) {
-        double integratedDrains = 0;
-        double integratedFills = 0;
-        long consumedDrains = 0;
-        long consumedFills = 0;
-        for (EndpointFlow flow : component.endpointFlows()) {
-            boolean draining = flow.drainFlowRate() > GasFlowMath.FLOW_RATE_EPSILON;
-            Map<Object, IntegratedAmount> amounts = draining ? drainAmounts : fillAmounts;
-            IntegratedAmount previous = amounts.get(flow.endpoint().transferIdentity());
-            double integrated = previous == null ? 0 : previous.integrated;
-            long consumed = previous == null ? 0 : previous.consumed;
-            if (draining) {
-                integratedDrains += integrated + flow.drainFlowRate() * fraction;
-                consumedDrains = BoundedMath.saturatedAdd(consumedDrains, consumed);
-                continue;
-            }
-
-            integratedFills += integrated + flow.fillFlowRate() * fraction;
-            consumedFills = BoundedMath.saturatedAdd(consumedFills, consumed);
-        }
-        long drains = Math.max(0, GasFlowMath.toWholeAmount(integratedDrains) - consumedDrains);
-        long fills = Math.max(0, GasFlowMath.toWholeAmount(integratedFills) - consumedFills);
-        return Math.min(drains, fills);
+    public long executeQuantum(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long sourcePressure, long amount) {
+        return executeQuantum(level, gas, source, target, sourcePressure, amount, ignored -> {});
     }
 
-    public void advance(TransferComponent component, double fraction) {
-        for (EndpointFlow flow : component.endpointFlows()) {
-            GasNetworkPressureEndpoint endpoint = flow.endpoint();
-            Object identity = endpoint.transferIdentity();
-            boolean draining = flow.drainFlowRate() > GasFlowMath.FLOW_RATE_EPSILON;
-            double rate = draining ? flow.drainFlowRate() : flow.fillFlowRate();
-            Map<Object, IntegratedAmount> amounts = draining ? drainAmounts : fillAmounts;
-            IntegratedAmount amount = amounts.computeIfAbsent(identity, ignored -> new IntegratedAmount());
-            amount.integrated += rate * fraction;
-        }
-    }
-
-    public void record(ExecutedRoute transfer) {
-        IntegratedAmount source = drainAmounts.get(transfer.route().source().transferIdentity());
-        IntegratedAmount target = fillAmounts.get(transfer.route().target().transferIdentity());
-        if (source != null) {
-            source.consumed = BoundedMath.saturatedAdd(source.consumed, transfer.amount());
-        }
-        if (target == null) {
-            return;
+    public long executeQuantum(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long sourcePressure, long amount, LongConsumer onCommitted) {
+        if (amount <= 0 || source.transferIdentity() == target.transferIdentity() || source.access().drainHandler() == null || target.access().fillHandler() == null) {
+            return 0;
         }
 
-        target.consumed = BoundedMath.saturatedAdd(target.consumed, transfer.amount());
+        GasTransferPlan plan = new GasTransferPlan(List.of(new PlannedDrain(source, amount)), List.of(new PlannedFill(target, amount, sourcePressure)), amount);
+        IntegratedAmount drain = drainAmounts.computeIfAbsent(source.transferIdentity(), ignored -> new IntegratedAmount());
+        IntegratedAmount fill = fillAmounts.computeIfAbsent(target.transferIdentity(), ignored -> new IntegratedAmount());
+        long previous = drain.consumed;
+        drain.integrated += amount;
+        fill.integrated += amount;
+        try {
+            return GasPairTransferExecutor.executePair(level, gas, plan, accepted -> {
+                drain.consumed = BoundedMath.saturatedAdd(drain.consumed, accepted);
+                fill.consumed = BoundedMath.saturatedAdd(fill.consumed, accepted);
+                GasSolverProfiler.recordCommittedGas(accepted);
+                onCommitted.accept(accepted);
+                if (source.access().drainHandler() instanceof GasIntakeListener listener) {
+                    listener.onGasIntake(accepted);
+                }
+            });
+        }
+        finally {
+            long unused = amount - (drain.consumed - previous);
+            drain.integrated -= unused;
+            fill.integrated -= unused;
+        }
     }
 
     private static final class IntegratedAmount {

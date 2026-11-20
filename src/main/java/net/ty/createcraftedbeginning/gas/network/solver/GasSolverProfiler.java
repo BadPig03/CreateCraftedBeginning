@@ -4,7 +4,12 @@ import com.sun.management.ThreadMXBean;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology.Snapshot;
+import net.ty.createcraftedbeginning.gas.network.solver.GasShadowComparison.Observation;
+import net.ty.createcraftedbeginning.gas.network.solver.GasShadowComparison.Sample;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -13,8 +18,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -30,6 +37,14 @@ public final class GasSolverProfiler {
     private static final ThreadMXBean ALLOCATION_BEAN = allocationBean();
 
     private GasSolverProfiler() {
+    }
+
+    static long allocatedBytes() {
+        if (ALLOCATION_BEAN == null) {
+            return -1;
+        }
+
+        return ALLOCATION_BEAN.getThreadAllocatedBytes(Thread.currentThread().threadId());
     }
 
     public static boolean beginNetwork(BlockPos startPos) {
@@ -159,7 +174,39 @@ public final class GasSolverProfiler {
         builder.simulation.maxSubstepCapRemainingTickFraction = Math.max(builder.simulation.maxSubstepCapRemainingTickFraction, remainingTickFraction);
     }
 
-    public static void recordGraphSolve(long elapsedNanos, int nodeCount, int edgeCount, boolean hypothetical, boolean converged, int activeSetIterations, int forestDirectSolveAttempts, int forestDirectSolveSuccesses, int conjugateGradientIterations, int biConjugateGradientStabilizedIterations, int sorSweeps) {
+    public static void recordApproximateTransfer() {
+        ProfileBuilder builder = CURRENT.get();
+        if (builder != null) {
+            builder.simulation.approximateTransferCount++;
+        }
+    }
+
+    public static void recordTransferPlanRollback() {
+        ProfileBuilder builder = CURRENT.get();
+        if (builder != null) {
+            builder.simulation.transferPlanRollbackCount++;
+        }
+    }
+
+    public static void recordTransferStop(GasTransferStopReason reason) {
+        ProfileBuilder builder = CURRENT.get();
+        if (builder == null) {
+            return;
+        }
+
+        builder.transferStops.merge(reason, 1, Integer::sum);
+    }
+
+    public static void recordCommittedGas(long amount) {
+        ProfileBuilder builder = CURRENT.get();
+        if (builder == null) {
+            return;
+        }
+
+        builder.committedGas = BoundedMath.saturatedAdd(builder.committedGas, amount);
+    }
+
+    public static void recordGraphSolve(long elapsedNanos, int nodeCount, int edgeCount, boolean hypothetical, boolean converged, boolean approximate, boolean budgetAborted, int activeSetIterations, int forestDirectSolveAttempts, int forestDirectSolveSuccesses, int conjugateGradientIterations, int biConjugateGradientStabilizedIterations, int sorSweeps) {
         ProfileBuilder builder = CURRENT.get();
         if (builder == null) {
             return;
@@ -174,6 +221,15 @@ public final class GasSolverProfiler {
         }
         if (!converged) {
             builder.graph.nonConvergedSolveCount++;
+            if (!approximate) {
+                builder.graph.skippedSolveCount++;
+            }
+        }
+        if (approximate) {
+            builder.graph.approximateSolveCount++;
+        }
+        if (budgetAborted) {
+            builder.graph.budgetAbortCount++;
         }
         builder.graph.activeSetIterations += activeSetIterations;
         builder.graph.forestDirectSolveAttempts += forestDirectSolveAttempts;
@@ -271,12 +327,41 @@ public final class GasSolverProfiler {
         builder.stageTimings.telemetryNanos += elapsedNanos;
     }
 
+    static void preview(Level level, Snapshot topology) {
+        Capture capture = ACTIVE_CAPTURE.get();
+        if (capture == null || capture.comparison == null) {
+            return;
+        }
+
+        ProfileBuilder builder = CURRENT.get();
+        try {
+            builder.shadow = new Observation(level, topology, capture.comparison);
+        }
+        catch (RuntimeException failure) {
+            topology.releaseShadow(capture.comparison);
+            builder.shadowError = failure.toString();
+        }
+    }
+
+    static @Nullable Observation observation() {
+        ProfileBuilder builder = CURRENT.get();
+        if (builder == null) {
+            return null;
+        }
+
+        return builder.shadow;
+    }
+
     public static Capture capture() {
+        return capture(null);
+    }
+
+    public static Capture capture(@Nullable GasShadowComparison comparison) {
         if (ACTIVE_CAPTURE.get() != null) {
             throw new IllegalStateException("A gas solver profiler capture is already active on this thread.");
         }
 
-        Capture capture = new Capture(Thread.currentThread());
+        Capture capture = new Capture(Thread.currentThread(), comparison);
         ACTIVE_CAPTURE.set(capture);
         return capture;
     }
@@ -319,12 +404,28 @@ public final class GasSolverProfiler {
         SimulationSummary simulation = summary.simulation();
         TelemetrySummary telemetry = summary.telemetry();
         GraphSummary graph = summary.graph();
+        Map<GasTransferStopReason, Long> stops = new EnumMap<>(GasTransferStopReason.class);
+        long committedGas = 0;
+        int scheduled = 0;
+        int matrix = 0;
+        for (NetworkProfile sample : samples) {
+            Diagnostics diagnostics = sample.diagnostics();
+            if (diagnostics.scheduler() != null) {
+                scheduled++;
+            }
+            else if (diagnostics.matrix()) {
+                matrix++;
+            }
+            committedGas = BoundedMath.saturatedAdd(committedGas, diagnostics.committedGas());
+            diagnostics.transferStops().forEach((reason, count) -> stops.merge(reason, count.longValue(), Long::sum));
+        }
+        CCBAPI.LOGGER.info("Gas solver profile [{}] transfers: committed={} GU, scheduledNetworks={}, pressureSolverNetworks={}, stopEvents={}", label, committedGas, scheduled, matrix, stops);
         CCBAPI.LOGGER.info("Gas solver profile [{}]: samples={}, totalAvg={} ms, totalP95={} ms, totalMax={} ms, maxPipes={}, maxNodes={}, maxEdges={}, maxEndpointFaces={}, maxPressureEndpoints={}, maxGases={}", label, summary.sampleCount(), formatMs(timings.averageTotalNanos()), formatMs(timings.p95TotalNanos()), formatMs(timings.maxTotalNanos()), shape.pipeCount(), shape.nodeCount(), shape.edgeCount(), shape.endpointFaceCount(), shape.pressureEndpointCount(), shape.gasGroupCount());
         double attributedNanos = stages.totalNanos() + postSolve.totalNanos();
         double unattributedNanos = Math.max(0, timings.averageTotalNanos() - attributedNanos);
         CCBAPI.LOGGER.info("Gas solver profile [{}] stages avg: topology={} ms, endpoints={} ms, graphPrepare={} ms, graphSetup={} ms, graphSolve={} ms, pressureCollect={} ms, transferPlan={} ms, transferExecute={} ms, telemetry={} ms, unattributed={} ms; topologyCacheHitRate={}%, topologyCacheHits={}, topologyCacheQueries={}", label, formatMs(stages.topologyNanos()), formatMs(stages.endpointPlanningNanos()), formatMs(stages.graphPreparationNanos()), formatMs(stages.graphSetupNanos()), formatMs(stages.graphSolveNanos()), formatMs(stages.pressureCollectionNanos()), formatMs(stages.transferPlanningNanos()), formatMs(stages.transferExecutionNanos()), formatMs(stages.telemetryNanos()), formatMs(unattributedNanos), String.format(Locale.ROOT, "%.1f", topologyCache.hitRate() * 100.0), topologyCache.hits(), topologyCache.queries());
         CCBAPI.LOGGER.info("Gas solver profile [{}] postSolve avg: warmStartCopy={} ms, activeComponents={} ms, endpointFlows={} ms, facePressures={} ms, edgeFlows={} ms, materialize={} ms", label, formatMs(postSolve.warmStartCopyNanos()), formatMs(postSolve.activeComponentsNanos()), formatMs(postSolve.endpointFlowsNanos()), formatMs(postSolve.facePressuresNanos()), formatMs(postSolve.edgeFlowsNanos()), formatMs(postSolve.materializationNanos()));
-        CCBAPI.LOGGER.info("Gas solver profile [{}] work: gasSolvesAvg={}, substepsPerSampleAvg={}, substepsPerGasSolveAvg={}, graphSolvesAvg={}, hypotheticalGraphSolvesAvg={}, activeSetIterationsAvg={}, forestDirectSuccessesAvg={}, forestDirectAttemptsAvg={}, cgIterationsAvg={}, bicgstabIterationsAvg={}, sorSweepsAvg={}, nonConvergedSolvesTotal={}", label, formatCount(summary.averageGasSolveCount()), formatCount(simulation.averageDynamicSubsteps()), formatCount(simulation.averageDynamicSubstepsPerGasSolve()), formatCount(graph.averageSolveCount()), formatCount(graph.averageHypotheticalSolveCount()), formatCount(graph.averageActiveSetIterations()), formatCount(graph.averageForestDirectSolveSuccesses()), formatCount(graph.averageForestDirectSolveAttempts()), formatCount(graph.averageConjugateGradientIterations()), formatCount(graph.averageBiConjugateGradientStabilizedIterations()), formatCount(graph.averageSorSweeps()), graph.nonConvergedSolveCount());
+        CCBAPI.LOGGER.info("Gas solver profile [{}] work: gasSolvesAvg={}, substepsPerSampleAvg={}, substepsPerGasSolveAvg={}, graphSolvesAvg={}, hypotheticalGraphSolvesAvg={}, activeSetIterationsAvg={}, forestDirectSuccessesAvg={}, forestDirectAttemptsAvg={}, cgIterationsAvg={}, bicgstabIterationsAvg={}, sorSweepsAvg={}, nonConvergedSolvesTotal={}, approximateSolvesTotal={}, skippedSolvesTotal={}, budgetAbortsTotal={}, approximateTransfersTotal={}, transferPlanRollbacksTotal={}", label, formatCount(summary.averageGasSolveCount()), formatCount(simulation.averageDynamicSubsteps()), formatCount(simulation.averageDynamicSubstepsPerGasSolve()), formatCount(graph.averageSolveCount()), formatCount(graph.averageHypotheticalSolveCount()), formatCount(graph.averageActiveSetIterations()), formatCount(graph.averageForestDirectSolveSuccesses()), formatCount(graph.averageForestDirectSolveAttempts()), formatCount(graph.averageConjugateGradientIterations()), formatCount(graph.averageBiConjugateGradientStabilizedIterations()), formatCount(graph.averageSorSweeps()), graph.nonConvergedSolveCount(), graph.approximateSolveCount(), graph.skippedSolveCount(), graph.budgetAbortCount(), simulation.approximateTransferCount(), simulation.transferPlanRollbackCount());
         CCBAPI.LOGGER.info("Gas solver profile [{}] telemetry avg: pressureTargets={}, pressureFaceSamples={}, flowTargets={}, flowTargetUpdates={}", label, formatCount(telemetry.averagePressureTargetCount()), formatCount(telemetry.averagePressureFaceSampleCount()), formatCount(telemetry.averageFlowTargetCount()), formatCount(telemetry.averageFlowTargetUpdateCount()));
         CCBAPI.LOGGER.info("Gas solver profile [{}] substepCap: hitsTotal={}, gasSolvesTotal={}, hitRate={}%, affectedSamples={}, samples={}, affectedSampleRate={}%, maxRemainingTick={}%", label, simulation.substepCapHitCount(), simulation.gasSolveCount(), formatPercent(summary.substepCapHitRate()), simulation.substepCapAffectedSampleCount(), summary.sampleCount(), formatPercent(summary.substepCapAffectedSampleRate()), formatPercent(simulation.maxSubstepCapRemainingTickFraction()));
         int worstSubstepCapProfileIndex = findWorstSubstepCapProfileIndex(samples);
@@ -334,6 +435,33 @@ public final class GasSolverProfiler {
 
         NetworkProfile worst = samples.get(worstSubstepCapProfileIndex);
         CCBAPI.LOGGER.info("Gas solver profile [{}] substepCap worst: startPos={}, hits={}, gasSolves={}, maxRemainingTick={}%, maxPipes={}, maxEndpointFaces={}, maxPressureEndpoints={}, maxGases={}, maxNodes={}, maxEdges={}", label, worst.startPos(), worst.simulation().substepCapHitCount(), worst.simulation().gasSolveCount(), formatPercent(worst.simulation().maxSubstepCapRemainingTickFraction()), worst.shape().pipeCount(), worst.shape().endpointFaceCount(), worst.shape().pressureEndpointCount(), worst.shape().gasGroupCount(), worst.shape().nodeCount(), worst.shape().edgeCount());
+    }
+
+    static void recordScheduledTick(GasTransferScheduler.Tick tick, @Nullable GasZonePressure pressure, int buildWork, int receipts) {
+        ProfileBuilder builder = CURRENT.get();
+        if (builder == null) {
+            return;
+        }
+
+        GasTransferStopReason reason = switch (tick.status()) {
+            case NO_SOURCE -> GasTransferStopReason.NO_SOURCE;
+            case NO_SINK -> GasTransferStopReason.NO_SINK;
+            case NO_PATH -> GasTransferStopReason.NO_ROUTED_PATH;
+            default -> null;
+        };
+        if (reason != null) {
+            recordTransferStop(reason);
+        }
+        builder.scheduler = new SchedulerWork(tick.status().name(), tick.work(), tick.expanded(), tick.continuation(), pressure == null ? 0 : pressure.nodes(), pressure == null ? 0 : pressure.lastWork(), buildWork, receipts);
+    }
+
+    static void recordTopologyPipeRead() {
+        ProfileBuilder builder = CURRENT.get();
+        if (builder == null) {
+            return;
+        }
+
+        builder.topologyPipeReads++;
     }
 
     @Nullable
@@ -403,7 +531,10 @@ public final class GasSolverProfiler {
         private final List<NetworkProfile> samples = new ArrayList<>();
         private boolean closed;
 
-        private Capture(Thread ownerThread) {
+        private final @Nullable GasShadowComparison comparison;
+
+        private Capture(Thread ownerThread, @Nullable GasShadowComparison comparison) {
+            this.comparison = comparison;
             this.ownerThread = ownerThread;
         }
 
@@ -433,7 +564,25 @@ public final class GasSolverProfiler {
 
     public record NetworkProfile(BlockPos startPos, TimingProfile timings, NetworkShape shape, TopologyCacheStats topologyCache, SimulationWork simulation, TelemetryWork telemetry, GraphWork graph, Diagnostics diagnostics) {}
 
-    public record Diagnostics(long allocatedBytes, int regularizedSolves, int regularizedIterations) {}
+    public record SchedulerWork(String status, int work, int expanded, boolean continuation, int pressureNodes, int pressureWork, int buildWork, int receipts) {
+        public SchedulerWork(String status, int work, int expanded, boolean continuation, int pressureNodes, int pressureWork) {
+            this(status, work, expanded, continuation, pressureNodes, pressureWork, 0, 0);
+        }
+    }
+
+    public record Diagnostics(long allocatedBytes, int regularizedSolves, int regularizedIterations, long committedGas, Map<GasTransferStopReason, Integer> transferStops, int topologyPipeReads, @Nullable SchedulerWork scheduler, @Nullable Sample shadow, @Nullable String shadowError, boolean matrix) {
+        public Diagnostics(long allocatedBytes, int regularizedSolves, int regularizedIterations, long committedGas, Map<GasTransferStopReason, Integer> transferStops, int topologyPipeReads, @Nullable SchedulerWork scheduler) {
+            this(allocatedBytes, regularizedSolves, regularizedIterations, committedGas, transferStops, topologyPipeReads, scheduler, null, null, false);
+        }
+
+        public Diagnostics(long allocatedBytes, int regularizedSolves, int regularizedIterations, long committedGas, Map<GasTransferStopReason, Integer> transferStops, int topologyPipeReads, @Nullable SchedulerWork scheduler, @Nullable Sample shadow, @Nullable String shadowError) {
+            this(allocatedBytes, regularizedSolves, regularizedIterations, committedGas, transferStops, topologyPipeReads, scheduler, shadow, shadowError, false);
+        }
+
+        public Diagnostics {
+            transferStops = Map.copyOf(transferStops);
+        }
+    }
 
     public record TimingProfile(long totalNanos, StageTimings stages, GraphPostSolveTimings graphPostSolve) {}
 
@@ -472,11 +621,11 @@ public final class GasSolverProfiler {
         }
     }
 
-    public record SimulationWork(int gasSolveCount, int dynamicSubsteps, int substepCapHitCount, double maxSubstepCapRemainingTickFraction) {}
+    public record SimulationWork(int gasSolveCount, int dynamicSubsteps, int substepCapHitCount, double maxSubstepCapRemainingTickFraction, int approximateTransferCount, int transferPlanRollbackCount) {}
 
     public record TelemetryWork(int pressureTargetCount, int pressureFaceSampleCount, int flowTargetCount, int flowTargetUpdateCount) {}
 
-    public record GraphWork(int solveCount, int hypotheticalSolveCount, int nonConvergedSolveCount, int activeSetIterations, int forestDirectSolveAttempts, int forestDirectSolveSuccesses, int conjugateGradientIterations, int biConjugateGradientStabilizedIterations, int sorSweeps) {}
+    public record GraphWork(int solveCount, int hypotheticalSolveCount, int nonConvergedSolveCount, int approximateSolveCount, int skippedSolveCount, int budgetAbortCount, int activeSetIterations, int forestDirectSolveAttempts, int forestDirectSolveSuccesses, int conjugateGradientIterations, int biConjugateGradientStabilizedIterations, int sorSweeps) {}
 
     public record Summary(int sampleCount, TimingSummary timings, NetworkShape maxShape, TopologyCacheStats topologyCache, SimulationSummary simulation, TelemetrySummary telemetry, GraphSummary graph) {
         private static Summary empty() {
@@ -531,16 +680,16 @@ public final class GasSolverProfiler {
         }
     }
 
-    public record SimulationSummary(long gasSolveCount, double averageDynamicSubsteps, double averageDynamicSubstepsPerGasSolve, long substepCapHitCount, int substepCapAffectedSampleCount, double maxSubstepCapRemainingTickFraction) {
-        private static final SimulationSummary EMPTY = new SimulationSummary(0, 0, 0, 0, 0, 0);
+    public record SimulationSummary(long gasSolveCount, double averageDynamicSubsteps, double averageDynamicSubstepsPerGasSolve, long substepCapHitCount, int substepCapAffectedSampleCount, double maxSubstepCapRemainingTickFraction, long approximateTransferCount, long transferPlanRollbackCount) {
+        private static final SimulationSummary EMPTY = new SimulationSummary(0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     public record TelemetrySummary(double averagePressureTargetCount, double averagePressureFaceSampleCount, double averageFlowTargetCount, double averageFlowTargetUpdateCount) {
         private static final TelemetrySummary EMPTY = new TelemetrySummary(0, 0, 0, 0);
     }
 
-    public record GraphSummary(double averageSolveCount, double averageHypotheticalSolveCount, long nonConvergedSolveCount, double averageActiveSetIterations, double averageForestDirectSolveAttempts, double averageForestDirectSolveSuccesses, double averageConjugateGradientIterations, double averageBiConjugateGradientStabilizedIterations, double averageSorSweeps) {
-        private static final GraphSummary EMPTY = new GraphSummary(0, 0, 0, 0, 0, 0, 0, 0, 0);
+    public record GraphSummary(double averageSolveCount, double averageHypotheticalSolveCount, long nonConvergedSolveCount, long approximateSolveCount, long skippedSolveCount, long budgetAbortCount, double averageActiveSetIterations, double averageForestDirectSolveAttempts, double averageForestDirectSolveSuccesses, double averageConjugateGradientIterations, double averageBiConjugateGradientStabilizedIterations, double averageSorSweeps) {
+        private static final GraphSummary EMPTY = new GraphSummary(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     private static final class ProfileBuilder {
@@ -554,6 +703,12 @@ public final class GasSolverProfiler {
         private final MutableSimulationWork simulation = new MutableSimulationWork();
         private final MutableTelemetryWork telemetry = new MutableTelemetryWork();
         private final MutableGraphWork graph = new MutableGraphWork();
+        private int topologyPipeReads;
+        private @Nullable SchedulerWork scheduler;
+        private @Nullable Observation shadow;
+        private @Nullable String shadowError;
+        private final Map<GasTransferStopReason, Integer> transferStops = new EnumMap<>(GasTransferStopReason.class);
+        private long committedGas;
         private int regularizedSolves;
         private int regularizedIterations;
 
@@ -562,19 +717,16 @@ public final class GasSolverProfiler {
             this.startNanos = startNanos;
         }
 
-        private static long allocatedBytes() {
-            if (ALLOCATION_BEAN == null) {
-                return -1;
-            }
-
-            return ALLOCATION_BEAN.getThreadAllocatedBytes(Thread.currentThread().threadId());
-        }
-
         private NetworkProfile finish(long endNanos) {
             long endAllocatedBytes = allocatedBytes();
             long allocation = startAllocatedBytes < 0 || endAllocatedBytes < 0 ? -1 : Math.max(0, endAllocatedBytes - startAllocatedBytes);
             TimingProfile timings = new TimingProfile(Math.max(0, endNanos - startNanos), stageTimings.freeze(), graphPostSolveTimings.freeze());
-            return new NetworkProfile(startPos, timings, shape.freeze(), topologyCache.freeze(), simulation.freeze(), telemetry.freeze(), graph.freeze(), new Diagnostics(allocation, regularizedSolves, regularizedIterations));
+            Sample comparison = null;
+            if (shadow != null) {
+                comparison = shadow.finish();
+            }
+            Diagnostics diagnostics = new Diagnostics(allocation, regularizedSolves, regularizedIterations, committedGas, transferStops, topologyPipeReads, scheduler, comparison, shadowError, false);
+            return new NetworkProfile(startPos, timings, shape.freeze(), topologyCache.freeze(), simulation.freeze(), telemetry.freeze(), graph.freeze(), diagnostics);
         }
     }
 
@@ -634,9 +786,11 @@ public final class GasSolverProfiler {
         private int dynamicSubsteps;
         private int substepCapHitCount;
         private double maxSubstepCapRemainingTickFraction;
+        private int approximateTransferCount;
+        private int transferPlanRollbackCount;
 
         private SimulationWork freeze() {
-            return new SimulationWork(gasSolveCount, dynamicSubsteps, substepCapHitCount, maxSubstepCapRemainingTickFraction);
+            return new SimulationWork(gasSolveCount, dynamicSubsteps, substepCapHitCount, maxSubstepCapRemainingTickFraction, approximateTransferCount, transferPlanRollbackCount);
         }
     }
 
@@ -655,6 +809,9 @@ public final class GasSolverProfiler {
         private int solveCount;
         private int hypotheticalSolveCount;
         private int nonConvergedSolveCount;
+        private int approximateSolveCount;
+        private int skippedSolveCount;
+        private int budgetAbortCount;
         private int activeSetIterations;
         private int forestDirectSolveAttempts;
         private int forestDirectSolveSuccesses;
@@ -663,7 +820,7 @@ public final class GasSolverProfiler {
         private int sorSweeps;
 
         private GraphWork freeze() {
-            return new GraphWork(solveCount, hypotheticalSolveCount, nonConvergedSolveCount, activeSetIterations, forestDirectSolveAttempts, forestDirectSolveSuccesses, conjugateGradientIterations, biConjugateGradientStabilizedIterations, sorSweeps);
+            return new GraphWork(solveCount, hypotheticalSolveCount, nonConvergedSolveCount, approximateSolveCount, skippedSolveCount, budgetAbortCount, activeSetIterations, forestDirectSolveAttempts, forestDirectSolveSuccesses, conjugateGradientIterations, biConjugateGradientStabilizedIterations, sorSweeps);
         }
     }
 
@@ -746,6 +903,8 @@ public final class GasSolverProfiler {
         private long gasSolveCount;
         private long dynamicSubsteps;
         private long substepCapHitCount;
+        private long approximateTransferCount;
+        private long transferPlanRollbackCount;
         private int substepCapAffectedSampleCount;
         private double maxSubstepCapRemainingTickFraction;
 
@@ -753,6 +912,8 @@ public final class GasSolverProfiler {
             gasSolveCount += work.gasSolveCount();
             dynamicSubsteps += work.dynamicSubsteps();
             substepCapHitCount += work.substepCapHitCount();
+            approximateTransferCount += work.approximateTransferCount();
+            transferPlanRollbackCount += work.transferPlanRollbackCount();
             if (work.substepCapHitCount() > 0) {
                 substepCapAffectedSampleCount++;
             }
@@ -761,7 +922,7 @@ public final class GasSolverProfiler {
 
         private SimulationSummary finish(int sampleCount) {
             double averageDynamicSubstepsPerGasSolve = gasSolveCount == 0 ? 0 : (double) dynamicSubsteps / gasSolveCount;
-            return new SimulationSummary(gasSolveCount, (double) dynamicSubsteps / sampleCount, averageDynamicSubstepsPerGasSolve, substepCapHitCount, substepCapAffectedSampleCount, maxSubstepCapRemainingTickFraction);
+            return new SimulationSummary(gasSolveCount, (double) dynamicSubsteps / sampleCount, averageDynamicSubstepsPerGasSolve, substepCapHitCount, substepCapAffectedSampleCount, maxSubstepCapRemainingTickFraction, approximateTransferCount, transferPlanRollbackCount);
         }
     }
 
@@ -787,6 +948,9 @@ public final class GasSolverProfiler {
         private long solveCount;
         private long hypotheticalSolveCount;
         private long nonConvergedSolveCount;
+        private long approximateSolveCount;
+        private long skippedSolveCount;
+        private long budgetAbortCount;
         private long activeSetIterations;
         private long forestDirectSolveAttempts;
         private long forestDirectSolveSuccesses;
@@ -798,6 +962,9 @@ public final class GasSolverProfiler {
             solveCount += work.solveCount();
             hypotheticalSolveCount += work.hypotheticalSolveCount();
             nonConvergedSolveCount += work.nonConvergedSolveCount();
+            approximateSolveCount += work.approximateSolveCount();
+            skippedSolveCount += work.skippedSolveCount();
+            budgetAbortCount += work.budgetAbortCount();
             activeSetIterations += work.activeSetIterations();
             forestDirectSolveAttempts += work.forestDirectSolveAttempts();
             forestDirectSolveSuccesses += work.forestDirectSolveSuccesses();
@@ -807,7 +974,7 @@ public final class GasSolverProfiler {
         }
 
         private GraphSummary finish(int sampleCount) {
-            return new GraphSummary((double) solveCount / sampleCount, (double) hypotheticalSolveCount / sampleCount, nonConvergedSolveCount, (double) activeSetIterations / sampleCount, (double) forestDirectSolveAttempts / sampleCount, (double) forestDirectSolveSuccesses / sampleCount, (double) conjugateGradientIterations / sampleCount, (double) biConjugateGradientStabilizedIterations / sampleCount, (double) sorSweeps / sampleCount);
+            return new GraphSummary((double) solveCount / sampleCount, (double) hypotheticalSolveCount / sampleCount, nonConvergedSolveCount, approximateSolveCount, skippedSolveCount, budgetAbortCount, (double) activeSetIterations / sampleCount, (double) forestDirectSolveAttempts / sampleCount, (double) forestDirectSolveSuccesses / sampleCount, (double) conjugateGradientIterations / sampleCount, (double) biConjugateGradientStabilizedIterations / sampleCount, (double) sorSweeps / sampleCount);
         }
     }
 }

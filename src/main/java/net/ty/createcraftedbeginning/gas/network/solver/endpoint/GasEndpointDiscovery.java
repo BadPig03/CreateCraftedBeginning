@@ -39,40 +39,34 @@ public final class GasEndpointDiscovery {
     }
 
     static DiscoveredEndpoints discover(Level level, Snapshot topology) {
-        return new DiscoveredEndpoints(discoverStorageAccesses(level, topology), discoverPressureBoundaryAccesses(level, topology), discoverAtmosphericAccesses(level, topology));
-    }
-
-    private static @Unmodifiable List<StorageAccess> discoverStorageAccesses(Level level, Snapshot topology) {
-        List<StorageAccess> accesses = new ArrayList<>();
-        for (BlockFace endpointFace : topology.endpointFaces()) {
-            GasStorageHandler handler = getStorageHandler(level, endpointFace);
-            if (handler == null) {
+        List<StorageAccess> storage = new ArrayList<>();
+        List<PressureBoundaryAccess> boundaries = new ArrayList<>();
+        for (BlockFace face : topology.endpointFaces()) {
+            BlockPos pos = face.getConnectedPos();
+            if (!level.isLoaded(pos)) {
                 continue;
             }
 
-            for (int tank = 0; tank < handler.getTanks(); tank++) {
-                GasPressureCompartment compartment = handler.getPressureCompartment(tank);
-                if (compartment.getVolume() <= 0) {
-                    continue;
+            GasHandler handler = level.getCapability(GasCapabilities.BLOCK, pos, face.getOppositeFace());
+            if (handler instanceof GasStorageHandler tanks) {
+                int count = tanks.getTanks();
+                for (int index = 0; index < count; index++) {
+                    GasPressureCompartment compartment = tanks.getPressureCompartment(index);
+                    if (compartment.getVolume() <= 0) {
+                        continue;
+                    }
+
+                    storage.add(new StorageAccess(face, compartment));
                 }
-
-                accesses.add(new StorageAccess(endpointFace, compartment));
+                continue;
             }
-        }
-        return List.copyOf(accesses);
-    }
-
-    private static @Unmodifiable List<PressureBoundaryAccess> discoverPressureBoundaryAccesses(Level level, Snapshot topology) {
-        List<PressureBoundaryAccess> accesses = new ArrayList<>();
-        for (BlockFace endpointFace : topology.endpointFaces()) {
-            GasPressureBoundary handler = getSingleTankPressureBoundary(level, endpointFace);
-            if (handler == null) {
+            if (!(handler instanceof GasPressureBoundary boundary) || boundary.getTanks() != 1) {
                 continue;
             }
 
-            accesses.add(new PressureBoundaryAccess(endpointFace, handler));
+            boundaries.add(new PressureBoundaryAccess(face, boundary));
         }
-        for (BlockPos pipePos : topology.pipePositions()) {
+        for (BlockPos pipePos : topology.state().devicePositions()) {
             GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pipePos);
             if (behaviour == null) {
                 continue;
@@ -84,16 +78,16 @@ public final class GasEndpointDiscovery {
                     continue;
                 }
 
-                accesses.add(new PressureBoundaryAccess(new BlockFace(pipePos, face), boundary));
+                boundaries.add(new PressureBoundaryAccess(new BlockFace(pipePos, face), boundary));
             }
         }
-        return List.copyOf(accesses);
+        return new DiscoveredEndpoints(storage, boundaries, discoverAtmosphericAccesses(level, topology));
     }
 
     private static @Unmodifiable List<AtmosphericAccess> discoverAtmosphericAccesses(Level level, Snapshot topology) {
         List<AtmosphericAccess> accesses = new ArrayList<>(topology.atmosphericFaces().size());
         for (BlockFace atmosphericFace : topology.atmosphericFaces()) {
-            AtmosphericAccess access = getManagedAtmosphericEndpoint(level, atmosphericFace);
+            AtmosphericAccess access = getManagedAtmosphericEndpoint(level, atmosphericFace, false);
             if (access == null) {
                 continue;
             }
@@ -104,7 +98,7 @@ public final class GasEndpointDiscovery {
     }
 
     @Nullable
-    private static AtmosphericAccess getManagedAtmosphericEndpoint(Level level, BlockFace face) {
+    static AtmosphericAccess getManagedAtmosphericEndpoint(Level level, BlockFace face, boolean observeOnly) {
         if (!level.isLoaded(face.getConnectedPos())) {
             return null;
         }
@@ -114,14 +108,14 @@ public final class GasEndpointDiscovery {
             return null;
         }
 
-        GasPipeConnection connection = behaviour.getConnection(face.getFace());
-        if (connection == null) {
+        GasPipeConnection connection = observeOnly ? behaviour.peekConnection(face.getFace()) : behaviour.getConnection(face.getFace());
+        if (connection == null || observeOnly && connection.hasPendingTransfer()) {
             return null;
         }
 
         GasConnectionEndpoint endpoint = connection.getEndpoint();
         if (!(endpoint instanceof AtmosphericGasEndpoint)) {
-            if (!connection.resolveEndpoint(level, face.getPos())) {
+            if (observeOnly || !connection.resolveEndpoint(level, face.getPos())) {
                 return null;
             }
 
@@ -136,7 +130,9 @@ public final class GasEndpointDiscovery {
             return null;
         }
 
-        atmosphericEndpoint.bind(level, blockEntity);
+        if (!observeOnly) {
+            atmosphericEndpoint.bind(level, blockEntity);
+        }
         ICapabilityProvider<GasHandler> provider = atmosphericEndpoint.getGasHandlerProvider();
         GasHandler handler = provider.getCapability();
         if (handler == null) {
@@ -146,36 +142,6 @@ public final class GasEndpointDiscovery {
         AtmosphereState atmosphereState = atmosphericEndpoint.getAtmosphereState();
         GasStack atmosphericGas = atmosphericEndpoint.canExtractAtmosphericGas() && !atmosphereState.gas().isEmpty() ? new GasStack(atmosphereState.gas(), Long.MAX_VALUE) : GasStack.EMPTY;
         return new AtmosphericAccess(face, handler, atmosphereState, atmosphericGas);
-    }
-
-    @Nullable
-    private static GasStorageHandler getStorageHandler(Level level, BlockFace endpointFace) {
-        BlockPos adjacentPos = endpointFace.getConnectedPos();
-        if (!level.isLoaded(adjacentPos)) {
-            return null;
-        }
-
-        GasHandler rawHandler = level.getCapability(GasCapabilities.BLOCK, adjacentPos, endpointFace.getOppositeFace());
-        if (!(rawHandler instanceof GasStorageHandler handler)) {
-            return null;
-        }
-
-        return handler;
-    }
-
-    @Nullable
-    private static GasPressureBoundary getSingleTankPressureBoundary(Level level, BlockFace endpointFace) {
-        BlockPos adjacentPos = endpointFace.getConnectedPos();
-        if (!level.isLoaded(adjacentPos)) {
-            return null;
-        }
-
-        GasHandler rawHandler = level.getCapability(GasCapabilities.BLOCK, adjacentPos, endpointFace.getOppositeFace());
-        if (!(rawHandler instanceof GasPressureBoundary handler) || rawHandler instanceof GasStorageHandler || handler.getTanks() != 1) {
-            return null;
-        }
-
-        return handler;
     }
 
     record DiscoveredEndpoints(List<StorageAccess> storageAccesses, List<PressureBoundaryAccess> pressureBoundaryAccesses, List<AtmosphericAccess> atmosphericAccesses) {

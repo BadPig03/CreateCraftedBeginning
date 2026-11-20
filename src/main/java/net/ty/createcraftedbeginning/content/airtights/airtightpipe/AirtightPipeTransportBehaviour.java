@@ -18,6 +18,11 @@ final class AirtightPipeTransportBehaviour extends GasTransportBehaviour {
     }
 
     @Override
+    public boolean isOrdinaryPressurePipe() {
+        return true;
+    }
+
+    @Override
     public boolean canConnectOnFace(BlockState state, Direction direction) {
         if (!isConnectionFaceEnabled(state, direction)) {
             return false;

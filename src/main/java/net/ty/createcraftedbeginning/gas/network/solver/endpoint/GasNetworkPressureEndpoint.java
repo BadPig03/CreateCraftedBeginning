@@ -327,7 +327,7 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
         return true;
     }
 
-    private @Nullable GasNetworkPressureEndpoint withAmountDelta(GasStack gas, long delta, @Nullable GasPressurePrediction prediction) {
+    public @Nullable GasNetworkPressureEndpoint withAmountDelta(GasStack gas, long delta, @Nullable GasPressurePrediction prediction) {
         if (delta == 0 && prediction == null || pressureState.fixedPressure()) {
             return this;
         }

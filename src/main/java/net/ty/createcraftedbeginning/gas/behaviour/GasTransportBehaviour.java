@@ -185,6 +185,14 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         retiredConnections = null;
     }
 
+    public boolean isOrdinaryPressurePipe() {
+        return false;
+    }
+
+    public boolean usesPassiveAtmosphericMouth() {
+        return isOrdinaryPressurePipe();
+    }
+
     public abstract boolean canConnectOnFace(BlockState state, Direction direction);
 
     public abstract boolean isConnectionFaceEnabled(BlockState state, Direction direction);
@@ -224,6 +232,15 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     }
 
     @Nullable
+    public GasPipeConnection peekConnection(Direction side) {
+        if (connectionsDirty || connections == null) {
+            return null;
+        }
+
+        return connections.get(side);
+    }
+
+    @Nullable
     public GasPipeConnection getConnection(Direction side) {
         if (connectionsDirty) {
             refreshConnections();
@@ -242,7 +259,12 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
             return null;
         }
 
-        return connection.getFlowState();
+        Level level = getWorld();
+        if (level == null || level.isClientSide) {
+            return connection.getFlowState();
+        }
+
+        return GasNetworkTopology.readFlow(level, getPos(), side, connection);
     }
 
     public long getThroughputFlowRate() {
@@ -283,34 +305,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         connectionsDirty = true;
     }
 
-    @SuppressWarnings("unused")
-    protected long getFlowResistanceUnits(BlockState state, Direction entryFace, Direction exitFace) {
-        return PIPE_RESISTANCE_UNITS;
-    }
-
-    protected boolean acceptsGas(GasStack gas, BlockState state, Direction direction) {
-        return true;
-    }
-
-    private void createConnectionData() {
-        if (connections != null) {
-            return;
-        }
-
-        connections = new EnumMap<>(Direction.class);
-        BlockState state = blockEntity.getBlockState();
-        Level level = getWorld();
-        for (Direction direction : Iterate.directions) {
-            boolean canConnect = level == null ? isConnectionFaceEnabled(state, direction) : canConnectOnFace(state, direction);
-            if (!canConnect) {
-                continue;
-            }
-
-            connections.put(direction, new GasPipeConnection(direction));
-        }
-    }
-
-    private void refreshConnectionData() {
+    public void refreshConnectionFaces() {
         if (connections == null) {
             createConnectionData();
             return;
@@ -358,6 +353,33 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         publishFlowTelemetry();
     }
 
+    @SuppressWarnings("unused")
+    protected long getFlowResistanceUnits(BlockState state, Direction entryFace, Direction exitFace) {
+        return PIPE_RESISTANCE_UNITS;
+    }
+
+    protected boolean acceptsGas(GasStack gas, BlockState state, Direction direction) {
+        return true;
+    }
+
+    private void createConnectionData() {
+        if (connections != null) {
+            return;
+        }
+
+        connections = new EnumMap<>(Direction.class);
+        BlockState state = blockEntity.getBlockState();
+        Level level = getWorld();
+        for (Direction direction : Iterate.directions) {
+            boolean canConnect = level == null ? isConnectionFaceEnabled(state, direction) : canConnectOnFace(state, direction);
+            if (!canConnect) {
+                continue;
+            }
+
+            connections.put(direction, new GasPipeConnection(direction));
+        }
+    }
+
     private void retireConnection(GasPipeConnection connection) {
         Level level = getWorld();
         if (level != null && connection.prepareForRemoval(level, getPos())) {
@@ -393,7 +415,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     }
 
     private void refreshConnections() {
-        refreshConnectionData();
+        refreshConnectionFaces();
         recoverRetiredConnections();
         connectionsDirty = false;
         connectionRefreshTicks = CONNECTION_REFRESH_INTERVAL;

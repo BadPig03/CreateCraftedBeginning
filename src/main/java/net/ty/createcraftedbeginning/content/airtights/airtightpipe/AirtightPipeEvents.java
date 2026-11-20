@@ -19,6 +19,7 @@ import net.neoforged.neoforge.event.level.ChunkTicketLevelUpdatedEvent;
 import net.neoforged.neoforge.event.level.LevelEvent.Unload;
 import net.neoforged.neoforge.event.tick.LevelTickEvent.Post;
 import net.ty.createcraftedbeginning.api.CCBAPI;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
@@ -79,6 +80,7 @@ public final class AirtightPipeEvents {
 
         Set<BlockPos> pipes = new HashSet<>();
         for (ChunkPos pos : changed) {
+            GasNetworkTopology.invalidateChunk(level, pos);
             collectPipes(level, pos, pos, pipes);
             for (Direction direction : Iterate.horizontalDirections) {
                 collectPipes(level, new ChunkPos(pos.x + direction.getStepX(), pos.z + direction.getStepZ()), pos, pipes);
