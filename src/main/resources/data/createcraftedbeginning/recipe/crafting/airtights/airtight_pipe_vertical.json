@@ -10,7 +10,7 @@
       "item": "createcraftedbeginning:airtight_sheet"
     },
     "B": {
-      "tag": "c:plates/iron"
+      "item": "minecraft:dried_kelp"
     }
   },
   "result": {

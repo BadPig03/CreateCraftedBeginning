@@ -127,7 +127,7 @@ public class CCBTags {
     public enum CCBItemTags {
         AIRTIGHT_COMPONENTS,
         AIRTIGHT_ARMOR,
-        AIRTIGHT_SHEET_ADHESIVES,
+        AIRTIGHT_SHEET_CATALYSTS,
         END_CASING_RAW_MATERIALS,
         CRATES,
         WEATHER_FLARE,

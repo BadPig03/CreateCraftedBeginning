@@ -16,7 +16,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluid;
-import net.neoforged.neoforge.common.Tags;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.registry.CCBEntityTypes;
 import net.ty.createcraftedbeginning.registry.CCBItems;
@@ -54,7 +53,7 @@ public class CCBRegistrateTags {
     }
 
     private static void genItemTags(RegistrateTagsProvider<Item> provider) {
-        provider.addTag(CCBItemTags.AIRTIGHT_SHEET_ADHESIVES.tag).addTag(Tags.Items.SLIME_BALLS).add(BuiltInRegistries.ITEM.getResourceKey(AllItems.SUPER_GLUE.get()).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(Items.HONEY_BOTTLE).orElseThrow()).addOptional(ResourceLocation.fromNamespaceAndPath("simulated", "honey_glue"));
+        provider.addTag(CCBItemTags.AIRTIGHT_SHEET_CATALYSTS.tag).add(BuiltInRegistries.ITEM.getResourceKey(AllItems.SUPER_GLUE.get()).orElseThrow()).addOptional(ResourceLocation.fromNamespaceAndPath("simulated", "honey_glue"));
         provider.addTag(CCBItemTags.END_CASING_RAW_MATERIALS.tag).add(BuiltInRegistries.ITEM.getResourceKey(Blocks.CRYING_OBSIDIAN.asItem()).orElseThrow());
         provider.addTag(CCBItemTags.PRESS_HEAD_TOOLS.tag).add(BuiltInRegistries.ITEM.getResourceKey(Items.HEAVY_CORE).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(Items.IRON_BARS).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(Items.IRON_TRAPDOOR).orElseThrow());
         provider.addTag(CCBItemTags.WIND_CHARGING_EXCLUDED.tag).add(BuiltInRegistries.ITEM.getResourceKey(Items.OMINOUS_BOTTLE).orElseThrow()).add(BuiltInRegistries.ITEM.getResourceKey(CCBItems.MILK_ICE_CREAM.get()).orElseThrow());
