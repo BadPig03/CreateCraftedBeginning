@@ -27,7 +27,7 @@ public class CCBAirtightEngineHandlers {
         AirtightEngineHandlers.register(CCBGases.SPORE_AIR.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 10, 4);
 
         AirtightEngineHandlers.register(CCBGases.SCULK_AIR.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 1, 4);
-        AirtightEngineHandlers.register(CCBGases.SCULK_AIR.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 1, 4);
+        AirtightEngineHandlers.register(CCBGases.SCULK_AIR.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 10, 4);
 
         AirtightEngineHandlers.register(CCBGases.STEAM.get().getResourceLocation(), GameplayPressureProfiles.NORMAL, 2, 8);
         AirtightEngineHandlers.register(CCBGases.STEAM.get().getResourceLocation(), GameplayPressureProfiles.HIGH_PRESSURE, 20, 8);
