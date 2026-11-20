@@ -20,6 +20,7 @@ import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.ty.createcraftedbeginning.content.airtights.gaspackager.gasunpackager.GasUnpackagerBlock;
 import net.ty.createcraftedbeginning.content.airtights.portablegasinterface.PortableGasInterfaceMovement;
+import net.ty.createcraftedbeginning.registry.CCBTags.CCBBlockTags;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -89,7 +90,7 @@ public final class GasLogisticsRegistration {
 
     @Contract(pure = true)
     public static <B extends Block> @NotNull NonNullUnaryOperator<BlockBuilder<B, CreateRegistrate>> gasFactoryGaugeProperties() {
-        return builder -> AirtightBlockProperties.applyComponent(builder).properties(properties -> properties.forceSolidOn().noOcclusion()).transform(DisplaySource.displaySource(AllDisplaySources.GAUGE_STATUS));
+        return builder -> AirtightBlockProperties.applyComponent(builder).properties(properties -> properties.forceSolidOn().noOcclusion()).tag(CCBBlockTags.SABLE_LIGHT.tag).transform(DisplaySource.displaySource(AllDisplaySources.GAUGE_STATUS));
     }
 
     @Contract(pure = true)

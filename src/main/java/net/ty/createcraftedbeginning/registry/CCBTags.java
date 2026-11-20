@@ -28,6 +28,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import static net.ty.createcraftedbeginning.registry.CCBTags.NameSpace.COMMON;
 import static net.ty.createcraftedbeginning.registry.CCBTags.NameSpace.MOD;
+import static net.ty.createcraftedbeginning.registry.CCBTags.NameSpace.SABLE;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -67,7 +68,8 @@ public class CCBTags {
 
     public enum NameSpace {
         MOD(CCBAPI.MOD_ID, false, true),
-        COMMON("c");
+        COMMON("c"),
+        SABLE("sable");
 
         public final String id;
         public final boolean optionalDefault;
@@ -89,7 +91,8 @@ public class CCBTags {
         AIRTIGHT_COMPONENTS,
         GAS_SOURCES,
         END_COMPONENTS,
-        AMETHYST_COLLECTOR_SKY_OCCLUDERS;
+        AMETHYST_COLLECTOR_SKY_OCCLUDERS,
+        SABLE_LIGHT(SABLE, "light");
 
         public final TagKey<Block> tag;
         public final boolean alwaysDataGen;
