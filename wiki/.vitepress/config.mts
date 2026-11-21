@@ -27,6 +27,10 @@ function sidebar(english: boolean): DefaultTheme.Sidebar {
           {
             text: english ? 'Airtight Reactor Kettle' : '气密反应釜',
             link: `${prefix}/developers/kubejs/reactor-kettle`
+          },
+          {
+            text: english ? 'Airtight Fractionation Tower' : '气密分离塔',
+            link: `${prefix}/developers/kubejs/fractionation-tower`
           }
         ]
       }

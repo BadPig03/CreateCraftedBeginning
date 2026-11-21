@@ -27,7 +27,7 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 public final class FractionationTowerRecipe extends GasProcessingRecipe<RecipeInput, FractionationTowerRecipeParams> implements TemperatureAwareRecipe {
     private static final int MAX_INPUTS = 64;
-    private static final int MIN_PRODUCTS = 2;
+    private static final int MIN_LAYER_OUTPUTS = 2;
 
     private final TemperatureRecipeData temperature;
     private final List<FractionationTowerOutput> outputs;
@@ -85,27 +85,18 @@ public final class FractionationTowerRecipe extends GasProcessingRecipe<RecipeIn
         if (getIngredients().isEmpty() && getFluidIngredients().isEmpty() && getGasRequirements().isEmpty()) {
             errors.add("Fractionation tower recipe requires at least one input.");
         }
-        if (outputs.size() < MIN_PRODUCTS || outputs.size() > FractionationTowerOutput.MAX_LAYER_OFFSET) {
+        if (outputs.size() < MIN_LAYER_OUTPUTS || outputs.size() > FractionationTowerOutput.MAX_LAYER_OFFSET) {
             errors.add("Fractionation tower recipe must have between 2 and 8 layer outputs; got " + outputs.size() + '.');
         }
         Set<Integer> layers = new HashSet<>();
-        boolean distinctProducts = false;
         for (FractionationTowerOutput output : outputs) {
             int layer = output.layer();
-            if (!output.isValid() || !layers.add(layer)) {
-                errors.add("Fractionation tower output requires one product and a unique layer offset in [1, 9); got offset " + layer + '.');
-            }
-            if (output.isSameProduct(outputs.getFirst())) {
+            if (output.isValid() && layers.add(layer)) {
                 continue;
             }
 
-            distinctProducts = true;
+            errors.add("Fractionation tower output requires one product and a unique layer offset in [1, 9); got offset " + layer + '.');
         }
-        if (distinctProducts) {
-            return;
-        }
-
-        errors.add("Fractionation tower recipe requires at least two distinct products.");
     }
 
     public List<FractionationTowerOutput> getLayerOutputs() {

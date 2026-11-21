@@ -57,8 +57,4 @@ public record FractionationTowerOutput(int layer, ItemStack item, FluidStack flu
         }
         return layer > 0 && layer <= MAX_LAYER_OFFSET && products == 1;
     }
-
-    public boolean isSameProduct(FractionationTowerOutput other) {
-        return !item.isEmpty() && ItemStack.isSameItemSameComponents(item, other.item) || !fluid.isEmpty() && FluidStack.isSameFluidSameComponents(fluid, other.fluid) || !gas.isEmpty() && GasStack.isSameGasSameComponents(gas, other.gas);
-    }
 }

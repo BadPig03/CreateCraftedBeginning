@@ -13,3 +13,4 @@ description: Create Crafted Beginning的KubeJS接口与整合包定制文档。
 - [注气室](./kubejs/gas-injection.md)——物品、流体与概率产物的配方示例。
 - [气密锻造机](./kubejs/forging-press.md)——使用必需的基底与可选附加原料，搭配独立设置的压头。
 - [气密反应釜](./kubejs/reactor-kettle.md)——混合物品、流体和气体，设置加工时间与温度条件。
+- [气密分离塔](./kubejs/fractionation-tower.md)——混合原料，按层输出分馏或冷凝产物。

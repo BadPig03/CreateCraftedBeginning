@@ -6,6 +6,7 @@ import dev.latvian.mods.kubejs.recipe.RecipeKey;
 import dev.latvian.mods.kubejs.recipe.component.FluidStackComponent;
 import dev.latvian.mods.kubejs.recipe.component.IngredientComponent;
 import dev.latvian.mods.kubejs.recipe.component.NumberComponent;
+import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
 import dev.latvian.mods.kubejs.recipe.component.StringComponent;
 import dev.latvian.mods.kubejs.recipe.schema.KubeRecipeFactory;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeSchema;
@@ -18,7 +19,6 @@ import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.ty.createcraftedbeginning.api.CCBAPI;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.recipe.CCBRecipeTypes;
-import net.ty.createcraftedbeginning.recipe.FractionationTowerOutput;
 import net.ty.createcraftedbeginning.recipe.gas.GasRecipeRequirement;
 import net.ty.createcraftedbeginning.recipe.temperature.TemperatureCondition;
 import net.ty.createcraftedbeginning.recipe.temperature.TemperatureMatching;
@@ -29,15 +29,13 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CCBRecipeSchemas {
-    private static final int DEFAULT_PROCESSING_TIME = 200;
     static final RecipeKey<List<GasRecipeRequirement>> GAS_INPUTS = CCBRecipeComponents.GAS_INPUT.instance().asList().withBounds(IntBounds.OPTIONAL).inputKey("gas_ingredients").optional(List.of()).functionNames("gasInputs");
-    static final RecipeKey<List<FractionationTowerOutput>> LAYER_OUTPUTS = CCBRecipeComponents.LAYER_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("layer_outputs").optional(List.of()).alwaysWrite().functionNames("layerOutputs");
     private static final RecipeKey<List<Ingredient>> ITEM_INPUTS = IngredientComponent.INGREDIENT.instance().asList().inputKey("ingredients");
     static final RecipeKey<List<ProcessingOutput>> ITEM_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().outputKey("results");
-    private static final RecipeKey<List<Either<Ingredient, SizedFluidIngredient>>> INPUTS = IngredientComponent.INGREDIENT.instance().or(CCBRecipeComponents.FLUID_INPUT.instance()).asList().withBounds(IntBounds.OPTIONAL).inputKey("ingredients");
+    static final RecipeComponent<Either<Ingredient, SizedFluidIngredient>> ITEM_OR_FLUID_INPUT = IngredientComponent.INGREDIENT.instance().or(CCBRecipeComponents.FLUID_INPUT.instance());
+    static final RecipeKey<List<Either<Ingredient, SizedFluidIngredient>>> INPUTS = ITEM_OR_FLUID_INPUT.asList().withBounds(IntBounds.OPTIONAL).inputKey("ingredients");
     static final RecipeKey<List<Either<FluidStack, ProcessingOutput>>> OUTPUTS = FluidStackComponent.FLUID_STACK.instance().or(CCBRecipeComponents.ITEM_OUTPUT.instance()).asList().outputKey("results");
-    private static final RecipeKey<List<ProcessingOutput>> EMPTY_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite().noFunctions();
-    private static final RecipeKey<Integer> DURATION = NumberComponent.intRange(1, Integer.MAX_VALUE).otherKey("processing_time").optional(DEFAULT_PROCESSING_TIME).alwaysWrite().functionNames("processingTime");
+    static final RecipeKey<List<ProcessingOutput>> EMPTY_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite().noFunctions();
     static final RecipeKey<TemperatureCondition> TEMPERATURE = CCBRecipeComponents.TEMPERATURE.otherKey("temperature").optional(TemperatureCondition.NONE);
     static final RecipeKey<TemperatureMatching> TEMPERATURE_MATCHING = CCBRecipeComponents.TEMPERATURE_MATCHING.otherKey("temperature_matching").optional(TemperatureMatching.EXACT);
     private static final RecipeKey<List<Ingredient>> EMPTY_INPUTS = IngredientComponent.INGREDIENT.instance().asList().withBounds(IntBounds.OPTIONAL).inputKey("ingredients").optional(List.of()).alwaysWrite().noFunctions();
@@ -50,7 +48,6 @@ public final class CCBRecipeSchemas {
     private static final RecipeKey<String> WIND_CHARGE_ACTION = StringComponent.STRING.instance().otherKey("action").optional("charge").alwaysWrite();
     private static final RecipeKey<Integer> PRIORITY = NumberComponent.intRange(Integer.MIN_VALUE, Integer.MAX_VALUE).otherKey("priority").optional(0);
     private static final KubeRecipeFactory MACHINE = new KubeRecipeFactory(CCBAPI.asResource("machine"), MachineKubeRecipe.class, MachineKubeRecipe::new);
-    private static final KubeRecipeFactory FRACTIONATION = new KubeRecipeFactory(CCBAPI.asResource("fractionation"), FractionationTowerKubeRecipe.class, FractionationTowerKubeRecipe::new);
     private static final KubeRecipeFactory RESIDUE = new KubeRecipeFactory(CCBAPI.asResource("residue"), ResidueKubeRecipe.class, ResidueKubeRecipe::new);
 
     private CCBRecipeSchemas() {
@@ -68,6 +65,6 @@ public final class CCBRecipeSchemas {
         registry.register(CCBRecipeTypes.RESIDUE_GENERATION.getId(), new RecipeSchema(OPTIONAL_OUTPUTS, GAS_INPUTS, EMPTY_INPUTS).factory(RESIDUE).constructor(ResidueKubeRecipe.mappingConstructor()));
         registry.register(CCBRecipeTypes.REACTOR_KETTLE.getId(), ReactorKettleKubeRecipe.schema());
         registry.register(CCBRecipeTypes.WIND_CHARGING.getId(), new RecipeSchema(OPTIONAL_ITEM_OUTPUTS, ITEM_INPUTS, WIND_CHARGE_DURATION, WIND_CHARGE_ACTION, PRIORITY).factory(MACHINE).constructor(OPTIONAL_ITEM_OUTPUTS, ITEM_INPUTS));
-        registry.register(CCBRecipeTypes.FRACTIONATION_TOWER.getId(), new RecipeSchema(INPUTS, EMPTY_OUTPUTS, GAS_INPUTS, LAYER_OUTPUTS, DURATION, TEMPERATURE, TEMPERATURE_MATCHING).factory(FRACTIONATION).constructor(INPUTS));
+        registry.register(CCBRecipeTypes.FRACTIONATION_TOWER.getId(), FractionationTowerKubeRecipe.schema());
     }
 }
