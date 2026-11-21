@@ -55,8 +55,12 @@ public final class GasFlowForces {
     }
 
     public static boolean shouldSyncItemPosition(Entity entity) {
-        Set<ItemEntity> items = POSITION_SYNC.get(entity.level());
-        return items != null && items.contains(entity);
+        if (!(entity instanceof ItemEntity item)) {
+            return false;
+        }
+
+        Set<ItemEntity> items = POSITION_SYNC.get(item.level());
+        return items != null && items.contains(item);
     }
 
     public static void outline(GasReleaseContext context, boolean continuous) {

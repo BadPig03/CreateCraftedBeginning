@@ -29,7 +29,6 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class GasReleaseFlow {
-    private static final double LOG_2 = Math.log(2);
     private static final double PRESSURE_STEPS = 3;
     private static final double REFERENCE_FLOW_GU_PER_TICK = 1000;
     private static final double REFERENCE_BURST_GU = 2000;
@@ -55,7 +54,7 @@ final class GasReleaseFlow {
     void add(GasReleaseContext context) {
         double released = context.gasAmount();
         double pressureDelta = context.pressureDeltaPa().orElse(0);
-        double pressure = Mth.clamp(Math.log1p(pressureDelta / GasPressure.REFERENCE_PRESSURE_PA) / LOG_2 / PRESSURE_STEPS, 0, 1);
+        double pressure = Mth.clamp(Math.log1p(pressureDelta / GasPressure.REFERENCE_PRESSURE_PA) / Math.log(2) / PRESSURE_STEPS, 0, 1);
         amount += released;
         GasReleaseArea area = context.releaseArea();
         Emission emission = emissions.computeIfAbsent(area, ignored -> new Emission());

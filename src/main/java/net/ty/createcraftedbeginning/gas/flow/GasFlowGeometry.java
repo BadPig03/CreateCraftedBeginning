@@ -42,10 +42,6 @@ final class GasFlowGeometry {
 
             return false;
         }, world -> world.isLoaded(BlockPos.containing(start)));
-        if (!loaded) {
-            return false;
-        }
-
-        return level.clip(new ClipContext(start, end, Block.COLLIDER, Fluid.NONE, new GasFlowCollisionContext(entity, sourcePos))).getType() == Type.MISS;
+        return loaded && level.clip(new ClipContext(start, end, Block.COLLIDER, Fluid.NONE, new GasFlowCollisionContext(entity, sourcePos))).getType() == Type.MISS;
     }
 }

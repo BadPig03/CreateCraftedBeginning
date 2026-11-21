@@ -1,6 +1,5 @@
 package net.ty.createcraftedbeginning.gas.flow;
 
-import com.simibubi.create.content.logistics.box.PackageEntity;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
@@ -30,15 +29,7 @@ final class GasFlowTarget {
     private double intakeStrength;
 
     static boolean canAffect(Entity entity) {
-        if (!entity.isAlive() || entity.isSpectator() || entity instanceof ArmorStand) {
-            return false;
-        }
-
-        if (entity instanceof Player player && player.isCreative() && player.getAbilities().flying) {
-            return false;
-        }
-
-        return entity instanceof LivingEntity || entity instanceof ItemEntity || entity instanceof ExperienceOrb || entity instanceof PackageEntity || entity instanceof Boat || entity instanceof AbstractMinecart;
+        return entity.isAlive() && !entity.isSpectator() && !(entity instanceof ArmorStand) && (!(entity instanceof Player player) || !player.isCreative() || !player.getAbilities().flying) && (entity instanceof LivingEntity || entity instanceof ItemEntity || entity instanceof ExperienceOrb || entity instanceof Boat || entity instanceof AbstractMinecart);
     }
 
     void add(Vec3 impulse, boolean sustained) {
