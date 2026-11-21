@@ -474,6 +474,7 @@ public final class GasTransferScheduler {
             return new Tick(Status.NO_SOURCE, 0, 0, false, null);
         }
 
+        boolean cyclic = batch != null && topology.state().hasCycle();
         int work = 0;
         int expanded = 0;
         Status status = Status.CONTINUING;
@@ -517,7 +518,7 @@ public final class GasTransferScheduler {
                         }
                         else {
                             searchingGas = gas.copyWithAmount(1);
-                            if (batch != null && topology.state().hasCycle() && knownRoutes.knows(source, target)) {
+                            if (batch != null && cyclic && knownRoutes.knows(source, target)) {
                                 search = GasRouteSearch.zoned(level, batch.layout(), face(source), face(target), searchingGas, drain, fill);
                             }
                             else if (batch != null) {
@@ -554,7 +555,7 @@ public final class GasTransferScheduler {
                     skippedDetour = true;
                 }
                 if (path != null) {
-                    ready = new Candidate(source, target, searchingGas, path);
+                    ready = knownRoutes.candidate(source, target, searchingGas, path, cyclic);
                     if (zones != null && search.pending()) {
                         prepared = settle(level, ready, batch);
                         if (prepared.status == Status.ENDPOINT_RESERVED) {
@@ -770,7 +771,8 @@ public final class GasTransferScheduler {
     }
 
     private void recordDelivery(Level level, GasRouteBatch batch, Candidate candidate, GasNetworkPressureEndpoint drain, GasNetworkPressureEndpoint fill, Receipt receipt) {
-        batch.record(drain, fill, receipt);
+        GasParallelRoutes parallel = candidate.parallel;
+        batch.record(drain, fill, receipt, parallel == null ? List.of() : parallel.paths(), candidate.parallelBranch);
         if (rotation != null && faceCount >= 3) {
             GasBranchOrder order = receipt.assisted ? pumpOrder : branchOrder;
             order.received(candidate, fill.transferIdentity(), receipt.gas.getAmount());
@@ -786,7 +788,6 @@ public final class GasTransferScheduler {
             rotation.supplied(candidate.source, receipt);
         }
         knownRoutes.served(candidate, level.getGameTime());
-        receipt.requireZoneRoute().served();
     }
 
     private Status finishSweep() {
@@ -848,5 +849,5 @@ public final class GasTransferScheduler {
 
     private record Settlement(Status status, @Nullable Receipt receipt) {}
 
-    record Candidate(GasEndpointSlot source, GasEndpointSlot target, GasStack gas, Path path) {}
+    record Candidate(GasEndpointSlot source, GasEndpointSlot target, GasStack gas, Path path, @Nullable GasParallelRoutes parallel, int parallelBranch) {}
 }

@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteSearch.Path;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
@@ -94,33 +95,39 @@ final class GasRouteBatch implements Usage {
 
     boolean compatible(Receipt receipt) {
         GasStack gas = receipt.gas();
-        GasZoneRoute route = receipt.requireZoneRoute();
-        for (Pass pass : route.passes()) {
+        for (Pass pass : receipt.requireZoneRoute().passes()) {
             Object vertex = pass.vertexKey();
             GasStack prior = occupants.get(vertex);
-            if (prior != null && !GasStack.isSameGasSameComponents(prior, gas)) {
-                collision = new Collision(pass.position(), prior.copyWithAmount(used(vertex)), gas);
-                return false;
+            if (prior == null || GasStack.isSameGasSameComponents(prior, gas)) {
+                continue;
             }
+
+            collision = new Collision(pass.position(), prior.copyWithAmount(used(vertex)), gas);
+            return false;
         }
 
         return true;
     }
 
-    void record(GasNetworkPressureEndpoint from, GasNetworkPressureEndpoint to, Receipt receipt) {
-        GasStack gas = receipt.gas();
-        GasZoneRoute route = receipt.requireZoneRoute();
-        long amount = gas.getAmount();
-        for (Pass pass : route.passes()) {
-            Object vertex = pass.vertexKey();
-            occupants.putIfAbsent(vertex, gas);
-            traffic.put(vertex, used(vertex) + amount);
-            Object corridor = pass.corridorKey();
-            if (corridor == null) {
-                continue;
-            }
+    void record(GasNetworkPressureEndpoint from, GasNetworkPressureEndpoint to, Receipt receipt, List<Path> parallel, int selectedBranch) {
+        long amount = receipt.gas().getAmount();
+        if (parallel.size() < 2 || amount == 1) {
+            recordPath(receipt);
+        }
+        else {
+            int count = parallel.size();
+            long share = amount / count;
+            long extra = amount % count;
+            int first = share == 0 ? selectedBranch : 0;
+            for (int index = 0; index < count; index++) {
+                long part = index < extra ? share + 1 : share;
+                if (part == 0) {
+                    break;
+                }
 
-            traffic.put(corridor, used(corridor) + amount);
+                Path branch = parallel.get((first + index) % count);
+                recordPath(new Receipt(receipt.source(), receipt.target(), receipt.gas().copyWithAmount(part), branch, receipt.assisted()));
+            }
         }
         drained.put(from.transferIdentity(), drained(from) + amount);
         filled.put(to.transferIdentity(), filled(to) + amount);
@@ -128,7 +135,6 @@ final class GasRouteBatch implements Usage {
             naturalSinks.add(to.transferIdentity());
         }
         remaining -= amount;
-        grants.add(receipt);
     }
 
     boolean receivedNaturally(GasNetworkPressureEndpoint endpoint) {
@@ -146,6 +152,25 @@ final class GasRouteBatch implements Usage {
     @Nullable
     Collision collision() {
         return collision;
+    }
+
+    private void recordPath(Receipt receipt) {
+        GasStack gas = receipt.gas();
+        GasZoneRoute route = receipt.requireZoneRoute();
+        long amount = gas.getAmount();
+        for (Pass pass : route.passes()) {
+            Object vertex = pass.vertexKey();
+            occupants.putIfAbsent(vertex, gas);
+            traffic.put(vertex, used(vertex) + amount);
+            Object corridor = pass.corridorKey();
+            if (corridor == null) {
+                continue;
+            }
+
+            traffic.put(corridor, used(corridor) + amount);
+        }
+        grants.add(receipt);
+        route.served();
     }
 
     record Collision(BlockPos pos, GasStack existing, GasStack incoming) {}

@@ -131,6 +131,47 @@ public final class GasZoneRoute {
         return devices.get(index);
     }
 
+    public boolean samePath(GasZoneRoute other) {
+        return passes.size() == other.passes.size() && commonPrefix(other) == passes.size();
+    }
+
+    @Nullable
+    public ParallelSpan parallelSpan(GasZoneRoute other) {
+        int split = commonPrefix(other);
+        if (split >= Math.min(passes.size(), other.passes.size()) - 1) {
+            return null;
+        }
+
+        Pass start = passes.get(split);
+        Pass otherStart = other.passes.get(split);
+        if (start.vertex != otherStart.vertex || start.entry != otherStart.entry || start.vertex.device) {
+            return null;
+        }
+
+        int join = passes.size() - 1;
+        int otherJoin = other.passes.size() - 1;
+        while (join > split && otherJoin > split) {
+            Pass end = passes.get(join);
+            Pass otherEnd = other.passes.get(otherJoin);
+            if (end.vertex != otherEnd.vertex || end.next != otherEnd.next || end.exit != otherEnd.exit) {
+                return null;
+            }
+
+            if (end.entry != otherEnd.entry) {
+                if (end.vertex.device || !unrestrictedArm(split, join) || !other.unrestrictedArm(split, otherJoin)) {
+                    return null;
+                }
+
+                return new ParallelSpan(start.vertex.pos, end.vertex.pos);
+            }
+
+            join--;
+            otherJoin--;
+        }
+
+        return null;
+    }
+
     public void served() {
         for (Link link : corridors) {
             link.turns++;
@@ -329,6 +370,42 @@ public final class GasZoneRoute {
         }
         return new Quote(lower, GasPressure.round(GasPressureLimits.clampToHardLimit(pressure)), assistRoom, assist);
     }
+
+    private int commonPrefix(GasZoneRoute other) {
+        int count = Math.min(passes.size(), other.passes.size());
+        for (int index = 0; index < count; index++) {
+            Pass pass = passes.get(index);
+            Pass alternate = other.passes.get(index);
+            if (pass.vertex != alternate.vertex || pass.entry != alternate.entry || pass.exit != alternate.exit || pass.next != alternate.next) {
+                return index;
+            }
+        }
+
+        return count;
+    }
+
+    private boolean unrestrictedArm(int split, int join) {
+        for (int index = split; index < join; index++) {
+            Pass pass = passes.get(index);
+            Link link = pass.next;
+            if (link == null || link.capacity != Long.MAX_VALUE) {
+                return false;
+            }
+
+            if (index == split) {
+                continue;
+            }
+
+            Vertex vertex = pass.vertex;
+            if (vertex.device || Integer.bitCount(vertex.links.neighbors()) != 2 || (vertex.links.endpoints() | vertex.links.atmosphere()) != 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public record ParallelSpan(BlockPos split, BlockPos join) {}
 
     public enum PumpUse {
         NATURAL, ASSIST, BEST

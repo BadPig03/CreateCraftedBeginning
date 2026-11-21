@@ -1,7 +1,10 @@
 package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointSlot;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteSearch.Path;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute;
 import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasTransferScheduler.Candidate;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,6 +39,25 @@ final class GasServiceRoutes {
     boolean knows(GasEndpointSlot source, GasEndpointSlot target) {
         LinkedHashMap<GasEndpointSlot, Candidate> routes = sources.get(source);
         return routes != null && routes.containsKey(target);
+    }
+
+    Candidate candidate(GasEndpointSlot source, GasEndpointSlot target, GasStack gas, Path path, boolean cyclic) {
+        GasZoneRoute route = path.zoneRoute();
+        if (!cyclic || route == null) {
+            return new Candidate(source, target, gas, path, null, 0);
+        }
+
+        LinkedHashMap<GasEndpointSlot, Candidate> routes = sources.get(source);
+        Candidate prior = routes == null ? null : routes.get(target);
+        GasParallelRoutes parallel = prior == null ? null : prior.parallel();
+        if (parallel != null) {
+            int branch = parallel.learn(path, route);
+            if (branch >= 0) {
+                return new Candidate(source, target, gas, path, parallel, branch);
+            }
+        }
+
+        return new Candidate(source, target, gas, path, new GasParallelRoutes(path), 0);
     }
 
     void served(Candidate candidate, long tick) {

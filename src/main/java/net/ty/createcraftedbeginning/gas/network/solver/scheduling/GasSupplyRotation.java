@@ -242,7 +242,7 @@ final class GasSupplyRotation {
 
             Path path = tree.expand();
             if (path != null) {
-                Candidate candidate = new Candidate(steadySource, target, steadyGas, path);
+                Candidate candidate = routes.candidate(steadySource, target, steadyGas, path, topology.state().hasCycle());
                 deliver.accept(candidate);
             }
             if (path == null && tree.pending()) {
