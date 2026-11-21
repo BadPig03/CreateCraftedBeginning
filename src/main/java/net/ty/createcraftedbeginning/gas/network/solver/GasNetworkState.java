@@ -5,6 +5,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.ty.createcraftedbeginning.gas.network.solver.GasPipeLinkIndex.Links;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasNetworkState {
@@ -84,31 +86,35 @@ public final class GasNetworkState {
         return devicePositions;
     }
 
-    boolean hasCycle() {
+    public boolean hasCycle() {
         return cycle;
     }
 
-    long version() {
-        return version;
-    }
-
     @Nullable
-    BlockPos pressureZoneAt(BlockPos pos) {
+    public BlockPos pressureZoneAt(BlockPos pos) {
         return zones.get(pos);
     }
 
-    boolean isCurrent() {
+    public boolean isCurrent() {
         return current;
     }
 
     @Nullable
-    Links linksAt(BlockPos pos) {
+    public PipeLinks linksAt(BlockPos pos) {
         return pipes.get(pos);
     }
 
-    int ordinaryNeighbors(BlockPos pos) {
+    public int ordinaryNeighbors(BlockPos pos) {
         Links links = pipes.get(pos);
-        return links == null || !links.ordinary() ? 0 : links.neighbors();
+        if (links == null || !links.ordinary()) {
+            return 0;
+        }
+
+        return links.neighbors();
+    }
+
+    long version() {
+        return version;
     }
 
     boolean simulatedAt(long tick) {
@@ -121,5 +127,15 @@ public final class GasNetworkState {
 
     void retire() {
         current = false;
+    }
+
+    public interface PipeLinks {
+        int neighbors();
+
+        int endpoints();
+
+        int atmosphere();
+
+        boolean ordinary();
     }
 }

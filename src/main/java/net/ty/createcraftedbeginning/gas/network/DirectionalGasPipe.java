@@ -25,16 +25,6 @@ public interface DirectionalGasPipe {
         public static final Codec<DirectionalFacing> CODEC = StringRepresentable.fromEnum(DirectionalFacing::values);
 
         @Contract(pure = true)
-        public static int getYAngle(DirectionalFacing facing) {
-            return switch (facing) {
-                case EAST -> 90;
-                case SOUTH -> 0;
-                case WEST -> 270;
-                default -> 180;
-            };
-        }
-
-        @Contract(pure = true)
         public static DirectionalFacing getFacingDirection(Direction direction) {
             return switch (direction) {
                 case NORTH -> NORTH;

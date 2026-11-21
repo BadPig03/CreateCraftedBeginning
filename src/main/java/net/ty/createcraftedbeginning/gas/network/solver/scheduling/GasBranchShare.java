@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 

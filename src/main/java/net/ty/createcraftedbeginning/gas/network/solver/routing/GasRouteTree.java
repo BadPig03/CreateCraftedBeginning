@@ -1,15 +1,15 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
-import net.ty.createcraftedbeginning.gas.network.solver.GasOrdinaryPathSearch.Path;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Link;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Vertex;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneRoute.Pass;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Vertex;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -20,9 +20,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasRouteTree implements GasRouteSearch {
+public final class GasRouteTree implements GasRouteSearch {
     private final Level level;
     private final GasZoneLayout layout;
     private final BlockFace root;
@@ -40,13 +41,13 @@ final class GasRouteTree implements GasRouteSearch {
     private int detourSteps;
     private @Nullable GasZoneRouteSearch detour;
 
-    GasRouteTree(Level level, GasZoneLayout layout, BlockFace root) {
+    public GasRouteTree(Level level, GasZoneLayout layout, BlockFace root) {
         this.level = level;
         this.layout = layout;
         this.root = root;
         Vertex start = layout.vertex(root.getPos());
         if (start != null) {
-            Hop first = new Hop(start, null, null, 0);
+            Hop first = new RootHop(start);
             reached.put(start, first);
             frontier.addLast(first);
         }
@@ -80,15 +81,15 @@ final class GasRouteTree implements GasRouteSearch {
         return null;
     }
 
-    boolean rootedAt(BlockFace face) {
+    public boolean rootedAt(BlockFace face) {
         return root.equals(face);
     }
 
-    void seek(BlockFace destination, GasStack gas, GasNetworkPressureEndpoint supply, GasNetworkPressureEndpoint demand) {
+    public void seek(BlockFace destination, GasStack gas, GasNetworkPressureEndpoint supply, GasNetworkPressureEndpoint demand) {
         seek(root, destination, gas, supply, demand);
     }
 
-    void seek(BlockFace origin, BlockFace destination, GasStack gas, GasNetworkPressureEndpoint supply, GasNetworkPressureEndpoint demand) {
+    public void seek(BlockFace origin, BlockFace destination, GasStack gas, GasNetworkPressureEndpoint supply, GasNetworkPressureEndpoint demand) {
         this.origin = origin;
         supplier = layout.vertex(origin.getPos());
         this.destination = destination;
@@ -101,7 +102,7 @@ final class GasRouteTree implements GasRouteSearch {
         detour = null;
     }
 
-    boolean hasLongDetour(int limit) {
+    public boolean hasLongDetour(int limit) {
         return detourSteps >= limit && detour != null && detour.pending();
     }
 
@@ -111,13 +112,14 @@ final class GasRouteTree implements GasRouteSearch {
 
     private void step() {
         Hop here = frontier.removeFirst();
-        layout.connect(here.vertex);
-        for (Link link : here.vertex.edges.values()) {
-            if (here.parent == null && link.exit == root.getFace() || reached.containsKey(link.end)) {
+        Vertex vertex = here.vertex();
+        layout.connect(vertex);
+        for (Link link : vertex.edges.values()) {
+            if (here instanceof RootHop && link.exit == root.getFace() || reached.containsKey(link.end)) {
                 continue;
             }
 
-            Hop next = new Hop(link.end, here, link, here.depth + 1);
+            Hop next = new ChildHop(here, link, here.depth() + 1);
             reached.put(link.end, next);
             frontier.addLast(next);
         }
@@ -136,27 +138,49 @@ final class GasRouteTree implements GasRouteSearch {
         Hop right = end;
         List<Pass> passes = new ArrayList<>();
         Direction entry = origin.getFace();
-        long capacity = start.vertex.capacity;
+        long capacity = start.vertex().capacity;
         while (left != right) {
-            if (left.depth > right.depth) {
-                Link up = left.vertex.edges.get(left.incoming.entry);
-                passes.add(new Pass(left.vertex, entry, up.exit, up));
+            if (left instanceof ChildHop child && child.depth > right.depth()) {
+                Link up = child.incoming.opposite;
+                passes.add(new Pass(child.vertex(), entry, up.exit, up));
                 entry = up.entry;
                 capacity = Math.min(capacity, up.capacity);
-                left = left.parent;
+                left = child.parent;
                 continue;
             }
+            if (!(right instanceof ChildHop child)) {
+                throw new IllegalStateException("Route tree did not reach a common ancestor for " + origin + " and " + destination + '.');
+            }
 
-            tail.add(new Pass(right.vertex, right.incoming.entry, next == null ? destination.getFace() : next.exit, next));
-            next = right.incoming;
-            capacity = Math.min(capacity, next.capacity);
-            right = right.parent;
+            Link incoming = child.incoming;
+            tail.add(new Pass(child.vertex(), incoming.entry, next == null ? destination.getFace() : next.exit, next));
+            next = incoming;
+            capacity = Math.min(capacity, incoming.capacity);
+            right = child.parent;
         }
-        passes.add(new Pass(left.vertex, entry, next == null ? destination.getFace() : next.exit, next));
+        passes.add(new Pass(left.vertex(), entry, next == null ? destination.getFace() : next.exit, next));
         Collections.reverse(tail);
         passes.addAll(tail);
-        return new Path(end.vertex.pos, capacity, null, new GasZoneRoute(passes, capacity));
+        return new Path(end.vertex().pos, capacity, null, new GasZoneRoute(level, passes, capacity));
     }
 
-    private record Hop(Vertex vertex, @Nullable Hop parent, @Nullable Link incoming, int depth) {}
+    private sealed interface Hop permits RootHop, ChildHop {
+        Vertex vertex();
+
+        int depth();
+    }
+
+    private record RootHop(Vertex vertex) implements Hop {
+        @Override
+        public int depth() {
+            return 0;
+        }
+    }
+
+    private record ChildHop(Hop parent, Link incoming, int depth) implements Hop {
+        @Override
+        public Vertex vertex() {
+            return incoming.end;
+        }
+    }
 }

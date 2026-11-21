@@ -1,15 +1,17 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.endpoint;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-record GasEndpointSlot(int face, int tank) {
-    static final GasEndpointSlot FIRST = new GasEndpointSlot(0, 0);
+public record GasEndpointSlot(int face, int tank) {
+    public static final GasEndpointSlot FIRST = new GasEndpointSlot(0, 0);
 
-    GasEndpointSlot after(int tankCount, int faceCount) {
+    public GasEndpointSlot after(int tankCount, int faceCount) {
         if (tank + 1 < tankCount) {
             return new GasEndpointSlot(face, tank + 1);
         }

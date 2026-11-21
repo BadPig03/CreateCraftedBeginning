@@ -1,15 +1,19 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology.Snapshot;
-import net.ty.createcraftedbeginning.gas.network.solver.GasOrdinaryPathSearch.Path;
-import net.ty.createcraftedbeginning.gas.network.solver.GasTransferScheduler.Candidate;
-import net.ty.createcraftedbeginning.gas.network.solver.GasTransferScheduler.Receipt;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointPlanner.Port;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointSlot;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasZonePorts;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteSearch.Path;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteTree;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout;
+import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasTransferScheduler.Candidate;
+import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasTransferScheduler.Receipt;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -90,7 +94,8 @@ final class GasSupplyRotation {
         int work = 0;
         boolean startWithDiscovery = supplies.isEmpty() && routes.size() == 0;
         int scanLimit = Math.min(scanned && hasStorageSupply ? 1 : SCAN_PER_TICK, budget / 4);
-        for (; work < scanLimit && nextSupply == null; work++) {
+        while (work < scanLimit && nextSupply == null) {
+            work++;
             GasEndpointSlot inspected = scan;
             Port port = ports.read(level, inspected);
             scan = inspected.after(port.tanks(), topology.endpointFaces().size());
@@ -127,7 +132,9 @@ final class GasSupplyRotation {
         }
         while (work < budget && batch.available() > 0 && batch.collision() == null && topology.state().isCurrent()) {
             work++;
-            if (steadyTarget == null) {
+            GasEndpointSlot target = steadyTarget;
+            GasRouteTree tree = steadyTree;
+            if (target == null) {
                 GasEndpointSlot retry = null;
                 if (supplyTurn == 0) {
                     if (nextSupply != null && (supplies.size() < MAX_SUPPLIES || supplies.remove(steadySource))) {
@@ -209,22 +216,26 @@ final class GasSupplyRotation {
                     continue;
                 }
                 BlockFace root = ports.face(steadySource);
-                if (steadyTree == null) {
-                    steadyTree = new GasRouteTree(level, zones, root);
+                if (tree == null) {
+                    tree = new GasRouteTree(level, zones, root);
+                    steadyTree = tree;
                 }
-                steadyTree.seek(root, ports.face(outlet), gas, drain, fill);
+                tree.seek(root, ports.face(outlet), gas, drain, fill);
                 steadyTarget = outlet;
                 steadyGas = gas.copyWithAmount(1);
                 retryingOutlet = retry != null;
                 continue;
             }
+            if (tree == null) {
+                throw new IllegalStateException("An active supply outlet search requires a route tree; target " + target + '.');
+            }
 
-            Path path = steadyTree.expand();
+            Path path = tree.expand();
             if (path != null) {
-                Candidate candidate = new Candidate(steadySource, steadyTarget, steadyGas, path);
+                Candidate candidate = new Candidate(steadySource, target, steadyGas, path);
                 deliver.accept(candidate);
             }
-            if (path != null || !steadyTree.pending()) {
+            if (path != null || !tree.pending()) {
                 steadyTarget = null;
                 retryingOutlet = false;
             }

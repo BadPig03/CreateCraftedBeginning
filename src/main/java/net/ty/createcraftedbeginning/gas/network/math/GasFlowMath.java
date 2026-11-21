@@ -37,20 +37,4 @@ public final class GasFlowMath {
 
         return toWholeAmount(flowRate * Math.min(1, tickFraction));
     }
-
-    public static long amountForScale(double flowRate, double scale) {
-        if (!hasFlow(flowRate) || scale <= 0 || Double.isNaN(scale)) {
-            return 0;
-        }
-
-        return toWholeAmount(flowRate * scale);
-    }
-
-    public static long nextSmallerQuantizedAmount(long amount) {
-        if (amount <= 1) {
-            return 0;
-        }
-
-        return Math.max(1, amount / 2);
-    }
 }

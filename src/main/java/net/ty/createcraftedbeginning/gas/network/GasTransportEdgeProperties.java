@@ -13,8 +13,9 @@ public record GasTransportEdgeProperties(long resistanceUnits, GasTransportPress
         flowRateLimit = Math.max(0, flowRateLimit);
         flowLimitReferencePressurePa = Math.max(GasPressure.VACUUM_PA, flowLimitReferencePressurePa);
         conductancePerPascal = Double.isFinite(conductancePerPascal) && conductancePerPascal > 0 ? conductancePerPascal : Double.NaN;
-        boolean lossless = resistanceUnits == 0 && pressureDrive instanceof PressureBoost boost && boost.pressureBoostPa() == GasPressure.VACUUM_PA && flowRateLimit == Long.MAX_VALUE && flowLimitReferencePressurePa == GasPressure.VACUUM_PA && Double.isNaN(conductancePerPascal);
-        resistanceUnits = lossless ? 0 : Math.max(GasFlowResistance.MIN_RESISTANCE_UNITS, resistanceUnits);
+        if (resistanceUnits < 0) {
+            resistanceUnits = GasFlowResistance.MIN_RESISTANCE_UNITS;
+        }
     }
 
     public static GasTransportEdgeProperties passive(long resistanceUnits) {
@@ -22,6 +23,6 @@ public record GasTransportEdgeProperties(long resistanceUnits, GasTransportPress
     }
 
     public boolean isLossless() {
-        return resistanceUnits == 0;
+        return resistanceUnits == 0 && pressureDrive instanceof PressureBoost(long pa) && pa == GasPressure.VACUUM_PA && flowRateLimit == Long.MAX_VALUE && flowLimitReferencePressurePa == GasPressure.VACUUM_PA && Double.isNaN(conductancePerPascal);
     }
 }

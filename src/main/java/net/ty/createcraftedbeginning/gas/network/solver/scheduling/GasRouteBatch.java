@@ -1,13 +1,14 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
-import net.ty.createcraftedbeginning.api.gas.pressure.GasPressurePrediction;
-import net.ty.createcraftedbeginning.gas.network.solver.GasTransferScheduler.Receipt;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneRoute.Pass;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
-import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.PredictionAccess;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Usage;
+import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasTransferScheduler.Receipt;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasFlowIntegration;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,23 +22,49 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasRouteBatch {
+final class GasRouteBatch implements Usage {
+    private final GasZoneLayout layout;
+    private final GasServiceOrder serviceOrder;
     private final Map<Object, Long> traffic = new IdentityHashMap<>();
     private final Map<Object, GasStack> occupants = new IdentityHashMap<>();
     private final Map<Object, Long> drained = new IdentityHashMap<>();
     private final Map<Object, Long> drainLimits = new IdentityHashMap<>();
     private final Map<Object, Long> fillLimits = new IdentityHashMap<>();
     private final Map<Object, Long> filled = new IdentityHashMap<>();
-    private final Map<Object, GasStack> contents = new IdentityHashMap<>();
-    private final Set<Object> affected = Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<Object> naturalSinks = Collections.newSetFromMap(new IdentityHashMap<>());
     private final List<Receipt> grants = new ArrayList<>();
     private final Set<Object> attempts = Collections.newSetFromMap(new IdentityHashMap<>());
     private @Nullable GasFlowIntegration integration;
     private long remaining;
     private @Nullable Collision collision;
 
-    GasRouteBatch(long quantum) {
+    GasRouteBatch(long quantum, GasZoneLayout layout, GasServiceOrder serviceOrder) {
         remaining = quantum;
+        this.layout = layout;
+        this.serviceOrder = serviceOrder;
+    }
+
+    @Override
+    public long used(Object segment) {
+        return traffic.getOrDefault(segment, 0L);
+    }
+
+    @Override
+    public long drained(GasNetworkPressureEndpoint end) {
+        return drained.getOrDefault(end.transferIdentity(), 0L);
+    }
+
+    @Override
+    public long filled(GasNetworkPressureEndpoint end) {
+        return filled.getOrDefault(end.transferIdentity(), 0L);
+    }
+
+    GasZoneLayout layout() {
+        return layout;
+    }
+
+    GasServiceOrder serviceOrder() {
+        return serviceOrder;
     }
 
     GasFlowIntegration integration() {
@@ -59,50 +86,20 @@ final class GasRouteBatch {
         return remaining;
     }
 
-    long used(Object segment) {
-        return traffic.getOrDefault(segment, 0L);
-    }
-
-    long drained(GasNetworkPressureEndpoint end) {
-        return drained.getOrDefault(end.transferIdentity(), 0L);
-    }
-
-    long filled(GasNetworkPressureEndpoint end) {
-        return filled.getOrDefault(end.transferIdentity(), 0L);
-    }
-
     long remainingQuota(GasNetworkPressureEndpoint from, GasNetworkPressureEndpoint to) {
         long source = drainLimits.merge(from.transferIdentity(), from.transferLimits().drainLimit(), Math::max);
         long target = fillLimits.merge(to.transferIdentity(), to.transferLimits().fillLimit(), Math::max);
         return Math.min(remaining, Math.min(source - drained(from), target - filled(to)));
     }
 
-    @Nullable
-    GasNetworkPressureEndpoint project(GasNetworkPressureEndpoint end, GasStack gas) {
-        if (end.pressureState().fixedPressure()) {
-            return end;
-        }
-
-        Object id = end.transferIdentity();
-        GasStack stored = contents.get(id);
-        if (stored != null && !stored.isEmpty() && !GasStack.isSameGasSameComponents(stored, gas)) {
-            return null;
-        }
-        for (PredictionAccess access : end.predictionAccesses()) {
-            if (affected.contains(access.compartment().getPredictionGroup())) {
-                return end.withAmountDelta(gas, filled(end) - drained(end), new GasPressurePrediction(contents));
-            }
-        }
-        return end;
-    }
-
     boolean compatible(Receipt receipt) {
         GasStack gas = receipt.gas();
-        GasZoneRoute route = receipt.path().zoneRoute();
+        GasZoneRoute route = receipt.requireZoneRoute();
         for (Pass pass : route.passes()) {
-            GasStack prior = occupants.get(pass.vertex());
+            Object vertex = pass.vertexKey();
+            GasStack prior = occupants.get(vertex);
             if (prior != null && !GasStack.isSameGasSameComponents(prior, gas)) {
-                collision = new Collision(pass.vertex().pos, prior.copyWithAmount(used(pass.vertex())), gas);
+                collision = new Collision(pass.position(), prior.copyWithAmount(used(vertex)), gas);
                 return false;
             }
         }
@@ -110,25 +107,32 @@ final class GasRouteBatch {
         return true;
     }
 
-    void record(GasNetworkPressureEndpoint from, GasNetworkPressureEndpoint to, Receipt receipt, boolean projected) {
+    void record(GasNetworkPressureEndpoint from, GasNetworkPressureEndpoint to, Receipt receipt) {
         GasStack gas = receipt.gas();
-        GasZoneRoute route = receipt.path().zoneRoute();
+        GasZoneRoute route = receipt.requireZoneRoute();
         long amount = gas.getAmount();
         for (Pass pass : route.passes()) {
-            occupants.putIfAbsent(pass.vertex(), gas);
-            traffic.put(pass.vertex(), used(pass.vertex()) + amount);
-            if (pass.next() != null) {
-                traffic.put(pass.next().shared, used(pass.next().shared) + amount);
+            Object vertex = pass.vertexKey();
+            occupants.putIfAbsent(vertex, gas);
+            traffic.put(vertex, used(vertex) + amount);
+            Object corridor = pass.corridorKey();
+            if (corridor == null) {
+                continue;
             }
+
+            traffic.put(corridor, used(corridor) + amount);
         }
         drained.put(from.transferIdentity(), drained(from) + amount);
         filled.put(to.transferIdentity(), filled(to) + amount);
-        if (projected) {
-            remember(from, gas);
-            remember(to, gas);
+        if (!receipt.assisted() && from.pressureState().pressurePa() > to.pressureState().pressurePa()) {
+            naturalSinks.add(to.transferIdentity());
         }
         remaining -= amount;
         grants.add(receipt);
+    }
+
+    boolean receivedNaturally(GasNetworkPressureEndpoint endpoint) {
+        return naturalSinks.contains(endpoint.transferIdentity());
     }
 
     boolean hasGrants() {
@@ -142,18 +146,6 @@ final class GasRouteBatch {
     @Nullable
     Collision collision() {
         return collision;
-    }
-
-    private void remember(GasNetworkPressureEndpoint end, GasStack gas) {
-        if (end.pressureState().fixedPressure()) {
-            return;
-        }
-
-        long amount = end.pressureState().currentAmount() + (filled(end) - drained(end));
-        contents.put(end.transferIdentity(), gas.copyWithAmount(amount));
-        for (PredictionAccess access : end.predictionAccesses()) {
-            affected.add(access.compartment().getPredictionGroup());
-        }
     }
 
     record Collision(BlockPos pos, GasStack existing, GasStack incoming) {}

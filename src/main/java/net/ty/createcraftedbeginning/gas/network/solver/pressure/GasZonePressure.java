@@ -1,8 +1,9 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.pressure;
 
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -10,13 +11,15 @@ import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
-import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology.PressureGauge;
-import net.ty.createcraftedbeginning.gas.network.solver.GasShadowComparison.Observation;
-import net.ty.createcraftedbeginning.gas.network.solver.GasShadowComparison.Reading;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Vertex;
+import net.ty.createcraftedbeginning.gas.network.GasFlowResistance;
+import net.ty.createcraftedbeginning.gas.network.GasTransportEdgeProperties;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointPlanner.Port;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointSlot;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasZonePorts;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout;
 import net.ty.createcraftedbeginning.gas.telemetry.GasPressureTelemetryTarget;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
@@ -24,13 +27,16 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.ToLongBiFunction;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasZonePressure {
+public final class GasZonePressure {
     private final GasZoneLayout layout;
     private final GasZonePorts ports;
-    private final List<PressureGauge> gauges;
+    private final List<Gauge> gauges;
+    private final ToLongBiFunction<BlockPos, GasStack> assistedPumpFlow;
     private final Set<GasStack> species = new LinkedHashSet<>();
     private Map<GasStack, GasZoneField> published = Map.of();
     private Map<GasStack, GasZoneField> building = new HashMap<>();
@@ -45,16 +51,25 @@ final class GasZonePressure {
     private long maximum;
     private Stage stage = Stage.DISCOVER;
     private int lastWork;
-    private final Map<String, Reading> shadowReadings;
 
-    GasZonePressure(GasZoneLayout layout, GasZonePorts ports, List<PressureGauge> gauges) {
+    public GasZonePressure(GasZoneLayout layout, GasZonePorts ports, List<Gauge> gauges, ToLongBiFunction<BlockPos, GasStack> assistedPumpFlow) {
         this.layout = layout;
         this.ports = ports;
         this.gauges = gauges;
-        shadowReadings = ports.observeOnly ? new HashMap<>() : Map.of();
+        this.assistedPumpFlow = assistedPumpFlow;
     }
 
-    void tick(Level level, int budget) {
+    public static void clearTelemetry(Level level, List<Gauge> gauges) {
+        for (Gauge gauge : gauges) {
+            if (!(level.getBlockEntity(gauge.pos()) instanceof GasPressureTelemetryTarget target)) {
+                continue;
+            }
+
+            target.clearPressureTelemetry();
+        }
+    }
+
+    public void tick(Level level, int budget) {
         lastWork = 0;
         while (lastWork < budget) {
             lastWork++;
@@ -64,6 +79,14 @@ final class GasZonePressure {
         }
     }
 
+    public int nodes() {
+        return layout.nodes();
+    }
+
+    public int lastWork() {
+        return lastWork;
+    }
+
     double pressure(BlockFace face, GasStack gas) {
         GasZoneField field = published.get(gas.getAmount() == 1 ? gas : gas.copyWithAmount(1));
         if (field == null) {
@@ -71,18 +94,6 @@ final class GasZonePressure {
         }
 
         return field.at(layout.node(face));
-    }
-
-    Map<String, Reading> shadowReadings() {
-        return shadowReadings;
-    }
-
-    int nodes() {
-        return layout.nodes();
-    }
-
-    int lastWork() {
-        return lastWork;
     }
 
     private boolean step(Level level) {
@@ -128,10 +139,10 @@ final class GasZonePressure {
                 if (behaviour != null && behaviour.canObservePressureOnFace(state, face.getFace())) {
                     for (GasNetworkPressureEndpoint endpoint : port.planner().planPressureEndpoints(level, gas)) {
                         if (behaviour.acceptsInboundGas(state, face.getFace(), gas)) {
-                            field.boundary(node, endpoint.pressureState().pressurePa(), GasZoneRoute.contact(endpoint.flowResistance().drainResistanceUnits()), endpoint.transferLimits().drainLimit(), true);
+                            field.boundary(node, endpoint.pressureState().pressurePa(), GasFlowResistance.endpointResistance(endpoint.flowResistance().drainResistanceUnits()), endpoint.transferLimits().drainLimit(), true);
                         }
                         if (behaviour.allowsOutboundGas(state, face.getFace(), gas) || behaviour.getInternalPressureBoundary(face.getFace()) == endpoint.access().fillHandler() && endpoint.access().fillHandler() != null) {
-                            field.boundary(node, endpoint.pressureState().pressurePa(), GasZoneRoute.contact(endpoint.flowResistance().fillResistanceUnits()), endpoint.transferLimits().fillLimit(), false);
+                            field.boundary(node, endpoint.pressureState().pressurePa(), GasFlowResistance.endpointResistance(endpoint.flowResistance().fillResistanceUnits()), endpoint.transferLimits().fillLimit(), false);
                         }
                     }
                 }
@@ -142,25 +153,33 @@ final class GasZonePressure {
             }
             return false;
         }
-        if (stage == Stage.DEVICES && device < layout.devices().size()) {
-            Vertex part = layout.devices().get(device++);
-            GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, part.pos);
+        if (stage == Stage.DEVICES && device < layout.deviceCount()) {
+            BlockPos pos = layout.devicePosition(device++);
+            GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pos);
             if (behaviour == null) {
                 return false;
             }
-            BlockState state = level.getBlockState(part.pos);
+            BlockState state = level.getBlockState(pos);
             for (Direction in : Iterate.directions) {
-                int from = layout.node(new BlockFace(part.pos, in));
+                int from = layout.node(new BlockFace(pos, in));
                 if (from < 0 || !behaviour.acceptsInboundGas(state, in, gas)) {
                     continue;
                 }
                 for (Direction out : Iterate.directions) {
-                    int to = layout.node(new BlockFace(part.pos, out));
+                    int to = layout.node(new BlockFace(pos, out));
                     if (in == out || to < 0 || !behaviour.allowsOutboundGas(state, out, gas)) {
                         continue;
                     }
 
-                    field.device(from, to, behaviour.getTransportEdgeProperties(state, in, out, gas));
+                    GasTransportEdgeProperties edge = behaviour.getTransportEdgeProperties(state, in, out, gas);
+                    long assistedFlow = -1;
+                    if (edge.flowRateLimit() > 0 && behaviour.passesNaturalForwardFlow()) {
+                        assistedFlow = assistedPumpFlow.applyAsLong(pos, gas);
+                        if (assistedFlow < 0) {
+                            edge = GasTransportEdgeProperties.passive(0);
+                        }
+                    }
+                    field.device(from, to, edge, assistedFlow);
                 }
             }
             return false;
@@ -174,7 +193,7 @@ final class GasZonePressure {
         return false;
     }
 
-    private void sampleGauge(Level level, PressureGauge meter) {
+    private void sampleGauge(Level level, Gauge meter) {
         int faces = 0;
         GasZoneField field = null;
         if (gaugeGas < gases.size()) {
@@ -205,28 +224,27 @@ final class GasZonePressure {
             return;
         }
 
-        if (ports.observeOnly) {
-            boolean known = faces != 0 && observedFaces == faces;
-            shadowReadings.put(meter.pos().toShortString(), new Reading(known ? minimum : -1, known ? maximum : -1, level.getGameTime()));
-        }
-        else if (level.getBlockEntity(meter.pos()) instanceof GasPressureTelemetryTarget target) {
-            if (faces == 0 || observedFaces != faces) {
-                target.clearPressureTelemetry();
-            }
-            else {
-                target.acceptPressureTelemetry(minimum, maximum);
-                Observation observation = GasSolverProfiler.observation();
-                if (observation != null) {
-                    observation.pressure(meter.pos(), minimum, maximum);
-                }
-            }
-        }
+        publishGauge(level, meter.pos(), faces != 0 && observedFaces == faces);
         gauge++;
         gaugeGas = 0;
         observedFaces = 0;
         minimum = Long.MAX_VALUE;
         maximum = 0;
     }
+
+    private void publishGauge(Level level, BlockPos pos, boolean known) {
+        if (!(level.getBlockEntity(pos) instanceof GasPressureTelemetryTarget target)) {
+            return;
+        }
+        if (!known) {
+            target.clearPressureTelemetry();
+            return;
+        }
+
+        target.acceptPressureTelemetry(minimum, maximum);
+    }
+
+    public record Gauge(BlockPos pos, int connectedFaces) {}
 
     private enum Stage {
         DISCOVER, PORTS, DEVICES, RELAX, PUBLISH

@@ -1,13 +1,14 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.ty.createcraftedbeginning.gas.network.solver.GasPipeLinkIndex.Links;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Interior;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Link;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Vertex;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkState;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkState.PipeLinks;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Interior;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Vertex;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -20,14 +21,13 @@ final class GasRouteIndex {
     private final GasNetworkState state;
     private final Map<BlockPos, Long> limits;
     private final Map<BlockPos, Vertex> vertices;
-
     private final Map<BlockPos, Interior> interiors;
 
     GasRouteIndex(GasNetworkState state, Map<BlockPos, Long> limits, Map<BlockPos, Vertex> vertices, Map<BlockPos, Interior> interiors) {
-        this.interiors = interiors;
         this.state = state;
         this.limits = limits;
         this.vertices = vertices;
+        this.interiors = interiors;
     }
 
     @Nullable
@@ -36,15 +36,13 @@ final class GasRouteIndex {
         if (existing != null) {
             return existing;
         }
-        Links links = state.linksAt(pos);
+        PipeLinks links = state.linksAt(pos);
         long capacity = limits.getOrDefault(pos, Long.MAX_VALUE);
         if (links == null || capacity <= 0) {
             return null;
         }
 
-        Vertex created = new Vertex(pos, !links.ordinary(), capacity);
-        vertices.put(pos, created);
-        return created;
+        return addVertex(pos, links, capacity);
     }
 
     void connect(Vertex start) {
@@ -53,7 +51,7 @@ final class GasRouteIndex {
         }
 
         start.indexed = true;
-        int mask = state.linksAt(start.pos).neighbors();
+        int mask = start.links.neighbors();
         for (Direction exit : Iterate.directions) {
             if ((mask & 1 << exit.ordinal()) == 0 || start.edges.containsKey(exit)) {
                 continue;
@@ -65,8 +63,9 @@ final class GasRouteIndex {
             long capacity = start.capacity;
             while (true) {
                 pos = pos.relative(exit);
-                Links links = state.linksAt(pos);
-                capacity = Math.min(capacity, limits.getOrDefault(pos, Long.MAX_VALUE));
+                PipeLinks links = state.linksAt(pos);
+                long pipeCapacity = limits.getOrDefault(pos, Long.MAX_VALUE);
+                capacity = Math.min(capacity, pipeCapacity);
                 if (links == null || capacity <= 0 || (links.neighbors() & 1 << entry.ordinal()) == 0) {
                     break;
                 }
@@ -75,17 +74,24 @@ final class GasRouteIndex {
                     continue;
                 }
 
-                Vertex end = vertex(pos);
-                Link forward = new Link(end, exit, entry, capacity, null);
-                Link reverse = new Link(start, entry, exit, capacity, forward);
-                start.edges.put(exit, forward);
-                end.edges.put(entry, reverse);
-                Interior span = new Interior(forward, reverse, entry, exit);
+                Vertex end = vertices.get(pos);
+                if (end == null) {
+                    end = addVertex(pos, links, pipeCapacity);
+                }
+
+                Link forward = Link.connect(start, end, exit, entry, capacity);
+                Interior span = new Interior(forward, forward.opposite, entry, exit);
                 for (BlockPos inner = start.pos.relative(exit); !inner.equals(pos); inner = inner.relative(exit)) {
                     interiors.put(inner, span);
                 }
                 break;
             }
         }
+    }
+
+    private Vertex addVertex(BlockPos pos, PipeLinks links, long capacity) {
+        Vertex vertex = new Vertex(pos, links, capacity);
+        vertices.put(pos, vertex);
+        return vertex;
     }
 }

@@ -1,8 +1,9 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -10,11 +11,10 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.GasTransportEdgeProperties;
-import net.ty.createcraftedbeginning.gas.network.solver.GasOrdinaryPathSearch.Path;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Link;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Vertex;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneRoute.Pass;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Vertex;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -46,7 +46,7 @@ final class GasZoneRouteSearch implements GasRouteSearch {
         this.supply = supply;
         this.demand = demand;
         Vertex start = layout.vertex(from.getPos());
-        if (start == null || layout.vertex(to.getPos()) == null || layout.complete() && layout.devices().isEmpty() && layout.node(from) != layout.node(to)) {
+        if (start == null || layout.vertex(to.getPos()) == null || layout.complete() && layout.deviceCount() == 0 && layout.node(from) != layout.node(to)) {
             return;
         }
 
@@ -64,10 +64,10 @@ final class GasZoneRouteSearch implements GasRouteSearch {
     @Override
     public @Nullable Path expand() {
         if (driveProbe >= 0) {
-            if (driveProbe == layout.devices().size()) {
+            if (driveProbe == layout.deviceCount()) {
                 stack.clear();
             }
-            else if (canLift(layout.devices().get(driveProbe++))) {
+            else if (canLift(layout.devicePosition(driveProbe++))) {
                 driveProbe = -1;
             }
             return null;
@@ -80,7 +80,7 @@ final class GasZoneRouteSearch implements GasRouteSearch {
                 Link link = part == frame ? null : part.links.get(part.cursor - 1);
                 passes.add(new Pass(part.vertex, part.entry, link == null ? destination.getFace() : link.exit, link));
             }
-            GasZoneRoute route = new GasZoneRoute(passes, frame.capacity);
+            GasZoneRoute route = new GasZoneRoute(level, passes, frame.capacity);
             stack.removeLast();
             visited.remove(frame.vertex);
             if (route.quote(level, gas, supply, demand, 1).amount() == 0) {
@@ -103,20 +103,20 @@ final class GasZoneRouteSearch implements GasRouteSearch {
         return null;
     }
 
-    private boolean canLift(Vertex part) {
-        GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, part.pos);
+    private boolean canLift(BlockPos pos) {
+        GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pos);
         if (behaviour == null) {
             return false;
         }
 
-        BlockState state = level.getBlockState(part.pos);
+        BlockState state = level.getBlockState(pos);
         for (Direction in : Iterate.directions) {
-            if (layout.node(new BlockFace(part.pos, in)) < 0 || !behaviour.acceptsInboundGas(state, in, gas)) {
+            if (layout.node(new BlockFace(pos, in)) < 0 || !behaviour.acceptsInboundGas(state, in, gas)) {
                 continue;
             }
 
             for (Direction out : Iterate.directions) {
-                if (in == out || layout.node(new BlockFace(part.pos, out)) < 0 || !behaviour.allowsOutboundGas(state, out, gas)) {
+                if (in == out || layout.node(new BlockFace(pos, out)) < 0 || !behaviour.allowsOutboundGas(state, out, gas)) {
                     continue;
                 }
 

@@ -3,8 +3,6 @@ package net.ty.createcraftedbeginning.gas.network.solver.transfer;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
-import net.ty.createcraftedbeginning.gas.network.solver.GasSolverProfiler;
-import net.ty.createcraftedbeginning.gas.network.solver.GasTransferStopReason;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferExecutor.PooledTransferExecutionResult;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,11 +18,7 @@ final class GasPairTransferExecutor {
     static long executePair(Level level, GasStack gas, GasTransferPlan plan, LongConsumer onFilled) {
         PooledTransferExecutionResult execution = GasTransferExecutor.executePooledTransfer(gas, plan.executorDrains(), plan.executorFills(), partial -> settlePair(level, gas, plan, partial, onFilled));
         settlePair(level, gas, plan, execution, onFilled);
-        long filled = execution.filledAmounts()[0];
-        if (filled == 0 && GasSolverProfiler.isProfilingCurrentNetwork()) {
-            GasSolverProfiler.recordTransferStop(GasTransferStopReason.HANDLER_REJECTED);
-        }
-        return filled;
+        return execution.filledAmounts()[0];
     }
 
     private static void settlePair(Level level, GasStack gas, GasTransferPlan plan, PooledTransferExecutionResult execution, LongConsumer onFilled) {

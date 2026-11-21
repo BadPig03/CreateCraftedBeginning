@@ -1,7 +1,8 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.gas.network.solver.GasTransferScheduler.Candidate;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointSlot;
+import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasTransferScheduler.Candidate;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -49,9 +50,9 @@ final class GasServiceRoutes {
     }
 
     @Nullable
-    Candidate overdue(long tick, boolean live) {
+    Candidate overdue(long tick) {
         Entry<GasEndpointSlot, Service> oldest = sinks.firstEntry();
-        if (oldest == null || tick - oldest.getValue().turn < Math.max(2, live ? sinks.size() / 2 : sinks.size() - 1)) {
+        if (oldest == null || tick - oldest.getValue().turn < Math.max(2, sinks.size() / 2)) {
             return null;
         }
 
@@ -94,11 +95,7 @@ final class GasServiceRoutes {
     }
 
     void keep(Candidate candidate) {
-        LinkedHashMap<GasEndpointSlot, Candidate> routes = sources.get(candidate.source());
-        if (routes == null) {
-            routes = new LinkedHashMap<>();
-            sources.put(candidate.source(), routes);
-        }
+        LinkedHashMap<GasEndpointSlot, Candidate> routes = sources.computeIfAbsent(candidate.source(), k -> new LinkedHashMap<>());
         if (routes.putLast(candidate.target(), candidate) == null) {
             size++;
         }

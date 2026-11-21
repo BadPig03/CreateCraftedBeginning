@@ -6,7 +6,6 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.gas.flow.GasIntakeListener;
 import net.ty.createcraftedbeginning.gas.network.math.GasFlowMath;
-import net.ty.createcraftedbeginning.gas.network.solver.GasSolverProfiler;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferPlan.PlannedDrain;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferPlan.PlannedFill;
@@ -52,7 +51,6 @@ public final class GasFlowIntegration {
             return GasPairTransferExecutor.executePair(level, gas, plan, accepted -> {
                 drain.consumed = BoundedMath.saturatedAdd(drain.consumed, accepted);
                 fill.consumed = BoundedMath.saturatedAdd(fill.consumed, accepted);
-                GasSolverProfiler.recordCommittedGas(accepted);
                 onCommitted.accept(accepted);
                 if (source.access().drainHandler() instanceof GasIntakeListener listener) {
                     listener.onGasIntake(accepted);

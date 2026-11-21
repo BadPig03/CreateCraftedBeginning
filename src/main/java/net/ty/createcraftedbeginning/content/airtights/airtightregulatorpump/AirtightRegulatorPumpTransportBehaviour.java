@@ -93,4 +93,9 @@ final class AirtightRegulatorPumpTransportBehaviour extends GasTransportBehaviou
         double regulationConductance = flowRateLimit <= 0 ? Double.NaN : (double) flowRateLimit / REGULATION_BAND_PA;
         return new GasTransportEdgeProperties(resistanceUnits, GasTransportPressureDrive.outletPressureTarget(outletSetPressurePa, maximumPressureRisePa), flowRateLimit, GasPressure.REFERENCE_PRESSURE_PA, regulationConductance, true, true);
     }
+
+    @Override
+    protected long getFlowResistanceUnits(BlockState state, Direction entryFace, Direction exitFace) {
+        return 0;
+    }
 }

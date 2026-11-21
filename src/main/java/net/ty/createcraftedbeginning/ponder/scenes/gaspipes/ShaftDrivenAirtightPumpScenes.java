@@ -123,7 +123,7 @@ public class ShaftDrivenAirtightPumpScenes {
         scene.idle(3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, inputConnectionObject, connectionArea.move(-0.5, 0, 0), 60);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.OUTPUT, outputConnectionObject, connectionArea.move(0.5, 0, 0), 60);
-        scene.overlay().showText(60).text("When active, the pump provides a pressure boost from its inlet toward its outlet").pointAt(pumpVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("The pump helps when flow falls short of its target").pointAt(pumpVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(77);
         scene.world().setKineticSpeed(driveSelection, fastSpeed);
@@ -134,7 +134,7 @@ public class ShaftDrivenAirtightPumpScenes {
         scene.idle(3);
         performanceArea = performanceArea.inflate(0.5);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, performanceObject, performanceArea, 60);
-        scene.overlay().showText(60).text("Higher rotational speed increases both maximum pressure boost and maximum flow rate").colored(PonderPalette.GREEN).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("More speed raises both the flow target and the maximum pressure boost").colored(PonderPalette.GREEN).pointAt(pumpVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(65);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, forwardFlowObject, forwardFlowArea, 3);

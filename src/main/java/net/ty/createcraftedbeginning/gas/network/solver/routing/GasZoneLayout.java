@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BlockFace;
@@ -8,27 +8,33 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
-import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology.Snapshot;
-import net.ty.createcraftedbeginning.gas.network.solver.GasPipeLinkIndex.Links;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkState;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkState.PipeLinks;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasZoneLayout {
+public final class GasZoneLayout {
     private final Map<BlockPos, Vertex> vertices = new HashMap<>();
     private final Map<BlockPos, Integer> ordinary = new HashMap<>();
     private final Map<BlockFace, Integer> ports = new HashMap<>();
     private final List<Integer> volumes = new ArrayList<>();
     private final List<BlockFace> internal = new ArrayList<>();
+    private final List<BlockFace> internalView = Collections.unmodifiableList(internal);
     private final Map<BlockPos, Interior> interiors = new HashMap<>();
     private final List<Vertex> devices = new ArrayList<>();
 
@@ -36,25 +42,96 @@ final class GasZoneLayout {
     private @Nullable Construction construction;
     private int lastBuildWork;
 
-    GasZoneLayout(Snapshot topology, Map<BlockPos, Long> limits) {
-        routing = new GasRouteIndex(topology.state(), limits, vertices, interiors);
-        construction = new Construction(topology, limits);
+    public GasZoneLayout(GasNetworkState state, Set<BlockPos> pipePositions, Map<BlockPos, Long> limits) {
+        routing = new GasRouteIndex(state, limits, vertices, interiors);
+        construction = new Construction(state, pipePositions, limits);
     }
 
-    GasZoneLayout(Level level, Snapshot topology, Map<BlockPos, Long> limits) {
+    public GasZoneLayout(Level level, GasNetworkState state, Set<BlockPos> pipePositions, Map<BlockPos, Long> limits) {
         routing = null;
-        GasNetworkState state = topology.state();
-        List<BlockPos> positions = new ArrayList<>(topology.pipePositions());
+        List<BlockPos> positions = new ArrayList<>(pipePositions);
         positions.sort(GasNetworkTopology::compareBlockPositions);
         indexVertices(state, positions, limits);
         indexCorridors(state, positions, limits);
-        indexPorts(level, state);
+        indexPorts(level);
+    }
+
+    public int build(Level level, int budget) {
+        lastBuildWork = 0;
+        while (construction != null && lastBuildWork < budget) {
+            lastBuildWork++;
+            if (construction.step(level)) {
+                construction = null;
+            }
+        }
+        return lastBuildWork;
+    }
+
+    public int lastBuildWork() {
+        return lastBuildWork;
+    }
+
+    public boolean complete() {
+        return construction == null;
+    }
+
+    public int node(BlockFace face) {
+        Integer zone = ordinary.get(face.getPos());
+        if (zone == null) {
+            return ports.getOrDefault(face, -1);
+        }
+
+        return zone;
+    }
+
+    public int volume(int node) {
+        return volumes.get(node);
+    }
+
+    public int nodes() {
+        return volumes.size();
+    }
+
+    public int deviceCount() {
+        return devices.size();
+    }
+
+    public BlockPos devicePosition(int index) {
+        return devices.get(index).pos;
+    }
+
+    public List<BlockFace> internalFaces() {
+        return internalView;
+    }
+
+    void connect(Vertex vertex) {
+        if (routing != null) {
+            routing.connect(vertex);
+        }
+    }
+
+    @Nullable
+    Vertex vertex(BlockPos pos) {
+        if (routing == null) {
+            return vertices.get(pos);
+        }
+        return routing.vertex(pos);
+    }
+
+    @Nullable
+    Interior interior(BlockPos pos) {
+        return interiors.get(pos);
     }
 
     private void indexVertices(GasNetworkState state, List<BlockPos> positions, Map<BlockPos, Long> limits) {
         for (BlockPos pos : positions) {
-            Links links = state.linksAt(pos);
-            if (links == null || limits.getOrDefault(pos, Long.MAX_VALUE) <= 0) {
+            PipeLinks links = state.linksAt(pos);
+            if (links == null) {
+                continue;
+            }
+
+            long capacity = limits.getOrDefault(pos, Long.MAX_VALUE);
+            if (capacity <= 0) {
                 continue;
             }
 
@@ -73,7 +150,7 @@ final class GasZoneLayout {
                 continue;
             }
 
-            Vertex vertex = new Vertex(pos, !links.ordinary(), limits.getOrDefault(pos, Long.MAX_VALUE));
+            Vertex vertex = new Vertex(pos, links, capacity);
             vertices.put(pos, vertex);
             if (!vertex.device) {
                 continue;
@@ -98,7 +175,7 @@ final class GasZoneLayout {
                     continue;
                 }
                 BlockPos next = here.relative(side);
-                Links other = state.linksAt(next);
+                PipeLinks other = state.linksAt(next);
                 if (other == null || !other.ordinary() || limits.getOrDefault(next, Long.MAX_VALUE) <= 0 || ordinary.putIfAbsent(next, index) != null) {
                     continue;
                 }
@@ -115,7 +192,7 @@ final class GasZoneLayout {
             if (start == null) {
                 continue;
             }
-            Links links = state.linksAt(pos);
+            PipeLinks links = start.links;
             for (Direction side : Iterate.directions) {
                 if ((links.neighbors() & 1 << side.ordinal()) == 0 || start.edges.containsKey(side)) {
                     continue;
@@ -129,10 +206,8 @@ final class GasZoneLayout {
                     capacity = Math.min(capacity, limits.getOrDefault(here, Long.MAX_VALUE));
                     Vertex end = vertices.get(here);
                     if (end != null) {
-                        Link forward = new Link(end, side, incoming, capacity, null);
-                        Link reverse = new Link(start, incoming, side, capacity, forward);
-                        start.edges.put(side, forward);
-                        end.edges.put(incoming, reverse);
+                        Link forward = Link.connect(start, end, side, incoming, capacity);
+                        Link reverse = forward.opposite;
                         for (Member member : members) {
                             interiors.put(member.pos, new Interior(forward, reverse, member.entry, member.exit));
                         }
@@ -158,15 +233,15 @@ final class GasZoneLayout {
         }
     }
 
-    private void indexPorts(Level level, GasNetworkState state) {
+    private void indexPorts(Level level) {
         for (Vertex device : devices) {
-            indexInternal(level, state, device);
-            indexPorts(state, device);
+            indexInternal(level, device);
+            indexPorts(device);
         }
     }
 
-    private void indexInternal(Level level, GasNetworkState state, Vertex device) {
-        Links links = state.linksAt(device.pos);
+    private void indexInternal(Level level, Vertex device) {
+        PipeLinks links = device.links;
         GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, device.pos);
         for (Direction side : Iterate.directions) {
             int bit = 1 << side.ordinal();
@@ -179,8 +254,8 @@ final class GasZoneLayout {
         }
     }
 
-    private void indexPorts(GasNetworkState state, Vertex device) {
-        Links links = state.linksAt(device.pos);
+    private void indexPorts(Vertex device) {
+        PipeLinks links = device.links;
         for (Direction side : Iterate.directions) {
             int bit = 1 << side.ordinal();
             if (((links.neighbors() | links.endpoints() | links.atmosphere()) & bit) == 0) {
@@ -207,79 +282,18 @@ final class GasZoneLayout {
         }
     }
 
-    int build(Level level, int budget) {
-        lastBuildWork = 0;
-        while (construction != null && lastBuildWork < budget) {
-            lastBuildWork++;
-            if (construction.step(level)) {
-                construction = null;
-            }
-        }
-        return lastBuildWork;
-    }
-
-    int lastBuildWork() {
-        return lastBuildWork;
-    }
-
-    boolean complete() {
-        return construction == null;
-    }
-
-    void connect(Vertex vertex) {
-        if (routing != null) {
-            routing.connect(vertex);
-        }
-    }
-
-    @Nullable
-    Vertex vertex(BlockPos pos) {
-        if (routing == null) {
-            return vertices.get(pos);
-        }
-        return routing.vertex(pos);
-    }
-
-    @Nullable
-    Interior interior(BlockPos pos) {
-        return interiors.get(pos);
-    }
-
-    int node(BlockFace face) {
-        Integer zone = ordinary.get(face.getPos());
-        if (zone == null) {
-            return ports.getOrDefault(face, -1);
-        }
-
-        return zone;
-    }
-
-    int volume(int node) {
-        return volumes.get(node);
-    }
-
-    int nodes() {
-        return volumes.size();
-    }
-
-    List<Vertex> devices() {
-        return devices;
-    }
-
-    List<BlockFace> internal() {
-        return internal;
-    }
-
     static final class Vertex {
         final BlockPos pos;
+        final PipeLinks links;
         boolean indexed;
         final boolean device;
         final long capacity;
         final Map<Direction, Link> edges = new EnumMap<>(Direction.class);
 
-        Vertex(BlockPos pos, boolean device, long capacity) {
+        Vertex(BlockPos pos, PipeLinks links, long capacity) {
             this.pos = pos;
-            this.device = device;
+            this.links = links;
+            this.device = !links.ordinary();
             this.capacity = capacity;
         }
     }
@@ -290,14 +304,32 @@ final class GasZoneLayout {
         final Direction entry;
         final long capacity;
         final Link shared;
+        final Link opposite;
         long turns;
 
-        Link(Vertex end, Direction exit, Direction entry, long capacity, @Nullable Link forward) {
-            shared = forward == null ? this : forward;
+        private Link(Vertex start, Vertex end, Direction exit, Direction entry, long capacity) {
             this.end = end;
             this.exit = exit;
             this.entry = entry;
             this.capacity = capacity;
+            shared = this;
+            opposite = new Link(start, entry, exit, capacity, this);
+        }
+
+        private Link(Vertex end, Direction exit, Direction entry, long capacity, Link forward) {
+            this.end = end;
+            this.exit = exit;
+            this.entry = entry;
+            this.capacity = capacity;
+            shared = forward;
+            opposite = forward;
+        }
+
+        static Link connect(Vertex start, Vertex end, Direction exit, Direction entry, long capacity) {
+            Link forward = new Link(start, end, exit, entry, capacity);
+            start.edges.put(exit, forward);
+            end.edges.put(entry, forward.opposite);
+            return forward;
         }
     }
 
@@ -311,10 +343,10 @@ final class GasZoneLayout {
         private int internalIndex;
         private int deviceIndex;
 
-        private Construction(Snapshot topology, Map<BlockPos, Long> limits) {
-            state = topology.state();
+        private Construction(GasNetworkState state, Set<BlockPos> pipePositions, Map<BlockPos, Long> limits) {
+            this.state = state;
             this.limits = limits;
-            positions = topology.pipePositions().iterator();
+            positions = pipePositions.iterator();
         }
 
         private boolean step(Level level) {
@@ -323,7 +355,7 @@ final class GasZoneLayout {
                 BlockPos pos = positionsWithDevices.get(internalIndex++);
                 Vertex device = vertex(pos);
                 if (device != null) {
-                    indexInternal(level, state, device);
+                    indexInternal(level, device);
                     devices.add(device);
                 }
                 return false;
@@ -337,7 +369,7 @@ final class GasZoneLayout {
                     }
 
                     BlockPos next = pos.relative(side);
-                    Links links = state.linksAt(next);
+                    PipeLinks links = state.linksAt(next);
                     if (links != null && links.ordinary() && limits.getOrDefault(next, Long.MAX_VALUE) > 0 && ordinary.putIfAbsent(next, zoneId) == null) {
                         zone.addLast(next);
                     }
@@ -347,8 +379,8 @@ final class GasZoneLayout {
             }
             if (positions.hasNext()) {
                 BlockPos pos = positions.next();
-                Links links = state.linksAt(pos);
-                if (!links.ordinary() || limits.getOrDefault(pos, Long.MAX_VALUE) <= 0) {
+                PipeLinks links = state.linksAt(pos);
+                if (links == null || !links.ordinary() || limits.getOrDefault(pos, Long.MAX_VALUE) <= 0) {
                     return false;
                 }
                 if (limits.isEmpty()) {
@@ -370,7 +402,7 @@ final class GasZoneLayout {
                 return false;
             }
             if (deviceIndex < devices.size()) {
-                indexPorts(state, devices.get(deviceIndex++));
+                indexPorts(devices.get(deviceIndex++));
                 return false;
             }
             return true;

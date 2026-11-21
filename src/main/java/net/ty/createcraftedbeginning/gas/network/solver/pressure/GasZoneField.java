@@ -1,10 +1,11 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.pressure;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.gas.network.GasFlowResistance;
 import net.ty.createcraftedbeginning.gas.network.GasTransportEdgeProperties;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -26,7 +27,7 @@ final class GasZoneField {
     private final double[] slope;
     private final List<Arc> arcs = new ArrayList<>();
     private final List<LosslessLink> losslessLinks = new ArrayList<>();
-    private @Nullable double[] losslessWeights;
+    private double @Nullable [] losslessWeights;
     private int cursor;
     private int sweep;
     private Stage stage = Stage.SEED;
@@ -54,10 +55,10 @@ final class GasZoneField {
         int root = root(node);
         fixedSum[root] += pascals;
         anchors[root]++;
-        arcs.add(new Arc(supply ? -1 : node, supply ? node : -1, pascals, limit, 1 / resistance, null));
+        arcs.add(new Arc(supply ? -1 : node, supply ? node : -1, pascals, limit, 1 / resistance, null, -1));
     }
 
-    void device(int from, int to, GasTransportEdgeProperties edge) {
+    void device(int from, int to, GasTransportEdgeProperties edge, long assistedFlow) {
         if (from == to || edge.flowRateLimit() <= 0) {
             return;
         }
@@ -83,8 +84,8 @@ final class GasZoneField {
             return;
         }
 
-        double conductance = Double.isFinite(edge.conductancePerPascal()) ? edge.conductancePerPascal() : GasFlowResistance.conductancePerPascal(edge.resistanceUnits());
-        arcs.add(new Arc(from, to, 0, edge.flowRateLimit(), conductance, edge));
+        double conductance = assistedFlow >= 0 ? 0 : Double.isFinite(edge.conductancePerPascal()) ? edge.conductancePerPascal() : GasFlowResistance.conductancePerPascal(edge.resistanceUnits());
+        arcs.add(new Arc(from, to, 0, edge.flowRateLimit(), conductance, edge, assistedFlow));
     }
 
     boolean step() {
@@ -113,12 +114,17 @@ final class GasZoneField {
             if (!Double.isFinite(inlet) || !Double.isFinite(outlet)) {
                 return false;
             }
-            double head = arc.device == null ? inlet : arc.device.pressureDrive().drivenOutletPressurePa(inlet);
-            double limit = arc.limit;
-            if (arc.device != null && arc.device.flowLimitReferencePressurePa() > 0) {
-                limit *= Math.min(1, inlet / arc.device.flowLimitReferencePressurePa());
+            double flow = arc.assistedFlow;
+            if (flow < 0) {
+                double head = arc.device == null ? inlet : arc.device.pressureDrive().drivenOutletPressurePa(inlet);
+                double limit = arc.limit;
+                if (arc.device != null && arc.device.flowLimitReferencePressurePa() > 0) {
+                    limit *= Math.min(1, inlet / arc.device.flowLimitReferencePressurePa());
+                }
+
+                flow = Math.min(limit, Math.max(0, head - outlet) * arc.conductance);
             }
-            double flow = Math.min(limit, Math.max(0, head - outlet) * arc.conductance);
+
             if (arc.from >= 0) {
                 net[arc.from] -= flow;
                 slope[arc.from] += arc.conductance;
@@ -195,7 +201,7 @@ final class GasZoneField {
         return index;
     }
 
-    private record Arc(int from, int to, double fixed, long limit, double conductance, @Nullable GasTransportEdgeProperties device) {}
+    private record Arc(int from, int to, double fixed, long limit, double conductance, @Nullable GasTransportEdgeProperties device, long assistedFlow) {}
 
     private record LosslessLink(int from, int to) {}
 

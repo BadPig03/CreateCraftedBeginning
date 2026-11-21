@@ -1,20 +1,27 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.PressureState;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.math.BigInteger;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasPassiveQuantum {
-    private GasPassiveQuantum() {}
+public final class GasPassiveQuantum {
+    private GasPassiveQuantum() {
+    }
 
-    static long limit(PressureState source, PressureState target, long capacity) {
+    public static long limit(PressureState source, PressureState target, long capacity) {
         if (source.fixedPressure() && target.fixedPressure()) {
-            return source.pressurePa() > target.pressurePa() ? capacity : 0;
+            if (source.pressurePa() > target.pressurePa()) {
+                return capacity;
+            }
+
+            return 0;
         }
         if (source.fixedPressure()) {
             return nearest(GasPressure.round(source.pressurePa()), target.volume(), target.currentAmount(), GasPressure.REFERENCE_PRESSURE_PA, GasPressure.REFERENCE_PRESSURE_PA, 0, capacity);

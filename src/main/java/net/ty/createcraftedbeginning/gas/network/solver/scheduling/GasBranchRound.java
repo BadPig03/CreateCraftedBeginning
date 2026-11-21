@@ -1,10 +1,11 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
-import net.ty.createcraftedbeginning.gas.network.solver.GasBranchOrder.Outlet;
-import net.ty.createcraftedbeginning.gas.network.solver.GasTransferScheduler.Candidate;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneRoute.Pass;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Sharing;
+import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasBranchOrder.Outlet;
+import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasTransferScheduler.Candidate;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -19,7 +20,7 @@ import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasBranchRound {
+final class GasBranchRound implements Sharing {
     private static final int MAX_REFILL_ATTEMPTS = 4;
     private final int limit;
     private final boolean refillEnabled;
@@ -32,6 +33,11 @@ final class GasBranchRound {
         this.refillEnabled = refillEnabled;
     }
 
+    @Override
+    public int count(Object segment) {
+        return Math.max(1, competitors.getOrDefault(segment, 1));
+    }
+
     void add(Candidate candidate) {
         if (candidates.size() >= limit) {
             return;
@@ -40,7 +46,7 @@ final class GasBranchRound {
         candidates.add(candidate);
     }
 
-    void offer(Candidate candidate, Object source, long available, Outlet outlet, long accepted) {
+    void offer(Candidate candidate, List<Pass> passes, Object source, long available, Outlet outlet, long accepted) {
         GasPool pool = gases.computeIfAbsent(candidate.gas(), ignored -> new GasPool());
         Supply supply = pool.sources.get(source);
         available = Math.max(available, accepted);
@@ -56,7 +62,7 @@ final class GasBranchRound {
         }
         Offer prior = supply.outlets.get(outlet);
         if (prior != null) {
-            if (prior.alternate == null && !prior.route.path().zoneRoute().passes().equals(candidate.path().zoneRoute().passes())) {
+            if (prior.alternate == null && !prior.passes.equals(passes)) {
                 prior.alternate = candidate;
                 prior.capacity += accepted;
                 prior.target.room += accepted;
@@ -71,14 +77,10 @@ final class GasBranchRound {
             pool.shares.add(target);
         }
         target.room += accepted;
-        Offer offer = new Offer(candidate, outlet, accepted, target, supply);
+        Offer offer = new Offer(candidate, passes, outlet, accepted, target, supply);
         supply.outlets.put(outlet, offer);
         supply.offers.add(offer);
-        countRoute(source, candidate, 1);
-    }
-
-    int count(Object segment) {
-        return Math.max(1, competitors.getOrDefault(segment, 1));
+        countRoute(source, passes, 1);
     }
 
     int dispatch(GasRouteBatch batch, int budget, Consumer<Candidate> probe, Delivery delivery) {
@@ -105,7 +107,7 @@ final class GasBranchRound {
                         supply.remaining -= amount;
                         work++;
                     }
-                    countRoute(supply.identity, offer.route, -1);
+                    countRoute(supply.identity, offer.passes, -1);
                 }
             }
         }
@@ -162,18 +164,20 @@ final class GasBranchRound {
         return work;
     }
 
-    private void countRoute(Object source, Candidate route, int delta) {
+    private void countRoute(Object source, List<Pass> passes, int delta) {
         competitors.merge(source, delta, Integer::sum);
-        for (Pass pass : route.path().zoneRoute().passes()) {
-            competitors.merge(pass.vertex(), delta, Integer::sum);
-            if (pass.next() == null) {
+        for (Pass pass : passes) {
+            competitors.merge(pass.vertexKey(), delta, Integer::sum);
+            Object corridor = pass.corridorKey();
+            if (corridor == null) {
                 continue;
             }
 
-            competitors.merge(pass.next().shared, delta, Integer::sum);
+            competitors.merge(corridor, delta, Integer::sum);
         }
     }
 
+    @FunctionalInterface
     interface Delivery {
         long send(Candidate candidate, long limit, @Nullable GasBranchRound sharing);
     }
@@ -250,6 +254,7 @@ final class GasBranchRound {
 
     private static final class Offer extends GasBranchShare {
         private final Candidate route;
+        private final List<Pass> passes;
         private final Outlet outlet;
         private long capacity;
         private final GasBranchShare target;
@@ -258,9 +263,10 @@ final class GasBranchRound {
         private long shortfall;
         private long paid;
 
-        private Offer(Candidate route, Outlet outlet, long capacity, GasBranchShare target, Supply supply) {
+        private Offer(Candidate route, List<Pass> passes, Outlet outlet, long capacity, GasBranchShare target, Supply supply) {
             super(outlet.received(), outlet.turn(), capacity);
             this.route = route;
+            this.passes = passes;
             this.outlet = outlet;
             this.capacity = capacity;
             this.target = target;

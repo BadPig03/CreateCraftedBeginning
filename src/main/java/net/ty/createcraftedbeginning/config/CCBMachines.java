@@ -80,7 +80,7 @@ public final class CCBMachines extends ConfigBase {
 
     public static final class AirtightPump extends ConfigBase {
         public final ConfigFloat maxPressureBoost = f(4, 0, GasPressureLimits.HARD_PRESSURE_ATM, "max_pressure_boost", "[Unit: atm; 1 atm = 100000 Pa]", "Maximum pressure boost in the pumping direction at Create's configured maximum rotation speed. Boost scales with absolute speed; forward flow stops when the opposing pressure difference reaches the available boost. Set to 0 to disable pressure boost.");
-        public final ConfigInt maxFlowPerTick = i(4000, 0, 1000000, "max_flow_per_tick", "[Unit: GU/t]", "Maximum free flow at Create's configured maximum rotation speed with an inlet pressure of at least 1 atm. Flow scales with absolute speed and decreases with opposing pressure difference. Inlet pressure below 1 atm further reduces throughput. Set to 0 to disable pump flow.");
+        public final ConfigInt maxFlowPerTick = i(4000, 0, 1000000, "max_flow_per_tick", "[Unit: GU/t]", "Target assisted flow at Create's maximum rotation speed. The pump helps reach this total when its available boost is sufficient. Faster natural flow is not capped. Set to 0 to block all pump flow.");
 
         @Override
         public String getName() {

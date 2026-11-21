@@ -9,6 +9,7 @@ import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver.AdjacentConnection;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkState.PipeLinks;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -91,7 +92,6 @@ final class GasPipeLinkIndex {
 
             neighbors |= bit;
         }
-        GasSolverProfiler.recordTopologyPipeRead();
         Links links = new Links(neighbors, endpoints, atmosphere, loaded, behaviour.isOrdinaryPressurePipe());
         byChunk.computeIfAbsent(chunk, ignored -> new HashMap<>()).put(pos.immutable(), links);
         return links;
@@ -136,5 +136,5 @@ final class GasPipeLinkIndex {
         return positions;
     }
 
-    record Links(int neighbors, int endpoints, int atmosphere, int loaded, boolean ordinary) {}
+    record Links(int neighbors, int endpoints, int atmosphere, int loaded, boolean ordinary) implements PipeLinks {}
 }

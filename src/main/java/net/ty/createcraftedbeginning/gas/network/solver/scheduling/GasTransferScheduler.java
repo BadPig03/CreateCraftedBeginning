@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BlockFace;
@@ -9,38 +9,50 @@ import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.events.GasCollisionEvent;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
-import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection.FlowDirection;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection.FlowState;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology.Snapshot;
-import net.ty.createcraftedbeginning.gas.network.solver.GasOrdinaryPathSearch.Path;
-import net.ty.createcraftedbeginning.gas.network.solver.GasRouteBatch.Collision;
-import net.ty.createcraftedbeginning.gas.network.solver.GasShadowComparison.Observation;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneRoute.Quote;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointPlanner.Port;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointSlot;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasZonePorts;
+import net.ty.createcraftedbeginning.gas.network.solver.pressure.GasZonePressure;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasPassiveQuantum;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteSearch;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteSearch.Path;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteTree;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.PumpUse;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Quote;
+import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasRouteBatch.Collision;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasFlowIntegration;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasTransferScheduler {
-    static final int WORK_PER_TICK = 128;
-    static final long GU_PER_TICK = 65536;
+public final class GasTransferScheduler {
+    public static final int WORK_PER_TICK = 128;
+    public static final long GU_PER_TICK = 65536;
     private static final int PRESSURE_DIVISOR = 4;
     private static final int REPLAY_DIVISOR = 3;
     private static final int SHORT_DETOUR_STEPS = 8;
 
     private final Snapshot topology;
+    private final Predicate<GasTransferScheduler> owner;
     private final Map<BlockPos, Long> limits;
     private final int workLimit;
     private final long quantumLimit;
@@ -48,6 +60,9 @@ final class GasTransferScheduler {
     private @Nullable GasRouteTree tree;
     private final GasZonePorts ports;
     private final @Nullable GasFixedManifold manifold;
+    private @Nullable GasFixedManifold pumpManifold;
+    private final LinkedHashSet<Candidate> pendingAssistance = new LinkedHashSet<>();
+    private boolean servingAssistance;
     private final @Nullable GasSupplyRotation rotation;
     private final @Nullable GasZoneLayout zones;
     private @Nullable GasZonePressure pressureModel;
@@ -72,16 +87,13 @@ final class GasTransferScheduler {
     private GasStack searchingGas = GasStack.EMPTY;
     private final GasServiceRoutes knownRoutes = new GasServiceRoutes();
     private final GasBranchOrder branchOrder = new GasBranchOrder();
+    private final GasBranchOrder pumpOrder = new GasBranchOrder();
     private @Nullable GasBranchRound collecting;
     private @Nullable Candidate hot;
     private @Nullable Tick last;
     private List<Receipt> flows = List.of();
 
-    GasTransferScheduler(Snapshot topology, Map<BlockPos, Long> limits, int workLimit, long quantumLimit) {
-        this(topology, limits, workLimit, quantumLimit, null, null, false);
-    }
-
-    GasTransferScheduler(Snapshot topology, Map<BlockPos, Long> limits, int workLimit, long quantumLimit, @Nullable GasZoneLayout zones, @Nullable GasServiceOrder serviceOrder, boolean observeOnly) {
+    public GasTransferScheduler(Snapshot topology, Map<BlockPos, Long> limits, int workLimit, long quantumLimit, @Nullable GasZoneLayout zones, @Nullable GasServiceOrder serviceOrder, Predicate<GasTransferScheduler> owner) {
         if (workLimit < 1 || quantumLimit < 1) {
             throw new IllegalArgumentException("Gas scheduling requires positive work and transfer budgets.");
         }
@@ -90,31 +102,42 @@ final class GasTransferScheduler {
         }
 
         this.topology = topology;
+        this.owner = owner;
         this.limits = Map.copyOf(limits);
         this.workLimit = workLimit;
         this.quantumLimit = quantumLimit;
         this.zones = zones;
         this.serviceOrder = serviceOrder;
-        ports = new GasZonePorts(topology, zones == null ? List.of() : zones.internal(), observeOnly);
+        ports = new GasZonePorts(topology.endpointFaces(), topology.atmosphericFaces(), zones == null ? List.of() : zones.internalFaces());
         faceCount = ports.size();
-        rotation = !observeOnly && serviceOrder != null && zones != null && !topology.endpointFaces().isEmpty() ? new GasSupplyRotation(topology, zones, ports, serviceOrder) : null;
-        manifold = !observeOnly && serviceOrder != null && faceCount >= 3 && faceCount <= GasFixedManifold.MAX_FACES ? new GasFixedManifold() : null;
-        pressureModel = zones == null || serviceOrder != null ? null : new GasZonePressure(zones, ports, topology.pressureGauges());
+        rotation = serviceOrder != null && zones != null && !topology.endpointFaces().isEmpty() ? new GasSupplyRotation(topology, zones, ports, serviceOrder) : null;
+        manifold = serviceOrder != null && faceCount >= 3 && faceCount <= GasFixedManifold.MAX_FACES ? new GasFixedManifold() : null;
+        pressureModel = zones == null || serviceOrder != null ? null : new GasZonePressure(zones, ports, topology.pressureGauges(), this::assistedPumpFlow);
     }
 
-    @Nullable
-    Tick last() {
-        return last;
+    private static void collectFlowDevices(List<Receipt> receipts, Set<BlockPos> changed) {
+        for (Receipt receipt : receipts) {
+            GasZoneRoute route = receipt.requireZoneRoute();
+            for (int index = 0; index < route.deviceCount(); index++) {
+                changed.add(route.device(index).position());
+            }
+        }
     }
 
-    void tick(Level level) {
+    public void tick(Level level) {
         List<Receipt> previous = flows;
         boolean cold = last == null;
-        if (serviceOrder != null) {
-            if (cold) {
-                topology.clearPressureTelemetry(level);
+        GasServiceOrder order = serviceOrder;
+        if (order != null) {
+            GasZoneLayout layout = zones;
+            if (layout == null) {
+                throw new IllegalStateException("Batched gas scheduling requires a pressure zone layout.");
             }
-            GasRouteBatch batch = new GasRouteBatch(quantumLimit);
+
+            if (cold) {
+                GasZonePressure.clearTelemetry(level, topology.pressureGauges());
+            }
+            GasRouteBatch batch = new GasRouteBatch(quantumLimit, layout, order);
             try {
                 scheduleBatch(level, batch);
             }
@@ -134,21 +157,16 @@ final class GasTransferScheduler {
                 pressureModel.tick(level, workLimit);
             }
         }
-        GasSolverProfiler.recordScheduledTick(last, last.status == Status.RETIRED ? null : pressureModel, serviceOrder == null ? 0 : zones.lastBuildWork(), flows.size());
     }
 
-    boolean hasZoneFlows() {
+    public boolean hasZoneFlows() {
         return zones != null;
     }
 
     @Nullable
-    GasZonePressure pressureModel() {
-        return pressureModel;
-    }
-
-    @Nullable
-    FlowState zoneFlow(BlockPos pos, Direction side) {
-        if (zones == null || flows.isEmpty()) {
+    public FlowState zoneFlow(BlockPos pos, Direction side) {
+        GasZoneLayout layout = zones;
+        if (layout == null || flows.isEmpty()) {
             return null;
         }
 
@@ -156,7 +174,7 @@ final class GasTransferScheduler {
         GasStack gas = GasStack.EMPTY;
         BlockFace face = new BlockFace(pos, side);
         for (Receipt receipt : flows) {
-            int direction = receipt.path.zoneRoute().direction(zones, face);
+            int direction = receipt.requireZoneRoute().direction(layout, face);
             if (direction == 0) {
                 continue;
             }
@@ -175,23 +193,14 @@ final class GasTransferScheduler {
         return new FlowState(gas, FlowDirection.OUTBOUND, net);
     }
 
-    GasRouteBatch previewBatch(Level level) {
-        if (!ports.observeOnly || zones == null) {
-            throw new IllegalStateException("Preview requires an isolated shadow scheduler.");
-        }
-
-        GasRouteBatch batch = new GasRouteBatch(quantumLimit);
-        scheduleBatch(level, batch);
-        return batch;
-    }
-
-    Tick preview(Level level) {
-        previewBatch(level);
+    @Nullable
+    Tick last() {
         return last;
     }
 
-    int buildWork() {
-        return zones.lastBuildWork();
+    @Nullable
+    GasZonePressure pressureModel() {
+        return pressureModel;
     }
 
     private void publishFlows(Level level, boolean cold, List<Receipt> previous) {
@@ -202,12 +211,8 @@ final class GasTransferScheduler {
         if (cold || !previous.isEmpty() || !flows.isEmpty()) {
             changed.addAll(topology.meteredPipes());
         }
-        for (Receipt receipt : previous) {
-            receipt.path.zoneRoute().devices().forEach(pass -> changed.add(pass.vertex().pos));
-        }
-        for (Receipt receipt : flows) {
-            receipt.path.zoneRoute().devices().forEach(pass -> changed.add(pass.vertex().pos));
-        }
+        collectFlowDevices(previous, changed);
+        collectFlowDevices(flows, changed);
         for (BlockPos pos : changed) {
             GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pos);
             if (behaviour == null) {
@@ -227,22 +232,29 @@ final class GasTransferScheduler {
                     changedFlow |= connection.setFlowState(flow.gas(), flow.direction() == FlowDirection.INBOUND, flow.flowRate());
                 }
             }
-            if ((!changedFlow && !cold) || !behaviour.publishFlowTelemetry()) {
+            if (!changedFlow && !cold) {
                 continue;
             }
 
-            GasSolverProfiler.recordFlowTelemetryUpdate();
+            behaviour.publishFlowTelemetry();
         }
     }
 
+    private long assistedPumpFlow(BlockPos pos, GasStack gas) {
+        long amount = 0;
+        boolean assisted = false;
+        for (Receipt receipt : flows) {
+            if (!receipt.requireZoneRoute().hasPumpAt(pos) || !GasStack.isSameGasSameComponents(receipt.gas, gas)) {
+                continue;
+            }
+            amount += receipt.gas.getAmount();
+            assisted |= receipt.assisted;
+        }
+        return assisted ? amount : -1;
+    }
+
     private boolean current() {
-        if (!topology.state().isCurrent()) {
-            return false;
-        }
-        if (ports.observeOnly) {
-            return topology.ownsShadow(this);
-        }
-        return topology.scheduler() == this;
+        return topology.state().isCurrent() && owner.test(this);
     }
 
     private void scheduleBatch(Level level, GasRouteBatch batch) {
@@ -251,8 +263,10 @@ final class GasTransferScheduler {
             return;
         }
 
+        GasZoneLayout layout = batch.layout();
+        GasServiceOrder order = batch.serviceOrder();
         if (last == null && !topology.endpointFaces().isEmpty()) {
-            firstSource = ports.source(serviceOrder.lastSource(topology.endpointFaces().getFirst()));
+            firstSource = ports.source(order.lastSource(topology.endpointFaces().getFirst()));
             source = firstSource;
             if (rotation != null) {
                 firstSource = rotation.restore(firstSource);
@@ -263,17 +277,19 @@ final class GasTransferScheduler {
         if (workLimit < PRESSURE_DIVISOR && last != null && level.getGameTime() % PRESSURE_DIVISOR == 0 && (workLimit > 1 || knownRoutes.size() == 0)) {
             pressureBudget = 1;
         }
-        int build = zones.build(level, last == null ? Math.min(1, pressureBudget) : pressureBudget);
+        int build = layout.build(level, last == null ? Math.min(1, pressureBudget) : pressureBudget);
         faceCount = ports.size();
         int pressureWork = 0;
-        if (zones.complete()) {
+        if (layout.complete()) {
             if (pressureModel == null) {
-                pressureModel = new GasZonePressure(zones, ports, topology.pressureGauges());
+                pressureModel = new GasZonePressure(layout, ports, topology.pressureGauges(), this::assistedPumpFlow);
             }
             pressureModel.tick(level, pressureBudget - build);
             pressureWork = pressureModel.lastWork();
         }
-        int availableWork = workLimit - build - pressureWork;
+        int totalWork = workLimit - build - pressureWork;
+        int pumpWork = completedFirstSweep ? Math.min(2 * pendingAssistance.size(), Math.min(totalWork, Math.max(1, totalWork / 3))) : 0;
+        int availableWork = totalWork - pumpWork;
         GasBranchRound round = null;
         int budget = availableWork;
         if (rotation != null && availableWork >= 8 && branchOrder.hasPeers()) {
@@ -283,7 +299,7 @@ final class GasTransferScheduler {
             branchOrder.seed(round, Math.max(1, routes - Math.max(1, routes / 3)));
         }
         collecting = round;
-        int replay = Math.min(knownRoutes.size(), Math.max(1, budget / REPLAY_DIVISOR));
+        int replay = Math.min(budget, Math.min(knownRoutes.size(), Math.max(1, budget / REPLAY_DIVISOR)));
         int discovery = budget - replay;
         int work = 0;
         int expanded = 0;
@@ -291,7 +307,7 @@ final class GasTransferScheduler {
         Status status = Status.CONTINUING;
         boolean coldSlice = last == null && topology.pipePositions().size() > pressureBudget && pressureBudget > 0;
         if (budget > 0 && (deferred == null || knownRoutes.hasServed(deferred.target))) {
-            Candidate due = knownRoutes.overdue(level.getGameTime(), !ports.observeOnly);
+            Candidate due = knownRoutes.overdue(level.getGameTime());
             if (due != null) {
                 work++;
                 if (settle(level, due, batch).status == Status.OFFER_CHANGED) {
@@ -303,7 +319,7 @@ final class GasTransferScheduler {
             int outletBudget = last == null ? discovery - 1 : discovery - discovery / PRESSURE_DIVISOR;
             work += rotation.serve(level, batch, Math.max(0, outletBudget - work), knownRoutes, candidate -> {
                 if (settle(level, candidate, batch).receipt != null) {
-                    remember(candidate);
+                    remember(candidate, order);
                 }
             });
         }
@@ -313,7 +329,7 @@ final class GasTransferScheduler {
             work++;
             Settlement service = settle(level, next, batch);
             if (service.receipt != null) {
-                remember(next);
+                remember(next, order);
             }
         }
         while (work < discovery && (work < Math.max(1, pressureBudget / 2) || !coldSlice || !batch.hasGrants()) && deferred == null && batch.available() > 0 && batch.collision() == null && continuation) {
@@ -342,16 +358,7 @@ final class GasTransferScheduler {
         work += replayAlternates(level, batch, Math.min(alternates - beforeReplay, budget - work));
         collecting = null;
         if (round != null && current()) {
-            GasBranchRound offers = round;
-            work += offers.dispatch(batch, availableWork - work, candidate -> settle(level, candidate, batch, quantumLimit, offers, null), (candidate, limit, sharing) -> {
-                Settlement result = settle(level, candidate, batch, limit, null, sharing);
-                if (result.receipt == null) {
-                    return 0;
-                }
-
-                remember(candidate);
-                return result.receipt.gas.getAmount();
-            });
+            work += dispatchRound(level, batch, round, availableWork - work);
             while (!batch.hasGrants() && batch.collision() == null && work < availableWork && current()) {
                 Tick step = advance(level, availableWork - work, batch);
                 work += step.work();
@@ -363,22 +370,55 @@ final class GasTransferScheduler {
                 }
             }
         }
+        if (completedFirstSweep && !pendingAssistance.isEmpty() && work < totalWork && batch.available() > 0 && batch.collision() == null && current()) {
+            servingAssistance = true;
+            try {
+                int remaining = totalWork - work;
+                if (pendingAssistance.size() > 1 && remaining >= 4) {
+                    int pumpRoutes = Math.min(pendingAssistance.size(), remaining / 2);
+                    GasBranchRound pumps = new GasBranchRound(pumpRoutes, true);
+                    for (int i = 0; i < pumpRoutes; i++) {
+                        pumps.add(pendingAssistance.removeFirst());
+                    }
+                    work += dispatchRound(level, batch, pumps, remaining);
+                }
+                else {
+                    Candidate candidate = pendingAssistance.removeFirst();
+                    work++;
+                    if (settle(level, candidate, batch, quantumLimit, null, null).receipt != null) {
+                        remember(candidate, order);
+                    }
+                }
+            }
+            finally {
+                servingAssistance = false;
+            }
+        }
         List<Receipt> grants = batch.grants();
         Collision collision = batch.collision();
         if (collision != null) {
             status = Status.GAS_COLLISION;
-            if (!ports.observeOnly) {
-                GasSolverProfiler.recordTransferStop(GasTransferStopReason.GAS_COLLISION);
-                GasCollisionEvent.handleCollision(level, collision.pos(), collision.existing(), collision.incoming());
-            }
+            GasCollisionEvent.handleCollision(level, collision.pos(), collision.existing(), collision.incoming());
         }
         else if (!grants.isEmpty()) {
-            status = ports.observeOnly ? Status.PROPOSED : Status.COMMITTED;
+            status = Status.COMMITTED;
         }
         else if (status == Status.QUEUED) {
             status = Status.CONTINUING;
         }
         last = new Tick(status, work, expanded, continuation, grants.isEmpty() ? null : grants.getFirst());
+    }
+
+    private int dispatchRound(Level level, GasRouteBatch batch, GasBranchRound offers, int work) {
+        return offers.dispatch(batch, work, candidate -> settle(level, candidate, batch, quantumLimit, offers, null), (candidate, limit, sharing) -> {
+            Settlement result = settle(level, candidate, batch, limit, null, sharing);
+            if (result.receipt == null) {
+                return 0;
+            }
+
+            remember(candidate, batch.serviceOrder());
+            return result.receipt.gas.getAmount();
+        });
     }
 
     private int replayAlternates(Level level, GasRouteBatch batch, int limit) {
@@ -425,8 +465,8 @@ final class GasTransferScheduler {
                 }
 
                 sawSource = true;
-                if (enteringSource && serviceOrder != null) {
-                    sweepStart = seeded.add(source) ? ports.afterTarget(serviceOrder.lastTarget(face(source))) : GasEndpointSlot.FIRST;
+                if (enteringSource && batch != null) {
+                    sweepStart = seeded.add(source) ? ports.afterTarget(batch.serviceOrder().lastTarget(face(source))) : GasEndpointSlot.FIRST;
                     target = sweepStart;
                     enteringSource = false;
                 }
@@ -435,7 +475,7 @@ final class GasTransferScheduler {
                 GasNetworkPressureEndpoint fill = demand.endpoint(level, gas, false);
                 if (fill != null && drain.transferIdentity() != fill.transferIdentity()) {
                     sawSink = true;
-                    boolean hasDevices = zones != null && (zones.complete() ? !zones.devices().isEmpty() : !topology.state().devicePositions().isEmpty());
+                    boolean hasDevices = zones != null && (zones.complete() ? zones.deviceCount() > 0 : !topology.state().devicePositions().isEmpty());
                     if (hasDevices || GasPassiveQuantum.limit(drain.pressureState(), fill.pressureState(), quantumLimit) > 0) {
                         sawGradient = true;
                         if (zones == null && hot != null && hot.source.equals(source) && hot.target.equals(target) && GasStack.isSameGasSameComponents(hot.gas, gas)) {
@@ -443,22 +483,24 @@ final class GasTransferScheduler {
                         }
                         else {
                             searchingGas = gas.copyWithAmount(1);
-                            if (batch != null && !ports.observeOnly && topology.state().hasCycle() && knownRoutes.knows(source, target)) {
-                                search = new GasZoneRouteSearch(level, zones, face(source), face(target), searchingGas, drain, fill);
+                            if (batch != null && topology.state().hasCycle() && knownRoutes.knows(source, target)) {
+                                search = GasRouteSearch.zoned(level, batch.layout(), face(source), face(target), searchingGas, drain, fill);
                             }
                             else if (batch != null) {
                                 BlockFace root = face(source);
-                                if (tree == null || !tree.rootedAt(root)) {
-                                    tree = new GasRouteTree(level, zones, root);
+                                GasRouteTree routeTree = tree;
+                                if (routeTree == null || !routeTree.rootedAt(root)) {
+                                    routeTree = new GasRouteTree(level, batch.layout(), root);
+                                    tree = routeTree;
                                 }
-                                tree.seek(face(target), searchingGas, drain, fill);
-                                search = tree;
+                                routeTree.seek(face(target), searchingGas, drain, fill);
+                                search = routeTree;
                             }
                             else if (zones != null) {
-                                search = new GasZoneRouteSearch(level, zones, face(source), face(target), searchingGas, drain, fill);
+                                search = GasRouteSearch.zoned(level, zones, face(source), face(target), searchingGas, drain, fill);
                             }
                             else {
-                                search = new GasOrdinaryPathSearch(topology.state(), limits, face(source).getPos(), face(target).getPos());
+                                search = GasRouteSearch.ordinary(topology.state(), limits, face(source).getPos(), face(target).getPos());
                             }
                             if (search.pending()) {
                                 continue;
@@ -516,14 +558,14 @@ final class GasTransferScheduler {
         Settlement settlement = prepared == null ? settle(level, candidate, batch) : prepared;
         if (settlement.receipt == null && previous != null && previous != candidate && topology.state().isCurrent()) {
             candidate = previous;
-            settlement = settle(level, candidate, batch);
+            settlement = settle(level, candidate, null);
         }
         if (settlement.receipt != null) {
             if (batch == null) {
                 hot = candidate;
             }
             else {
-                remember(candidate);
+                remember(candidate, batch.serviceOrder());
             }
         }
         else if (candidate == hot) {
@@ -532,11 +574,11 @@ final class GasTransferScheduler {
         return new Tick(settlement.status, work, expanded, status == Status.CONTINUING, settlement.receipt);
     }
 
-    private void remember(Candidate candidate) {
+    private void remember(Candidate candidate, GasServiceOrder order) {
         BlockFace from = face(candidate.source);
-        serviceOrder.served(from, face(candidate.target));
+        order.served(from, face(candidate.target));
         if (!topology.endpointFaces().isEmpty()) {
-            serviceOrder.servedFrom(topology.endpointFaces().getFirst(), from);
+            order.servedFrom(topology.endpointFaces().getFirst(), from);
         }
         knownRoutes.keep(candidate);
     }
@@ -566,70 +608,78 @@ final class GasTransferScheduler {
         GasNetworkPressureEndpoint fill = read(level, candidate.target).endpoint(level, gas, false);
         boolean attempted = false;
         if (drain != null && fill != null && drain.transferIdentity() != fill.transferIdentity()) {
-            GasNetworkPressureEndpoint sourceEnd = drain;
-            GasNetworkPressureEndpoint targetEnd = fill;
-            long usedDrain = 0;
-            long usedFill = 0;
             long maximum = quantumLimit;
             GasZoneRoute route = candidate.path.zoneRoute();
+            if (servingAssistance && batch != null && batch.receivedNaturally(drain)) {
+                return new Settlement(Status.NO_REMAINDER, null);
+            }
+
+            PumpUse pumpUse = servingAssistance ? PumpUse.ASSIST : batch == null || faceCount <= 2 ? PumpUse.BEST : PumpUse.NATURAL;
+            GasFixedManifold allocation = manifold;
+            if (servingAssistance && manifold != null) {
+                if (pumpManifold == null) {
+                    pumpManifold = new GasFixedManifold();
+                }
+                allocation = pumpManifold;
+            }
             long fair = quantumLimit;
-            if (manifold != null && route != null && drain.pressureState().fixedPressure() && fill.pressureState().fixedPressure()) {
-                long solo = route.quote(level, gas, drain, fill, quantumLimit).amount();
+            if (allocation != null && route != null && drain.pressureState().fixedPressure() && fill.pressureState().fixedPressure()) {
+                long solo = route.quote(level, gas, drain, fill, quantumLimit, pumpUse).amount();
                 if (solo > 0) {
-                    fair = manifold.share(level.getGameTime(), drain, fill, route, solo, quantumLimit);
+                    fair = allocation.share(level.getGameTime(), drain, fill, route, solo, quantumLimit, servingAssistance);
                 }
             }
-            if (batch != null && ports.observeOnly) {
-                usedDrain = batch.drained(drain);
-                usedFill = batch.filled(fill);
-                maximum = Math.min(batch.available(), Math.min(drain.transferLimits().drainLimit() - usedDrain, fill.transferLimits().fillLimit() - usedFill));
-                sourceEnd = batch.project(drain, gas);
-                targetEnd = batch.project(fill, gas);
-                if (sourceEnd == null || targetEnd == null || maximum <= 0) {
-                    return new Settlement(Status.ENDPOINT_RESERVED, null);
-                }
-            }
-            else if (batch != null) {
+            if (batch != null) {
                 maximum = batch.remainingQuota(drain, fill);
                 if (maximum <= 0) {
                     return new Settlement(Status.ENDPOINT_RESERVED, null);
                 }
             }
-            double pressure = sourceEnd.pressureState().pressurePa();
+            double pressure = drain.pressureState().pressurePa();
             maximum = Math.min(limit, Math.min(maximum, fair));
             long cap;
+            long assistRoom = 0;
+            boolean assisted = false;
             if (route != null) {
-                Quote quote = route.quote(level, gas, sourceEnd, targetEnd, maximum, batch, sharing);
+                Quote quote = route.quote(level, gas, drain, fill, maximum, batch, sharing, pumpUse);
                 cap = quote.amount();
                 pressure = quote.pressure();
+                assistRoom = quote.assistRoom();
+                assisted = quote.assisted();
             }
             else {
                 cap = GasPassiveQuantum.limit(drain.pressureState(), fill.pressureState(), Math.min(quantumLimit, candidate.path.capacity()));
             }
-            long offered = Math.max(0, drain.maxQuantizedDrainAmount(gas, BoundedMath.saturatedAdd(usedDrain, cap)) - usedDrain);
-            long accepted = Math.max(0, fill.maxQuantizedFillAmount(gas, BoundedMath.saturatedAdd(usedFill, offered), pressure) - usedFill);
+            long offered = Math.max(0, drain.maxQuantizedDrainAmount(gas, cap));
+            long accepted = Math.max(0, fill.maxQuantizedFillAmount(gas, offered, pressure));
             if (route != null && accepted == 0 && offered > 1) {
-                Quote minimum = route.quote(level, gas, sourceEnd, targetEnd, 1, batch);
+                Quote minimum = route.quote(level, gas, drain, fill, 1, batch, sharing, pumpUse);
                 pressure = minimum.pressure();
-                long single = Math.max(0, drain.maxQuantizedDrainAmount(gas, BoundedMath.saturatedAdd(usedDrain, minimum.amount())) - usedDrain);
-                accepted = Math.max(0, fill.maxQuantizedFillAmount(gas, BoundedMath.saturatedAdd(usedFill, single), pressure) - usedFill);
+                assisted = minimum.assisted();
+                long single = Math.max(0, drain.maxQuantizedDrainAmount(gas, minimum.amount()));
+                accepted = Math.max(0, fill.maxQuantizedFillAmount(gas, single, pressure));
+            }
+            boolean queued = pumpUse == PumpUse.NATURAL && assistRoom > accepted && pendingAssistance.size() < workLimit && current();
+            if (queued) {
+                pendingAssistance.add(candidate);
             }
             if (accepted > 0 && current()) {
                 if (offers != null) {
+                    if (route == null) {
+                        throw new IllegalStateException("A branch offer requires a pressure zone route.");
+                    }
+
                     long sourceLimit = Math.min(quantumLimit, drain.transferLimits().drainLimit());
                     long available = cap >= sourceLimit ? offered : drain.maxQuantizedDrainAmount(gas, sourceLimit);
-                    offers.offer(candidate, drain.transferIdentity(), available, branchOrder.available(candidate, fill.transferIdentity()), accepted);
+                    GasBranchOrder order = assisted ? pumpOrder : branchOrder;
+                    offers.offer(candidate, route.passes(), drain.transferIdentity(), available, order.available(candidate, fill.transferIdentity()), accepted);
                     return new Settlement(Status.QUEUED, null);
                 }
-                Receipt quote = new Receipt(face(candidate.source), face(candidate.target), gas.copyWithAmount(accepted), candidate.path);
+                Receipt quote = new Receipt(face(candidate.source), face(candidate.target), gas.copyWithAmount(accepted), candidate.path, assisted);
                 if (batch != null && !batch.compatible(quote)) {
                     return new Settlement(Status.GAS_COLLISION, null);
                 }
                 attempted = true;
-                if (ports.observeOnly) {
-                    recordDelivery(level, batch, candidate, drain, fill, quote);
-                    return new Settlement(Status.PROPOSED, quote);
-                }
                 long amount;
                 if (batch == null) {
                     amount = new GasFlowIntegration().executeQuantum(level, gas, drain, fill, GasPressure.round(pressure), accepted);
@@ -644,6 +694,9 @@ final class GasTransferScheduler {
                     return new Settlement(Status.COMMITTED, quote.withAmount(amount));
                 }
             }
+            if (queued) {
+                return new Settlement(Status.QUEUED, null);
+            }
         }
         if (!current()) {
             return new Settlement(Status.RETIRED, null);
@@ -651,7 +704,8 @@ final class GasTransferScheduler {
         if (rotation != null) {
             boolean unavailable = attempted || fill == null || fill.transferLimits().fillLimit() <= 0 || !fill.pressureState().fixedPressure() && fill.pressureState().currentAmount() >= fill.pressureState().maxAmount();
             if (offers != null || unavailable) {
-                branchOrder.unavailable(candidate, unavailable);
+                GasBranchOrder order = servingAssistance ? pumpOrder : branchOrder;
+                order.unavailable(candidate, unavailable);
             }
         }
         if (batch != null && (drain != null && batch.drained(drain) > 0 || fill != null && batch.filled(fill) > 0)) {
@@ -660,19 +714,18 @@ final class GasTransferScheduler {
         if (offers != null) {
             knownRoutes.discard(candidate);
         }
-        if (attempted && GasSolverProfiler.isProfilingCurrentNetwork()) {
-            GasSolverProfiler.recordTransferStop(GasTransferStopReason.HANDLER_REJECTED);
-        }
         return new Settlement(attempted ? Status.HANDLER_REJECTED : Status.OFFER_CHANGED, null);
     }
 
     private void recordDelivery(Level level, GasRouteBatch batch, Candidate candidate, GasNetworkPressureEndpoint drain, GasNetworkPressureEndpoint fill, Receipt receipt) {
-        batch.record(drain, fill, receipt, ports.observeOnly);
+        batch.record(drain, fill, receipt);
         if (rotation != null && faceCount >= 3) {
-            branchOrder.received(candidate, fill.transferIdentity(), receipt.gas.getAmount());
+            GasBranchOrder order = receipt.assisted ? pumpOrder : branchOrder;
+            order.received(candidate, fill.transferIdentity(), receipt.gas.getAmount());
         }
-        if (manifold != null && drain.pressureState().fixedPressure() && fill.pressureState().fixedPressure()) {
-            manifold.record(drain, fill, receipt.gas.getAmount());
+        GasFixedManifold allocation = receipt.assisted ? pumpManifold : manifold;
+        if (allocation != null && drain.pressureState().fixedPressure() && fill.pressureState().fixedPressure()) {
+            allocation.record(drain, fill, receipt.gas.getAmount());
         }
         if (rotation != null && faceCount > GasFixedManifold.MAX_FACES && candidate.target.face() < topology.endpointFaces().size()) {
             rotation.servedOutlet(receipt, level.getGameTime());
@@ -680,19 +733,13 @@ final class GasTransferScheduler {
         if (rotation != null && drain.pressureState().fixedPressure() && candidate.source.face() < topology.endpointFaces().size()) {
             rotation.supplied(candidate.source, receipt);
         }
-        if (!ports.observeOnly && GasSolverProfiler.isProfilingCurrentNetwork()) {
-            Observation observation = GasSolverProfiler.observation();
-            if (observation != null) {
-                observation.receipt(level, receipt);
-            }
-        }
         knownRoutes.served(candidate, level.getGameTime());
-        receipt.path.zoneRoute().served();
+        receipt.requireZoneRoute().served();
     }
 
     private Status finishSweep() {
         completedFirstSweep = true;
-        Status status = !sawSource ? Status.NO_SOURCE : !sawSink ? Status.NO_SINK : !sawGradient ? Status.AT_EQUILIBRIUM : sawPath ? Status.SWEEP_COMPLETE : Status.NO_PATH;
+        Status status = sawSource ? sawSink ? sawGradient ? sawPath ? Status.SWEEP_COMPLETE : Status.NO_PATH : Status.AT_EQUILIBRIUM : Status.NO_SINK : Status.NO_SOURCE;
         sawSource = false;
         sawSink = false;
         sawGradient = false;
@@ -714,18 +761,27 @@ final class GasTransferScheduler {
     }
 
     enum Status {
-        CONTINUING, COMMITTED, PROPOSED, QUEUED, NO_SOURCE, NO_SINK, AT_EQUILIBRIUM, NO_PATH, SWEEP_COMPLETE, OFFER_CHANGED, HANDLER_REJECTED, RETIRED, NO_REMAINDER, ENDPOINT_RESERVED, GAS_COLLISION
+        CONTINUING, COMMITTED, QUEUED, NO_SOURCE, NO_SINK, AT_EQUILIBRIUM, NO_PATH, SWEEP_COMPLETE, OFFER_CHANGED, HANDLER_REJECTED, RETIRED, NO_REMAINDER, ENDPOINT_RESERVED, GAS_COLLISION
     }
 
     record Tick(Status status, int work, int expanded, boolean continuation, @Nullable Receipt receipt) {}
 
-    record Receipt(BlockFace source, BlockFace target, GasStack gas, Path path) {
+    record Receipt(BlockFace source, BlockFace target, GasStack gas, Path path, boolean assisted) {
+        GasZoneRoute requireZoneRoute() {
+            GasZoneRoute route = path.zoneRoute();
+            if (route == null) {
+                throw new IllegalStateException("Gas transfer from " + source + " to " + target + " has no pressure zone route.");
+            }
+
+            return route;
+        }
+
         Receipt withAmount(long amount) {
             if (gas.getAmount() == amount) {
                 return this;
             }
 
-            return new Receipt(source, target, gas.copyWithAmount(amount), path);
+            return new Receipt(source, target, gas.copyWithAmount(amount), path, assisted);
         }
     }
 

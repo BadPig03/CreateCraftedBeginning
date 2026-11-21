@@ -41,4 +41,9 @@ final class AirtightPipeTransportBehaviour extends GasTransportBehaviour {
     public boolean isConnectionFaceEnabled(BlockState state, Direction direction) {
         return AirtightPipeConnections.isOpen(state, direction);
     }
+
+    @Override
+    protected long getFlowResistanceUnits(BlockState state, Direction entryFace, Direction exitFace) {
+        return 0;
+    }
 }

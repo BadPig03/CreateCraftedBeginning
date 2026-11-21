@@ -22,6 +22,7 @@ import net.ty.createcraftedbeginning.gas.network.GasPipeConnection;
 import net.ty.createcraftedbeginning.gas.network.endpoint.AtmosphericGasEndpoint;
 import net.ty.createcraftedbeginning.gas.network.endpoint.GasConnectionEndpoint;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology.Snapshot;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.FlowResistance;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferExecutor;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +57,7 @@ public final class GasEndpointDiscovery {
                         continue;
                     }
 
-                    storage.add(new StorageAccess(face, compartment));
+                    storage.add(new StorageAccess(face, compartment, tanks));
                 }
                 continue;
             }
@@ -87,7 +88,7 @@ public final class GasEndpointDiscovery {
     private static @Unmodifiable List<AtmosphericAccess> discoverAtmosphericAccesses(Level level, Snapshot topology) {
         List<AtmosphericAccess> accesses = new ArrayList<>(topology.atmosphericFaces().size());
         for (BlockFace atmosphericFace : topology.atmosphericFaces()) {
-            AtmosphericAccess access = getManagedAtmosphericEndpoint(level, atmosphericFace, false);
+            AtmosphericAccess access = getManagedAtmosphericEndpoint(level, atmosphericFace);
             if (access == null) {
                 continue;
             }
@@ -98,7 +99,7 @@ public final class GasEndpointDiscovery {
     }
 
     @Nullable
-    static AtmosphericAccess getManagedAtmosphericEndpoint(Level level, BlockFace face, boolean observeOnly) {
+    static AtmosphericAccess getManagedAtmosphericEndpoint(Level level, BlockFace face) {
         if (!level.isLoaded(face.getConnectedPos())) {
             return null;
         }
@@ -108,14 +109,14 @@ public final class GasEndpointDiscovery {
             return null;
         }
 
-        GasPipeConnection connection = observeOnly ? behaviour.peekConnection(face.getFace()) : behaviour.getConnection(face.getFace());
-        if (connection == null || observeOnly && connection.hasPendingTransfer()) {
+        GasPipeConnection connection = behaviour.getConnection(face.getFace());
+        if (connection == null) {
             return null;
         }
 
         GasConnectionEndpoint endpoint = connection.getEndpoint();
         if (!(endpoint instanceof AtmosphericGasEndpoint)) {
-            if (observeOnly || !connection.resolveEndpoint(level, face.getPos())) {
+            if (!connection.resolveEndpoint(level, face.getPos())) {
                 return null;
             }
 
@@ -130,9 +131,7 @@ public final class GasEndpointDiscovery {
             return null;
         }
 
-        if (!observeOnly) {
-            atmosphericEndpoint.bind(level, blockEntity);
-        }
+        atmosphericEndpoint.bind(level, blockEntity);
         ICapabilityProvider<GasHandler> provider = atmosphericEndpoint.getGasHandlerProvider();
         GasHandler handler = provider.getCapability();
         if (handler == null) {
@@ -158,7 +157,11 @@ public final class GasEndpointDiscovery {
         }
     }
 
-    record StorageAccess(BlockFace pipeFace, GasPressureCompartment compartment) {
+    record StorageAccess(BlockFace pipeFace, GasPressureCompartment compartment, FlowResistance contact) {
+        StorageAccess(BlockFace pipeFace, GasPressureCompartment compartment, GasStorageHandler handler) {
+            this(pipeFace, compartment, handler.usesStandardPipePort() ? FlowResistance.STANDARD_PIPE_PORT : FlowResistance.NONE);
+        }
+
         long simulateDrainAmount(GasStack gas, long maxAmount) {
             return GasTransferExecutor.simulateDrainAmount(compartment, gas, maxAmount);
         }

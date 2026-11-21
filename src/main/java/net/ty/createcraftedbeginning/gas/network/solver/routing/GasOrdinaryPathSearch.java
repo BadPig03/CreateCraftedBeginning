@@ -1,9 +1,11 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkState;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -41,32 +43,28 @@ final class GasOrdinaryPathSearch implements GasRouteSearch {
     @Override
     public @Nullable Path expand() {
         Path path = frontier.removeFirst();
-        if (path.pos.equals(target)) {
+        if (path.pos().equals(target)) {
             return path;
         }
 
-        int neighbors = state.ordinaryNeighbors(path.pos);
+        int neighbors = state.ordinaryNeighbors(path.pos());
         for (Direction side : Iterate.directions) {
             if ((neighbors & 1 << side.ordinal()) == 0) {
                 continue;
             }
 
-            BlockPos next = path.pos.relative(side);
+            BlockPos next = path.pos().relative(side);
             if (!visited.add(next)) {
                 continue;
             }
 
-            long capacity = Math.min(path.capacity, limits.getOrDefault(next, Long.MAX_VALUE));
-            if (capacity > 0) {
-                frontier.addLast(new Path(next, capacity, path));
+            long capacity = Math.min(path.capacity(), limits.getOrDefault(next, Long.MAX_VALUE));
+            if (capacity <= 0) {
+                continue;
             }
+
+            frontier.addLast(new Path(next, capacity, path));
         }
         return null;
-    }
-
-    record Path(BlockPos pos, long capacity, @Nullable Path previous, @Nullable GasZoneRoute zoneRoute) {
-        private Path(BlockPos pos, long capacity, @Nullable Path previous) {
-            this(pos, capacity, previous, null);
-        }
     }
 }

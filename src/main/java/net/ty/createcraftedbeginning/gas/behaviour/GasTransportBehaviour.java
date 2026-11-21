@@ -19,7 +19,6 @@ import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseCause;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.gas.network.GasConnectable;
-import net.ty.createcraftedbeginning.gas.network.GasFlowResistance;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection.FlowDirection;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection.FlowState;
@@ -44,7 +43,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
     public static final BehaviourType<GasTransportBehaviour> TYPE = new BehaviourType<>();
 
     private static final int CONNECTION_REFRESH_INTERVAL = 20;
-    private static final long PIPE_RESISTANCE_UNITS = GasFlowResistance.fromFactor(0.958);
     @Internal
     public static final String COMPOUND_KEY_RETIRED_CONNECTIONS = "RetiredGasConnections";
 
@@ -189,8 +187,8 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return false;
     }
 
-    public boolean usesPassiveAtmosphericMouth() {
-        return isOrdinaryPressurePipe();
+    public boolean passesNaturalForwardFlow() {
+        return false;
     }
 
     public abstract boolean canConnectOnFace(BlockState state, Direction direction);
@@ -223,21 +221,6 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
 
     public @Nullable GasPressureBoundary getInternalPressureBoundary(Direction face) {
         return null;
-    }
-
-    public long getManifoldSpokeResistanceUnits(BlockState state, Direction face) {
-        long segmentResistance = Math.max(GasFlowResistance.MIN_RESISTANCE_UNITS, getFlowResistanceUnits(state, face, face.getOpposite()));
-        long halfResistance = segmentResistance / 2 + segmentResistance % 2;
-        return Math.max(GasFlowResistance.MIN_RESISTANCE_UNITS, halfResistance);
-    }
-
-    @Nullable
-    public GasPipeConnection peekConnection(Direction side) {
-        if (connectionsDirty || connections == null) {
-            return null;
-        }
-
-        return connections.get(side);
     }
 
     @Nullable
@@ -287,13 +270,12 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         return Math.max(inboundFlowRate, outboundFlowRate);
     }
 
-    public boolean publishFlowTelemetry() {
+    public void publishFlowTelemetry() {
         if (!(blockEntity instanceof GasFlowTelemetryTarget telemetryTarget)) {
-            return false;
+            return;
         }
 
         telemetryTarget.acceptFlowTelemetry(getThroughputFlowRate());
-        return true;
     }
 
     public void markConnectionsDirty() {
@@ -353,10 +335,7 @@ public abstract class GasTransportBehaviour extends BlockEntityBehaviour {
         publishFlowTelemetry();
     }
 
-    @SuppressWarnings("unused")
-    protected long getFlowResistanceUnits(BlockState state, Direction entryFace, Direction exitFace) {
-        return PIPE_RESISTANCE_UNITS;
-    }
+    protected abstract long getFlowResistanceUnits(BlockState state, Direction entryFace, Direction exitFace);
 
     protected boolean acceptsGas(GasStack gas, BlockState state, Direction direction) {
         return true;

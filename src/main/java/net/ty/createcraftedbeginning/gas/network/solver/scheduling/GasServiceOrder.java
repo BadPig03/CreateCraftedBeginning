@@ -1,16 +1,18 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasServiceOrder {
+public final class GasServiceOrder {
     private static final int MAX_SERVICE_HINTS = 1024;
     private static final int MAX_TRACKED_NETWORKS = 16;
     private static final int MAX_TRACKED_OUTLETS = MAX_SERVICE_HINTS / MAX_TRACKED_NETWORKS;

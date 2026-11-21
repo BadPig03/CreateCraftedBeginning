@@ -1,4 +1,4 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -15,11 +15,12 @@ import net.ty.createcraftedbeginning.gas.network.GasFlowResistance;
 import net.ty.createcraftedbeginning.gas.network.GasTransportEdgeProperties;
 import net.ty.createcraftedbeginning.gas.network.GasTransportPressureDrive.OutletPressureTarget;
 import net.ty.createcraftedbeginning.gas.network.GasTransportPressureDrive.PressureBoost;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Interior;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Link;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Vertex;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint.PressureState;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Interior;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Vertex;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,22 +31,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasZoneRoute {
+public final class GasZoneRoute {
     private final List<Pass> passes;
     private final List<Pass> devices = new ArrayList<>();
     private final Set<Link> corridors = new HashSet<>();
     private final Map<BlockPos, Pass> stops = new HashMap<>();
+    private final Set<BlockPos> pumps;
     private final long capacity;
 
-    GasZoneRoute(List<Pass> passes, long capacity) {
+    GasZoneRoute(Level level, List<Pass> passes, long capacity) {
         this.capacity = capacity;
         this.passes = List.copyOf(passes);
+        Set<BlockPos> pumpPositions = null;
         for (Pass pass : passes) {
             stops.put(pass.vertex.pos, pass);
             if (pass.vertex.device) {
                 devices.add(pass);
+                GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pass.vertex.pos);
+                if (behaviour != null && behaviour.passesNaturalForwardFlow()) {
+                    if (pumpPositions == null) {
+                        pumpPositions = new HashSet<>();
+                    }
+                    pumpPositions.add(pass.vertex.pos);
+                }
             }
             if (pass.next == null) {
                 continue;
@@ -53,11 +64,7 @@ final class GasZoneRoute {
 
             corridors.add(pass.next);
         }
-    }
-
-    static double contact(long extraResistance) {
-        double segments = 0.02 + (double) extraResistance / GasFlowResistance.UNITS_PER_STANDARD_SEGMENT;
-        return segments / GasFlowResistance.conductancePerPascal(GasFlowResistance.UNITS_PER_STANDARD_SEGMENT);
+        pumps = pumpPositions == null ? Set.of() : Set.copyOf(pumpPositions);
     }
 
     private static double downstream(List<GasTransportEdgeProperties> edges, double pressure, long amount, double sourceResistance, boolean losses, long @Nullable [] priorFlow, long alreadyDrained, int sourceCount, int @Nullable [] counts) {
@@ -69,7 +76,7 @@ final class GasZoneRoute {
                 return -1;
             }
             pressure = edge.pressureDrive().drivenOutletPressurePa(pressure);
-            if (!losses) {
+            if (!losses || edge.resistanceUnits() == 0 && !Double.isFinite(edge.conductancePerPascal())) {
                 continue;
             }
 
@@ -98,25 +105,29 @@ final class GasZoneRoute {
         return 0;
     }
 
-    List<Pass> passes() {
+    public List<Pass> passes() {
         return passes;
     }
 
-    List<Pass> devices() {
-        return devices;
+    public boolean hasPumpAt(BlockPos pos) {
+        return pumps.contains(pos);
     }
 
-    long capacity() {
-        return capacity;
+    public int deviceCount() {
+        return devices.size();
     }
 
-    void served() {
+    public Pass device(int index) {
+        return devices.get(index);
+    }
+
+    public void served() {
         for (Link link : corridors) {
             link.turns++;
         }
     }
 
-    int direction(GasZoneLayout layout, BlockFace face) {
+    public int direction(GasZoneLayout layout, BlockFace face) {
         Pass pass = stops.get(face.getPos());
         if (pass != null) {
             return direction(face.getFace(), pass.entry, pass.exit);
@@ -137,33 +148,54 @@ final class GasZoneRoute {
         return 0;
     }
 
-    Quote quote(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum) {
-        return quote(level, gas, source, target, maximum, null);
+    public Quote quote(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum) {
+        return quote(level, gas, source, target, maximum, null, null, PumpUse.BEST);
     }
 
-    Quote quote(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum, @Nullable GasRouteBatch batch) {
-        return quote(level, gas, source, target, maximum, batch, null);
+    public Quote quote(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum, PumpUse pumpUse) {
+        return quote(level, gas, source, target, maximum, null, null, pumpUse);
     }
 
-    Quote quote(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum, @Nullable GasRouteBatch batch, @Nullable GasBranchRound sharing) {
+    public Quote quote(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum, @Nullable Usage usage, @Nullable Sharing sharing, PumpUse pumpUse) {
+        if (pumpUse != PumpUse.BEST || pumps.isEmpty()) {
+            return quote(level, gas, source, target, maximum, usage, sharing, pumpUse == PumpUse.ASSIST);
+        }
+
+        Quote natural = quote(level, gas, source, target, maximum, usage, sharing, false);
+        if (natural.amount() >= Math.min(maximum, natural.assistRoom())) {
+            return natural;
+        }
+
+        Quote assist = quote(level, gas, source, target, maximum, usage, sharing, true);
+        return assist.amount() > natural.amount() ? assist : natural;
+    }
+
+    private Quote quote(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum, @Nullable Usage usage, @Nullable Sharing sharing, boolean assist) {
+        if (assist && pumps.isEmpty()) {
+            return Quote.CLOSED;
+        }
+
         long alreadyDrained = 0;
         long alreadyFilled = 0;
-        if (batch != null) {
-            alreadyDrained = batch.drained(source);
-            alreadyFilled = batch.filled(target);
+        if (usage != null) {
+            alreadyDrained = usage.drained(source);
+            alreadyFilled = usage.filled(target);
             for (Pass pass : passes) {
-                long room = pass.vertex.capacity - batch.used(pass.vertex);
+                long room = pass.vertex.capacity - usage.used(pass.vertex);
                 maximum = Math.min(maximum, sharing == null ? room : Math.ceilDiv(room, sharing.count(pass.vertex)));
                 if (pass.next != null) {
-                    long linkRoom = pass.next.capacity - batch.used(pass.next.shared);
+                    long linkRoom = pass.next.capacity - usage.used(pass.next.shared);
                     maximum = Math.min(maximum, sharing == null ? linkRoom : Math.ceilDiv(linkRoom, sharing.count(pass.next.shared)));
                 }
             }
         }
         List<GasTransportEdgeProperties> edges = new ArrayList<>(devices.size());
-        long[] priorFlow = batch == null || devices.isEmpty() ? null : new long[devices.size()];
+        long[] priorFlow = usage == null || devices.isEmpty() ? null : new long[devices.size()];
         int[] counts = sharing == null || devices.isEmpty() ? null : new int[devices.size()];
         int sourceCount = sharing == null ? 1 : sharing.count(source.transferIdentity());
+        long assistRoom = pumps.isEmpty() ? 0 : Long.MAX_VALUE;
+        long availableBoostPa = 0;
+        boolean otherDrive = false;
         boolean driven = false;
         for (Pass pass : devices) {
             GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pass.vertex.pos);
@@ -184,13 +216,22 @@ final class GasZoneRoute {
             if (edge.flowRateLimit() <= 0) {
                 return Quote.CLOSED;
             }
+            boolean pump = hasPumpAt(pass.vertex.pos);
+            long carried = usage == null ? 0 : usage.used(pass.vertex);
+            if (pump) {
+                assistRoom = Math.min(assistRoom, edge.flowRateLimit() - carried);
+                if (edge.pressureDrive() instanceof PressureBoost(long pa)) {
+                    availableBoostPa += pa;
+                }
+                if (!assist) {
+                    continue;
+                }
+            }
             if (edge.isLossless()) {
                 continue;
             }
 
-            long carried = 0;
             if (priorFlow != null) {
-                carried = batch.used(pass.vertex);
                 priorFlow[edges.size()] = carried;
             }
             int count = 1;
@@ -200,22 +241,29 @@ final class GasZoneRoute {
             }
             maximum = Math.min(maximum, Math.ceilDiv(edge.flowRateLimit() - carried, count));
             edges.add(edge);
-            driven |= edge.pressureDrive() instanceof OutletPressureTarget || edge.pressureDrive() instanceof PressureBoost boost && boost.pressureBoostPa() > 0;
+            boolean providesDrive = edge.pressureDrive() instanceof OutletPressureTarget || edge.pressureDrive() instanceof PressureBoost(long pa) && pa > 0;
+            driven |= providesDrive;
+            otherDrive |= !pump && providesDrive;
         }
 
         PressureState supply = source.pressureState();
         PressureState demand = target.pressureState();
+        assistRoom = availableBoostPa > 0 && (otherDrive || supply.pressurePa() + availableBoostPa > demand.pressurePa()) ? Math.max(0, assistRoom) : 0;
+        if (assist && assistRoom == 0) {
+            return Quote.CLOSED;
+        }
+
         long limit = Math.min(capacity, Math.min(maximum, Math.min(source.transferLimits().drainLimit(), target.transferLimits().fillLimit())));
         if (!driven) {
             limit = GasPassiveQuantum.limit(supply, demand, limit);
         }
         if (limit <= 0) {
-            return Quote.CLOSED;
+            return assistRoom == 0 ? Quote.CLOSED : new Quote(0, 0, assistRoom, false);
         }
         double inlet = supply.pressurePa();
         double outlet = demand.pressurePa();
-        double sourceResistance = contact(source.flowResistance().drainResistanceUnits());
-        double targetResistance = contact(target.flowResistance().fillResistanceUnits());
+        double sourceResistance = GasFlowResistance.endpointResistance(source.flowResistance().drainResistanceUnits());
+        double targetResistance = GasFlowResistance.endpointResistance(target.flowResistance().fillResistanceUnits());
         long lower = 0;
         long upper = limit;
         while (lower < upper) {
@@ -241,15 +289,69 @@ final class GasZoneRoute {
             }
         }
         if (lower == 0) {
-            return Quote.CLOSED;
+            return assistRoom == 0 ? Quote.CLOSED : new Quote(0, 0, assistRoom, false);
         }
         double pressure = Math.max(outlet, downstream(edges, inlet, lower, sourceResistance, true, priorFlow, alreadyDrained, 1, null));
-        return new Quote(lower, GasPressure.round(GasPressureLimits.clampToHardLimit(pressure)));
+        if (assist && !otherDrive) {
+            double required = outlet + (lower + (double) alreadyFilled) * targetResistance;
+            if (!demand.fixedPressure()) {
+                required = Math.max(required, GasPressure.pressureExact(demand.currentAmount() + lower, demand.volume()));
+            }
+
+            pressure = Math.min(pressure, required);
+        }
+        return new Quote(lower, GasPressure.round(GasPressureLimits.clampToHardLimit(pressure)), assistRoom, assist);
     }
 
-    record Pass(Vertex vertex, Direction entry, Direction exit, @Nullable Link next) {}
+    public enum PumpUse {
+        NATURAL, ASSIST, BEST
+    }
 
-    record Quote(long amount, long pressure) {
-        static final Quote CLOSED = new Quote(0, 0);
+    public interface Usage {
+        long used(Object segment);
+
+        long drained(GasNetworkPressureEndpoint endpoint);
+
+        long filled(GasNetworkPressureEndpoint endpoint);
+    }
+
+    @FunctionalInterface
+    public interface Sharing {
+        int count(Object segment);
+    }
+
+    public static final class Pass {
+        private final Vertex vertex;
+        private final Direction entry;
+        private final Direction exit;
+        private final @Nullable Link next;
+
+        Pass(Vertex vertex, Direction entry, Direction exit, @Nullable Link next) {
+            this.vertex = vertex;
+            this.entry = entry;
+            this.exit = exit;
+            this.next = next;
+        }
+
+        public BlockPos position() {
+            return vertex.pos;
+        }
+
+        public Object vertexKey() {
+            return vertex;
+        }
+
+        @Nullable
+        public Object corridorKey() {
+            if (next == null) {
+                return null;
+            }
+
+            return next.shared;
+        }
+    }
+
+    public record Quote(long amount, long pressure, long assistRoom, boolean assisted) {
+        static final Quote CLOSED = new Quote(0, 0, 0, false);
     }
 }

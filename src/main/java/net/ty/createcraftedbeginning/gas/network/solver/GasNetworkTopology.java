@@ -14,8 +14,14 @@ import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection.FlowState;
 import net.ty.createcraftedbeginning.gas.network.solver.GasPipeLinkIndex.Links;
+import net.ty.createcraftedbeginning.gas.network.solver.pressure.GasZonePressure;
+import net.ty.createcraftedbeginning.gas.network.solver.pressure.GasZonePressure.Gauge;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout;
+import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasServiceOrder;
+import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasTransferScheduler;
 import net.ty.createcraftedbeginning.gas.telemetry.GasFlowTelemetryTarget;
 import net.ty.createcraftedbeginning.gas.telemetry.GasPressureTelemetryTarget;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -24,12 +30,10 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Supplier;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -55,11 +59,9 @@ public final class GasNetworkTopology {
         TopologySnapshotCache cache = CACHES.get(level);
         Snapshot cached = cache.byPipe.get(startPos);
         if (cached != null && !cached.invalidateChangedChunks(level, cache)) {
-            GasSolverProfiler.recordTopologyCacheHit();
             return cached;
         }
 
-        GasSolverProfiler.recordTopologyCacheMiss();
         return cache.rebuild(level, startPos);
     }
 
@@ -109,23 +111,17 @@ public final class GasNetworkTopology {
         return topology != null && topology.state.simulatedAt(tick) || cache.retiredThisTick.containsKey(pos);
     }
 
-    record PressureGauge(BlockPos pos, int connectedFaces) {}
-
     public static final class Snapshot {
         private final GasNetworkState state;
         private @Nullable GasTransferScheduler scheduler;
-        private @Nullable GasShadowComparison shadowOwner;
-        private @Nullable GasTransferScheduler shadow;
-        private long lastShadowTick;
         private final Set<BlockPos> pipePositions;
         private final List<BlockPos> meteredPipes;
-        private final List<PressureGauge> pressureGauges;
+        private final List<Gauge> pressureGauges;
         private final List<BlockFace> atmosphericFaces;
         private final List<BlockFace> endpointFaces;
         private final Map<ChunkPos, Boolean> loadedChunks;
-        private final Map<Object, Object> cachedArtifacts = new IdentityHashMap<>();
 
-        private Snapshot(GasNetworkState state, Set<BlockPos> pipePositions, List<BlockPos> meteredPipes, List<PressureGauge> pressureGauges, List<BlockFace> atmosphericFaces, List<BlockFace> endpointFaces, Map<ChunkPos, Boolean> loadedChunks) {
+        private Snapshot(GasNetworkState state, Set<BlockPos> pipePositions, List<BlockPos> meteredPipes, List<Gauge> pressureGauges, List<BlockFace> atmosphericFaces, List<BlockFace> endpointFaces, Map<ChunkPos, Boolean> loadedChunks) {
             this.state = state;
             this.pipePositions = pipePositions;
             this.meteredPipes = meteredPipes;
@@ -133,55 +129,6 @@ public final class GasNetworkTopology {
             this.atmosphericFaces = atmosphericFaces;
             this.endpointFaces = endpointFaces;
             this.loadedChunks = loadedChunks;
-        }
-
-        boolean hasContinuousShadow(GasShadowComparison comparison, long tick) {
-            return shadowOwner == comparison && lastShadowTick == tick - 1;
-        }
-
-        GasTransferScheduler shadow(Level level, GasShadowComparison comparison, long tick, boolean cold) {
-            if (cold || shadow == null) {
-                comparison.attach(this);
-                GasZoneLayout layout = new GasZoneLayout(this, comparison.capacities);
-                shadow = new GasTransferScheduler(this, comparison.capacities, comparison.work, comparison.quantum, layout, comparison.order(level), true);
-                shadowOwner = comparison;
-            }
-            lastShadowTick = tick;
-            return shadow;
-        }
-
-        void releaseShadow(GasShadowComparison comparison) {
-            if (shadowOwner != comparison) {
-                return;
-            }
-
-            shadow = null;
-            shadowOwner = null;
-        }
-
-        boolean ownsShadow(GasTransferScheduler candidate) {
-            return shadow == candidate;
-        }
-
-        void selectCapacityScheduler(Map<BlockPos, Long> limits, int workLimit, long quantumLimit) {
-            scheduler = new GasTransferScheduler(this, limits, workLimit, quantumLimit);
-        }
-
-        void selectPressureScheduler(Level level, Map<BlockPos, Long> limits, int workLimit, long quantumLimit) {
-            GasZoneLayout layout = new GasZoneLayout(level, this, limits);
-            clearPressureTelemetry(level);
-            scheduler = new GasTransferScheduler(this, limits, workLimit, quantumLimit, layout, null, false);
-        }
-
-        GasTransferScheduler activateBatch(Level level) {
-            GasZoneLayout layout = new GasZoneLayout(this, Map.of());
-            scheduler = new GasTransferScheduler(this, Map.of(), GasTransferScheduler.WORK_PER_TICK, GasTransferScheduler.GU_PER_TICK, layout, CACHES.get(level).serviceOrder, false);
-            return scheduler;
-        }
-
-        @Nullable
-        GasTransferScheduler scheduler() {
-            return scheduler;
         }
 
         public GasNetworkState state() {
@@ -200,34 +147,39 @@ public final class GasNetworkTopology {
             return endpointFaces;
         }
 
-        @SuppressWarnings("unchecked")
-        public <T> T cachedArtifact(Object key, Supplier<T> factory) {
-            Object cached = cachedArtifacts.get(key);
-            if (cached != null) {
-                return (T) cached;
-            }
-
-            T created = factory.get();
-            cachedArtifacts.put(key, created);
-            return created;
-        }
-
-        List<BlockPos> meteredPipes() {
+        @Internal
+        public List<BlockPos> meteredPipes() {
             return meteredPipes;
         }
 
-        List<PressureGauge> pressureGauges() {
+        @Internal
+        public List<Gauge> pressureGauges() {
             return pressureGauges;
         }
 
-        void clearPressureTelemetry(Level level) {
-            for (PressureGauge gauge : pressureGauges) {
-                if (!(level.getBlockEntity(gauge.pos()) instanceof GasPressureTelemetryTarget target)) {
-                    continue;
-                }
+        void selectCapacityScheduler(Map<BlockPos, Long> limits, int workLimit, long quantumLimit) {
+            scheduler = new GasTransferScheduler(this, limits, workLimit, quantumLimit, null, null, this::ownsScheduler);
+        }
 
-                target.clearPressureTelemetry();
-            }
+        void selectPressureScheduler(Level level, Map<BlockPos, Long> limits, int workLimit, long quantumLimit) {
+            GasZoneLayout layout = new GasZoneLayout(level, state, pipePositions, limits);
+            GasZonePressure.clearTelemetry(level, pressureGauges);
+            scheduler = new GasTransferScheduler(this, limits, workLimit, quantumLimit, layout, null, this::ownsScheduler);
+        }
+
+        GasTransferScheduler activateBatch(Level level) {
+            GasZoneLayout layout = new GasZoneLayout(state, pipePositions, Map.of());
+            scheduler = new GasTransferScheduler(this, Map.of(), GasTransferScheduler.WORK_PER_TICK, GasTransferScheduler.GU_PER_TICK, layout, CACHES.get(level).serviceOrder, this::ownsScheduler);
+            return scheduler;
+        }
+
+        @Nullable
+        GasTransferScheduler scheduler() {
+            return scheduler;
+        }
+
+        private boolean ownsScheduler(GasTransferScheduler candidate) {
+            return scheduler == candidate;
         }
 
         private boolean invalidateChangedChunks(Level level, TopologySnapshotCache cache) {
@@ -262,7 +214,7 @@ public final class GasNetworkTopology {
             List<BlockFace> endpoints = new ArrayList<>();
             List<BlockFace> atmosphere = new ArrayList<>();
             List<BlockPos> meteredPipes = new ArrayList<>();
-            List<PressureGauge> pressureGauges = new ArrayList<>();
+            List<Gauge> pressureGauges = new ArrayList<>();
             Map<ChunkPos, Boolean> chunks = new HashMap<>();
             BlockPos start = startPos.immutable();
             ChunkPos firstChunk = new ChunkPos(start);
@@ -290,7 +242,7 @@ public final class GasNetworkTopology {
                     meteredPipes.add(pos);
                 }
                 if (entity instanceof GasPressureTelemetryTarget) {
-                    pressureGauges.add(new PressureGauge(pos, node.neighbors() | node.endpoints() | node.atmosphere()));
+                    pressureGauges.add(new Gauge(pos, node.neighbors() | node.endpoints() | node.atmosphere()));
                 }
                 for (Direction side : Iterate.directions) {
                     int bit = 1 << side.ordinal();

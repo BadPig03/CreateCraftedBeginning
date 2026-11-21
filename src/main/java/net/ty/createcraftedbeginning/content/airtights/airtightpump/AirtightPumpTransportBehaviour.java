@@ -42,6 +42,11 @@ final class AirtightPumpTransportBehaviour extends GasTransportBehaviour {
     }
 
     @Override
+    public boolean passesNaturalForwardFlow() {
+        return true;
+    }
+
+    @Override
     public GasTransportEdgeProperties getTransportEdgeProperties(BlockState state, Direction entryFace, Direction exitFace, GasStack gasStack) {
         long resistanceUnits = getFlowResistanceUnits(state, entryFace, exitFace);
         if (!allowsInboundFlow(state, entryFace) || !allowsOutboundFlow(state, exitFace)) {
@@ -50,7 +55,11 @@ final class AirtightPumpTransportBehaviour extends GasTransportBehaviour {
 
         long maxPressureBoostPa = Math.max(GasPressure.VACUUM_PA, pump.getPumpMaxPressureBoostPa());
         long flowRateLimit = Math.max(0, pump.getPumpFlowRateLimit());
-        double pumpCurveConductance = maxPressureBoostPa == GasPressure.VACUUM_PA || flowRateLimit <= 0 ? Double.NaN : (double) flowRateLimit / maxPressureBoostPa;
-        return new GasTransportEdgeProperties(resistanceUnits, GasTransportPressureDrive.pressureBoost(maxPressureBoostPa), flowRateLimit, GasPressure.REFERENCE_PRESSURE_PA, pumpCurveConductance, true, true);
+        return new GasTransportEdgeProperties(resistanceUnits, GasTransportPressureDrive.pressureBoost(maxPressureBoostPa), flowRateLimit, GasPressure.VACUUM_PA, Double.NaN, true, true);
+    }
+
+    @Override
+    protected long getFlowResistanceUnits(BlockState state, Direction entryFace, Direction exitFace) {
+        return 0;
     }
 }

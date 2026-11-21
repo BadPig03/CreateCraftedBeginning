@@ -62,6 +62,11 @@ final class AirtightTankGasStorage {
 
     private final class ControllerAwareGasHandler implements GasStorageHandler {
         @Override
+        public boolean usesStandardPipePort() {
+            return true;
+        }
+
+        @Override
         public GasPressureCompartment getPressureCompartment(int tank) {
             return resolveHandler().getPressureCompartment(tank);
         }

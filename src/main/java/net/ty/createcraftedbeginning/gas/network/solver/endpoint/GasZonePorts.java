@@ -1,38 +1,35 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.endpoint;
 
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.Level;
-import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology.Snapshot;
-import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointPlanner;
+import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointPlanner.Port;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collections;
 import java.util.List;
 
+@Internal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasZonePorts {
+public final class GasZonePorts {
     private final List<BlockFace> external;
     private final List<BlockFace> atmosphere;
     private final List<BlockFace> internal;
 
-    final boolean observeOnly;
-
-    GasZonePorts(Snapshot topology, List<BlockFace> internal, boolean observeOnly) {
-        this.observeOnly = observeOnly;
-        external = topology.endpointFaces();
-        atmosphere = topology.atmosphericFaces();
+    public GasZonePorts(List<BlockFace> external, List<BlockFace> atmosphere, List<BlockFace> internal) {
+        this.external = external;
+        this.atmosphere = atmosphere;
         this.internal = internal;
     }
 
-    int size() {
+    public int size() {
         return external.size() + atmosphere.size() + internal.size();
     }
 
-    GasEndpointSlot source(@Nullable BlockFace visited) {
+    public GasEndpointSlot source(@Nullable BlockFace visited) {
         int index = externalIndex(visited);
         if (index < 0) {
             return GasEndpointSlot.FIRST;
@@ -40,7 +37,7 @@ final class GasZonePorts {
         return new GasEndpointSlot(index, 0);
     }
 
-    GasEndpointSlot afterTarget(@Nullable BlockFace visited) {
+    public GasEndpointSlot afterTarget(@Nullable BlockFace visited) {
         int index = externalIndex(visited);
         if (index < 0) {
             return GasEndpointSlot.FIRST;
@@ -49,7 +46,7 @@ final class GasZonePorts {
         return new GasEndpointSlot(index, 0).after(1, size());
     }
 
-    BlockFace face(GasEndpointSlot slot) {
+    public BlockFace face(GasEndpointSlot slot) {
         int i = slot.face();
         if (i < external.size()) {
             return external.get(i);
@@ -62,21 +59,39 @@ final class GasZonePorts {
         return internal.get(i - atmosphere.size());
     }
 
-    Port read(Level level, GasEndpointSlot slot) {
+    public Port read(Level level, GasEndpointSlot slot) {
         BlockFace face = face(slot);
         if (slot.face() >= external.size() + atmosphere.size()) {
-            return GasEndpointPlanner.readInternalPort(level, face, observeOnly);
+            return GasEndpointPlanner.readInternalPort(level, face);
         }
         if (slot.face() >= external.size()) {
-            return GasEndpointPlanner.readZoneMouth(level, face, observeOnly);
+            return GasEndpointPlanner.readZoneMouth(level, face);
         }
-        return GasEndpointPlanner.readPort(level, face, false, slot.tank(), observeOnly);
+        return GasEndpointPlanner.readPort(level, face, false, slot.tank());
     }
 
     private int externalIndex(@Nullable BlockFace face) {
         if (face == null) {
             return -1;
         }
-        return Collections.binarySearch(external, face, GasNetworkTopology::compareBlockFaces);
+
+        int low = 0;
+        int high = external.size() - 1;
+        while (low <= high) {
+            int middle = low + (high - low >>> 1);
+            int order = GasNetworkTopology.compareBlockFaces(external.get(middle), face);
+            if (order < 0) {
+                low = middle + 1;
+                continue;
+            }
+            if (order > 0) {
+                high = middle - 1;
+                continue;
+            }
+
+            return middle;
+        }
+
+        return -(low + 1);
     }
 }

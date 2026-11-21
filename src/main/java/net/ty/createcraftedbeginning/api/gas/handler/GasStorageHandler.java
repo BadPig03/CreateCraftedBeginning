@@ -11,6 +11,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface GasStorageHandler extends GasHandler {
     GasPressureCompartment getPressureCompartment(int tank);
 
+    /**
+     * Whether this access uses the standard pipe contact for network transfers.
+     */
+    default boolean usesStandardPipePort() {
+        return false;
+    }
+
     default long getTankVolume(int tank) {
         return getPressureCompartment(tank).getVolume();
     }

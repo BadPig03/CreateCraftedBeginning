@@ -1,9 +1,10 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneLayout.Vertex;
-import net.ty.createcraftedbeginning.gas.network.solver.GasZoneRoute.Pass;
+import net.ty.createcraftedbeginning.gas.network.GasFlowResistance;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
@@ -16,13 +17,13 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 final class GasFixedManifold {
     static final int MAX_FACES = 8;
-    private final Map<Pair, Set<Vertex>> learning = new HashMap<>();
+    private final Map<Pair, Set<Object>> learning = new HashMap<>();
     private final Map<Pair, Long> seen = new HashMap<>();
-    private Map<Pair, Set<Vertex>> active = Map.of();
+    private Map<Pair, Set<Object>> active = Map.of();
     private final Map<Pair, Long> paid = new HashMap<>();
     private long tick = Long.MIN_VALUE;
 
-    long share(long now, GasNetworkPressureEndpoint from, GasNetworkPressureEndpoint to, GasZoneRoute route, long solo, long quantum) {
+    long share(long now, GasNetworkPressureEndpoint from, GasNetworkPressureEndpoint to, GasZoneRoute route, long solo, long quantum, boolean assisted) {
         if (tick != now) {
             learning.keySet().removeIf(key -> now - seen.get(key) > MAX_FACES * 2);
             seen.keySet().retainAll(learning.keySet());
@@ -35,9 +36,14 @@ final class GasFixedManifold {
             return solo;
         }
         seen.put(pair, now);
-        Set<Vertex> devices = learning.computeIfAbsent(pair, ignored -> new HashSet<>());
-        for (Pass pass : route.devices()) {
-            devices.add(pass.vertex());
+        Set<Object> devices = learning.computeIfAbsent(pair, ignored -> new HashSet<>());
+        for (int index = 0; index < route.deviceCount(); index++) {
+            Pass pass = route.device(index);
+            if (route.hasPumpAt(pass.position()) && !assisted) {
+                continue;
+            }
+
+            devices.add(pass.vertexKey());
         }
         if (!active.containsKey(pair) || active.size() < 2) {
             return solo;
@@ -46,7 +52,7 @@ final class GasFixedManifold {
         int outlets = 0;
         int inlets = 0;
         int sharingDevice = 0;
-        for (Entry<Pair, Set<Vertex>> entry : active.entrySet()) {
+        for (Entry<Pair, Set<Object>> entry : active.entrySet()) {
             Pair other = entry.getKey();
             if (other.source == pair.source) {
                 outlets++;
@@ -63,7 +69,7 @@ final class GasFixedManifold {
             limit = Math.min(limit, Math.max(1, solo / sharingDevice));
         }
         if (devices.isEmpty()) {
-            double resistance = outlets * GasZoneRoute.contact(from.flowResistance().drainResistanceUnits()) + inlets * GasZoneRoute.contact(to.flowResistance().fillResistanceUnits());
+            double resistance = outlets * GasFlowResistance.endpointResistance(from.flowResistance().drainResistanceUnits()) + inlets * GasFlowResistance.endpointResistance(to.flowResistance().fillResistanceUnits());
             double head = from.pressureState().pressurePa() - to.pressureState().pressurePa();
             limit = Math.min(limit, Math.max(1, (long) (head / resistance)));
         }
@@ -77,7 +83,7 @@ final class GasFixedManifold {
     private record Pair(Object source, Object target) {
         @Override
         public boolean equals(Object other) {
-            return other instanceof Pair pair && source == pair.source && target == pair.target;
+            return other instanceof Pair(Object source1, Object target1) && source == source1 && target == target1;
         }
 
         @Override

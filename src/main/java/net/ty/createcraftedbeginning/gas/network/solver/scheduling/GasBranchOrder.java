@@ -1,8 +1,9 @@
-package net.ty.createcraftedbeginning.gas.network.solver;
+package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
-import net.ty.createcraftedbeginning.gas.network.solver.GasTransferScheduler.Candidate;
+import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointSlot;
+import net.ty.createcraftedbeginning.gas.network.solver.scheduling.GasTransferScheduler.Candidate;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;

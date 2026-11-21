@@ -13,12 +13,10 @@ import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
 import net.ty.createcraftedbeginning.api.gas.handler.GasTransferSnapshot;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
-import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment.PredictedTransferLimits;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
-import net.ty.createcraftedbeginning.api.gas.pressure.GasPressurePrediction;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
+import net.ty.createcraftedbeginning.gas.network.GasFlowResistance;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection;
-import net.ty.createcraftedbeginning.gas.network.math.GasPressureTransferMath;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferExecutor;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @ParametersAreNonnullByDefault
@@ -39,47 +36,6 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
 
     public GasNetworkPressureEndpoint(TransferAccess access, PressureState pressureState, TransferLimits transferLimits, FlowResistance flowResistance, Recovery recovery) {
         this(access, pressureState, transferLimits, flowResistance, recovery, predictionAccesses(access));
-    }
-
-    public GasNetworkPressureEndpoint(TransferAccess access, PressureState pressureState, TransferLimits transferLimits, Recovery recovery) {
-        this(access, pressureState, transferLimits, FlowResistance.NONE, recovery);
-    }
-
-    public static @Nullable List<GasNetworkPressureEndpoint> predictAll(GasStack gas, List<GasNetworkPressureEndpoint> endpoints, Map<GasNetworkPressureEndpoint, Long> deltas) {
-        Map<Object, GasStack> contents = new IdentityHashMap<>();
-        Set<Object> affectedGroups = Collections.newSetFromMap(new IdentityHashMap<>());
-        for (GasNetworkPressureEndpoint endpoint : endpoints) {
-            long delta = endpoint.pressureState.fixedPressure() ? 0 : deltas.getOrDefault(endpoint, 0L);
-            long amount = Mth.clamp(BoundedMath.saturatedAdd(endpoint.pressureState.currentAmount(), delta), 0, endpoint.pressureState.maxAmount());
-            for (PredictionAccess access : endpoint.predictionAccesses) {
-                GasPressureCompartment compartment = access.compartment();
-                GasStack projectedGas = delta == 0 ? compartment.getGasStack().copyWithAmount(amount) : gas.copyWithAmount(amount);
-                contents.put(compartment.getCompartmentIdentity(), projectedGas);
-                if (delta == 0) {
-                    continue;
-                }
-
-                affectedGroups.add(compartment.getPredictionGroup());
-            }
-        }
-
-        GasPressurePrediction prediction = new GasPressurePrediction(contents);
-        List<GasNetworkPressureEndpoint> projected = new ArrayList<>(endpoints.size());
-        for (GasNetworkPressureEndpoint endpoint : endpoints) {
-            long delta = deltas.getOrDefault(endpoint, 0L);
-            boolean affected = delta != 0;
-            for (PredictionAccess access : endpoint.predictionAccesses) {
-                affected |= affectedGroups.contains(access.compartment().getPredictionGroup());
-            }
-
-            GasNetworkPressureEndpoint hypothetical = affected ? endpoint.withAmountDelta(gas, delta, prediction) : endpoint;
-            if (hypothetical == null) {
-                return null;
-            }
-
-            projected.add(hypothetical);
-        }
-        return List.copyOf(projected);
     }
 
     private static List<PredictionAccess> predictionAccesses(TransferAccess access) {
@@ -105,33 +61,6 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
         }
 
         return this;
-    }
-
-    public boolean canQuantizedDrain(GasStack gas) {
-        return maxQuantizedDrainAmount(gas, 1) >= 1;
-    }
-
-    public boolean canQuantizedFill(GasStack gas, double manifoldPressurePa) {
-        return maxQuantizedFillAmount(gas, 1, manifoldPressurePa) >= 1;
-    }
-
-    public long quantizedPressureStepAmount() {
-        if (pressureState.fixedPressure()) {
-            return 1;
-        }
-
-        long volume = pressureState.volume();
-        if (volume <= 0) {
-            return 1;
-        }
-
-        long whole = volume / GasPressure.REFERENCE_PRESSURE_PA;
-        long remainder = volume % GasPressure.REFERENCE_PRESSURE_PA;
-        if (remainder == 0) {
-            return Math.max(1, whole);
-        }
-
-        return Math.max(1, BoundedMath.saturatedAdd(whole, 1));
     }
 
     public long maxQuantizedDrainAmount(GasStack gas, long requestedAmount) {
@@ -167,53 +96,6 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
 
         long sourcePressurePa = GasPressure.round(GasPressureLimits.clampToHardLimit(manifoldPressurePa));
         return GasTransferExecutor.simulateFillAmount(handler, gas, capped, sourcePressurePa);
-    }
-
-    public @Nullable GasNetworkPressureEndpoint withAmountDelta(GasStack gas, long delta) {
-        return withAmountDelta(gas, delta, null);
-    }
-
-    public long maxSafeDrainAmount(GasStack gas, double manifoldPressurePa, long flowBudget) {
-        long capped = Mth.clamp(flowBudget, 0, transferLimits.drainLimit());
-        if (capped <= 0) {
-            return 0;
-        }
-
-        GasHandler handler = access.drainHandler();
-        if (handler == null) {
-            return 0;
-        }
-
-        if (pressureState.fixedPressure()) {
-            return capped;
-        }
-
-        double clampedManifoldPressurePa = GasPressureLimits.clampToHardLimit(manifoldPressurePa);
-        long pressureLimitedAmount = GasPressureTransferMath.maxDrainAmount(pressureState.currentAmount(), pressureState.volume(), pressureState.pressurePa(), clampedManifoldPressurePa);
-        long simulatedAmount = GasTransferExecutor.simulateDrainAmount(handler, gas, capped);
-        return Math.min(capped, Math.min(pressureLimitedAmount, simulatedAmount));
-    }
-
-    public long maxSafeFillAmount(GasStack gas, double manifoldPressurePa, long flowBudget) {
-        long capped = Mth.clamp(flowBudget, 0, transferLimits.fillLimit());
-        if (capped <= 0) {
-            return 0;
-        }
-
-        GasHandler handler = access.fillHandler();
-        if (handler == null) {
-            return 0;
-        }
-
-        double clampedManifoldPressurePa = GasPressureLimits.clampToHardLimit(manifoldPressurePa);
-        long sourcePressurePa = GasPressure.round(clampedManifoldPressurePa);
-        long simulatedAmount = GasTransferExecutor.simulateFillAmount(handler, gas, capped, sourcePressurePa);
-        if (pressureState.fixedPressure()) {
-            return Math.min(capped, simulatedAmount);
-        }
-
-        long pressureLimitedAmount = GasPressureTransferMath.maxFillAmount(pressureState.currentAmount(), pressureState.maxAmount(), pressureState.volume(), pressureState.pressurePa(), clampedManifoldPressurePa, pressureState.maxPressurePa());
-        return Math.min(capped, Math.min(pressureLimitedAmount, simulatedAmount));
     }
 
     public long restoreRemainder(Level level, GasStack remainder) {
@@ -327,73 +209,6 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
         return true;
     }
 
-    public @Nullable GasNetworkPressureEndpoint withAmountDelta(GasStack gas, long delta, @Nullable GasPressurePrediction prediction) {
-        if (delta == 0 && prediction == null || pressureState.fixedPressure()) {
-            return this;
-        }
-
-        long updatedAmount;
-        if (delta > 0) {
-            updatedAmount = Math.min(pressureState.maxAmount(), BoundedMath.saturatedAdd(pressureState.currentAmount(), delta));
-        }
-        else {
-            updatedAmount = Math.max(0, BoundedMath.saturatedAdd(pressureState.currentAmount(), delta));
-        }
-        double updatedPressure = GasPressureLimits.clampToHardLimit(GasPressure.pressureExact(updatedAmount, pressureState.volume()));
-        if (predictionAccesses.isEmpty()) {
-            return null;
-        }
-
-        List<BlockFace> drainFaces = new ArrayList<>();
-        List<BlockFace> fillFaces = new ArrayList<>();
-        GasHandler drainHandler = null;
-        GasHandler fillHandler = null;
-        long updatedDrainLimit = 0;
-        long updatedFillLimit = 0;
-        for (PredictionAccess predictionAccess : predictionAccesses) {
-            GasPressureCompartment compartment = predictionAccess.compartment();
-            PredictedTransferLimits limits = prediction == null ? compartment.predictTransferLimits(gas, updatedAmount) : compartment.predictTransferLimits(gas, prediction);
-            if (limits == null) {
-                return null;
-            }
-
-            long drain = Math.max(0, Math.min(limits.drainLimit(), updatedAmount));
-            long fill = Math.max(0, Math.min(limits.fillLimit(), pressureState.maxAmount() - updatedAmount));
-            if (drain > 0) {
-                for (BlockFace face : predictionAccess.faces()) {
-                    if (drainFaces.contains(face)) {
-                        continue;
-                    }
-
-                    drainFaces.add(face);
-                }
-            }
-            if (fill > 0) {
-                for (BlockFace face : predictionAccess.faces()) {
-                    if (fillFaces.contains(face)) {
-                        continue;
-                    }
-
-                    fillFaces.add(face);
-                }
-            }
-            if (drain > updatedDrainLimit) {
-                updatedDrainLimit = drain;
-                drainHandler = compartment;
-            }
-            if (!(fill > updatedFillLimit)) {
-                continue;
-            }
-
-            updatedFillLimit = fill;
-            fillHandler = compartment;
-        }
-        PressureState updatedPressureState = new PressureState(updatedPressure, false, updatedAmount, pressureState.volume(), pressureState.maxPressurePa(), pressureState.maxAmount());
-        TransferLimits updatedTransferLimits = new TransferLimits(updatedDrainLimit, updatedFillLimit);
-        TransferAccess updatedAccess = new TransferAccess(drainHandler, fillHandler, drainFaces, fillFaces);
-        return new GasNetworkPressureEndpoint(updatedAccess, updatedPressureState, updatedTransferLimits, flowResistance, recovery, predictionAccesses);
-    }
-
     public record TransferAccess(@Nullable GasHandler drainHandler, @Nullable GasHandler fillHandler, List<BlockFace> drainFaces, List<BlockFace> fillFaces) {
         public TransferAccess {
             drainFaces = List.copyOf(drainFaces);
@@ -412,7 +227,10 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
     }
 
     public record FlowResistance(long drainResistanceUnits, long fillResistanceUnits) {
+        private static final long STANDARD_PORT_EXTRA_UNITS = GasFlowResistance.UNITS_PER_STANDARD_SEGMENT / 2 - GasFlowResistance.BASE_ENDPOINT_RESISTANCE_UNITS;
+
         public static final FlowResistance NONE = new FlowResistance(0, 0);
+        static final FlowResistance STANDARD_PIPE_PORT = new FlowResistance(STANDARD_PORT_EXTRA_UNITS, STANDARD_PORT_EXTRA_UNITS);
 
         public FlowResistance {
             drainResistanceUnits = Math.max(0, drainResistanceUnits);
