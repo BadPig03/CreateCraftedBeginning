@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +30,7 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class GasZoneLayout {
+    private static final int MAX_MESHES = 16;
     private final Map<BlockPos, Vertex> vertices = new HashMap<>();
     private final Map<BlockPos, Integer> ordinary = new HashMap<>();
     private final Map<BlockFace, Integer> ports = new HashMap<>();
@@ -41,6 +43,8 @@ public final class GasZoneLayout {
     private final @Nullable GasRouteIndex routing;
     private @Nullable Construction construction;
     private int lastBuildWork;
+    private final LinkedHashMap<MeshKey, GasMeshPlan> meshes = new LinkedHashMap<>(MAX_MESHES, 0.75f, true);
+    private final ArrayDeque<MeshWork> pendingMeshes = new ArrayDeque<>();
 
     public GasZoneLayout(GasNetworkState state, Set<BlockPos> pipePositions, Map<BlockPos, Long> limits) {
         routing = new GasRouteIndex(state, limits, vertices, interiors);
@@ -67,6 +71,63 @@ public final class GasZoneLayout {
             construction = null;
         }
         return lastBuildWork;
+    }
+
+    @Nullable
+    public GasMeshPlan mesh(BlockFace inlet, BlockFace outlet, GasZoneRoute route) {
+        MeshKey key = new MeshKey(inlet, outlet, route.devicePorts);
+        GasMeshPlan mesh = meshes.get(key);
+        if (mesh == null) {
+            if (pendingMeshes.size() == MAX_MESHES) {
+                return null;
+            }
+            if (meshes.size() == MAX_MESHES) {
+                Iterator<GasMeshPlan> cached = meshes.values().iterator();
+                while (cached.hasNext()) {
+                    if (cached.next().complete()) {
+                        cached.remove();
+                        break;
+                    }
+                }
+            }
+            MeshWork search;
+            if (route.deviceCount() == 0) {
+                Vertex start = route.passes().getFirst().vertex;
+                Vertex target = route.passes().getLast().vertex;
+                if (start == target) {
+                    return null;
+                }
+                search = new GasMeshSearch(this, inlet, outlet, start, target);
+            }
+            else {
+                if (!complete()) {
+                    return null;
+                }
+                search = new GasMeshSections(this, route);
+            }
+            meshes.put(key, search.result());
+            pendingMeshes.addLast(search);
+            return null;
+        }
+        return mesh.complete() && mesh.size() > 1 ? mesh : null;
+    }
+
+    @Nullable
+    public GasMeshPlan completedMesh(BlockFace inlet, BlockFace outlet) {
+        GasMeshPlan mesh = meshes.get(new MeshKey(inlet, outlet, List.of()));
+        return mesh != null && mesh.complete() && mesh.size() > 1 ? mesh : null;
+    }
+
+    public int advanceMeshes(Level level, int budget) {
+        int work = 0;
+        while (work < budget && !pendingMeshes.isEmpty()) {
+            MeshWork search = pendingMeshes.removeFirst();
+            if (!search.step(level)) {
+                pendingMeshes.addLast(search);
+            }
+            work++;
+        }
+        return work;
     }
 
     public int lastBuildWork() {
@@ -294,6 +355,14 @@ public final class GasZoneLayout {
             internal.add(new BlockFace(device.pos, side));
         }
     }
+
+    interface MeshWork {
+        boolean step(Level level);
+
+        GasMeshPlan result();
+    }
+
+    private record MeshKey(BlockFace inlet, BlockFace outlet, List<GasZoneRoute.DevicePort> devices) {}
 
     static final class Vertex {
         final BlockPos pos;

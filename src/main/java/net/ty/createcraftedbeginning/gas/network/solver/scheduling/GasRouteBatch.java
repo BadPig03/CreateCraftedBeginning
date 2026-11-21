@@ -4,6 +4,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshPlan.Allocation;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteSearch.Path;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute;
@@ -93,9 +94,25 @@ final class GasRouteBatch implements Usage {
         return Math.min(remaining, Math.min(source - drained(from), target - filled(to)));
     }
 
-    boolean compatible(Receipt receipt) {
-        GasStack gas = receipt.gas();
-        for (Pass pass : receipt.requireZoneRoute().passes()) {
+    boolean compatible(Receipt receipt, @Nullable Allocation split) {
+        if (occupants.isEmpty()) {
+            return true;
+        }
+
+        if (split == null) {
+            return compatible(receipt.gas(), receipt.requireZoneRoute());
+        }
+
+        for (int index = 0; index < split.plan().size(); index++) {
+            if (split.part(index) > 0 && !compatible(receipt.gas(), split.plan().route(index))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean compatible(GasStack gas, GasZoneRoute route) {
+        for (Pass pass : route.passes()) {
             Object vertex = pass.vertexKey();
             GasStack prior = occupants.get(vertex);
             if (prior == null || GasStack.isSameGasSameComponents(prior, gas)) {
@@ -109,9 +126,19 @@ final class GasRouteBatch implements Usage {
         return true;
     }
 
-    void record(GasNetworkPressureEndpoint from, GasNetworkPressureEndpoint to, Receipt receipt, List<Path> parallel, int selectedBranch) {
+    void record(GasNetworkPressureEndpoint from, GasNetworkPressureEndpoint to, Receipt receipt, List<Path> parallel, int selectedBranch, @Nullable Allocation split) {
         long amount = receipt.gas().getAmount();
-        if (parallel.size() < 2 || amount == 1) {
+        if (split != null) {
+            Allocation delivery = split.limitTo(amount);
+            for (int index = 0; index < delivery.plan().size(); index++) {
+                long part = delivery.part(index);
+                if (part > 0) {
+                    Path branch = delivery.plan().path(index);
+                    recordPath(new Receipt(receipt.source(), receipt.target(), receipt.gas().copyWithAmount(part), branch, receipt.assisted()));
+                }
+            }
+        }
+        else if (parallel.size() < 2 || amount == 1) {
             recordPath(receipt);
         }
         else {

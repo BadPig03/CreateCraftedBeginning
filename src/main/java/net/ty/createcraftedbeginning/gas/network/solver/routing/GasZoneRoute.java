@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,35 +37,25 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 public final class GasZoneRoute {
     private final List<Pass> passes;
-    private final List<Pass> devices = new ArrayList<>();
-    private final Set<Link> corridors = new HashSet<>();
-    private final Map<BlockPos, Pass> stops = new HashMap<>();
+    private final List<Pass> devices;
+    private final Set<Link> corridors;
+    private final Map<BlockPos, Pass> stops;
     private final Set<BlockPos> pumps;
     private final long capacity;
+    final List<DevicePort> devicePorts;
 
     GasZoneRoute(Level level, List<Pass> passes, long capacity) {
-        this.capacity = capacity;
-        this.passes = List.copyOf(passes);
-        Set<BlockPos> pumpPositions = null;
-        for (Pass pass : passes) {
-            stops.put(pass.vertex.pos, pass);
-            if (pass.vertex.device) {
-                devices.add(pass);
-                GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pass.vertex.pos);
-                if (behaviour != null && behaviour.passesNaturalForwardFlow()) {
-                    if (pumpPositions == null) {
-                        pumpPositions = new HashSet<>();
-                    }
-                    pumpPositions.add(pass.vertex.pos);
-                }
-            }
-            if (pass.next == null) {
-                continue;
-            }
+        this(new Builder(level, passes), capacity);
+    }
 
-            corridors.add(pass.next);
-        }
-        pumps = pumpPositions == null ? Set.of() : Set.copyOf(pumpPositions);
+    GasZoneRoute(Builder builder, long capacity) {
+        this.capacity = capacity;
+        passes = Collections.unmodifiableList(builder.passes);
+        devices = builder.devices;
+        devicePorts = devices.isEmpty() ? List.of() : devices.stream().map(pass -> new DevicePort(pass.position(), pass.entry, pass.exit)).toList();
+        corridors = builder.corridors;
+        stops = builder.stops;
+        pumps = builder.pumps == null ? Set.of() : builder.pumps;
     }
 
     private static double downstream(List<GasTransportEdgeProperties> edges, double pressure, long amount, double sourceResistance, boolean losses, long @Nullable [] priorFlow, long alreadyDrained, int sourceCount, int @Nullable [] counts) {
@@ -229,6 +220,14 @@ public final class GasZoneRoute {
     }
 
     private Quote quote(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum, @Nullable Usage usage, @Nullable Sharing sharing, boolean assist) {
+        return quote(level, gas, source, target, maximum, usage, sharing, assist, false);
+    }
+
+    public Quote quotePassiveMesh(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum, Usage usage, @Nullable Sharing sharing) {
+        return quote(level, gas, source, target, maximum, usage, sharing, false, true);
+    }
+
+    private Quote quote(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum, @Nullable Usage usage, @Nullable Sharing sharing, boolean assist, boolean mesh) {
         if (assist && pumps.isEmpty()) {
             return Quote.CLOSED;
         }
@@ -238,6 +237,8 @@ public final class GasZoneRoute {
         if (usage != null) {
             alreadyDrained = usage.drained(source);
             alreadyFilled = usage.filled(target);
+        }
+        if (usage != null && !mesh) {
             for (Pass pass : passes) {
                 long room = pass.vertex.capacity - usage.used(pass.vertex);
                 maximum = Math.min(maximum, sharing == null ? room : Math.ceilDiv(room, sharing.count(pass.vertex)));
@@ -319,7 +320,7 @@ public final class GasZoneRoute {
             return Quote.CLOSED;
         }
 
-        long limit = Math.min(capacity, Math.min(maximum, Math.min(source.transferLimits().drainLimit(), target.transferLimits().fillLimit())));
+        long limit = Math.min(mesh ? maximum : Math.min(capacity, maximum), Math.min(source.transferLimits().drainLimit(), target.transferLimits().fillLimit()));
         if (!driven) {
             limit = GasPassiveQuantum.limit(supply, demand, limit);
         }
@@ -405,6 +406,48 @@ public final class GasZoneRoute {
         return true;
     }
 
+    record DevicePort(BlockPos pos, Direction entry, Direction exit) {}
+
+    static final class Builder {
+        private final Level level;
+        private final List<Pass> passes;
+        private final List<Pass> devices = new ArrayList<>();
+        private final Map<BlockPos, Pass> stops = new HashMap<>();
+        private final Set<Link> corridors = new HashSet<>();
+        private @Nullable Set<BlockPos> pumps;
+
+        Builder(Level level) {
+            this.level = level;
+            passes = new ArrayList<>();
+        }
+
+        private Builder(Level level, List<Pass> passes) {
+            this.level = level;
+            this.passes = new ArrayList<>(passes.size());
+            for (Pass pass : passes) {
+                add(pass);
+            }
+        }
+
+        void add(Pass pass) {
+            passes.add(pass);
+            stops.put(pass.vertex.pos, pass);
+            if (pass.vertex.device) {
+                devices.add(pass);
+                GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, pass.vertex.pos);
+                if (behaviour != null && behaviour.passesNaturalForwardFlow()) {
+                    if (pumps == null) {
+                        pumps = new HashSet<>();
+                    }
+                    pumps.add(pass.vertex.pos);
+                }
+            }
+            if (pass.next != null) {
+                corridors.add(pass.next);
+            }
+        }
+    }
+
     public record ParallelSpan(BlockPos split, BlockPos join) {}
 
     public enum PumpUse {
@@ -425,10 +468,10 @@ public final class GasZoneRoute {
     }
 
     public static final class Pass {
-        private final Vertex vertex;
-        private final Direction entry;
-        private final Direction exit;
-        private final @Nullable Link next;
+        final Vertex vertex;
+        final Direction entry;
+        final Direction exit;
+        final @Nullable Link next;
 
         Pass(Vertex vertex, Direction entry, Direction exit, @Nullable Link next) {
             this.vertex = vertex;
@@ -439,6 +482,14 @@ public final class GasZoneRoute {
 
         public BlockPos position() {
             return vertex.pos;
+        }
+
+        long vertexCapacity() {
+            return vertex.capacity;
+        }
+
+        long corridorCapacity() {
+            return next == null ? Long.MAX_VALUE : next.capacity;
         }
 
         public Object vertexKey() {

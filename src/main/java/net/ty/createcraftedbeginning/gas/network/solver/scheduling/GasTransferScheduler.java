@@ -20,6 +20,8 @@ import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointSlot
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasNetworkPressureEndpoint;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasZonePorts;
 import net.ty.createcraftedbeginning.gas.network.solver.pressure.GasZonePressure;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshPlan;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshPlan.Allocation;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasPassiveQuantum;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteSearch;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteSearch.Path;
@@ -331,7 +333,9 @@ public final class GasTransferScheduler {
             pressureModel.tick(level, pressureBudget - build);
             pressureWork = pressureModel.lastWork();
         }
-        int totalWork = workLimit - build - pressureWork;
+        int remainingWork = workLimit - build - pressureWork;
+        int meshWork = layout.advanceMeshes(level, remainingWork / PRESSURE_DIVISOR);
+        int totalWork = remainingWork - meshWork;
         int pumpWork = assistanceWork(totalWork);
         int availableWork = totalWork - pumpWork;
         GasBranchRound round = null;
@@ -453,7 +457,7 @@ public final class GasTransferScheduler {
         else if (status == Status.QUEUED) {
             status = Status.CONTINUING;
         }
-        last = new Tick(status, work, expanded, continuation, grants.isEmpty() ? null : grants.getFirst());
+        last = new Tick(status, work + meshWork, expanded, continuation, grants.isEmpty() ? null : grants.getFirst());
     }
 
     private int dispatchRound(Level level, GasRouteBatch batch, GasBranchRound offers, int work) {
@@ -530,7 +534,11 @@ public final class GasTransferScheduler {
                     boolean hasDevices = zones != null && (zones.complete() ? zones.deviceCount() > 0 : !topology.state().devicePositions().isEmpty());
                     if (hasDevices || GasPassiveQuantum.limit(drain.pressureState(), fill.pressureState(), quantumLimit) > 0) {
                         sawGradient = true;
-                        if (zones == null && hot != null && hot.source.equals(source) && hot.target.equals(target) && GasStack.isSameGasSameComponents(hot.gas, gas)) {
+                        GasMeshPlan mesh = cyclic && !hasDevices ? zones.completedMesh(face(source), face(target)) : null;
+                        if (mesh != null) {
+                            ready = new Candidate(source, target, gas, mesh.path(0), null, 0);
+                        }
+                        else if (zones == null && hot != null && hot.source.equals(source) && hot.target.equals(target) && GasStack.isSameGasSameComponents(hot.gas, gas)) {
                             ready = hot;
                         }
                         else {
@@ -702,8 +710,20 @@ public final class GasTransferScheduler {
             long cap;
             long assistRoom = 0;
             boolean assisted = false;
+            GasMeshPlan mesh = batch != null && route != null && (!servingAssistance || route.deviceCount() > 0) && topology.state().hasCycle() ? batch.layout().mesh(face(candidate.source), face(candidate.target), route) : null;
+            Allocation split = null;
             if (route != null) {
-                Quote quote = route.quote(level, gas, drain, fill, maximum, batch, sharing, pumpUse);
+                Quote quote;
+                if (mesh == null || batch == null) {
+                    quote = route.quote(level, gas, drain, fill, maximum, batch, sharing, pumpUse);
+                }
+                else {
+                    quote = route.deviceCount() == 0 ? route.quotePassiveMesh(level, gas, drain, fill, maximum, batch, sharing) : route.quote(level, gas, drain, fill, maximum, batch, sharing, pumpUse);
+                    split = mesh.allocate(quote.amount(), batch, sharing, level.getGameTime());
+                    if (split.amount() < quote.amount()) {
+                        quote = route.deviceCount() == 0 ? route.quotePassiveMesh(level, gas, drain, fill, split.amount(), batch, sharing) : route.quote(level, gas, drain, fill, split.amount(), batch, sharing, pumpUse);
+                    }
+                }
                 cap = quote.amount();
                 pressure = quote.pressure();
                 assistRoom = quote.assistRoom();
@@ -736,7 +756,8 @@ public final class GasTransferScheduler {
                 }
 
                 Receipt quote = new Receipt(face(candidate.source), face(candidate.target), gas.copyWithAmount(accepted), candidate.path, assisted);
-                if (batch != null && !batch.compatible(quote)) {
+                Allocation distribution = split == null ? null : split.limitTo(accepted);
+                if (batch != null && !batch.compatible(quote, distribution)) {
                     return new Settlement(Status.GAS_COLLISION, null);
                 }
 
@@ -746,7 +767,12 @@ public final class GasTransferScheduler {
                     amount = new GasFlowIntegration().executeQuantum(level, gas, drain, fill, GasPressure.round(pressure), accepted);
                 }
                 else {
-                    amount = batch.integration().executeQuantum(level, gas, drain, fill, GasPressure.round(pressure), accepted, received -> recordDelivery(level, batch, candidate, drain, fill, quote.withAmount(received)));
+                    amount = batch.integration().executeQuantum(level, gas, drain, fill, GasPressure.round(pressure), accepted, received -> {
+                        Receipt delivery = quote.withAmount(received);
+                        GasParallelRoutes parallel = candidate.parallel;
+                        batch.record(drain, fill, delivery, parallel == null ? List.of() : parallel.paths(), candidate.parallelBranch, distribution);
+                        recordDelivery(level, batch, candidate, drain, fill, delivery);
+                    });
                 }
                 if (amount > 0) {
                     if (batch == null && route != null) {
@@ -785,8 +811,6 @@ public final class GasTransferScheduler {
     }
 
     private void recordDelivery(Level level, GasRouteBatch batch, Candidate candidate, GasNetworkPressureEndpoint drain, GasNetworkPressureEndpoint fill, Receipt receipt) {
-        GasParallelRoutes parallel = candidate.parallel;
-        batch.record(drain, fill, receipt, parallel == null ? List.of() : parallel.paths(), candidate.parallelBranch);
         if (receipt.assisted && servingAssistance && workLimit > 1 && current()) {
             pendingAssistance.offer(fill.transferIdentity(), candidate);
         }
