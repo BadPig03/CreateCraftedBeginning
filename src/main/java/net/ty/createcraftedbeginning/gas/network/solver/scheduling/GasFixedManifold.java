@@ -35,6 +35,7 @@ final class GasFixedManifold {
         if (!seen.containsKey(pair) && seen.size() >= MAX_FACES * MAX_FACES) {
             return solo;
         }
+
         seen.put(pair, now);
         Set<Object> devices = learning.computeIfAbsent(pair, ignored -> new HashSet<>());
         for (int index = 0; index < route.deviceCount(); index++) {
@@ -60,9 +61,11 @@ final class GasFixedManifold {
             if (other.target == pair.target) {
                 inlets++;
             }
-            if (!devices.isEmpty() && entry.getValue().stream().anyMatch(devices::contains)) {
-                sharingDevice++;
+            if (devices.isEmpty() || entry.getValue().stream().noneMatch(devices::contains)) {
+                continue;
             }
+
+            sharingDevice++;
         }
         long limit = Math.max(1, quantum / active.size());
         if (sharingDevice > 1) {

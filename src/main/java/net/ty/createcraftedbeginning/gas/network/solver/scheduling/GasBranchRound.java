@@ -116,6 +116,7 @@ final class GasBranchRound implements Sharing {
                 if (work >= budget || batch.available() <= 0 || batch.collision() != null) {
                     return work;
                 }
+
                 if (supply.remaining <= 0) {
                     continue;
                 }
@@ -139,6 +140,7 @@ final class GasBranchRound implements Sharing {
                     if (work >= budget || batch.available() <= 0 || batch.collision() != null) {
                         return work;
                     }
+
                     if (offer.grant <= 0) {
                         continue;
                     }
@@ -277,9 +279,11 @@ final class GasBranchRound implements Sharing {
             if (supply.refillAttempts != other.supply.refillAttempts) {
                 return supply.refillAttempts < other.supply.refillAttempts;
             }
+
             if (supply.remaining != other.supply.remaining) {
                 return supply.remaining > other.supply.remaining;
             }
+
             if (outlet.received() != other.outlet.received()) {
                 return outlet.received() < other.outlet.received();
             }

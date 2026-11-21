@@ -10,6 +10,7 @@ import net.ty.createcraftedbeginning.api.gas.handler.GasTransferSnapshot;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.foundation.BoundedMath;
+import net.ty.createcraftedbeginning.gas.transfer.GasTransferRollback;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -107,7 +108,7 @@ public final class GasTransferExecutor {
                     remaining -= Mth.clamp(restored, 0L, amount);
                 }
                 catch (RuntimeException | Error failure) {
-                    if (restoring && !restoreSnapshot(snapshot, failure)) {
+                    if (restoring && !GasTransferRollback.restore(snapshot, failure)) {
                         remaining -= amount;
                         uncertainRecovery += amount;
                         failure.addSuppressed(new IllegalStateException("Unconfirmed gas restoration of up to " + amount + " GU by " + handler.getClass().getName() + "; this amount must not be offered to another source."));
@@ -143,25 +144,6 @@ public final class GasTransferExecutor {
             }
             throw failure;
         }
-    }
-
-    private static boolean restoreSnapshot(@Nullable GasTransferSnapshot snapshot, Throwable failure) {
-        if (snapshot == null) {
-            return false;
-        }
-
-        boolean restored = false;
-        try {
-            snapshot.restore();
-            restored = true;
-            snapshot.afterRestore();
-        }
-        catch (RuntimeException | Error recoveryFailure) {
-            if (recoveryFailure != failure) {
-                failure.addSuppressed(recoveryFailure);
-            }
-        }
-        return restored;
     }
 
     public record PlannedDrain(GasHandler handler, long amount) {}
@@ -283,9 +265,10 @@ public final class GasTransferExecutor {
                 return;
             }
 
-            if (restoreSnapshot(snapshot, failure)) {
+            if (GasTransferRollback.restore(snapshot, failure)) {
                 return;
             }
+
             if (!extracting) {
                 uncertainFill = attemptedAmount;
             }

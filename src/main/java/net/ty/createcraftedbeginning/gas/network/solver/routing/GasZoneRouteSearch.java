@@ -89,11 +89,13 @@ final class GasZoneRouteSearch implements GasRouteSearch {
 
             return new Path(frame.vertex.pos, frame.capacity, null, route);
         }
+
         if (frame.cursor == frame.links.size()) {
             visited.remove(frame.vertex);
             stack.removeLast();
             return null;
         }
+
         Link link = frame.links.get(frame.cursor++);
         if (link.exit != frame.entry && !visited.contains(link.end) && allowsStep(frame, link.exit)) {
             visited.add(link.end);
@@ -133,9 +135,14 @@ final class GasZoneRouteSearch implements GasRouteSearch {
         if (!frame.vertex.device) {
             return true;
         }
+
         GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, frame.vertex.pos);
+        if (behaviour == null) {
+            return false;
+        }
+
         BlockState state = level.getBlockState(frame.vertex.pos);
-        return behaviour != null && behaviour.acceptsInboundGas(state, frame.entry, gas) && behaviour.allowsOutboundGas(state, exit, gas) && behaviour.getTransportEdgeProperties(state, frame.entry, exit, gas).flowRateLimit() > 0;
+        return behaviour.acceptsInboundGas(state, frame.entry, gas) && behaviour.allowsOutboundGas(state, exit, gas) && behaviour.getTransportEdgeProperties(state, frame.entry, exit, gas).flowRateLimit() > 0;
     }
 
     private static final class Frame {

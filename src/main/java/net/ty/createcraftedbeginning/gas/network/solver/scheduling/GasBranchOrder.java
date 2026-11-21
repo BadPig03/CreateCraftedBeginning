@@ -80,11 +80,13 @@ final class GasBranchOrder {
         if (outlet == null) {
             return;
         }
+
         Candidate route = outlet.routes.get(candidate.source());
         if (!cannotFill) {
             if (route != candidate) {
                 return;
             }
+
             outlet.routes.remove(candidate.source());
             if (!outlet.routes.isEmpty()) {
                 return;

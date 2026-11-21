@@ -12,24 +12,22 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
 import net.ty.createcraftedbeginning.api.gas.handler.GasHandler;
+import net.ty.createcraftedbeginning.api.gas.handler.GasTransferSnapshot;
 import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureCompartment;
 import net.ty.createcraftedbeginning.foundation.NbtValues;
 import net.ty.createcraftedbeginning.gas.network.endpoint.AtmosphericGasEndpoint;
 import net.ty.createcraftedbeginning.gas.network.endpoint.ExternalGasEndpoint;
 import net.ty.createcraftedbeginning.gas.network.endpoint.GasConnectionEndpoint;
-import org.jetbrains.annotations.ApiStatus.Internal;
+import net.ty.createcraftedbeginning.gas.transfer.GasTransferRollback;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Internal
-public final class GasPendingTransfer {
-    @Internal
-    public static final String COMPOUND_KEY_PENDING_TRANSFER = "PendingTransfer";
-    @Internal
-    public static final String COMPOUND_KEY_PENDING_TRANSFER_ORIGIN = "PendingTransferOrigin";
+final class GasPendingTransfer {
+    private static final String COMPOUND_KEY_PENDING_TRANSFER = "PendingTransfer";
+    private static final String COMPOUND_KEY_PENDING_TRANSFER_ORIGIN = "PendingTransferOrigin";
     private static final int RETIRED_RECOVERY_INITIAL_DELAY_TICKS = 20;
     private static final int RETIRED_RECOVERY_MAX_DELAY_TICKS = 640;
 
@@ -91,7 +89,7 @@ public final class GasPendingTransfer {
             return true;
         }
 
-        if (endpoint == null || !origin.accepts(endpoint)) {
+        if (endpoint == null || !origin.accepts(endpoint) || !level.isLoaded(ownerPos)) {
             return false;
         }
 
@@ -111,8 +109,35 @@ public final class GasPendingTransfer {
             return false;
         }
 
-        long returnedAmount = endpointHandler instanceof GasPressureCompartment compartment && compartment.supportsExactDrainRecovery() ? compartment.restoreDrainedGas(transfer.copy(), GasAction.EXECUTE) : endpointHandler.fill(transfer.copy(), GasAction.EXECUTE);
-        returnedAmount = Mth.clamp(returnedAmount, 0L, transfer.getAmount());
+        GasPressureCompartment exactRecovery = endpointHandler instanceof GasPressureCompartment compartment && compartment.supportsExactDrainRecovery() ? compartment : null;
+        GasStack offered = transfer.copy();
+        long offeredAmount = offered.getAmount();
+        GasTransferSnapshot snapshot = endpointHandler.captureTransferSnapshot();
+        long returnedAmount;
+        try {
+            returnedAmount = exactRecovery == null ? endpointHandler.fill(offered, GasAction.EXECUTE) : exactRecovery.restoreDrainedGas(offered, GasAction.EXECUTE);
+        }
+        catch (RuntimeException | Error failure) {
+            if (GasTransferRollback.restore(snapshot, failure)) {
+                throw failure;
+            }
+
+            GasStack remaining = transfer.copy();
+            remaining.shrink(offeredAmount);
+            setTransfer(remaining, endpoint, previousEndpoint);
+            failure.addSuppressed(new IllegalStateException("Unconfirmed pending gas restoration of up to " + offeredAmount + " GU by " + endpointHandler.getClass().getName() + " at pipe " + ownerPos + "; this amount will not be retried or released."));
+            try {
+                blockEntity.setChanged();
+            }
+            catch (RuntimeException | Error notificationFailure) {
+                if (notificationFailure != failure) {
+                    failure.addSuppressed(notificationFailure);
+                }
+            }
+            throw failure;
+        }
+
+        returnedAmount = Mth.clamp(returnedAmount, 0L, offeredAmount);
         if (returnedAmount <= 0) {
             return false;
         }

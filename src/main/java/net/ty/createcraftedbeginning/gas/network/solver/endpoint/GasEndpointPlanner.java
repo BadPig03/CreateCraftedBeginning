@@ -57,21 +57,11 @@ public final class GasEndpointPlanner {
         return prepare(GasEndpointDiscovery.discover(level, topology));
     }
 
-    public static Port readInternalPort(Level level, BlockFace face) {
-        GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, face.getPos());
-        GasPressureBoundary boundary = behaviour == null ? null : behaviour.getInternalPressureBoundary(face.getFace());
-        if (boundary == null || connection(level, face) == null) {
-            return Port.EMPTY;
-        }
-
-        PressureBoundaryEndpointGroup endpoint = new PressureBoundaryEndpointGroup(new PressureBoundaryAccess(face, boundary));
-        return new Port(1, new GasEndpointPlanner(List.of(), List.of(endpoint), List.of()));
-    }
-
     public static Port readPort(Level level, BlockFace face, boolean atmosphere, int tank) {
         if (!level.isLoaded(face.getConnectedPos())) {
             return Port.EMPTY;
         }
+
         if (atmosphere) {
             return readZoneMouth(level, face);
         }
@@ -91,6 +81,7 @@ public final class GasEndpointPlanner {
             StorageEndpointGroup endpoint = new StorageEndpointGroup(new StorageAccess(face, compartment, storage));
             return new Port(count, new GasEndpointPlanner(List.of(endpoint), List.of(), List.of()));
         }
+
         if (tank != 0 || !(handler instanceof GasPressureBoundary boundary) || boundary.getTanks() != 1) {
             return Port.EMPTY;
         }
@@ -99,7 +90,26 @@ public final class GasEndpointPlanner {
         return new Port(1, new GasEndpointPlanner(List.of(), List.of(endpoint), List.of()));
     }
 
-    public static Port readZoneMouth(Level level, BlockFace face) {
+    static GasEndpointPlanner prepare(DiscoveredEndpoints discovered) {
+        return new GasEndpointPlanner(groupStorageEndpoints(discovered.storageAccesses()), groupPressureBoundaries(discovered.pressureBoundaryAccesses()), discovered.atmosphericAccesses());
+    }
+
+    static Port readInternalPort(Level level, BlockFace face) {
+        GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, face.getPos());
+        if (behaviour == null) {
+            return Port.EMPTY;
+        }
+
+        GasPressureBoundary boundary = behaviour.getInternalPressureBoundary(face.getFace());
+        if (boundary == null || behaviour.getConnection(face.getFace()) == null) {
+            return Port.EMPTY;
+        }
+
+        PressureBoundaryEndpointGroup endpoint = new PressureBoundaryEndpointGroup(new PressureBoundaryAccess(face, boundary));
+        return new Port(1, new GasEndpointPlanner(List.of(), List.of(endpoint), List.of()));
+    }
+
+    static Port readZoneMouth(Level level, BlockFace face) {
         AtmosphericAccess access = GasEndpointDiscovery.getManagedAtmosphericEndpoint(level, face);
         if (access == null) {
             return Port.EMPTY;
@@ -108,17 +118,13 @@ public final class GasEndpointPlanner {
         return new Port(1, new GasEndpointPlanner(List.of(), List.of(), List.of(access)));
     }
 
-    private static @Nullable GasPipeConnection connection(Level level, BlockFace face) {
+    static @Nullable GasPipeConnection connection(Level level, BlockFace face) {
         GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, face.getPos());
         if (behaviour == null) {
             return null;
         }
 
         return behaviour.getConnection(face.getFace());
-    }
-
-    static GasEndpointPlanner prepare(DiscoveredEndpoints discovered) {
-        return new GasEndpointPlanner(groupStorageEndpoints(discovered.storageAccesses()), groupPressureBoundaries(discovered.pressureBoundaryAccesses()), discovered.atmosphericAccesses());
     }
 
     private static void addGasGroup(List<GasStack> groups, GasStack candidate) {
@@ -267,7 +273,11 @@ public final class GasEndpointPlanner {
         private static final Port EMPTY = new Port(0, null);
 
         public GasStack offeredGas() {
-            return planner == null || planner.gasGroups.isEmpty() ? GasStack.EMPTY : planner.gasGroups.getFirst();
+            if (planner == null || planner.gasGroups.isEmpty()) {
+                return GasStack.EMPTY;
+            }
+
+            return planner.gasGroups.getFirst();
         }
 
         public @Nullable GasNetworkPressureEndpoint endpoint(Level level, GasStack gas, boolean draining) {
@@ -327,7 +337,7 @@ public final class GasEndpointPlanner {
             for (StorageAccess access : accesses) {
                 BlockFace pipeFace = access.pipeFace();
                 GasPipeConnection connection = connection(level, pipeFace);
-                if (connection == null || connection.hasPendingTransfer() && !connection.tryRecoverPendingTransfer(level, pipeFace.getPos())) {
+                if (connection == null || connection.hasPendingTransfer()) {
                     continue;
                 }
 
@@ -454,7 +464,7 @@ public final class GasEndpointPlanner {
             for (PressureBoundaryAccess access : accesses) {
                 BlockFace pipeFace = access.pipeFace();
                 GasPipeConnection connection = connection(level, pipeFace);
-                if (connection == null || connection.hasPendingTransfer() && !connection.tryRecoverPendingTransfer(level, pipeFace.getPos())) {
+                if (connection == null || connection.hasPendingTransfer()) {
                     continue;
                 }
 

@@ -75,12 +75,21 @@ public final class GasZoneRoute {
             if (pressure < 0 || edge.flowLimitReferencePressurePa() > 0 && flow > edge.flowRateLimit() * (pressure / edge.flowLimitReferencePressurePa())) {
                 return -1;
             }
+
             pressure = edge.pressureDrive().drivenOutletPressurePa(pressure);
-            if (!losses || edge.resistanceUnits() == 0 && !Double.isFinite(edge.conductancePerPascal())) {
+            if (!losses) {
                 continue;
             }
 
-            double conductance = Double.isFinite(edge.conductancePerPascal()) ? edge.conductancePerPascal() : GasFlowResistance.conductancePerPascal(edge.resistanceUnits());
+            double conductance = edge.conductancePerPascal();
+            if (!Double.isFinite(conductance)) {
+                long resistanceUnits = edge.resistanceUnits();
+                if (resistanceUnits == 0) {
+                    continue;
+                }
+
+                conductance = GasFlowResistance.conductancePerPascal(resistanceUnits);
+            }
             pressure -= flow / conductance;
         }
         return pressure;
@@ -98,6 +107,7 @@ public final class GasZoneRoute {
         if (side == entry) {
             return -1;
         }
+
         if (side == exit) {
             return 1;
         }
@@ -128,19 +138,22 @@ public final class GasZoneRoute {
     }
 
     public int direction(GasZoneLayout layout, BlockFace face) {
-        Pass pass = stops.get(face.getPos());
+        BlockPos pos = face.getPos();
+        Pass pass = stops.get(pos);
         if (pass != null) {
             return direction(face.getFace(), pass.entry, pass.exit);
         }
 
-        Interior span = layout.interior(face.getPos());
+        Interior span = layout.interior(pos);
         if (span == null) {
             return 0;
         }
+
         int sign = direction(face.getFace(), span.entry(), span.exit());
         if (corridors.contains(span.forward())) {
             return sign;
         }
+
         if (corridors.contains(span.reverse())) {
             return -sign;
         }
@@ -167,7 +180,11 @@ public final class GasZoneRoute {
         }
 
         Quote assist = quote(level, gas, source, target, maximum, usage, sharing, true);
-        return assist.amount() > natural.amount() ? assist : natural;
+        if (assist.amount() <= natural.amount()) {
+            return natural;
+        }
+
+        return assist;
     }
 
     private Quote quote(Level level, GasStack gas, GasNetworkPressureEndpoint source, GasNetworkPressureEndpoint target, long maximum, @Nullable Usage usage, @Nullable Sharing sharing, boolean assist) {
@@ -183,10 +200,13 @@ public final class GasZoneRoute {
             for (Pass pass : passes) {
                 long room = pass.vertex.capacity - usage.used(pass.vertex);
                 maximum = Math.min(maximum, sharing == null ? room : Math.ceilDiv(room, sharing.count(pass.vertex)));
-                if (pass.next != null) {
-                    long linkRoom = pass.next.capacity - usage.used(pass.next.shared);
-                    maximum = Math.min(maximum, sharing == null ? linkRoom : Math.ceilDiv(linkRoom, sharing.count(pass.next.shared)));
+                Link link = pass.next;
+                if (link == null) {
+                    continue;
                 }
+
+                long linkRoom = link.capacity - usage.used(link.shared);
+                maximum = Math.min(maximum, sharing == null ? linkRoom : Math.ceilDiv(linkRoom, sharing.count(link.shared)));
             }
         }
         List<GasTransportEdgeProperties> edges = new ArrayList<>(devices.size());
@@ -202,20 +222,25 @@ public final class GasZoneRoute {
             if (behaviour == null) {
                 return Quote.CLOSED;
             }
+
             BlockState state = level.getBlockState(pass.vertex.pos);
             if (!behaviour.acceptsInboundGas(state, pass.entry, gas) || pass.entry != pass.exit && !behaviour.allowsOutboundGas(state, pass.exit, gas)) {
                 return Quote.CLOSED;
             }
+
             if (pass.entry == pass.exit) {
                 if (behaviour.getInternalPressureBoundary(pass.exit) != target.access().fillHandler()) {
                     return Quote.CLOSED;
                 }
+
                 continue;
             }
+
             GasTransportEdgeProperties edge = behaviour.getTransportEdgeProperties(state, pass.entry, pass.exit, gas);
             if (edge.flowRateLimit() <= 0) {
                 return Quote.CLOSED;
             }
+
             boolean pump = hasPumpAt(pass.vertex.pos);
             long carried = usage == null ? 0 : usage.used(pass.vertex);
             if (pump) {
@@ -258,8 +283,9 @@ public final class GasZoneRoute {
             limit = GasPassiveQuantum.limit(supply, demand, limit);
         }
         if (limit <= 0) {
-            return assistRoom == 0 ? Quote.CLOSED : new Quote(0, 0, assistRoom, false);
+            return Quote.withoutFlow(assistRoom);
         }
+
         double inlet = supply.pressurePa();
         double outlet = demand.pressurePa();
         double sourceResistance = GasFlowResistance.endpointResistance(source.flowResistance().drainResistanceUnits());
@@ -289,8 +315,9 @@ public final class GasZoneRoute {
             }
         }
         if (lower == 0) {
-            return assistRoom == 0 ? Quote.CLOSED : new Quote(0, 0, assistRoom, false);
+            return Quote.withoutFlow(assistRoom);
         }
+
         double pressure = Math.max(outlet, downstream(edges, inlet, lower, sourceResistance, true, priorFlow, alreadyDrained, 1, null));
         if (assist && !otherDrive) {
             double required = outlet + (lower + (double) alreadyFilled) * targetResistance;
@@ -353,5 +380,13 @@ public final class GasZoneRoute {
 
     public record Quote(long amount, long pressure, long assistRoom, boolean assisted) {
         static final Quote CLOSED = new Quote(0, 0, 0, false);
+
+        private static Quote withoutFlow(long assistRoom) {
+            if (assistRoom == 0) {
+                return CLOSED;
+            }
+
+            return new Quote(0, 0, assistRoom, false);
+        }
     }
 }

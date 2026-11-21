@@ -29,10 +29,12 @@ final class GasOrdinaryPathSearch implements GasRouteSearch {
         this.limits = limits;
         this.target = target;
         long capacity = limits.getOrDefault(start, Long.MAX_VALUE);
-        if (capacity > 0) {
-            visited.add(start);
-            frontier.add(new Path(start, capacity, null));
+        if (capacity <= 0) {
+            return;
         }
+
+        visited.add(start);
+        frontier.add(new Path(start, capacity, null));
     }
 
     @Override

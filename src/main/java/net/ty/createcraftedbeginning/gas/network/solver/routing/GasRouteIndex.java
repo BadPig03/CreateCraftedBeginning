@@ -36,6 +36,7 @@ final class GasRouteIndex {
         if (existing != null) {
             return existing;
         }
+
         PipeLinks links = state.linksAt(pos);
         long capacity = limits.getOrDefault(pos, Long.MAX_VALUE);
         if (links == null || capacity <= 0) {
@@ -69,6 +70,7 @@ final class GasRouteIndex {
                 if (links == null || capacity <= 0 || (links.neighbors() & 1 << entry.ordinal()) == 0) {
                     break;
                 }
+
                 int coordinate = exit.getAxis().choose(pos.getX(), pos.getY(), pos.getZ());
                 if (links.ordinary() && links.neighbors() == straight && (links.endpoints() | links.atmosphere()) == 0 && Math.floorMod(coordinate, STRAIGHT_SPAN) != 0) {
                     continue;

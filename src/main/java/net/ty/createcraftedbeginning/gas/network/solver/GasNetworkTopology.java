@@ -52,6 +52,7 @@ public final class GasNetworkTopology {
         if (snapshot != null && snapshot.scheduler != null && snapshot.scheduler.hasZoneFlows()) {
             return snapshot.scheduler.zoneFlow(pos, side);
         }
+
         return connection.getFlowState();
     }
 

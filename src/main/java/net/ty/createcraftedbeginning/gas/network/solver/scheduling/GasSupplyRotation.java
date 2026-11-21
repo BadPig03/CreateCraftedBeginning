@@ -85,9 +85,11 @@ final class GasSupplyRotation {
 
     void supplied(GasEndpointSlot slot, Receipt receipt) {
         serviceOrder.supply(anchor, receipt.source(), receipt.target());
-        if (supplies.size() < MAX_SUPPLIES) {
-            supplies.add(slot);
+        if (supplies.size() >= MAX_SUPPLIES) {
+            return;
         }
+
+        supplies.add(slot);
     }
 
     int serve(Level level, GasRouteBatch batch, int budget, GasServiceRoutes routes, Consumer<Candidate> deliver) {
@@ -97,7 +99,7 @@ final class GasSupplyRotation {
         while (work < scanLimit && nextSupply == null) {
             work++;
             GasEndpointSlot inspected = scan;
-            Port port = ports.read(level, inspected);
+            Port port = ports.prepareTransfer(level, inspected);
             scan = inspected.after(port.tanks(), topology.endpointFaces().size());
             scanned |= scan.equals(GasEndpointSlot.FIRST);
             if (supplies.contains(inspected)) {
@@ -109,6 +111,7 @@ final class GasSupplyRotation {
             if (drain == null) {
                 continue;
             }
+
             if (!needsTurn(drain, routes, inspected)) {
                 rememberRetrySupply(inspected, drain);
                 continue;
@@ -144,15 +147,18 @@ final class GasSupplyRotation {
                     if (startWithDiscovery) {
                         break;
                     }
+
                     if (supplies.isEmpty()) {
                         GasEndpointSlot standby = retrySupply;
                         if (standby == null) {
                             break;
                         }
+
                         retry = retryOutlet(routes, level.getGameTime());
                         if (retry == null) {
                             break;
                         }
+
                         steadySource = standby;
                         budget = Math.min(budget, work + OUTLET_RETRY_WORK - 1);
                     }
@@ -164,7 +170,7 @@ final class GasSupplyRotation {
                 if (retry == null) {
                     supplyTurn = (supplyTurn + 1) % ATTEMPTS_PER_SUPPLY;
                 }
-                Port offer = ports.read(level, steadySource);
+                Port offer = ports.prepareTransfer(level, steadySource);
                 GasStack gas = offer.offeredGas();
                 GasNetworkPressureEndpoint drain = gas.isEmpty() ? null : offer.endpoint(level, gas, true);
                 if (drain == null || retry != null && drain.transferLimits().fillLimit() != 0) {
@@ -175,12 +181,14 @@ final class GasSupplyRotation {
                     supplyTurn = 0;
                     continue;
                 }
+
                 if (retry == null && !needsTurn(drain, routes, steadySource)) {
                     rememberRetrySupply(steadySource, drain);
                     supplies.remove(steadySource);
                     supplyTurn = 0;
                     continue;
                 }
+
                 GasEndpointSlot outlet = nextOutlet;
                 boolean resumeQueue = true;
                 if (retry != null) {
@@ -203,7 +211,7 @@ final class GasSupplyRotation {
                         }
                     }
                 }
-                Port port = ports.read(level, outlet);
+                Port port = ports.prepareTransfer(level, outlet);
                 if (resumeQueue) {
                     nextOutlet = outlet.after(port.tanks(), ports.size());
                     if (unvisitedOutletFaces > 0 && outlet.face() < topology.endpointFaces().size() && nextOutlet.tank() == 0) {
@@ -215,6 +223,7 @@ final class GasSupplyRotation {
                 if (fill == null || drain.transferIdentity() == fill.transferIdentity()) {
                     continue;
                 }
+
                 BlockFace root = ports.face(steadySource);
                 if (tree == null) {
                     tree = new GasRouteTree(level, zones, root);
@@ -226,6 +235,7 @@ final class GasSupplyRotation {
                 retryingOutlet = retry != null;
                 continue;
             }
+
             if (tree == null) {
                 throw new IllegalStateException("An active supply outlet search requires a route tree; target " + target + '.');
             }
@@ -235,10 +245,12 @@ final class GasSupplyRotation {
                 Candidate candidate = new Candidate(steadySource, target, steadyGas, path);
                 deliver.accept(candidate);
             }
-            if (path != null || !tree.pending()) {
-                steadyTarget = null;
-                retryingOutlet = false;
+            if (path == null && tree.pending()) {
+                continue;
             }
+
+            steadyTarget = null;
+            retryingOutlet = false;
         }
         return work;
     }

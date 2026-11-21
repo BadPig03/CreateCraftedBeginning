@@ -46,11 +46,13 @@ public final class GasRouteTree implements GasRouteSearch {
         this.layout = layout;
         this.root = root;
         Vertex start = layout.vertex(root.getPos());
-        if (start != null) {
-            Hop first = new RootHop(start);
-            reached.put(start, first);
-            frontier.addLast(first);
+        if (start == null) {
+            return;
         }
+
+        Hop first = new RootHop(start);
+        reached.put(start, first);
+        frontier.addLast(first);
     }
 
     @Override
@@ -65,11 +67,13 @@ public final class GasRouteTree implements GasRouteSearch {
                 step();
                 return null;
             }
+
             Path path = route();
             target = null;
             alternative = path != null;
             return path;
         }
+
         if (alternative) {
             detour = new GasZoneRouteSearch(level, layout, origin, destination, gas, supply, demand);
             alternative = false;
@@ -78,6 +82,7 @@ public final class GasRouteTree implements GasRouteSearch {
             detourSteps++;
             return detour.expand();
         }
+
         return null;
     }
 
@@ -132,6 +137,7 @@ public final class GasRouteTree implements GasRouteSearch {
         if (start == null || end == null) {
             return null;
         }
+
         List<Pass> tail = new ArrayList<>();
         Link next = null;
         Hop left = start;
@@ -148,6 +154,7 @@ public final class GasRouteTree implements GasRouteSearch {
                 left = child.parent;
                 continue;
             }
+
             if (!(right instanceof ChildHop child)) {
                 throw new IllegalStateException("Route tree did not reach a common ancestor for " + origin + " and " + destination + '.');
             }

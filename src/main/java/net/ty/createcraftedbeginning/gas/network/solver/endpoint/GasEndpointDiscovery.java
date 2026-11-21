@@ -61,6 +61,7 @@ public final class GasEndpointDiscovery {
                 }
                 continue;
             }
+
             if (!(handler instanceof GasPressureBoundary boundary) || boundary.getTanks() != 1) {
                 continue;
             }
@@ -83,19 +84,6 @@ public final class GasEndpointDiscovery {
             }
         }
         return new DiscoveredEndpoints(storage, boundaries, discoverAtmosphericAccesses(level, topology));
-    }
-
-    private static @Unmodifiable List<AtmosphericAccess> discoverAtmosphericAccesses(Level level, Snapshot topology) {
-        List<AtmosphericAccess> accesses = new ArrayList<>(topology.atmosphericFaces().size());
-        for (BlockFace atmosphericFace : topology.atmosphericFaces()) {
-            AtmosphericAccess access = getManagedAtmosphericEndpoint(level, atmosphericFace);
-            if (access == null) {
-                continue;
-            }
-
-            accesses.add(access);
-        }
-        return List.copyOf(accesses);
     }
 
     @Nullable
@@ -141,6 +129,20 @@ public final class GasEndpointDiscovery {
         AtmosphereState atmosphereState = atmosphericEndpoint.getAtmosphereState();
         GasStack atmosphericGas = atmosphericEndpoint.canExtractAtmosphericGas() && !atmosphereState.gas().isEmpty() ? new GasStack(atmosphereState.gas(), Long.MAX_VALUE) : GasStack.EMPTY;
         return new AtmosphericAccess(face, handler, atmosphereState, atmosphericGas);
+    }
+
+    private static @Unmodifiable List<AtmosphericAccess> discoverAtmosphericAccesses(Level level, Snapshot topology) {
+        List<BlockFace> atmosphericFaces = topology.atmosphericFaces();
+        List<AtmosphericAccess> accesses = new ArrayList<>(atmosphericFaces.size());
+        for (BlockFace face : atmosphericFaces) {
+            AtmosphericAccess access = getManagedAtmosphericEndpoint(level, face);
+            if (access == null) {
+                continue;
+            }
+
+            accesses.add(access);
+        }
+        return List.copyOf(accesses);
     }
 
     record DiscoveredEndpoints(List<StorageAccess> storageAccesses, List<PressureBoundaryAccess> pressureBoundaryAccesses, List<AtmosphericAccess> atmosphericAccesses) {

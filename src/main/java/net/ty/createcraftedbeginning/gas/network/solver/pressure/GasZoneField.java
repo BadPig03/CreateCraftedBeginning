@@ -84,7 +84,12 @@ final class GasZoneField {
             return;
         }
 
-        double conductance = assistedFlow >= 0 ? 0 : Double.isFinite(edge.conductancePerPascal()) ? edge.conductancePerPascal() : GasFlowResistance.conductancePerPascal(edge.resistanceUnits());
+        double conductance = 0;
+        if (assistedFlow < 0) {
+            double configuredConductance = edge.conductancePerPascal();
+            conductance = Double.isFinite(configuredConductance) ? configuredConductance : GasFlowResistance.conductancePerPascal(edge.resistanceUnits());
+        }
+
         arcs.add(new Arc(from, to, 0, edge.flowRateLimit(), conductance, edge, assistedFlow));
     }
 
@@ -92,6 +97,7 @@ final class GasZoneField {
         if (pressure.length == 0) {
             return true;
         }
+
         if (stage == Stage.SEED) {
             int i = cursor++;
             int group = root(i);
@@ -107,6 +113,7 @@ final class GasZoneField {
             }
             return false;
         }
+
         if (stage == Stage.BALANCE && cursor < arcs.size()) {
             Arc arc = arcs.get(cursor++);
             double inlet = arc.from < 0 ? arc.fixed : pressure[arc.from];
@@ -114,6 +121,7 @@ final class GasZoneField {
             if (!Double.isFinite(inlet) || !Double.isFinite(outlet)) {
                 return false;
             }
+
             double flow = arc.assistedFlow;
             if (flow < 0) {
                 double head = arc.device == null ? inlet : arc.device.pressureDrive().drivenOutletPressurePa(inlet);
@@ -135,6 +143,7 @@ final class GasZoneField {
             }
             return false;
         }
+
         if (stage == Stage.BALANCE) {
             cursor = 0;
             stage = Stage.UPDATE;

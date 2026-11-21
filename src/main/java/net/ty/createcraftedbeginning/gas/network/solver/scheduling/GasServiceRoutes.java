@@ -99,10 +99,12 @@ final class GasServiceRoutes {
         if (routes.putLast(candidate.target(), candidate) == null) {
             size++;
         }
-        if (routes.size() > BRANCHES_PER_SUPPLY) {
-            routes.pollFirstEntry();
-            size--;
+        if (routes.size() <= BRANCHES_PER_SUPPLY) {
+            return;
         }
+
+        routes.pollFirstEntry();
+        size--;
     }
 
     Candidate next() {

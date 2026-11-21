@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.gas.network.solver.endpoint;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.gas.network.GasPipeConnection;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
 import net.ty.createcraftedbeginning.gas.network.solver.endpoint.GasEndpointPlanner.Port;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -34,6 +35,7 @@ public final class GasZonePorts {
         if (index < 0) {
             return GasEndpointSlot.FIRST;
         }
+
         return new GasEndpointSlot(index, 0);
     }
 
@@ -51,6 +53,7 @@ public final class GasZonePorts {
         if (i < external.size()) {
             return external.get(i);
         }
+
         i -= external.size();
         if (i < atmosphere.size()) {
             return atmosphere.get(i);
@@ -64,10 +67,25 @@ public final class GasZonePorts {
         if (slot.face() >= external.size() + atmosphere.size()) {
             return GasEndpointPlanner.readInternalPort(level, face);
         }
+
         if (slot.face() >= external.size()) {
             return GasEndpointPlanner.readZoneMouth(level, face);
         }
+
         return GasEndpointPlanner.readPort(level, face, false, slot.tank());
+    }
+
+    public Port prepareTransfer(Level level, GasEndpointSlot slot) {
+        int index = slot.face();
+        if (index < external.size() || index >= external.size() + atmosphere.size()) {
+            BlockFace face = face(slot);
+            GasPipeConnection connection = GasEndpointPlanner.connection(level, face);
+            if (connection != null && connection.hasPendingTransfer()) {
+                connection.tryRecoverPendingTransfer(level, face.getPos());
+            }
+        }
+
+        return read(level, slot);
     }
 
     private int externalIndex(@Nullable BlockFace face) {
@@ -84,6 +102,7 @@ public final class GasZonePorts {
                 low = middle + 1;
                 continue;
             }
+
             if (order > 0) {
                 high = middle - 1;
                 continue;

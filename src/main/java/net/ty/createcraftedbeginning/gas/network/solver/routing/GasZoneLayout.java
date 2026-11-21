@@ -60,9 +60,11 @@ public final class GasZoneLayout {
         lastBuildWork = 0;
         while (construction != null && lastBuildWork < budget) {
             lastBuildWork++;
-            if (construction.step(level)) {
-                construction = null;
+            if (!construction.step(level)) {
+                continue;
             }
+
+            construction = null;
         }
         return lastBuildWork;
     }
@@ -105,9 +107,11 @@ public final class GasZoneLayout {
     }
 
     void connect(Vertex vertex) {
-        if (routing != null) {
-            routing.connect(vertex);
+        if (routing == null) {
+            return;
         }
+
+        routing.connect(vertex);
     }
 
     @Nullable
@@ -115,6 +119,7 @@ public final class GasZoneLayout {
         if (routing == null) {
             return vertices.get(pos);
         }
+
         return routing.vertex(pos);
     }
 
@@ -174,6 +179,7 @@ public final class GasZoneLayout {
                 if ((neighbors & 1 << side.ordinal()) == 0) {
                     continue;
                 }
+
                 BlockPos next = here.relative(side);
                 PipeLinks other = state.linksAt(next);
                 if (other == null || !other.ordinary() || limits.getOrDefault(next, Long.MAX_VALUE) <= 0 || ordinary.putIfAbsent(next, index) != null) {
@@ -192,6 +198,7 @@ public final class GasZoneLayout {
             if (start == null) {
                 continue;
             }
+
             PipeLinks links = start.links;
             for (Direction side : Iterate.directions) {
                 if ((links.neighbors() & 1 << side.ordinal()) == 0 || start.edges.containsKey(side)) {
@@ -225,6 +232,7 @@ public final class GasZoneLayout {
                     if (exit == null) {
                         break;
                     }
+
                     members.add(new Member(here, incoming, exit));
                     here = here.relative(exit);
                     incoming = exit.getOpposite();
@@ -240,20 +248,6 @@ public final class GasZoneLayout {
         }
     }
 
-    private void indexInternal(Level level, Vertex device) {
-        PipeLinks links = device.links;
-        GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, device.pos);
-        for (Direction side : Iterate.directions) {
-            int bit = 1 << side.ordinal();
-            if (((links.neighbors() | links.endpoints() | links.atmosphere()) & bit) == 0) {
-                continue;
-            }
-            if (behaviour != null && behaviour.getInternalPressureBoundary(side) != null) {
-                internal.add(new BlockFace(device.pos, side));
-            }
-        }
-    }
-
     private void indexPorts(Vertex device) {
         PipeLinks links = device.links;
         for (Direction side : Iterate.directions) {
@@ -266,6 +260,7 @@ public final class GasZoneLayout {
             if (ports.containsKey(port)) {
                 continue;
             }
+
             BlockPos neighbor = device.pos.relative(side);
             Integer id = ordinary.get(neighbor);
             if (id == null || (links.neighbors() & bit) == 0) {
@@ -279,6 +274,24 @@ public final class GasZoneLayout {
             }
 
             ports.put(new BlockFace(neighbor, side.getOpposite()), id);
+        }
+    }
+
+    private void indexInternal(Level level, Vertex device) {
+        PipeLinks links = device.links;
+        GasTransportBehaviour behaviour = GasConnectionResolver.getTransportBehaviour(level, device.pos);
+        if (behaviour == null) {
+            return;
+        }
+
+        int connected = links.neighbors() | links.endpoints() | links.atmosphere();
+        for (Direction side : Iterate.directions) {
+            int bit = 1 << side.ordinal();
+            if ((connected & bit) == 0 || behaviour.getInternalPressureBoundary(side) == null) {
+                continue;
+            }
+
+            internal.add(new BlockFace(device.pos, side));
         }
     }
 
@@ -360,6 +373,7 @@ public final class GasZoneLayout {
                 }
                 return false;
             }
+
             if (!zone.isEmpty()) {
                 BlockPos pos = zone.removeFirst();
                 int neighbors = state.ordinaryNeighbors(pos);
@@ -370,19 +384,23 @@ public final class GasZoneLayout {
 
                     BlockPos next = pos.relative(side);
                     PipeLinks links = state.linksAt(next);
-                    if (links != null && links.ordinary() && limits.getOrDefault(next, Long.MAX_VALUE) > 0 && ordinary.putIfAbsent(next, zoneId) == null) {
-                        zone.addLast(next);
+                    if (links == null || !links.ordinary() || limits.getOrDefault(next, Long.MAX_VALUE) <= 0 || ordinary.putIfAbsent(next, zoneId) != null) {
+                        continue;
                     }
+
+                    zone.addLast(next);
                 }
                 volumes.set(zoneId, volumes.get(zoneId) + 1);
                 return false;
             }
+
             if (positions.hasNext()) {
                 BlockPos pos = positions.next();
                 PipeLinks links = state.linksAt(pos);
                 if (links == null || !links.ordinary() || limits.getOrDefault(pos, Long.MAX_VALUE) <= 0) {
                     return false;
                 }
+
                 if (limits.isEmpty()) {
                     BlockPos anchor = state.pressureZoneAt(pos);
                     Integer id = anchors.putIfAbsent(anchor, volumes.size());
@@ -401,10 +419,12 @@ public final class GasZoneLayout {
                 }
                 return false;
             }
+
             if (deviceIndex < devices.size()) {
                 indexPorts(devices.get(deviceIndex++));
                 return false;
             }
+
             return true;
         }
     }

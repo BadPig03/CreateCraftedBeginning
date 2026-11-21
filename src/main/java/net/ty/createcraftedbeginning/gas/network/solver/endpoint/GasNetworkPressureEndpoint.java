@@ -18,6 +18,7 @@ import net.ty.createcraftedbeginning.foundation.BoundedMath;
 import net.ty.createcraftedbeginning.gas.network.GasFlowResistance;
 import net.ty.createcraftedbeginning.gas.network.GasPipeConnection;
 import net.ty.createcraftedbeginning.gas.network.solver.transfer.GasTransferExecutor;
+import net.ty.createcraftedbeginning.gas.transfer.GasTransferRollback;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -53,11 +54,15 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
         if (!predictionAccesses.isEmpty()) {
             return predictionAccesses.getFirst().compartment().getCompartmentIdentity();
         }
-        if (access.drainHandler() != null) {
-            return access.drainHandler();
+
+        GasHandler drain = access.drainHandler();
+        if (drain != null) {
+            return drain;
         }
-        if (access.fillHandler() != null) {
-            return access.fillHandler();
+
+        GasHandler fill = access.fillHandler();
+        if (fill != null) {
+            return fill;
         }
 
         return this;
@@ -150,30 +155,11 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
             }
         }
         catch (RuntimeException | Error failure) {
-            if (restoring) {
-                if (snapshot == null) {
-                    failure.addSuppressed(new IllegalStateException("Gas remainder restoration changed an unknown amount; pending transfer was not duplicated."));
-                    throw failure;
-                }
-
-                try {
-                    snapshot.restore();
-                }
-                catch (RuntimeException | Error rollbackFailure) {
-                    if (rollbackFailure != failure) {
-                        failure.addSuppressed(rollbackFailure);
-                    }
-                    throw failure;
-                }
-                try {
-                    snapshot.afterRestore();
-                }
-                catch (RuntimeException | Error notificationFailure) {
-                    if (notificationFailure != failure) {
-                        failure.addSuppressed(notificationFailure);
-                    }
-                }
+            if (restoring && !GasTransferRollback.restore(snapshot, failure)) {
+                failure.addSuppressed(new IllegalStateException("Unconfirmed gas remainder restoration of up to " + remaining.getAmount() + " GU; this amount was not retained for retry."));
+                throw failure;
             }
+
             try {
                 if (!retainRemainder(level, remaining)) {
                     failure.addSuppressed(new IllegalStateException("Gas remainder could not be retained after restoration failed: " + remaining.getAmount() + " GU."));
@@ -202,7 +188,7 @@ public record GasNetworkPressureEndpoint(TransferAccess access, PressureState pr
             return false;
         }
 
-        BlockEntity blockEntity = level.getBlockEntity(recoveryPipePos);
+        BlockEntity blockEntity = level.isLoaded(recoveryPipePos) ? level.getBlockEntity(recoveryPipePos) : null;
         if (blockEntity != null) {
             blockEntity.setChanged();
         }

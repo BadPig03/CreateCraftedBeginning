@@ -56,6 +56,7 @@ final class GasPipeLinkIndex {
         if (behaviour == null) {
             return null;
         }
+
         if (boundary) {
             behaviour.refreshConnectionFaces();
         }
@@ -74,6 +75,7 @@ final class GasPipeLinkIndex {
                 atmosphere |= bit;
                 continue;
             }
+
             if (adjacent.hasGasHandler()) {
                 endpoints |= bit;
                 continue;
@@ -83,6 +85,7 @@ final class GasPipeLinkIndex {
             if (other == null) {
                 continue;
             }
+
             if (boundary && !chunk.equals(new ChunkPos(adjacent.pos()))) {
                 other.refreshConnectionFaces();
             }

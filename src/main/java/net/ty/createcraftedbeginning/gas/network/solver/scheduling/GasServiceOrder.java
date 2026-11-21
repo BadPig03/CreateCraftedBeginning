@@ -2,6 +2,7 @@ package net.ty.createcraftedbeginning.gas.network.solver.scheduling;
 
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,9 +27,11 @@ public final class GasServiceOrder {
 
     private static void remember(LinkedHashMap<BlockFace, BlockFace> order, BlockFace key, BlockFace value) {
         order.putLast(key, value);
-        if (order.size() > MAX_SERVICE_HINTS) {
-            order.pollFirstEntry();
+        if (order.size() <= MAX_SERVICE_HINTS) {
+            return;
         }
+
+        order.pollFirstEntry();
     }
 
     @Nullable
@@ -44,6 +47,17 @@ public final class GasServiceOrder {
     @Nullable
     BlockFace supply(BlockFace anchor) {
         return supplies.get(anchor);
+    }
+
+    void supply(BlockFace anchor, BlockFace source, BlockFace target) {
+        remember(supplies, anchor, source);
+        BlockFace previous = nearby.get(source);
+        BlockPos position = source.getPos();
+        if (previous != null && position.distManhattan(target.getPos()) > position.distManhattan(previous.getPos())) {
+            return;
+        }
+
+        remember(nearby, source, target);
     }
 
     @Nullable
@@ -89,14 +103,6 @@ public final class GasServiceOrder {
         BlockFace target = first.getKey();
         turns.putLast(target, tick);
         return target;
-    }
-
-    void supply(BlockFace anchor, BlockFace source, BlockFace target) {
-        remember(supplies, anchor, source);
-        BlockFace previous = nearby.get(source);
-        if (previous == null || source.getPos().distManhattan(target.getPos()) <= source.getPos().distManhattan(previous.getPos())) {
-            remember(nearby, source, target);
-        }
     }
 
     void served(BlockFace source, BlockFace target) {

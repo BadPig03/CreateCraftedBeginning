@@ -23,12 +23,15 @@ public final class GasPassiveQuantum {
 
             return 0;
         }
+
         if (source.fixedPressure()) {
             return nearest(GasPressure.round(source.pressurePa()), target.volume(), target.currentAmount(), GasPressure.REFERENCE_PRESSURE_PA, GasPressure.REFERENCE_PRESSURE_PA, 0, capacity);
         }
+
         if (target.fixedPressure()) {
             return nearest(source.currentAmount(), GasPressure.REFERENCE_PRESSURE_PA, GasPressure.round(target.pressurePa()), source.volume(), GasPressure.REFERENCE_PRESSURE_PA, 0, capacity);
         }
+
         return nearest(source.currentAmount(), target.volume(), target.currentAmount(), source.volume(), source.volume(), target.volume(), capacity);
     }
 
@@ -42,8 +45,12 @@ public final class GasPassiveQuantum {
             }
 
             long difference = left - right;
+            long amount = difference / weight;
             long remainder = difference % weight;
-            return Math.min(capacity, difference / weight + (remainder > weight - remainder ? 1 : 0));
+            if (remainder > weight - remainder) {
+                amount++;
+            }
+            return Math.min(capacity, amount);
         }
 
         BigInteger difference = BigInteger.valueOf(a).multiply(BigInteger.valueOf(b)).subtract(BigInteger.valueOf(c).multiply(BigInteger.valueOf(d)));

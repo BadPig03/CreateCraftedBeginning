@@ -45,6 +45,7 @@ public final class GasNetworkState {
                 devices.add(pos);
                 continue;
             }
+
             if (zones.containsKey(pos)) {
                 continue;
             }
