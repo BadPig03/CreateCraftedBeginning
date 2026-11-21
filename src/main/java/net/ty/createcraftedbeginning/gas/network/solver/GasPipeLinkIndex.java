@@ -95,7 +95,7 @@ final class GasPipeLinkIndex {
 
             neighbors |= bit;
         }
-        Links links = new Links(neighbors, endpoints, atmosphere, loaded, behaviour.isOrdinaryPressurePipe());
+        Links links = new Links(neighbors, endpoints, atmosphere, loaded, behaviour.isOrdinaryPressurePipe(), behaviour.passesNaturalForwardFlow());
         byChunk.computeIfAbsent(chunk, ignored -> new HashMap<>()).put(pos.immutable(), links);
         return links;
     }
@@ -139,5 +139,5 @@ final class GasPipeLinkIndex {
         return positions;
     }
 
-    record Links(int neighbors, int endpoints, int atmosphere, int loaded, boolean ordinary) implements PipeLinks {}
+    record Links(int neighbors, int endpoints, int atmosphere, int loaded, boolean ordinary, boolean assistancePump) implements PipeLinks {}
 }

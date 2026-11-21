@@ -27,6 +27,7 @@ public final class GasNetworkState {
     private long lastSimulationTick;
     private boolean current = true;
     private final boolean cycle;
+    private final boolean assistancePump;
 
     GasNetworkState(long version, Set<BlockPos> positions, Map<BlockPos, Links> pipes, long lastSimulationTick) {
         this.version = version;
@@ -36,10 +37,12 @@ public final class GasNetworkState {
         ArrayDeque<BlockPos> queue = new ArrayDeque<>();
         List<BlockPos> members = new ArrayList<>();
         long edges = 0;
+        boolean pump = false;
         for (BlockPos pos : positions) {
             Links links = pipes.get(pos);
             if (links != null) {
                 edges += Integer.bitCount(links.neighbors());
+                pump |= links.assistancePump();
             }
             if (links == null || !links.ordinary()) {
                 devices.add(pos);
@@ -80,6 +83,7 @@ public final class GasNetworkState {
             }
         }
         cycle = edges / 2 >= positions.size();
+        assistancePump = pump;
         devicePositions = List.copyOf(devices);
     }
 
@@ -89,6 +93,10 @@ public final class GasNetworkState {
 
     public boolean hasCycle() {
         return cycle;
+    }
+
+    public boolean hasAssistancePump() {
+        return assistancePump;
     }
 
     @Nullable

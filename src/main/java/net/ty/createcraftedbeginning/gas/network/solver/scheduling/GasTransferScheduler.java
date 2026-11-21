@@ -35,7 +35,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +48,8 @@ public final class GasTransferScheduler {
     public static final long GU_PER_TICK = 65536;
     private static final int PRESSURE_DIVISOR = 4;
     private static final int REPLAY_DIVISOR = 3;
+    private static final int ASSISTANCE_DIVISOR = 3;
+    private static final int ASSISTANCE_WORK_PER_ROUTE = 2;
     private static final int SHORT_DETOUR_STEPS = 8;
 
     private final Snapshot topology;
@@ -61,7 +62,7 @@ public final class GasTransferScheduler {
     private final GasZonePorts ports;
     private final @Nullable GasFixedManifold manifold;
     private @Nullable GasFixedManifold pumpManifold;
-    private final LinkedHashSet<Candidate> pendingAssistance = new LinkedHashSet<>();
+    private final GasAssistanceQueue pendingAssistance;
     private boolean servingAssistance;
     private final @Nullable GasSupplyRotation rotation;
     private final @Nullable GasZoneLayout zones;
@@ -106,6 +107,7 @@ public final class GasTransferScheduler {
         this.owner = owner;
         this.limits = Map.copyOf(limits);
         this.workLimit = workLimit;
+        pendingAssistance = new GasAssistanceQueue(workLimit);
         this.quantumLimit = quantumLimit;
         this.zones = zones;
         this.serviceOrder = serviceOrder;
@@ -284,6 +286,21 @@ public final class GasTransferScheduler {
         return topology.state().isCurrent() && owner.test(this);
     }
 
+    private int assistanceWork(int budget) {
+        if (faceCount <= 2 || !topology.state().hasAssistancePump()) {
+            return 0;
+        }
+
+        int pending = pendingAssistance.size();
+        if (budget <= 1) {
+            return pending > 0 ? budget : 0;
+        }
+
+        int newOutlets = faceCount <= GasFixedManifold.MAX_FACES ? faceCount - 1 : 1;
+        int cap = Math.min(budget - 1, Math.max(1, budget / ASSISTANCE_DIVISOR));
+        return (int) Math.min(cap, (long) ASSISTANCE_WORK_PER_ROUTE * Math.max(newOutlets, pending));
+    }
+
     private void scheduleBatch(Level level, GasRouteBatch batch) {
         if (!current()) {
             last = new Tick(Status.RETIRED, 0, 0, false, null);
@@ -315,7 +332,7 @@ public final class GasTransferScheduler {
             pressureWork = pressureModel.lastWork();
         }
         int totalWork = workLimit - build - pressureWork;
-        int pumpWork = completedFirstSweep ? Math.min(2 * pendingAssistance.size(), Math.min(totalWork, Math.max(1, totalWork / 3))) : 0;
+        int pumpWork = assistanceWork(totalWork);
         int availableWork = totalWork - pumpWork;
         GasBranchRound round = null;
         int budget = availableWork;
@@ -400,12 +417,12 @@ public final class GasTransferScheduler {
                 }
             }
         }
-        if (completedFirstSweep && !pendingAssistance.isEmpty() && work < totalWork && batch.available() > 0 && batch.collision() == null && current()) {
+        if (pendingAssistance.size() > 0 && work < totalWork && batch.available() > 0 && batch.collision() == null && current()) {
             servingAssistance = true;
             try {
                 int remaining = totalWork - work;
-                if (pendingAssistance.size() > 1 && remaining >= 4) {
-                    int pumpRoutes = Math.min(pendingAssistance.size(), remaining / 2);
+                if (pendingAssistance.size() > 1 && remaining >= 2 * ASSISTANCE_WORK_PER_ROUTE) {
+                    int pumpRoutes = Math.min(pendingAssistance.size(), remaining / ASSISTANCE_WORK_PER_ROUTE);
                     GasBranchRound pumps = new GasBranchRound(pumpRoutes, true);
                     for (int i = 0; i < pumpRoutes; i++) {
                         pumps.add(pendingAssistance.removeFirst());
@@ -704,10 +721,7 @@ public final class GasTransferScheduler {
                 long single = Math.max(0, drain.maxQuantizedDrainAmount(gas, minimum.amount()));
                 accepted = Math.max(0, fill.maxQuantizedFillAmount(gas, single, pressure));
             }
-            boolean queued = pumpUse == PumpUse.NATURAL && assistRoom > accepted && pendingAssistance.size() < workLimit && current();
-            if (queued) {
-                pendingAssistance.add(candidate);
-            }
+            boolean queued = pumpUse == PumpUse.NATURAL && assistRoom > accepted && current() && pendingAssistance.offer(fill.transferIdentity(), candidate);
             if (accepted > 0 && current()) {
                 if (offers != null) {
                     if (route == null) {
@@ -773,6 +787,9 @@ public final class GasTransferScheduler {
     private void recordDelivery(Level level, GasRouteBatch batch, Candidate candidate, GasNetworkPressureEndpoint drain, GasNetworkPressureEndpoint fill, Receipt receipt) {
         GasParallelRoutes parallel = candidate.parallel;
         batch.record(drain, fill, receipt, parallel == null ? List.of() : parallel.paths(), candidate.parallelBranch);
+        if (receipt.assisted && servingAssistance && workLimit > 1 && current()) {
+            pendingAssistance.offer(fill.transferIdentity(), candidate);
+        }
         if (rotation != null && faceCount >= 3) {
             GasBranchOrder order = receipt.assisted ? pumpOrder : branchOrder;
             order.received(candidate, fill.transferIdentity(), receipt.gas.getAmount());
