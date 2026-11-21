@@ -710,7 +710,7 @@ public final class GasTransferScheduler {
             long cap;
             long assistRoom = 0;
             boolean assisted = false;
-            GasMeshPlan mesh = batch != null && route != null && (!servingAssistance || route.deviceCount() > 0) && topology.state().hasCycle() ? batch.layout().mesh(face(candidate.source), face(candidate.target), route) : null;
+            GasMeshPlan mesh = batch != null && route != null && (!servingAssistance || route.deviceCount() > 0) && topology.state().hasCycle() ? batch.layout().completedMesh(face(candidate.source), face(candidate.target), route) : null;
             Allocation split = null;
             if (route != null) {
                 Quote quote;
@@ -811,6 +811,9 @@ public final class GasTransferScheduler {
     }
 
     private void recordDelivery(Level level, GasRouteBatch batch, Candidate candidate, GasNetworkPressureEndpoint drain, GasNetworkPressureEndpoint fill, Receipt receipt) {
+        if (topology.state().hasCycle() && current()) {
+            batch.layout().requestDeliveredMesh(receipt.source, receipt.target, receipt.requireZoneRoute());
+        }
         if (receipt.assisted && servingAssistance && workLimit > 1 && current()) {
             pendingAssistance.offer(fill.transferIdentity(), candidate);
         }

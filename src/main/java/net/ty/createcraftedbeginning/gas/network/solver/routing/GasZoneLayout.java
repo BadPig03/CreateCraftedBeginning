@@ -43,7 +43,7 @@ public final class GasZoneLayout {
     private final @Nullable GasRouteIndex routing;
     private @Nullable Construction construction;
     private int lastBuildWork;
-    private final LinkedHashMap<MeshKey, GasMeshPlan> meshes = new LinkedHashMap<>(MAX_MESHES, 0.75f, true);
+    private final LinkedHashMap<MeshKey, GasMeshPlan> meshes = new LinkedHashMap<>();
     private final ArrayDeque<MeshWork> pendingMeshes = new ArrayDeque<>();
 
     public GasZoneLayout(GasNetworkState state, Set<BlockPos> pipePositions, Map<BlockPos, Long> limits) {
@@ -73,49 +73,55 @@ public final class GasZoneLayout {
         return lastBuildWork;
     }
 
-    @Nullable
-    public GasMeshPlan mesh(BlockFace inlet, BlockFace outlet, GasZoneRoute route) {
+    public void requestDeliveredMesh(BlockFace inlet, BlockFace outlet, GasZoneRoute route) {
         MeshKey key = new MeshKey(inlet, outlet, route.devicePorts);
-        GasMeshPlan mesh = meshes.get(key);
-        if (mesh == null) {
-            if (pendingMeshes.size() == MAX_MESHES) {
-                return null;
-            }
-            if (meshes.size() == MAX_MESHES) {
-                Iterator<GasMeshPlan> cached = meshes.values().iterator();
-                while (cached.hasNext()) {
-                    if (cached.next().complete()) {
-                        cached.remove();
-                        break;
-                    }
-                }
-            }
-            MeshWork search;
-            if (route.deviceCount() == 0) {
-                Vertex start = route.passes().getFirst().vertex;
-                Vertex target = route.passes().getLast().vertex;
-                if (start == target) {
-                    return null;
-                }
-                search = new GasMeshSearch(this, inlet, outlet, start, target);
-            }
-            else {
-                if (!complete()) {
-                    return null;
-                }
-                search = new GasMeshSections(this, route);
-            }
-            meshes.put(key, search.result());
-            pendingMeshes.addLast(search);
-            return null;
+        GasMeshPlan known = meshes.get(key);
+        if (known != null) {
+            meshes.putLast(key, known);
+            return;
         }
-        return mesh.complete() && mesh.size() > 1 ? mesh : null;
+
+        if (pendingMeshes.size() >= MAX_MESHES) {
+            return;
+        }
+
+        MeshWork search;
+        if (route.deviceCount() == 0) {
+            Vertex start = route.passes().getFirst().vertex;
+            Vertex target = route.passes().getLast().vertex;
+            if (start == target) {
+                return;
+            }
+            search = new GasMeshSearch(this, inlet, outlet, start, target);
+        }
+        else {
+            if (!complete()) {
+                return;
+            }
+            search = new GasMeshSections(this, route);
+        }
+
+        if (meshes.size() == MAX_MESHES) {
+            Iterator<GasMeshPlan> cached = meshes.values().iterator();
+            while (cached.hasNext()) {
+                if (cached.next().complete()) {
+                    cached.remove();
+                    break;
+                }
+            }
+        }
+        meshes.put(key, search.result());
+        pendingMeshes.addLast(search);
     }
 
     @Nullable
     public GasMeshPlan completedMesh(BlockFace inlet, BlockFace outlet) {
-        GasMeshPlan mesh = meshes.get(new MeshKey(inlet, outlet, List.of()));
-        return mesh != null && mesh.complete() && mesh.size() > 1 ? mesh : null;
+        return completedMesh(new MeshKey(inlet, outlet, List.of()));
+    }
+
+    @Nullable
+    public GasMeshPlan completedMesh(BlockFace inlet, BlockFace outlet, GasZoneRoute route) {
+        return completedMesh(new MeshKey(inlet, outlet, route.devicePorts));
     }
 
     public int advanceMeshes(Level level, int budget) {
@@ -187,6 +193,12 @@ public final class GasZoneLayout {
     @Nullable
     Interior interior(BlockPos pos) {
         return interiors.get(pos);
+    }
+
+    @Nullable
+    private GasMeshPlan completedMesh(MeshKey key) {
+        GasMeshPlan mesh = meshes.get(key);
+        return mesh != null && mesh.complete() && mesh.size() > 1 ? mesh : null;
     }
 
     private void indexVertices(GasNetworkState state, List<BlockPos> positions, Map<BlockPos, Long> limits) {
