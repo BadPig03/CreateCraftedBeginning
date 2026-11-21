@@ -11,6 +11,7 @@ import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkState;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkState.PipeLinks;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
@@ -115,11 +116,11 @@ public final class GasZoneLayout {
         return completedMesh(new MeshKey(inlet, outlet, route.devicePorts));
     }
 
-    public int advanceMeshes(Level level, int budget) {
+    public int advanceMeshes(int budget) {
         int work = 0;
         while (work < budget && !pendingMeshes.isEmpty()) {
             MeshWork search = pendingMeshes.removeFirst();
-            if (!search.step(level)) {
+            if (!search.step()) {
                 pendingMeshes.addLast(search);
             }
             work++;
@@ -380,7 +381,7 @@ public final class GasZoneLayout {
     }
 
     interface MeshWork {
-        boolean step(Level level);
+        boolean step();
 
         GasMeshPlan result();
     }
@@ -413,6 +414,7 @@ public final class GasZoneLayout {
         final Link shared;
         final Link opposite;
         long turns;
+        private @Nullable Pass meshPass;
 
         private Link(Vertex start, Vertex end, Direction exit, Direction entry, long capacity) {
             this.end = end;
@@ -437,6 +439,13 @@ public final class GasZoneLayout {
             start.edges.put(exit, forward);
             end.edges.put(entry, forward.opposite);
             return forward;
+        }
+
+        Pass meshPass(Direction inbound) {
+            if (meshPass == null || meshPass.entry != inbound) {
+                meshPass = new Pass(opposite.end, inbound, exit, this);
+            }
+            return meshPass;
         }
     }
 

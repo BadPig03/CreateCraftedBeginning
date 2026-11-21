@@ -334,7 +334,7 @@ public final class GasTransferScheduler {
             pressureWork = pressureModel.lastWork();
         }
         int remainingWork = workLimit - build - pressureWork;
-        int meshWork = layout.advanceMeshes(level, remainingWork / PRESSURE_DIVISOR);
+        int meshWork = layout.advanceMeshes(remainingWork / PRESSURE_DIVISOR);
         int totalWork = remainingWork - meshWork;
         int pumpWork = assistanceWork(totalWork);
         int availableWork = totalWork - pumpWork;

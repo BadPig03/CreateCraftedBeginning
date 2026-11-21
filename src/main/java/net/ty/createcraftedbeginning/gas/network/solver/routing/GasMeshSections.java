@@ -3,7 +3,7 @@ package net.ty.createcraftedbeginning.gas.network.solver.routing;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshPlan.BranchBuilder;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +18,9 @@ import java.util.Set;
 @MethodsReturnNonnullByDefault
 final class GasMeshSections implements GasZoneLayout.MeshWork {
     private final GasZoneLayout layout;
+    private final GasZoneRoute route;
     private final List<Pass> original;
+    private final List<Pass> restricted = new ArrayList<>();
     private final GasMeshPlan result = new GasMeshPlan();
     private final List<Section> sections = new ArrayList<>();
     private final Set<Integer> visitedZones = new HashSet<>();
@@ -31,11 +33,14 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
     private double lower;
     private double upper = 1;
     private boolean divided;
-    private GasMeshPlan.BranchBuilder branch;
+    private boolean originalBranch = true;
+    private boolean comparing;
+    private BranchBuilder branch;
     private Phase phase = Phase.PARTITION;
 
     GasMeshSections(GasZoneLayout layout, GasZoneRoute route) {
         this.layout = layout;
+        this.route = route;
         original = route.passes();
         entry = original.getFirst().entry;
     }
@@ -46,12 +51,18 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
     }
 
     @Override
-    public boolean step(Level level) {
+    public boolean step() {
         switch (phase) {
             case PARTITION -> partition();
             case SOLVE -> solve();
-            case WEIGH -> weigh(level);
+            case WEIGH -> weigh();
             case EMIT -> emit();
+            case REUSE -> {
+                branch.add(restricted.get(cursor++));
+                if (cursor == restricted.size()) {
+                    finish(original.getLast());
+                }
+            }
         }
         if (phase != Phase.DONE) {
             return false;
@@ -93,6 +104,9 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
         if (pass.vertex.device || link == null || link.end.device) {
             bridges = null;
         }
+        if (pass.vertexCapacity() != Long.MAX_VALUE || link != null && link.capacity != Long.MAX_VALUE) {
+            restricted.add(pass);
+        }
         if (++cursor == original.size()) {
             cursor = 0;
             phase = sections.isEmpty() ? Phase.DONE : Phase.SOLVE;
@@ -112,20 +126,42 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
         }
     }
 
-    private void weigh(Level level) {
+    private void weigh() {
         Section section = sections.get(sectionIndex);
         GasMeshRatios core = section.core;
         if (core.size() > 1) {
-            if (core.fraction(section.choice) <= lower) {
-                section.choice++;
+            if (!comparing) {
+                if (core.fraction(section.choice) <= lower) {
+                    section.choice++;
+                    section.matched = 0;
+                    section.different = false;
+                }
+                upper = Math.min(upper, core.fraction(section.choice));
             }
-            upper = Math.min(upper, core.fraction(section.choice));
+            if (originalBranch && !section.checkOriginal(original)) {
+                comparing = true;
+                return;
+            }
+
+            comparing = false;
+            originalBranch &= !section.different;
         }
-        if (++sectionIndex == sections.size()) {
-            sectionIndex = 0;
-            branch = result.new BranchBuilder(level, upper - lower);
+        if (++sectionIndex != sections.size()) {
+            return;
+        }
+
+        sectionIndex = 0;
+        branch = result.new BranchBuilder(route, upper - lower, originalBranch);
+        if (!originalBranch) {
             phase = Phase.EMIT;
+            return;
         }
+        if (!restricted.isEmpty()) {
+            phase = Phase.REUSE;
+            return;
+        }
+
+        finish(original.getLast());
     }
 
     private void emit() {
@@ -151,14 +187,19 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
             cursor++;
         }
         if (link != null) {
-            branch.add(new Pass(link.opposite.end, entry, link.exit, link));
+            branch.add(pass.entry == entry && pass.next == link ? pass : link.meshPass(entry));
             entry = link.entry;
             return;
         }
 
-        Pass last = new Pass(pass.vertex, entry, pass.exit, null);
+        Pass last = pass.entry == entry ? pass : new Pass(pass.vertex, entry, pass.exit, null);
         branch.add(last);
+        finish(last);
+    }
+
+    private void finish(Pass last) {
         branch.finish(last);
+        originalBranch = true;
         sectionIndex = 0;
         cursor = 0;
         entry = original.getFirst().entry;
@@ -168,7 +209,7 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
     }
 
     private enum Phase {
-        PARTITION, SOLVE, WEIGH, EMIT, DONE
+        PARTITION, SOLVE, WEIGH, EMIT, REUSE, DONE
     }
 
     private static final class Section {
@@ -176,11 +217,28 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
         private final int end;
         private final GasMeshRatios core;
         private int choice;
+        private int matched;
+        private boolean different;
 
         private Section(int start, int end, GasMeshRatios core) {
             this.start = start;
             this.end = end;
             this.core = core;
+        }
+
+        private boolean checkOriginal(List<Pass> original) {
+            int length = end - start;
+            if (different || matched == length) {
+                return true;
+            }
+
+            List<Link> links = core.links(choice);
+            if (links.size() != length || links.get(matched) != original.get(start + matched).next) {
+                different = true;
+                return true;
+            }
+
+            return ++matched == length;
         }
     }
 }

@@ -1,8 +1,9 @@
 package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasRouteSearch.Path;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Builder;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Sharing;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Usage;
@@ -25,24 +26,12 @@ public final class GasMeshPlan {
     private double smallestWeight = Double.POSITIVE_INFINITY;
     private boolean complete;
 
-    void finish() {
-        complete = true;
-    }
-
-    boolean complete() {
-        return complete;
-    }
-
     public int size() {
         return branches.size();
     }
 
     public Path path(int index) {
         return branches.get(index).path;
-    }
-
-    double fraction(int index) {
-        return branches.get(index).cumulative / totalWeight;
     }
 
     public GasZoneRoute route(int index) {
@@ -80,41 +69,59 @@ public final class GasMeshPlan {
         return new Allocation(this, amounts, assigned);
     }
 
-    private void limit(List<Bottleneck> restricted, Object key, long capacity, double weight) {
-        if (capacity == Long.MAX_VALUE) {
-            return;
-        }
+    void finish() {
+        complete = true;
+    }
 
+    boolean complete() {
+        return complete;
+    }
+
+    double fraction(int index) {
+        return branches.get(index).cumulative / totalWeight;
+    }
+
+    private void limit(List<Bottleneck> restricted, Object key, long capacity, double weight) {
         Bottleneck limit = limits.computeIfAbsent(key, ignored -> new Bottleneck(key, capacity, limits.size()));
         restricted.add(limit);
         limit.weight += weight;
     }
 
     final class BranchBuilder {
-        private final GasZoneRoute.Builder route;
+        private final @Nullable Builder route;
+        private final GasZoneRoute original;
         private final List<Bottleneck> restricted = new ArrayList<>();
         private final double weight;
         private long capacity = Long.MAX_VALUE;
 
-        BranchBuilder(Level level, double weight) {
-            route = new GasZoneRoute.Builder(level);
+        BranchBuilder(GasZoneRoute original, double weight, boolean originalBranch) {
+            this.original = original;
+            route = originalBranch ? null : new Builder(original.passes().size());
             this.weight = weight;
         }
 
         void add(Pass pass) {
-            route.add(pass);
-            capacity = Math.min(capacity, Math.min(pass.vertexCapacity(), pass.corridorCapacity()));
-            limit(restricted, pass.vertexKey(), pass.vertexCapacity(), weight);
-            Object corridor = pass.corridorKey();
-            if (corridor != null) {
-                limit(restricted, corridor, pass.corridorCapacity(), weight);
+            if (route != null) {
+                route.add(pass);
             }
+            long vertexLimit = pass.vertexCapacity();
+            if (vertexLimit != Long.MAX_VALUE) {
+                capacity = Math.min(capacity, vertexLimit);
+                limit(restricted, pass.vertexKey(), vertexLimit, weight);
+            }
+            Link link = pass.next;
+            if (link == null || link.capacity == Long.MAX_VALUE) {
+                return;
+            }
+
+            capacity = Math.min(capacity, link.capacity);
+            limit(restricted, link.shared, link.capacity, weight);
         }
 
         void finish(Pass last) {
             totalWeight += weight;
             smallestWeight = Math.min(smallestWeight, weight);
-            GasZoneRoute frozen = new GasZoneRoute(route, capacity);
+            GasZoneRoute frozen = original.branch(route, capacity);
             Path path = new Path(last.position(), capacity, null, frozen);
             branches.add(new Branch(path, frozen, totalWeight, restricted));
         }
