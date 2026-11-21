@@ -19,7 +19,7 @@ final class GasMeshBridges {
     private final GasZoneLayout layout;
     private final Set<Link> bridges = new HashSet<>();
     private final ArrayDeque<Frame> stack = new ArrayDeque<>();
-    private final Map<Vertex, Integer> discovery = new HashMap<>();
+    private final Map<Vertex, Frame> discovery = new HashMap<>();
 
     GasMeshBridges(GasZoneLayout layout, Vertex start) {
         this.layout = layout;
@@ -42,13 +42,13 @@ final class GasMeshBridges {
                 continue;
             }
 
-            Integer index = discovery.get(link.end);
-            if (index == null) {
+            Frame neighbor = discovery.get(link.end);
+            if (neighbor == null) {
                 visit(link.end, link.opposite);
                 return false;
             }
 
-            frame.low = Math.min(frame.low, index);
+            frame.low = Math.min(frame.low, neighbor.index);
         }
 
         stack.removeLast();
@@ -58,21 +58,40 @@ final class GasMeshBridges {
             if (frame.low > parent.index) {
                 bridges.add(frame.parent.shared);
             }
+            else {
+                parent.join(frame);
+            }
         }
         return stack.isEmpty();
     }
 
+    GasMeshEquation equation(Vertex start, Vertex end) {
+        if (GasMeshEquation.contracts(start) || GasMeshEquation.contracts(end)) {
+            return new GasMeshEquation(this, start, end);
+        }
+
+        Frame region = discovery.get(start).root();
+        if (region.equation == null) {
+            region.equation = new GasMeshEquation(this, start, end);
+        }
+        return region.equation;
+    }
+
     private void visit(Vertex vertex, @Nullable Link parent) {
         int index = discovery.size();
-        discovery.put(vertex, index);
+        Frame frame = new Frame(vertex, parent, index);
+        discovery.put(vertex, frame);
         layout.connect(vertex);
-        stack.addLast(new Frame(vertex, parent, index));
+        stack.addLast(frame);
     }
 
     private static final class Frame {
         private final Vertex vertex;
         private final @Nullable Link parent;
         private final int index;
+        private Frame leader = this;
+        private int members = 1;
+        private @Nullable GasMeshEquation equation;
         private int low;
         private int side;
 
@@ -81,6 +100,28 @@ final class GasMeshBridges {
             this.parent = parent;
             this.index = index;
             low = index;
+        }
+
+        private Frame root() {
+            Frame frame = this;
+            while (frame.leader != frame) {
+                frame.leader = frame.leader.leader;
+                frame = frame.leader;
+            }
+            return frame;
+        }
+
+        private void join(Frame other) {
+            Frame first = root();
+            Frame second = other.root();
+            if (first.members < second.members) {
+                first.leader = second;
+                second.members += first.members;
+            }
+            else {
+                second.leader = first;
+                first.members += second.members;
+            }
         }
     }
 }
