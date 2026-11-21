@@ -2,7 +2,9 @@ package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,10 +22,12 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
     private final GasMeshPlan result = new GasMeshPlan();
     private final List<Section> sections = new ArrayList<>();
     private final Set<Integer> visitedZones = new HashSet<>();
+    private @Nullable GasMeshBridges bridges;
     private int cursor;
-    private int start;
+    private int coreStart = -1;
     private int sectionIndex;
-    private int passIndex;
+    private int linkIndex;
+    private Direction entry;
     private double lower;
     private double upper = 1;
     private boolean divided;
@@ -33,6 +37,7 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
     GasMeshSections(GasZoneLayout layout, GasZoneRoute route) {
         this.layout = layout;
         original = route.passes();
+        entry = original.getFirst().entry;
     }
 
     @Override
@@ -44,7 +49,7 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
     public boolean step(Level level) {
         switch (phase) {
             case PARTITION -> partition();
-            case SOLVE -> solve(level);
+            case SOLVE -> solve();
             case WEIGH -> weigh(level);
             case EMIT -> emit();
         }
@@ -57,45 +62,50 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
     }
 
     private void partition() {
-        Pass first = original.get(start);
-        Pass last = original.get(cursor++);
-        if (!first.vertex.device && cursor < original.size() && !original.get(cursor).vertex.device) {
-            return;
-        }
-
-        GasMeshSearch search = null;
-        if (!first.vertex.device) {
-            BlockFace inlet = new BlockFace(first.position(), first.entry);
-            if (!visitedZones.add(layout.node(inlet))) {
+        Pass pass = original.get(cursor);
+        if (!pass.vertex.device && bridges == null) {
+            int zone = layout.node(new BlockFace(pass.position(), pass.entry));
+            if (zone < 0) {
+                return;
+            }
+            if (!visitedZones.add(zone)) {
                 phase = Phase.DONE;
                 return;
             }
-            if (first != last) {
-                search = new GasMeshSearch(layout, inlet, new BlockFace(last.position(), last.exit), first.vertex, last.vertex);
-            }
+            bridges = layout.meshBridges(zone, pass.vertex);
         }
 
-        sections.add(new Section(original.subList(start, cursor), search));
-        start = cursor;
-        if (cursor == original.size()) {
-            phase = Phase.SOLVE;
+        Link link = pass.next;
+        if (bridges != null && link != null && !link.end.device && !bridges.ready()) {
+            return;
+        }
+
+        if (bridges != null && link != null && !link.end.device && !bridges.contains(link)) {
+            if (coreStart < 0) {
+                coreStart = cursor;
+            }
+        }
+        else if (coreStart >= 0 && bridges != null) {
+            GasMeshRatios core = layout.meshCore(bridges, original.get(coreStart).vertex, pass.vertex);
+            sections.add(new Section(coreStart, cursor, core));
+            coreStart = -1;
+        }
+        if (pass.vertex.device || link == null || link.end.device) {
+            bridges = null;
+        }
+        if (++cursor == original.size()) {
+            cursor = 0;
+            phase = sections.isEmpty() ? Phase.DONE : Phase.SOLVE;
         }
     }
 
-    private void solve(Level level) {
-        Section section = sections.get(sectionIndex);
-        if (section.search != null) {
-            if (!section.search.step(level)) {
-                return;
-            }
-
-            GasMeshPlan plan = section.search.result();
-            if (plan.size() > 1) {
-                section.plan = plan;
-                divided = true;
-            }
-            section.search = null;
+    private void solve() {
+        GasMeshRatios core = sections.get(sectionIndex).core;
+        if (!core.advance()) {
+            return;
         }
+
+        divided |= core.size() > 1;
         if (++sectionIndex == sections.size()) {
             sectionIndex = 0;
             phase = divided ? Phase.WEIGH : Phase.DONE;
@@ -104,12 +114,12 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
 
     private void weigh(Level level) {
         Section section = sections.get(sectionIndex);
-        GasMeshPlan plan = section.plan;
-        if (plan != null) {
-            while (section.index + 1 < plan.size() && plan.fraction(section.index) <= lower) {
-                section.index++;
+        GasMeshRatios core = section.core;
+        if (core.size() > 1) {
+            if (core.fraction(section.choice) <= lower) {
+                section.choice++;
             }
-            upper = Math.min(upper, plan.fraction(section.index));
+            upper = Math.min(upper, core.fraction(section.choice));
         }
         if (++sectionIndex == sections.size()) {
             sectionIndex = 0;
@@ -119,25 +129,39 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
     }
 
     private void emit() {
-        Section section = sections.get(sectionIndex);
-        List<Pass> segment = section.plan == null ? section.passes : section.plan.route(section.index).passes();
-        Pass pass = ++passIndex == segment.size() ? section.passes.getLast() : segment.get(passIndex - 1);
-        if (section.plan != null && passIndex == segment.size()) {
-            Pass end = segment.getLast();
-            pass = new Pass(pass.vertex, end.entry, pass.exit, pass.next);
+        Pass pass = original.get(cursor);
+        Link link = pass.next;
+        if (sectionIndex < sections.size() && cursor == sections.get(sectionIndex).start) {
+            Section section = sections.get(sectionIndex);
+            if (section.core.size() > 1) {
+                List<Link> links = section.core.links(section.choice);
+                link = links.get(linkIndex++);
+                if (linkIndex == links.size()) {
+                    sectionIndex++;
+                    cursor = section.end;
+                    linkIndex = 0;
+                }
+            }
+            else {
+                sectionIndex++;
+                cursor++;
+            }
         }
-        branch.add(pass);
-        if (passIndex < segment.size()) {
+        else {
+            cursor++;
+        }
+        if (link != null) {
+            branch.add(new Pass(link.opposite.end, entry, link.exit, link));
+            entry = link.entry;
             return;
         }
 
-        passIndex = 0;
-        if (++sectionIndex < sections.size()) {
-            return;
-        }
-
-        branch.finish(pass);
+        Pass last = new Pass(pass.vertex, entry, pass.exit, null);
+        branch.add(last);
+        branch.finish(last);
         sectionIndex = 0;
+        cursor = 0;
+        entry = original.getFirst().entry;
         lower = upper;
         upper = 1;
         phase = lower == 1 ? Phase.DONE : Phase.WEIGH;
@@ -148,14 +172,15 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
     }
 
     private static final class Section {
-        private final List<Pass> passes;
-        private @Nullable GasMeshSearch search;
-        private @Nullable GasMeshPlan plan;
-        private int index;
+        private final int start;
+        private final int end;
+        private final GasMeshRatios core;
+        private int choice;
 
-        private Section(List<Pass> passes, @Nullable GasMeshSearch search) {
-            this.passes = passes;
-            this.search = search;
+        private Section(int start, int end, GasMeshRatios core) {
+            this.start = start;
+            this.end = end;
+            this.core = core;
         }
     }
 }

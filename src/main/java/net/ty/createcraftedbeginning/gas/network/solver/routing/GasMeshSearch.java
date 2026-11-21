@@ -1,13 +1,9 @@
 package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.createmod.catnip.data.Iterate;
-import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Vertex;
-import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -20,17 +16,16 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasMeshSearch implements GasZoneLayout.MeshWork {
+final class GasMeshSearch {
     private static final double PRECISION = 1e-12;
-    private final GasZoneLayout layout;
-    private final BlockFace inlet;
-    private final BlockFace outlet;
+    private final GasMeshBridges bridges;
+    private final Vertex start;
     private final Map<Vertex, Node> junctions = new HashMap<>();
     private final List<Node> nodes = new ArrayList<>();
+    private final List<Node> freeRows = new ArrayList<>();
     private final List<Edge> edges = new ArrayList<>();
     private final Set<Link> seen = new HashSet<>();
     private final List<Arc> path = new ArrayList<>();
-    private final GasMeshPlan result = new GasMeshPlan();
     private final Node source;
     private final Vertex target;
     private Node here;
@@ -45,46 +40,36 @@ final class GasMeshSearch implements GasZoneLayout.MeshWork {
     private List<Link> corridor = new ArrayList<>();
     private int arcIndex;
     private int linkIndex;
-    private Direction entry;
-    private GasMeshPlan.BranchBuilder branch;
+    private List<Link> branch = List.of();
     private Phase phase = Phase.BUILD;
 
-    GasMeshSearch(GasZoneLayout layout, BlockFace inlet, BlockFace outlet, Vertex start, Vertex target) {
-        this.layout = layout;
-        this.inlet = inlet;
-        this.outlet = outlet;
+    GasMeshSearch(GasMeshBridges bridges, Vertex start, Vertex target) {
+        this.bridges = bridges;
+        this.start = start;
         this.target = target;
         source = node(start);
         source.potential = 1;
         here = source;
     }
 
-    @Override
-    public boolean step(Level level) {
+    boolean step(GasMeshRatios ratios) {
         switch (phase) {
             case BUILD -> build();
             case INITIALIZE, MULTIPLY, UPDATE, DIRECTION -> balance();
             case ORIENT -> orient();
-            case TRACE -> trace(level);
-            case EMIT -> emit();
+            case TRACE -> trace();
+            case EMIT -> emit(ratios);
         }
-        if (phase != Phase.DONE) {
-            return false;
-        }
-
-        result.finish();
-        return true;
-    }
-
-    @Override
-    public GasMeshPlan result() {
-        return result;
+        return phase == Phase.DONE;
     }
 
     private Node node(Vertex vertex) {
         return junctions.computeIfAbsent(vertex, key -> {
             Node node = new Node(key);
             nodes.add(node);
+            if (key != start && key != target) {
+                freeRows.add(node);
+            }
             return node;
         });
     }
@@ -92,19 +77,18 @@ final class GasMeshSearch implements GasZoneLayout.MeshWork {
     private void build() {
         if (next == null) {
             if (cursor == nodes.size()) {
-                phase = edges.size() >= nodes.size() && junctions.containsKey(target) ? Phase.INITIALIZE : Phase.DONE;
+                phase = edges.size() >= nodes.size() && junctions.containsKey(target) ? (freeRows.isEmpty() ? Phase.ORIENT : Phase.INITIALIZE) : Phase.DONE;
                 cursor = 0;
                 return;
             }
 
             here = nodes.get(cursor);
-            layout.connect(here.vertex);
             next = here.vertex.edges.get(Iterate.directions[side++]);
             if (side == Iterate.directions.length) {
                 side = 0;
                 cursor++;
             }
-            if (next == null || seen.contains(next.shared)) {
+            if (next == null || seen.contains(next.shared) || bridges.contains(next) || next.end.device) {
                 next = null;
                 return;
             }
@@ -115,57 +99,52 @@ final class GasMeshSearch implements GasZoneLayout.MeshWork {
         corridor.add(link);
         Vertex end = link.end;
         next = null;
-        if (!end.device) {
-            layout.connect(end);
-            if (end != source.vertex && end != target && end.edges.size() == 2 && (end.links.endpoints() | end.links.atmosphere()) == 0) {
-                for (Link continuation : end.edges.values()) {
-                    if (continuation != link.opposite) {
-                        next = continuation;
-                        return;
-                    }
+        if (end != source.vertex && end != target && end.edges.size() == 2 && (end.links.endpoints() | end.links.atmosphere()) == 0) {
+            for (Link continuation : end.edges.values()) {
+                if (continuation != link.opposite) {
+                    next = continuation;
+                    return;
                 }
             }
-            Node other = node(end);
-            if (other != here) {
-                Edge edge = new Edge(here, other, corridor);
-                edges.add(edge);
-                here.arcs.add(new Arc(edge, other, true));
-                other.arcs.add(new Arc(edge, here, false));
-            }
+        }
+        Node other = node(end);
+        if (other != here) {
+            Edge edge = new Edge(here, other, corridor);
+            edges.add(edge);
+            here.arcs.add(new Arc(edge, other, true));
+            other.arcs.add(new Arc(edge, here, false));
         }
         corridor = new ArrayList<>();
     }
 
     private void balance() {
-        Node node = nodes.get(cursor++);
-        if (node != source && node.vertex != target) {
-            switch (phase) {
-                case INITIALIZE -> {
-                    for (Arc arc : node.arcs) {
-                        if (arc.end == source) {
-                            node.error++;
-                        }
+        Node node = freeRows.get(cursor++);
+        switch (phase) {
+            case INITIALIZE -> {
+                for (Arc arc : node.arcs) {
+                    if (arc.end == source) {
+                        node.error++;
                     }
-                    node.direction = node.error / node.arcs.size();
-                    residual += node.error * node.direction;
                 }
-                case MULTIPLY -> {
-                    double value = node.arcs.size() * node.direction;
-                    for (Arc arc : node.arcs) {
-                        value -= arc.end.direction;
-                    }
-                    node.product = value;
-                    product += value * node.direction;
-                }
-                case UPDATE -> {
-                    node.potential += scale * node.direction;
-                    node.error -= scale * node.product;
-                    nextResidual += node.error * node.error / node.arcs.size();
-                }
-                case DIRECTION -> node.direction = node.error / node.arcs.size() + scale * node.direction;
+                node.direction = node.error / node.arcs.size();
+                residual += node.error * node.direction;
             }
+            case MULTIPLY -> {
+                double value = node.arcs.size() * node.direction;
+                for (Arc arc : node.arcs) {
+                    value -= arc.end.direction;
+                }
+                node.product = value;
+                product += value * node.direction;
+            }
+            case UPDATE -> {
+                node.potential += scale * node.direction;
+                node.error -= scale * node.product;
+                nextResidual += node.error * node.error / node.arcs.size();
+            }
+            case DIRECTION -> node.direction = node.error / node.arcs.size() + scale * node.direction;
         }
-        if (cursor < nodes.size()) {
+        if (cursor < freeRows.size()) {
             return;
         }
 
@@ -197,10 +176,9 @@ final class GasMeshSearch implements GasZoneLayout.MeshWork {
         }
     }
 
-    private void trace(Level level) {
+    private void trace() {
         if (here.vertex == target) {
-            branch = result.new BranchBuilder(level, weight);
-            entry = inlet.getFace();
+            branch = new ArrayList<>();
             arcIndex = 0;
             linkIndex = 0;
             phase = Phase.EMIT;
@@ -228,11 +206,9 @@ final class GasMeshSearch implements GasZoneLayout.MeshWork {
         weight = 1;
     }
 
-    private void emit() {
+    private void emit(GasMeshRatios ratios) {
         if (arcIndex == path.size()) {
-            Pass last = new Pass(target, entry, outlet.getFace(), null);
-            branch.add(last);
-            branch.finish(last);
+            ratios.add(branch, weight);
             path.clear();
             here = source;
             weight = 1;
@@ -244,8 +220,7 @@ final class GasMeshSearch implements GasZoneLayout.MeshWork {
         Edge edge = arc.edge;
         List<Link> links = edge.links;
         Link link = arc.forward ? links.get(linkIndex) : links.get(links.size() - 1 - linkIndex).opposite;
-        branch.add(new Pass(link.opposite.end, entry, link.exit, link));
-        entry = link.entry;
+        branch.add(link);
         if (++linkIndex == links.size()) {
             edge.flow += arc.forward ? -weight : weight;
             arcIndex++;
