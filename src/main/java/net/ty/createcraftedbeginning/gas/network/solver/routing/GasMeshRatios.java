@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshBlocks.Block;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Vertex;
 import org.jetbrains.annotations.Nullable;
@@ -16,8 +17,8 @@ final class GasMeshRatios {
     private @Nullable GasMeshSearch search;
     private double totalWeight;
 
-    GasMeshRatios(GasMeshBridges bridges, Vertex start, Vertex end) {
-        search = new GasMeshSearch(bridges, start, end);
+    GasMeshRatios(Block block, Vertex start, Vertex end) {
+        search = new GasMeshSearch(block, start, end);
     }
 
     boolean advance() {

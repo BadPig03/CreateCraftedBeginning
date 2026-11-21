@@ -11,6 +11,8 @@ import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkState;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkState.PipeLinks;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshBlocks.Block;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.DevicePort;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
@@ -45,7 +47,7 @@ public final class GasZoneLayout {
     private @Nullable Construction construction;
     private int lastBuildWork;
     private final LinkedHashMap<MeshKey, GasMeshPlan> meshes = new LinkedHashMap<>();
-    private final Map<Integer, GasMeshBridges> meshBridges = new HashMap<>();
+    private final Map<Integer, GasMeshBlocks> meshBlocks = new HashMap<>();
     private final LinkedHashMap<CoreKey, GasMeshRatios> meshCores = new LinkedHashMap<>();
     private final ArrayDeque<MeshWork> pendingMeshes = new ArrayDeque<>();
 
@@ -165,12 +167,12 @@ public final class GasZoneLayout {
         return internalView;
     }
 
-    GasMeshBridges meshBridges(int zone, Vertex first) {
-        return meshBridges.computeIfAbsent(zone, ignored -> new GasMeshBridges(this, first));
+    GasMeshBlocks meshBlocks(int zone, Vertex first) {
+        return meshBlocks.computeIfAbsent(zone, ignored -> new GasMeshBlocks(this, first));
     }
 
-    GasMeshRatios meshCore(GasMeshBridges bridges, Vertex start, Vertex end) {
-        CoreKey key = new CoreKey(start, end);
+    GasMeshRatios meshCore(Block block, Vertex start, Vertex end) {
+        CoreKey key = new CoreKey(block, start, end);
         GasMeshRatios ratios = meshCores.get(key);
         if (ratios != null) {
             meshCores.putLast(key, ratios);
@@ -180,7 +182,7 @@ public final class GasZoneLayout {
         if (meshCores.size() == MAX_MESHES) {
             meshCores.pollFirstEntry();
         }
-        ratios = new GasMeshRatios(bridges, start, end);
+        ratios = new GasMeshRatios(block, start, end);
         meshCores.put(key, ratios);
         return ratios;
     }
@@ -386,9 +388,9 @@ public final class GasZoneLayout {
         GasMeshPlan result();
     }
 
-    private record CoreKey(Vertex start, Vertex end) {}
+    private record CoreKey(Block block, Vertex start, Vertex end) {}
 
-    private record MeshKey(BlockFace inlet, BlockFace outlet, List<GasZoneRoute.DevicePort> devices) {}
+    private record MeshKey(BlockFace inlet, BlockFace outlet, List<DevicePort> devices) {}
 
     static final class Vertex {
         final BlockPos pos;

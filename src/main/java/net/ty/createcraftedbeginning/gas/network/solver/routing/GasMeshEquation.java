@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.gas.network.solver.routing;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshBlocks.Block;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Vertex;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +25,7 @@ final class GasMeshEquation {
     final GasMeshFactor factor = new GasMeshFactor();
     private final Map<Vertex, Node> junctions = new HashMap<>();
     private final Set<Link> seen = new HashSet<>();
-    private final GasMeshBridges bridges;
+    private final Block block;
     private final Vertex start;
     private final Vertex target;
     private List<Link> corridor = new ArrayList<>();
@@ -33,8 +34,8 @@ final class GasMeshEquation {
     private int side;
     private boolean built;
 
-    GasMeshEquation(GasMeshBridges bridges, Vertex start, Vertex target) {
-        this.bridges = bridges;
+    GasMeshEquation(Block block, Vertex start, Vertex target) {
+        this.block = block;
         this.start = start;
         this.target = target;
         node(start);
@@ -66,7 +67,7 @@ final class GasMeshEquation {
         if (next == null) {
             while (side < Iterate.directions.length) {
                 Link link = here.vertex.edges.get(Iterate.directions[side++]);
-                if (link != null && !link.end.device && !bridges.contains(link) && !seen.contains(link.shared)) {
+                if (link != null && !link.end.device && block.contains(link) && !seen.contains(link.shared)) {
                     next = link;
                     break;
                 }

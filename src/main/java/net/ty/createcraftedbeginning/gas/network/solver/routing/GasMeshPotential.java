@@ -9,7 +9,7 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class GasMeshPotential {
-    private static final double RESIDUAL_LIMIT = 1e-24;
+    private static final double RESIDUAL_LIMIT = 1.0E-24;
     private final GasMeshFactor factor;
     private final double[] source;
     private final double[] potential;

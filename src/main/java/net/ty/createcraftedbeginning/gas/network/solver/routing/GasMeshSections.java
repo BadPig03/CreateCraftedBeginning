@@ -3,8 +3,10 @@ package net.ty.createcraftedbeginning.gas.network.solver.routing;
 import net.createmod.catnip.math.BlockFace;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshBlocks.Block;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshPlan.BranchBuilder;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.Link;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout.MeshWork;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneRoute.Pass;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +18,7 @@ import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasMeshSections implements GasZoneLayout.MeshWork {
+final class GasMeshSections implements MeshWork {
     private final GasZoneLayout layout;
     private final GasZoneRoute route;
     private final List<Pass> original;
@@ -24,9 +26,10 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
     private final GasMeshPlan result = new GasMeshPlan();
     private final List<Section> sections = new ArrayList<>();
     private final Set<Integer> visitedZones = new HashSet<>();
-    private @Nullable GasMeshBridges bridges;
+    private @Nullable GasMeshBlocks blocks;
+    private @Nullable Block currentBlock;
     private int cursor;
-    private int coreStart = -1;
+    private int coreStart;
     private int sectionIndex;
     private int linkIndex;
     private Direction entry;
@@ -74,35 +77,36 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
 
     private void partition() {
         Pass pass = original.get(cursor);
-        if (!pass.vertex.device && bridges == null) {
+        if (!pass.vertex.device && blocks == null) {
             int zone = layout.node(new BlockFace(pass.position(), pass.entry));
             if (zone < 0) {
                 return;
             }
+
             if (!visitedZones.add(zone)) {
                 phase = Phase.DONE;
                 return;
             }
-            bridges = layout.meshBridges(zone, pass.vertex);
+
+            blocks = layout.meshBlocks(zone, pass.vertex);
         }
 
         Link link = pass.next;
-        if (bridges != null && link != null && !link.end.device && !bridges.ready()) {
+        if (blocks != null && link != null && !link.end.device && !blocks.ready()) {
             return;
         }
 
-        if (bridges != null && link != null && !link.end.device && !bridges.contains(link)) {
-            if (coreStart < 0) {
-                coreStart = cursor;
+        Block nextBlock = blocks == null || link == null ? null : blocks.block(link);
+        if (nextBlock != currentBlock) {
+            if (currentBlock != null) {
+                GasMeshRatios core = layout.meshCore(currentBlock, original.get(coreStart).vertex, pass.vertex);
+                sections.add(new Section(coreStart, cursor, core));
             }
-        }
-        else if (coreStart >= 0 && bridges != null) {
-            GasMeshRatios core = layout.meshCore(bridges, original.get(coreStart).vertex, pass.vertex);
-            sections.add(new Section(coreStart, cursor, core));
-            coreStart = -1;
+            currentBlock = nextBlock;
+            coreStart = cursor;
         }
         if (pass.vertex.device || link == null || link.end.device) {
-            bridges = null;
+            blocks = null;
         }
         if (pass.vertexCapacity() != Long.MAX_VALUE || link != null && link.capacity != Long.MAX_VALUE) {
             restricted.add(pass);
@@ -156,6 +160,7 @@ final class GasMeshSections implements GasZoneLayout.MeshWork {
             phase = Phase.EMIT;
             return;
         }
+
         if (!restricted.isEmpty()) {
             phase = Phase.REUSE;
             return;

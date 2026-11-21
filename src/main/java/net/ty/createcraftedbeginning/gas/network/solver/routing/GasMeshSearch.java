@@ -1,6 +1,7 @@
 package net.ty.createcraftedbeginning.gas.network.solver.routing;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshBlocks.Block;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshEquation.Arc;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshEquation.Edge;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasMeshEquation.Node;
@@ -16,7 +17,7 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 final class GasMeshSearch {
-    private static final double PRECISION = 1e-12;
+    private static final double PRECISION = 1.0E-12;
     private final GasMeshEquation equation;
     private final Vertex start;
     private final Vertex target;
@@ -35,8 +36,8 @@ final class GasMeshSearch {
     private int linkIndex;
     private Phase phase = Phase.EQUATION;
 
-    GasMeshSearch(GasMeshBridges bridges, Vertex start, Vertex target) {
-        equation = bridges.equation(start, target);
+    GasMeshSearch(Block block, Vertex start, Vertex target) {
+        equation = block.equation(start, target);
         this.start = start;
         this.target = target;
     }

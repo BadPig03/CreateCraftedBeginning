@@ -9,25 +9,29 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class GasMeshBridges {
+final class GasMeshBlocks {
     private final GasZoneLayout layout;
-    private final Set<Link> bridges = new HashSet<>();
+    private final Map<Link, Block> owners = new HashMap<>();
     private final ArrayDeque<Frame> stack = new ArrayDeque<>();
     private final Map<Vertex, Frame> discovery = new HashMap<>();
 
-    GasMeshBridges(GasZoneLayout layout, Vertex start) {
+    GasMeshBlocks(GasZoneLayout layout, Vertex start) {
         this.layout = layout;
         visit(start, null);
     }
 
-    boolean contains(Link link) {
-        return bridges.contains(link.shared);
+    @Nullable
+    Block block(Link link) {
+        Block owner = owners.get(link.shared);
+        if (owner == null) {
+            return null;
+        }
+
+        return owner.root();
     }
 
     boolean ready() {
@@ -48,6 +52,9 @@ final class GasMeshBridges {
                 return false;
             }
 
+            if (neighbor.index < frame.index) {
+                owners.put(link.shared, frame.block);
+            }
             frame.low = Math.min(frame.low, neighbor.index);
         }
 
@@ -56,30 +63,22 @@ final class GasMeshBridges {
             Frame parent = stack.getLast();
             parent.low = Math.min(parent.low, frame.low);
             if (frame.low > parent.index) {
-                bridges.add(frame.parent.shared);
+                owners.remove(frame.parent.shared);
             }
-            else {
-                parent.join(frame);
+            else if (frame.low < parent.index) {
+                parent.block.join(frame.block);
             }
         }
         return stack.isEmpty();
     }
 
-    GasMeshEquation equation(Vertex start, Vertex end) {
-        if (GasMeshEquation.contracts(start) || GasMeshEquation.contracts(end)) {
-            return new GasMeshEquation(this, start, end);
-        }
-
-        Frame region = discovery.get(start).root();
-        if (region.equation == null) {
-            region.equation = new GasMeshEquation(this, start, end);
-        }
-        return region.equation;
-    }
-
     private void visit(Vertex vertex, @Nullable Link parent) {
         int index = discovery.size();
-        Frame frame = new Frame(vertex, parent, index);
+        Block block = new Block();
+        if (parent != null) {
+            owners.put(parent.shared, block);
+        }
+        Frame frame = new Frame(vertex, parent, index, block);
         discovery.put(vertex, frame);
         layout.connect(vertex);
         stack.addLast(frame);
@@ -89,31 +88,51 @@ final class GasMeshBridges {
         private final Vertex vertex;
         private final @Nullable Link parent;
         private final int index;
-        private Frame leader = this;
-        private int members = 1;
-        private @Nullable GasMeshEquation equation;
+        private final Block block;
         private int low;
         private int side;
 
-        private Frame(Vertex vertex, @Nullable Link parent, int index) {
+        private Frame(Vertex vertex, @Nullable Link parent, int index, Block block) {
             this.vertex = vertex;
             this.parent = parent;
             this.index = index;
+            this.block = block;
             low = index;
         }
+    }
 
-        private Frame root() {
-            Frame frame = this;
-            while (frame.leader != frame) {
-                frame.leader = frame.leader.leader;
-                frame = frame.leader;
-            }
-            return frame;
+    final class Block {
+        private Block leader = this;
+        private int members = 1;
+        private @Nullable GasMeshEquation equation;
+
+        boolean contains(Link link) {
+            return block(link) == this;
         }
 
-        private void join(Frame other) {
-            Frame first = root();
-            Frame second = other.root();
+        GasMeshEquation equation(Vertex start, Vertex end) {
+            if (GasMeshEquation.contracts(start) || GasMeshEquation.contracts(end)) {
+                return new GasMeshEquation(this, start, end);
+            }
+
+            if (equation == null) {
+                equation = new GasMeshEquation(this, start, end);
+            }
+            return equation;
+        }
+
+        private Block root() {
+            Block block = this;
+            while (block.leader != block) {
+                block.leader = block.leader.leader;
+                block = block.leader;
+            }
+            return block;
+        }
+
+        private void join(Block other) {
+            Block first = root();
+            Block second = other.root();
             if (first.members < second.members) {
                 first.leader = second;
                 second.members += first.members;
