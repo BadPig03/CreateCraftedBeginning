@@ -90,7 +90,7 @@ public final class CCBMachines extends ConfigBase {
 
     public static final class AirtightRegulatorPump extends ConfigBase {
         public final ConfigFloat maxPressureRise = f(8, 0, GasPressureLimits.HARD_PRESSURE_ATM, "max_pressure_rise", "[Unit: atm; 1 atm = 100000 Pa]", "Maximum pressure rise in one pump stage, independent of rotation speed. Supply is limited by inlet pressure plus this rise; active exhaust cannot lower the outlet below atmospheric pressure minus this rise.");
-        public final ConfigInt maxFlowPerTick = i(4000, 0, 1000000, "max_flow_per_tick", "[Unit: GU/t]", "Shared supply and exhaust budget at Create's configured maximum rotation speed. Flow scales with absolute speed; supply tapers within 0.01 atm of its pressure limit and inlet pressure below 1 atm reduces supply throughput. Set to 0 to disable both supply and exhaust.");
+        public final ConfigInt maxFlowPerTick = i(4000, 0, 1000000, "max_flow_per_tick", "[Unit: GU/t]", "Shared supply and exhaust budget at Create's configured maximum rotation speed. The budget scales with absolute speed. Gas network pressure, resistance, and available gas determine actual flow. Set to 0 to disable both supply and exhaust.");
 
         @Override
         public String getName() {

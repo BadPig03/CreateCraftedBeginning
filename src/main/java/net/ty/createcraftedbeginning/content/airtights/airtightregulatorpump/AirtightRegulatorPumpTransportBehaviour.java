@@ -20,7 +20,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 final class AirtightRegulatorPumpTransportBehaviour extends GasTransportBehaviour {
     private static final String COMPOUND_KEY_EXHAUST = "RegulatorExhaust";
-    private static final long REGULATION_BAND_PA = 1000;
 
     private final AirtightRegulatorPumpBlockEntity regulatorPump;
     private final AirtightRegulatorPumpExhaust exhaust;
@@ -90,8 +89,7 @@ final class AirtightRegulatorPumpTransportBehaviour extends GasTransportBehaviou
         long outletSetPressurePa = Mth.clamp(regulatorPump.getOutletSetPressurePa(), GasPressure.VACUUM_PA, AirtightRegulatorPumpPressureBehaviour.maxOutletSetPressurePa());
         long maximumPressureRisePa = Math.max(GasPressure.VACUUM_PA, regulatorPump.getMaxPressureRisePa());
         long flowRateLimit = Math.max(0, regulatorPump.getFlowRateLimit());
-        double regulationConductance = flowRateLimit <= 0 ? Double.NaN : (double) flowRateLimit / REGULATION_BAND_PA;
-        return new GasTransportEdgeProperties(resistanceUnits, GasTransportPressureDrive.outletPressureTarget(outletSetPressurePa, maximumPressureRisePa), flowRateLimit, GasPressure.REFERENCE_PRESSURE_PA, regulationConductance, true, true);
+        return new GasTransportEdgeProperties(resistanceUnits, GasTransportPressureDrive.outletPressureTarget(outletSetPressurePa, maximumPressureRisePa), flowRateLimit, GasPressure.VACUUM_PA, Double.NaN, true, true);
     }
 
     @Override

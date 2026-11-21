@@ -154,7 +154,7 @@ public class AirtightRegulatorPumpScenes {
         scene.idle(3);
         forwardFlowArea = forwardFlowArea.expandTowards(3, 0, 0);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, forwardFlowObject, forwardFlowArea, 60);
-        scene.overlay().showText(60).text("When the outlet is below the set pressure, the regulator pumps gas from its inlet toward its outlet").pointAt(regulatorVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("The setting only limits outlet pressure").pointAt(regulatorVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(77);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.INPUT, inletPressureObject, inletPressureArea, 3);
@@ -190,7 +190,7 @@ public class AirtightRegulatorPumpScenes {
 
         scene.idle(77);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetReachedFlowObject, flowStartArea, 3);
-        scene.overlay().showText(60).text("At the set pressure, regulation pauses until the pressure changes").colored(PonderPalette.GREEN).pointAt(outletTankVec).placeNearTarget().attachKeyFrame();
+        scene.overlay().showText(60).text("The pump keeps supplying gas until the downstream tank reaches the set pressure").colored(PonderPalette.GREEN).pointAt(outletTankVec).placeNearTarget().attachKeyFrame();
 
         scene.idle(3);
         scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, targetReachedFlowObject, targetReachedFlowArea, 21);

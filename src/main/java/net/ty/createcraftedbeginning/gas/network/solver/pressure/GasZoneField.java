@@ -5,6 +5,7 @@ import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasPressureLimits;
 import net.ty.createcraftedbeginning.gas.network.GasFlowResistance;
 import net.ty.createcraftedbeginning.gas.network.GasTransportEdgeProperties;
+import net.ty.createcraftedbeginning.gas.network.GasTransportPressureDrive.OutletPressureTarget;
 import net.ty.createcraftedbeginning.gas.network.solver.routing.GasZoneLayout;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,7 +18,8 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 final class GasZoneField {
     private static final int SWEEPS = 8;
-    private static final double MIN_LOSSLESS_WEIGHT = (double) SWEEPS / GasPressure.REFERENCE_PRESSURE_PA;
+    private static final double PRESSURE_RELAXATION = 0.5;
+    private static final double MIN_PROJECTION_WEIGHT = (double) SWEEPS / GasPressure.REFERENCE_PRESSURE_PA;
     private final GasZoneLayout layout;
     private final int[] groups;
     private final double[] fixedSum;
@@ -26,8 +28,9 @@ final class GasZoneField {
     private final double[] net;
     private final double[] slope;
     private final List<Arc> arcs = new ArrayList<>();
-    private final List<LosslessLink> losslessLinks = new ArrayList<>();
-    private double @Nullable [] losslessWeights;
+    private final List<PressureLink> pressureLinks = new ArrayList<>();
+    private double @Nullable [] projectionWeights;
+    private boolean @Nullable [] outletLimitNodes;
     private int cursor;
     private int sweep;
     private Stage stage = Stage.SEED;
@@ -76,11 +79,22 @@ final class GasZoneField {
             fixedSum[a] += fixedSum[b];
             anchors[a] += anchors[b];
         }
-        if (edge.isLossless()) {
-            if (losslessWeights == null) {
-                losslessWeights = new double[pressure.length];
+        boolean idealOutletLimit = edge.pressureDrive() instanceof OutletPressureTarget && edge.resistanceUnits() == 0 && edge.flowLimitReferencePressurePa() == GasPressure.VACUUM_PA && Double.isNaN(edge.conductancePerPascal());
+        if (edge.isLossless() || idealOutletLimit) {
+            if (projectionWeights == null) {
+                projectionWeights = new double[pressure.length];
             }
-            losslessLinks.add(new LosslessLink(from, to));
+
+            if (idealOutletLimit) {
+                if (outletLimitNodes == null) {
+                    outletLimitNodes = new boolean[pressure.length];
+                }
+
+                outletLimitNodes[from] = true;
+                outletLimitNodes[to] = true;
+            }
+
+            pressureLinks.add(new PressureLink(from, to, edge));
             return;
         }
 
@@ -133,13 +147,19 @@ final class GasZoneField {
                 flow = Math.min(limit, Math.max(0, head - outlet) * arc.conductance);
             }
 
+            double conductance = arc.conductance;
+            boolean[] limitNodes = outletLimitNodes;
+            if (limitNodes != null && arc.device == null && inlet < outlet && limitNodes[arc.from < 0 ? arc.to : arc.from]) {
+                conductance = 0;
+            }
+
             if (arc.from >= 0) {
                 net[arc.from] -= flow;
-                slope[arc.from] += arc.conductance;
+                slope[arc.from] += conductance;
             }
             if (arc.to >= 0) {
                 net[arc.to] += flow;
-                slope[arc.to] += arc.conductance;
+                slope[arc.to] += conductance;
             }
             return false;
         }
@@ -149,19 +169,22 @@ final class GasZoneField {
             stage = Stage.UPDATE;
         }
 
-        double[] weights = losslessWeights;
-        if (stage == Stage.EQUALIZE && weights != null) {
-            LosslessLink link = losslessLinks.get(cursor++);
+        double[] weights = projectionWeights;
+        if (stage == Stage.PROJECT && weights != null) {
+            PressureLink link = pressureLinks.get(cursor++);
             double inlet = pressure[link.from];
             double outlet = pressure[link.to];
-            if (inlet > outlet) {
-                double inletWeight = weights[link.from];
-                double outletWeight = weights[link.to];
+            double inletWeight = weights[link.from];
+            double outletWeight = weights[link.to];
+            if (link.edge.pressureDrive() instanceof OutletPressureTarget target) {
+                projectOutletLimit(link, target, inlet, outlet, inletWeight, outletWeight);
+            }
+            else if (inlet > outlet) {
                 double equalPressure = outlet + (inlet - outlet) * inletWeight / (inletWeight + outletWeight);
                 pressure[link.from] = equalPressure;
                 pressure[link.to] = equalPressure;
             }
-            if (cursor < losslessLinks.size()) {
+            if (cursor < pressureLinks.size()) {
                 return false;
             }
 
@@ -174,10 +197,10 @@ final class GasZoneField {
         double capacitance = (double) layout.volume(node) / GasPressure.REFERENCE_PRESSURE_PA;
         double weight = slope[node] + SWEEPS * capacitance;
         if (slope[node] > 0 && Double.isFinite(pressure[node])) {
-            pressure[node] = GasPressureLimits.clampToHardLimit(pressure[node] + 0.5 * net[node] / weight);
+            pressure[node] = GasPressureLimits.clampToHardLimit(pressure[node] + PRESSURE_RELAXATION * net[node] / weight);
         }
         if (weights != null) {
-            weights[node] = Math.max(MIN_LOSSLESS_WEIGHT, weight);
+            weights[node] = Math.max(MIN_PROJECTION_WEIGHT, weight);
         }
         net[node] = 0;
         slope[node] = 0;
@@ -187,7 +210,7 @@ final class GasZoneField {
 
         cursor = 0;
         if (weights != null) {
-            stage = Stage.EQUALIZE;
+            stage = Stage.PROJECT;
             return false;
         }
 
@@ -203,6 +226,22 @@ final class GasZoneField {
         return pressure[node];
     }
 
+    private void projectOutletLimit(PressureLink link, OutletPressureTarget target, double inlet, double outlet, double inletWeight, double outletWeight) {
+        double inletResponse = PRESSURE_RELAXATION / inletWeight;
+        double outletResponse = PRESSURE_RELAXATION / outletWeight;
+        double inletLimit = inlet / inletResponse;
+        double targetLimit = (target.targetPressurePa() - outlet) / outletResponse;
+        double riseLimit = (inlet + target.maxPressureBoostPa() - outlet) / (inletResponse + outletResponse);
+        double flow = Math.min(link.edge.flowRateLimit(), Math.min(inletLimit, Math.min(targetLimit, riseLimit)));
+        if (!(flow > 0)) {
+            return;
+        }
+
+        double inletAfter = Math.max(GasPressure.VACUUM_PA, inlet - flow * inletResponse);
+        pressure[link.from] = inletAfter;
+        pressure[link.to] = Math.min(target.drivenOutletPressurePa(inletAfter), outlet + flow * outletResponse);
+    }
+
     private int root(int index) {
         while (groups[index] >= 0) {
             index = groups[index];
@@ -212,9 +251,9 @@ final class GasZoneField {
 
     private record Arc(int from, int to, double fixed, long limit, double conductance, @Nullable GasTransportEdgeProperties device, long assistedFlow) {}
 
-    private record LosslessLink(int from, int to) {}
+    private record PressureLink(int from, int to, GasTransportEdgeProperties edge) {}
 
     private enum Stage {
-        SEED, BALANCE, UPDATE, EQUALIZE
+        SEED, BALANCE, UPDATE, PROJECT
     }
 }
