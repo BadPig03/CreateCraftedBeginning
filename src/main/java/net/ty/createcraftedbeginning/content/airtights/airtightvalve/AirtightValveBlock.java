@@ -3,7 +3,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightvalve;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.api.contraption.transformable.TransformableBlock;
 import com.simibubi.create.content.contraptions.StructureTransform;
-import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlock;
 import com.simibubi.create.foundation.block.IBE;
@@ -44,6 +43,7 @@ import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.AxisGasPipe;
 import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
@@ -57,7 +57,7 @@ import java.util.EnumSet;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightValveBlock extends KineticBlock implements IBE<AirtightValveBlockEntity>, SimpleWaterloggedBlock, IAxisPipe, GasConnectable, TransformableBlock {
+public class AirtightValveBlock extends KineticBlock implements IBE<AirtightValveBlockEntity>, SimpleWaterloggedBlock, AxisGasPipe, GasConnectable, TransformableBlock {
     public static final EnumProperty<Axis> AXIS = BlockStateProperties.AXIS;
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;

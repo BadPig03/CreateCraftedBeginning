@@ -4,7 +4,6 @@ import com.mojang.serialization.MapCodec;
 import com.simibubi.create.api.contraption.transformable.TransformableBlock;
 import com.simibubi.create.content.contraptions.StructureTransform;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
-import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.content.kinetics.base.KineticBlock;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.block.IBE;
@@ -44,6 +43,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.AxisGasPipe;
 import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
@@ -56,7 +56,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AirtightRegulatorPumpBlock extends KineticBlock implements IBE<AirtightRegulatorPumpBlockEntity>, SimpleWaterloggedBlock, IWrenchable, IAxisPipe, GasConnectable, TransformableBlock {
+public class AirtightRegulatorPumpBlock extends KineticBlock implements IBE<AirtightRegulatorPumpBlockEntity>, SimpleWaterloggedBlock, IWrenchable, AxisGasPipe, GasConnectable, TransformableBlock {
     private static final DirectionProperty FACING = BlockStateProperties.FACING;
     private static final SpeedLevel MINIMUM_REQUIRED_SPEED_LEVEL = SpeedLevel.MEDIUM;
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;

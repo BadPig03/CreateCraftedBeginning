@@ -2,7 +2,6 @@ package net.ty.createcraftedbeginning.content.airtights.airtightpipe;
 
 import com.simibubi.create.content.decoration.bracket.BracketedBlockEntityBehaviour;
 import com.simibubi.create.content.equipment.wrench.IWrenchableWithBracket;
-import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -38,6 +37,7 @@ import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.AxisGasPipe;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
 import net.ty.createcraftedbeginning.gas.visual.GasPlacementHelper;
@@ -48,7 +48,7 @@ import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterloggedBlock, IWrenchableWithBracket, IAxisPipe {
+public class AxisGasPipeBlock extends RotatedPillarBlock implements SimpleWaterloggedBlock, IWrenchableWithBracket, AxisGasPipe {
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     protected AxisGasPipeBlock(Properties properties) {

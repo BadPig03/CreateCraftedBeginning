@@ -1,7 +1,6 @@
 package net.ty.createcraftedbeginning.content.airtights.airtightpump;
 
 import com.simibubi.create.content.contraptions.StructureTransform;
-import com.simibubi.create.content.fluids.pipes.IAxisPipe;
 import com.simibubi.create.content.kinetics.base.DirectionalAxisKineticBlock;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
@@ -38,6 +37,7 @@ import net.minecraft.world.ticks.TickPriority;
 import net.ty.createcraftedbeginning.advancement.CCBAdvancementBehaviour;
 import net.ty.createcraftedbeginning.foundation.block.CCBShapes;
 import net.ty.createcraftedbeginning.gas.behaviour.GasTransportBehaviour;
+import net.ty.createcraftedbeginning.gas.network.AxisGasPipe;
 import net.ty.createcraftedbeginning.gas.network.GasConnectable;
 import net.ty.createcraftedbeginning.gas.network.GasConnectionResolver;
 import net.ty.createcraftedbeginning.gas.network.solver.GasNetworkTopology;
@@ -48,7 +48,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ShaftDrivenAirtightPumpBlock extends DirectionalAxisKineticBlock implements IBE<AirtightPumpBlockEntity>, SimpleWaterloggedBlock, IAxisPipe, GasConnectable {
+public class ShaftDrivenAirtightPumpBlock extends DirectionalAxisKineticBlock implements IBE<AirtightPumpBlockEntity>, SimpleWaterloggedBlock, AxisGasPipe, GasConnectable {
     private static final SpeedLevel MINIMUM_REQUIRED_SPEED_LEVEL = SpeedLevel.MEDIUM;
     private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
