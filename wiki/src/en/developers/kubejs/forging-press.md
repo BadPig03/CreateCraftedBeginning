@@ -9,12 +9,12 @@ editLink: false
 **Syntax:** `forging_press(output, inputs[])`
 
 ::: info Usage
-The Airtight Forging Press processes ingredients in its base, press head and addition slots. Recipes can also use a fluid or gas.
+The Airtight Forging Press uses separate slots for the base item, press head and additional ingredient. Recipes can also use a fluid or gas.
 :::
 
 **Features:**
 
-- The first input is the required base item. The optional second input can be an item, fluid or gas ingredient.
+- The first input is the required base item. The optional additional ingredient goes second and can be an item, fluid or gas.
 - Produces 1 to 8 item outputs.
 - Unused slots stay empty.
 - Supports [press head configuration](#pressHead), [gas tags and pressure conditions](./gas-conditions.md) and chance-based item outputs.
@@ -22,7 +22,7 @@ The Airtight Forging Press processes ingredients in its base, press head and add
 ## Press head items {#pressHead}
 
 - Use `.pressHead(...)` to set the press head. The press head is not consumed.
-- Only items in the `#createcraftedbeginning:press_head_tools` item tag fit in the press head slot.
+- The press head slot accepts items in the `#createcraftedbeginning:press_head_tools` tag and smithing templates.
 
 To allow an iron block as a press head, add it to the tag:
 
@@ -44,7 +44,7 @@ ServerEvents.recipes(event => {
         'minecraft:iron_ingot'
     ]).id('tutorial:forging_base')
 
-    // 1 iron nugget (base) + 1 gold nugget (addition) → 1 iron ingot
+    // 1 iron nugget (base) + 1 gold nugget (additional ingredient) → 1 iron ingot
     // A heavy core serves as the press head.
     ccb.forging_press('minecraft:iron_ingot', [
         'minecraft:iron_nugget',
@@ -52,7 +52,7 @@ ServerEvents.recipes(event => {
     ]).pressHead('minecraft:heavy_core')
         .id('tutorial:forging_three_items')
 
-    // 1 charcoal (base) + 2500 GU energized ultrawarm air (addition)
+    // 1 charcoal (base) + 2500 GU energized ultrawarm air (additional ingredient)
     // → 1 diamond (20% chance); a heavy core serves as the press head.
     ccb.forging_press(CCBItem.of('minecraft:diamond').withChance(0.2), [
         Ingredient.of('minecraft:charcoal'),
@@ -62,7 +62,7 @@ ServerEvents.recipes(event => {
     ]).pressHead('minecraft:heavy_core')
         .id('tutorial:forging_gas')
 
-    // 1 cobblestone (base) + 100 mB lava (addition) → 1 stone
+    // 1 cobblestone (base) + 100 mB lava (additional ingredient) → 1 stone
     // A heavy core serves as the press head.
     ccb.forging_press('minecraft:stone', [
         'minecraft:cobblestone',

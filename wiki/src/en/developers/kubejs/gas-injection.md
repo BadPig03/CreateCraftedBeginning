@@ -6,7 +6,7 @@ editLink: false
 
 # Gas Injection Chamber {#gas-injection}
 
-**Syntax:** `gas_injection(output, input[])`
+**Syntax:** `gas_injection(output, inputs[])`
 
 ::: info Usage
 The Gas Injection Chamber processes items on a Belt or Depot. Recipes involving fluids use a Basin.

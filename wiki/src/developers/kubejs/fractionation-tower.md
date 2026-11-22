@@ -15,8 +15,8 @@ editLink: false
 **功能：**
 
 - 输入可混合物品、流体和气体，至少1项。
-- 输入每类最多64项；输出一共2~8项。
-- 使用`.processingTime(...)`设置加工时间，单位为tick，需要为正整数，默认为200tick。
+- 输入每类最多64项；输出为2~8项产物。
+- 使用`.processingTime(...)`设置加工时间，单位为tick，传入值必须为正整数。省略此调用时默认为200tick。
 - 支持[温度档位与匹配方式](#temperature)和[气体标签和压力条件](./gas-conditions.md)。
 
 ## 分层产物 {#layer-outputs}

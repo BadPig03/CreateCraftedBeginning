@@ -15,8 +15,8 @@ The Airtight Fractionation Tower uses heat for fractionation or cooling for cond
 **Features:**
 
 - Inputs can mix items, fluids and gases. At least one input is required.
-- Inputs: up to 64 entries per type. Outputs: 2–8 entries in total.
-- Use `.processingTime(...)` to set the processing time in ticks. Pass a positive integer; the default is 200 ticks.
+- Inputs: up to 64 entries per type. Outputs: 2–8 entries.
+- Use `.processingTime(...)` to set the processing time in ticks. Pass a positive integer or omit the call to use the default of 200 ticks.
 - Supports [temperature tiers and matching modes](#temperature) and [gas tags and pressure conditions](./gas-conditions.md).
 
 ## Layer outputs {#layer-outputs}

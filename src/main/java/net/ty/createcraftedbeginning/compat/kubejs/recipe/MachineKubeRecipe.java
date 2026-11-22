@@ -30,6 +30,7 @@ public class MachineKubeRecipe extends KubeRecipe {
 
         try {
             afterLoaded(new ErrorStack());
+            validateScriptSettings();
             super.serializeChanges();
             Recipe<?> recipe = type.schemaType.getSerializer().codec().codec().parse(type.event.ops.json(), json).getOrThrow(error -> new IllegalStateException("Failed to decode recipe for serializer '" + type.idString + "': " + error));
             if (!(recipe instanceof ProcessingRecipe<?, ?> processing)) {
@@ -50,6 +51,9 @@ public class MachineKubeRecipe extends KubeRecipe {
         }
 
         return this;
+    }
+
+    protected void validateScriptSettings() {
     }
 
     protected void validateComplete(ProcessingRecipe<?, ?> processing) {

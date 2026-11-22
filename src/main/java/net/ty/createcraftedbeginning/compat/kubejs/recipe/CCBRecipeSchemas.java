@@ -7,7 +7,6 @@ import dev.latvian.mods.kubejs.recipe.component.FluidStackComponent;
 import dev.latvian.mods.kubejs.recipe.component.IngredientComponent;
 import dev.latvian.mods.kubejs.recipe.component.NumberComponent;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
-import dev.latvian.mods.kubejs.recipe.component.StringComponent;
 import dev.latvian.mods.kubejs.recipe.schema.KubeRecipeFactory;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeSchema;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeSchemaRegistry;
@@ -30,7 +29,7 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 public final class CCBRecipeSchemas {
     static final RecipeKey<List<GasRecipeRequirement>> GAS_INPUTS = CCBRecipeComponents.GAS_INPUT.instance().asList().withBounds(IntBounds.OPTIONAL).inputKey("gas_ingredients").optional(List.of()).functionNames("gasInputs");
-    private static final RecipeKey<List<Ingredient>> ITEM_INPUTS = IngredientComponent.INGREDIENT.instance().asList().inputKey("ingredients");
+    static final RecipeKey<List<Ingredient>> ITEM_INPUTS = IngredientComponent.INGREDIENT.instance().asList().inputKey("ingredients");
     static final RecipeKey<List<ProcessingOutput>> ITEM_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().outputKey("results");
     static final RecipeComponent<Either<Ingredient, SizedFluidIngredient>> ITEM_OR_FLUID_INPUT = IngredientComponent.INGREDIENT.instance().or(CCBRecipeComponents.FLUID_INPUT.instance());
     static final RecipeKey<List<Either<Ingredient, SizedFluidIngredient>>> INPUTS = ITEM_OR_FLUID_INPUT.asList().withBounds(IntBounds.OPTIONAL).inputKey("ingredients");
@@ -39,14 +38,10 @@ public final class CCBRecipeSchemas {
     static final RecipeKey<TemperatureCondition> TEMPERATURE = CCBRecipeComponents.TEMPERATURE.otherKey("temperature").optional(TemperatureCondition.NONE);
     static final RecipeKey<TemperatureMatching> TEMPERATURE_MATCHING = CCBRecipeComponents.TEMPERATURE_MATCHING.otherKey("temperature_matching").optional(TemperatureMatching.EXACT);
     private static final RecipeKey<List<Ingredient>> EMPTY_INPUTS = IngredientComponent.INGREDIENT.instance().asList().withBounds(IntBounds.OPTIONAL).inputKey("ingredients").optional(List.of()).alwaysWrite().noFunctions();
-    private static final RecipeKey<List<ProcessingOutput>> OPTIONAL_ITEM_OUTPUTS = CCBRecipeComponents.ITEM_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite();
     static final RecipeKey<List<Either<FluidStack, ProcessingOutput>>> OPTIONAL_OUTPUTS = FluidStackComponent.FLUID_STACK.instance().or(CCBRecipeComponents.ITEM_OUTPUT.instance()).asList().withBounds(IntBounds.OPTIONAL).outputKey("results").optional(List.of()).alwaysWrite();
     private static final RecipeKey<List<GasStack>> GAS_OUTPUTS = CCBRecipeComponents.GAS_OUTPUT.instance().asList().withBounds(IntBounds.OPTIONAL).outputKey("gas_results").optional(List.of()).functionNames("gasOutputs");
     private static final RecipeKey<Integer> COOLING_DURATION = NumberComponent.intRange(1, Integer.MAX_VALUE).otherKey("processing_time").functionNames("processingTime");
     private static final RecipeKey<Integer> OPTIONAL_DURATION = NumberComponent.intRange(0, Integer.MAX_VALUE).otherKey("processing_time").optional(0).functionNames("processingTime");
-    private static final RecipeKey<Integer> WIND_CHARGE_DURATION = NumberComponent.intRange(Integer.MIN_VALUE, Integer.MAX_VALUE).otherKey("processing_time").optional(0).functionNames("processingTime");
-    private static final RecipeKey<String> WIND_CHARGE_ACTION = StringComponent.STRING.instance().otherKey("action").optional("charge").alwaysWrite();
-    private static final RecipeKey<Integer> PRIORITY = NumberComponent.intRange(Integer.MIN_VALUE, Integer.MAX_VALUE).otherKey("priority").optional(0);
     private static final KubeRecipeFactory MACHINE = new KubeRecipeFactory(CCBAPI.asResource("machine"), MachineKubeRecipe.class, MachineKubeRecipe::new);
     private static final KubeRecipeFactory RESIDUE = new KubeRecipeFactory(CCBAPI.asResource("residue"), ResidueKubeRecipe.class, ResidueKubeRecipe::new);
 
@@ -64,7 +59,7 @@ public final class CCBRecipeSchemas {
         registry.register(CCBRecipeTypes.ENERGIZATION.getId(), new RecipeSchema(GAS_OUTPUTS, GAS_INPUTS, EMPTY_INPUTS, EMPTY_OUTPUTS).factory(MACHINE).constructor(GAS_OUTPUTS, GAS_INPUTS));
         registry.register(CCBRecipeTypes.RESIDUE_GENERATION.getId(), new RecipeSchema(OPTIONAL_OUTPUTS, GAS_INPUTS, EMPTY_INPUTS).factory(RESIDUE).constructor(ResidueKubeRecipe.mappingConstructor()));
         registry.register(CCBRecipeTypes.REACTOR_KETTLE.getId(), ReactorKettleKubeRecipe.schema());
-        registry.register(CCBRecipeTypes.WIND_CHARGING.getId(), new RecipeSchema(OPTIONAL_ITEM_OUTPUTS, ITEM_INPUTS, WIND_CHARGE_DURATION, WIND_CHARGE_ACTION, PRIORITY).factory(MACHINE).constructor(OPTIONAL_ITEM_OUTPUTS, ITEM_INPUTS));
+        registry.register(CCBRecipeTypes.WIND_CHARGING.getId(), WindChargingKubeRecipe.schema());
         registry.register(CCBRecipeTypes.FRACTIONATION_TOWER.getId(), FractionationTowerKubeRecipe.schema());
     }
 }

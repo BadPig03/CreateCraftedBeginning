@@ -16,7 +16,7 @@ The Airtight Reactor Kettle processes a mix of items, fluids and gases. It can a
 
 - Both inputs and outputs can mix items, fluids and gases. Each list needs at least one entry.
 - Inputs: up to 64 item, 3 fluid and 3 gas entries. Outputs: up to 4 item, 2 fluid and 2 gas entries.
-- Use `.processingTime(...)` to set the processing time in ticks. Pass a positive integer.
+- Use `.processingTime(...)` to set the processing time in ticks. Pass a positive integer or omit the call to use a 1-tick processing stage.
 - Supports [temperature tiers and matching modes](#temperature), [gas tags and pressure conditions](./gas-conditions.md) and chance-based item outputs.
 
 ## Temperature tiers and matching modes {#temperature}
@@ -38,8 +38,8 @@ The Airtight Reactor Kettle processes a mix of items, fluids and gases. It can a
 ServerEvents.recipes(event => {
     const ccb = event.recipes.createcraftedbeginning
 
-    // 1 Breeze Core + 1 stone ingredient → 1000 GU natural air; the Breeze Core is returned.
-    // Also produces 1 gravel with a 25% chance. Requires ambient temperature.
+    // 1 Breeze Core + 1 stone ingredient → 1000 GU natural air + 1 gravel (25% chance)
+    // Returns the Breeze Core. Requires ambient temperature.
     ccb.reactor_kettle([
         'createcraftedbeginning:breeze_core',
         CCBItem.of('minecraft:gravel').withChance(0.25),
@@ -50,8 +50,9 @@ ServerEvents.recipes(event => {
     ]).processingTime(50)
         .id('tutorial:reactor_natural_air')
 
-    // 1 stone + 100 mB lava + 100 GU natural air → 25 mB water + 50 GU ultrawarm air.
-    // Also produces 1 obsidian with a 50% chance. Requires chilled or superchilled conditions.
+    // 1 stone + 100 mB lava + 100 GU natural air
+    // → 25 mB water + 50 GU ultrawarm air + 1 obsidian (50% chance)
+    // Requires chilled or superchilled conditions.
     ccb.reactor_kettle([
         CCBItem.of('minecraft:obsidian').withChance(0.5),
         Fluid.of('minecraft:water', 25),

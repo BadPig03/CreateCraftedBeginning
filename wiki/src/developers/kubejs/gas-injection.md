@@ -6,7 +6,7 @@ editLink: false
 
 # 注气室 {#gas-injection}
 
-**语法：** `gas_injection(output, input[])`
+**语法：** `gas_injection(output, inputs[])`
 
 ::: info 用途
 注气室使用传送带或置物台加工物品；涉及流体的配方使用工作盆。

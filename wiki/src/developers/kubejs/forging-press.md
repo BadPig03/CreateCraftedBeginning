@@ -9,12 +9,12 @@ editLink: false
 **语法：** `forging_press(output, inputs[])`
 
 ::: info 用途
-气密锻造机按基底、压头和附加物槽位加工原料，也可使用流体或气体。
+气密锻造机按基底、压头和附加原料槽位加工原料，也可使用流体或气体。
 :::
 
 **功能：**
 
-- 输入第一项为必需的基底物品；第二项可选，可使用物品、流体或气体中的一种。
+- 输入第1项为必需的基底物品；第2项可选，可使用物品、流体或气体中的1种。
 - 输出为1~8项物品。
 - 未使用的槽位会保持为空。
 - 支持[压头物品](#pressHead)设置、[气体标签和压力条件](./gas-conditions.md)和概率物品产物。
@@ -22,7 +22,7 @@ editLink: false
 ## 压头物品 {#pressHead}
 
 - 使用`.pressHead(...)`设置压头物品，压头物品不会被消耗。
-- 压头物品必须要有`#createcraftedbeginning:press_head_tools`的物品标签，否则将无法放入压头槽位中。
+- 压头槽可放入带有`#createcraftedbeginning:press_head_tools`标签的物品，也可放入锻造模板。
 
 允许铁块作为压头时可使用如下示例：
 ```js
@@ -42,14 +42,14 @@ ServerEvents.recipes(event => {
         'minecraft:iron_ingot'
     ]).id('tutorial:forging_base')
 
-    // 1铁粒(基底)+1金粒(附加物)→1铁锭，沉重核心作为压头
+    // 1铁粒(基底)+1金粒(附加原料)→1铁锭，沉重核心作为压头
     ccb.forging_press('minecraft:iron_ingot', [
         'minecraft:iron_nugget',
         'minecraft:gold_nugget'
     ]).pressHead('minecraft:heavy_core')
         .id('tutorial:forging_three_items')
 
-    // 1木炭(基底)+2500GU高能炽热空气(附加物)→1钻石(20%概率)，沉重核心作为压头
+    // 1木炭(基底)+2500GU高能炽热空气(附加原料)→1钻石(20%概率)，沉重核心作为压头
     ccb.forging_press(CCBItem.of('minecraft:diamond').withChance(0.2), [
         Ingredient.of('minecraft:charcoal'),
         CCBGas.of(
@@ -58,7 +58,7 @@ ServerEvents.recipes(event => {
     ]).pressHead('minecraft:heavy_core')
         .id('tutorial:forging_gas')
 
-    // 1圆石(基底)+100mB熔岩(附加物)→1石头，沉重核心作为压头
+    // 1圆石(基底)+100mB熔岩(附加原料)→1石头，沉重核心作为压头
     ccb.forging_press('minecraft:stone', [
         'minecraft:cobblestone',
         Fluid.of('minecraft:lava', 100)

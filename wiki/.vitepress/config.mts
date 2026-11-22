@@ -31,6 +31,10 @@ function sidebar(english: boolean): DefaultTheme.Sidebar {
           {
             text: english ? 'Airtight Fractionation Tower' : '气密分离塔',
             link: `${prefix}/developers/kubejs/fractionation-tower`
+          },
+          {
+            text: english ? 'Breeze Chamber' : '旋风人蓄风室',
+            link: `${prefix}/developers/kubejs/breeze-chamber`
           }
         ]
       }
@@ -52,6 +56,7 @@ export default defineConfig({
   base,
   srcDir: 'src',
   cleanUrls: false,
+  markdown: { math: true },
   head: [['link', { rel: 'icon', type: 'image/png', href: `${base}assets/breeze-chamber-cover.png` }]],
   sitemap: { hostname: `https://badpig03.github.io${base}` },
   locales: {

@@ -14,3 +14,4 @@ Customize recipes, gases and machine behavior with KubeJS. This section covers s
 - [Airtight Forging Press](./kubejs/forging-press.md)—use a required base and an optional additional ingredient, with a separately configured press head.
 - [Airtight Reactor Kettle](./kubejs/reactor-kettle.md)—mix items, fluids and gases and set processing time and temperature conditions.
 - [Airtight Fractionation Tower](./kubejs/fractionation-tower.md)—mix inputs and route fractionation or condensation products by layer.
+- [Breeze Chamber](./kubejs/breeze-chamber.md)—set feeding effects and return items.
