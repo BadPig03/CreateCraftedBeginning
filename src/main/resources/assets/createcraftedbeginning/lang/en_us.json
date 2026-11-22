@@ -1556,7 +1556,7 @@
   "item.createcraftedbeginning.airtight_leggings.tooltip.condition1": "When Right-Click while sneaking",
   "item.createcraftedbeginning.airtight_leggings.tooltip.summary": "Leggings with multiple _upgrade_ configurations. Gas-dependent upgrades draw from Gas Canisters in your inventory.",
   "item.createcraftedbeginning.airtight_meter": "Airtight Meter",
-  "item.createcraftedbeginning.airtight_meter.tooltip.behaviour1": "Installs or removes the gauge. While installed, detailed _Pressure_ readouts are available.",
+  "item.createcraftedbeginning.airtight_meter.tooltip.behaviour1": "Attaches or removes the gauge. The needle follows the tank's _Pressure_.",
   "item.createcraftedbeginning.airtight_meter.tooltip.condition1": "When Right-Clicked on an Airtight Tank",
   "item.createcraftedbeginning.airtight_meter.tooltip.summary": "A reusable _Pressure Gauge_ for _Airtight Tanks_.",
   "item.createcraftedbeginning.airtight_sheet": "Airtight Sheet",

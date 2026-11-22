@@ -1444,7 +1444,7 @@
   "item.createcraftedbeginning.airtight_leggings.tooltip.condition1": "潜行右击时",
   "item.createcraftedbeginning.airtight_leggings.tooltip.summary": "拥有多种_升级_配置的护腿。需要供气的升级会使用背包中气罐内的_气体_。",
   "item.createcraftedbeginning.airtight_meter": "气密仪表",
-  "item.createcraftedbeginning.airtight_meter.tooltip.behaviour1": "安装或拆除仪表。安装后可查看_压力_的详细读数。",
+  "item.createcraftedbeginning.airtight_meter.tooltip.behaviour1": "安装或拆除表盘。表针随罐内_压力_转动。",
   "item.createcraftedbeginning.airtight_meter.tooltip.condition1": "对气密储罐右击时",
   "item.createcraftedbeginning.airtight_meter.tooltip.summary": "用于_气密储罐_的可重复使用_压力仪表_。",
   "item.createcraftedbeginning.airtight_sheet": "气密板",

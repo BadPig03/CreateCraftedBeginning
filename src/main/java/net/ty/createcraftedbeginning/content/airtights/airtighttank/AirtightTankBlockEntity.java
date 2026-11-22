@@ -16,6 +16,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -117,10 +118,6 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
 
     @Override
     public GasStorageReadout getGasStorageReadout() {
-        if (!hasTankGauge()) {
-            return GasStorageReadout.AMOUNT_ONLY;
-        }
-
         return GasStorageReadout.PRESSURE_ONLY;
     }
 
@@ -361,9 +358,7 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
             return false;
         }
 
-        controller.setLocalTankGaugeInstalled(true);
-        controller.synchronizeTankGaugeAttachment();
-        controller.setChanged();
+        controller.applyTankGaugeAttachment(true);
         controller.notifyUpdate();
         return true;
     }
@@ -378,7 +373,7 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
             return false;
         }
 
-        controller.clearTankGaugeAttachment();
+        controller.applyTankGaugeAttachment(false);
         controller.notifyUpdate();
         return true;
     }
@@ -498,7 +493,7 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
         storageController.resizeToBlocks(blocks);
     }
 
-    private void clearTankGaugeAttachment() {
+    private void applyTankGaugeAttachment(boolean installed) {
         if (level == null || level.isClientSide || !isController()) {
             return;
         }
@@ -508,11 +503,11 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
             for (int uOffset = 0; uOffset < getWidth(); uOffset++) {
                 for (int vOffset = 0; vOffset < getWidth(); vOffset++) {
                     BlockPos partPos = offsetInMulti(worldPosition, axis, lengthOffset, uOffset, vOffset);
-                    if (!(level.getBlockEntity(partPos) instanceof AirtightTankBlockEntity part) || !part.tankGaugeInstalled) {
+                    if (!(level.getBlockEntity(partPos) instanceof AirtightTankBlockEntity part) || part.tankGaugeInstalled == installed) {
                         continue;
                     }
 
-                    part.setLocalTankGaugeInstalled(false);
+                    part.setLocalTankGaugeInstalled(installed);
                     part.setChanged();
                 }
             }
@@ -525,48 +520,38 @@ public class AirtightTankBlockEntity extends AbstractAirtightTankBlockEntity imp
     }
 
     private void synchronizeTankGaugeAttachment() {
-        if (level == null || level.isClientSide || !isController()) {
+        if (level == null || level.isClientSide || !isController() || !hasInstalledGaugeInStructure(level)) {
             return;
         }
 
+        boolean changed = !tankGaugeInstalled;
+        applyTankGaugeAttachment(true);
+        if (!changed) {
+            return;
+        }
+
+        notifyUpdate();
+    }
+
+    private boolean hasInstalledGaugeInStructure(Level level) {
+        if (tankGaugeInstalled) {
+            return true;
+        }
+
         Axis axis = getMainConnectionAxis();
-        boolean controllerHadGauge = tankGaugeInstalled;
-        boolean installed = controllerHadGauge;
-        for (int lengthOffset = 0; lengthOffset < getHeight() && !installed; lengthOffset++) {
-            for (int uOffset = 0; uOffset < getWidth() && !installed; uOffset++) {
+        for (int lengthOffset = 0; lengthOffset < getHeight(); lengthOffset++) {
+            for (int uOffset = 0; uOffset < getWidth(); uOffset++) {
                 for (int vOffset = 0; vOffset < getWidth(); vOffset++) {
                     BlockPos partPos = offsetInMulti(worldPosition, axis, lengthOffset, uOffset, vOffset);
                     if (!(level.getBlockEntity(partPos) instanceof AirtightTankBlockEntity part) || !part.tankGaugeInstalled) {
                         continue;
                     }
 
-                    installed = true;
-                    break;
-                }
-            }
-        }
-        if (!installed) {
-            return;
-        }
-
-        for (int lengthOffset = 0; lengthOffset < getHeight(); lengthOffset++) {
-            for (int uOffset = 0; uOffset < getWidth(); uOffset++) {
-                for (int vOffset = 0; vOffset < getWidth(); vOffset++) {
-                    BlockPos partPos = offsetInMulti(worldPosition, axis, lengthOffset, uOffset, vOffset);
-                    if (!(level.getBlockEntity(partPos) instanceof AirtightTankBlockEntity part) || part.tankGaugeInstalled) {
-                        continue;
-                    }
-
-                    part.setLocalTankGaugeInstalled(true);
-                    part.setChanged();
+                    return true;
                 }
             }
         }
 
-        if (controllerHadGauge) {
-            return;
-        }
-
-        notifyUpdate();
+        return false;
     }
 }
