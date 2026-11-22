@@ -5,6 +5,7 @@ import com.simibubi.create.api.contraption.BlockMovementChecks.CheckResult;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -14,11 +15,16 @@ import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtowe
 import net.ty.createcraftedbeginning.content.airtights.airtightfractionationtower.AirtightFractionationTowerBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleBlock;
 import net.ty.createcraftedbeginning.content.airtights.airtightreactorkettle.AirtightReactorKettleStructural;
+import net.ty.createcraftedbeginning.content.airtights.airtighttank.AirtightTankBlockEntity;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineBlock;
 import net.ty.createcraftedbeginning.content.airtights.teslaturbine.TeslaTurbineStructuralBlock;
+import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivity;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -28,6 +34,31 @@ public final class MultiblockAssemblyCompat {
 
     public static void register() {
         BlockMovementChecks.registerAttachedCheck(MultiblockAssemblyCompat::isAttached);
+    }
+
+    public static void splitPartiallyMovedTanks(ServerLevel level, Iterable<BlockPos> positions) {
+        Map<AirtightTankBlockEntity, Integer> movedCounts = new HashMap<>();
+        for (BlockPos pos : positions) {
+            if (!(level.getBlockEntity(pos) instanceof AirtightTankBlockEntity tank)) {
+                continue;
+            }
+
+            AirtightTankBlockEntity controller = tank.getControllerBE();
+            if (controller == null || controller.isRemoved() || !controller.isController() || controller.getTotalTankSize() <= 1) {
+                continue;
+            }
+
+            movedCounts.merge(controller, 1, Integer::sum);
+        }
+
+        for (Entry<AirtightTankBlockEntity, Integer> entry : movedCounts.entrySet()) {
+            AirtightTankBlockEntity controller = entry.getKey();
+            if (entry.getValue() >= controller.getTotalTankSize()) {
+                continue;
+            }
+
+            GasTankMultiblockConnectivity.splitMultiblock(controller);
+        }
     }
 
     private static CheckResult isAttached(BlockState state, Level level, BlockPos pos, Direction direction) {

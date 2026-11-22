@@ -50,6 +50,10 @@ public final class GasTankMultiblockConnectivity {
         splitMultiblock(blockEntity, null, blockEntity.getBlockPos(), releaseRemovedTankGas);
     }
 
+    public static <T extends BlockEntity & GasTankMultiblockPart> void splitMultiblock(T controller) {
+        splitMultiblock(controller, null, null, false);
+    }
+
     public static <T extends BlockEntity & GasTankMultiblockPart> void formMultiblock(T blockEntity, Level level) {
         Deque<GasTankMultiblockPart> frontier = new ArrayDeque<>();
         frontier.addLast(blockEntity);
@@ -353,12 +357,14 @@ public final class GasTankMultiblockConnectivity {
         }
 
         GasStack splitGas = GasStack.EMPTY;
+        boolean finiteTank = false;
+        long sourcePressurePa = 0;
         if (tankPart.hasTank()) {
             GasPressureCompartment tank = tankPart.getTank(0);
-            boolean releaseRemovedGas = tankPhysicallyRemoved && tank.getPressureModel() == PressureModel.VARIABLE;
-            long sourcePressurePa = tank.getPressurePa();
+            finiteTank = tank.getPressureModel() == PressureModel.VARIABLE;
+            sourcePressurePa = tank.getPressurePa();
             splitGas = tankPart.prepareTankStateForSplit(0, controllerRemoved);
-            if (releaseRemovedGas && removedPos != null) {
+            if (tankPhysicallyRemoved && finiteTank && removedPos != null) {
                 GasStack releasedGas = extractRemovedTankShare(splitGas, remainingTankCount);
                 releaseRemovedTankGas(level, removedPos, releasedGas, sourcePressurePa);
             }
@@ -380,6 +386,11 @@ public final class GasTankMultiblockConnectivity {
             }
 
             cache.put(partPos, part);
+        }
+
+        boolean movingRemoval = removedPos != null && !releaseRemovedTankGas;
+        if (!level.isClientSide && finiteTank && !movingRemoval && !splitGas.isEmpty()) {
+            GasReleaseService.release(level, GasReleaseRequest.radial(splitGas, origin, GasReleaseCause.OVERFLOW, sourcePressurePa));
         }
 
         if (tankPart instanceof Inventory inv && inv.hasInventory()) {

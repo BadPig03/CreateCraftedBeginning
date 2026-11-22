@@ -3,6 +3,7 @@ package net.ty.createcraftedbeginning.content.airtights.airtighttank;
 import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -10,6 +11,8 @@ import net.ty.createcraftedbeginning.gas.multiblock.GasTankMultiblockConnectivit
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
+import java.util.List;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -42,12 +45,12 @@ final class AirtightTankMultiblockController {
 
     boolean tick() {
         tickSyncCooldown();
+        BlockPos position = owner.getBlockPos();
         if (lastKnownPos == null) {
-            lastKnownPos = owner.getBlockPos();
+            lastKnownPos = position;
         }
-        else if (!lastKnownPos.equals(owner.getBlockPos())) {
-            owner.removeController(true);
-            lastKnownPos = owner.getBlockPos();
+        else if (!lastKnownPos.equals(position)) {
+            recoverRelocation(position, lastKnownPos);
             return false;
         }
 
@@ -203,6 +206,86 @@ final class AirtightTankMultiblockController {
 
     void setHeight(int height) {
         this.height = Mth.clamp(height, 1, AbstractAirtightTankBlockEntity.configuredMaxLength());
+    }
+
+    private void recoverRelocation(BlockPos position, BlockPos previousPosition) {
+        Level level = owner.getLevel();
+        if (level == null || level.isClientSide) {
+            lastKnownPos = position;
+            return;
+        }
+
+        if (isController()) {
+            rebaseStructure(level, position, previousPosition);
+            return;
+        }
+
+        BlockPos previousController = getController();
+        BlockPos expectedController = previousController.offset(position.subtract(previousPosition));
+        if (!level.isLoaded(expectedController)) {
+            return;
+        }
+
+        if (level.getBlockEntity(expectedController) instanceof AbstractAirtightTankBlockEntity controller && controller.getType() == owner.getType() && !controller.isRemoved() && controller.isController() && previousController.equals(controller.getLastKnownPos())) {
+            if (!controller.multiblockController().rebaseStructure(level, expectedController, previousController) || position.equals(lastKnownPos)) {
+                return;
+            }
+        }
+
+        lastKnownPos = position;
+        owner.removeController(true);
+    }
+
+    private boolean rebaseStructure(Level level, BlockPos position, BlockPos previousPosition) {
+        Axis axis = owner.getMainConnectionAxis();
+        int partCount = width * width * height;
+        List<AbstractAirtightTankBlockEntity> members = new ArrayList<>(partCount - 1);
+        for (int length = 0; length < height; length++) {
+            for (int u = 0; u < width; u++) {
+                for (int v = 0; v < width; v++) {
+                    BlockPos partPos = AirtightTankBlockEntity.offsetInMulti(position, axis, length, u, v);
+                    if (partPos.equals(position)) {
+                        continue;
+                    }
+
+                    if (!level.isLoaded(partPos)) {
+                        return false;
+                    }
+
+                    if (!(level.getBlockEntity(partPos) instanceof AbstractAirtightTankBlockEntity part) || part.getType() != owner.getType() || part.isRemoved() || part.getMainConnectionAxis() != axis || !previousPosition.equals(part.getController())) {
+                        continue;
+                    }
+
+                    BlockPos previousPartPos = part.getLastKnownPos();
+                    if (previousPartPos != null && !previousPartPos.equals(AirtightTankBlockEntity.offsetInMulti(previousPosition, axis, length, u, v))) {
+                        continue;
+                    }
+
+                    members.add(part);
+                }
+            }
+        }
+
+        lastKnownPos = position;
+        for (AbstractAirtightTankBlockEntity member : members) {
+            AirtightTankMultiblockController multiblock = member.multiblockController();
+            multiblock.controllerPos = position;
+            multiblock.lastKnownPos = member.getBlockPos();
+            multiblock.width = width;
+            multiblock.height = height;
+        }
+
+        if (members.size() + 1 != partCount) {
+            GasTankMultiblockConnectivity.splitMultiblock(owner);
+            return true;
+        }
+
+        for (AbstractAirtightTankBlockEntity member : members) {
+            member.refreshCapability();
+            member.notifyMultiUpdated();
+        }
+        owner.notifyMultiUpdated();
+        return true;
     }
 
     private boolean recoverOrphanedMember() {

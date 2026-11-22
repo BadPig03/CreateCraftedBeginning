@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.ty.createcraftedbeginning.compat.sable.AssemblyTransformAccess;
+import net.ty.createcraftedbeginning.compat.sable.MultiblockAssemblyCompat;
 import net.ty.createcraftedbeginning.compat.sable.OpticalFiberAssemblyCompat;
 import net.ty.createcraftedbeginning.compat.sable.SableLoadingNetwork;
 import net.ty.createcraftedbeginning.compat.sable.SableLoadingNetwork.Move;
@@ -42,6 +43,11 @@ public abstract class SubLevelAssemblyHelperMixin {
         finally {
             SableLoadingNetwork.finishMove(level, access.ccb$getResultingLevel(), moves);
         }
+    }
+
+    @Inject(method = "moveBlocks", at = @At("HEAD"), require = 1)
+    private static void ccb$moveBlocks$splitPartialTanks(ServerLevel level, @Coerce Object transform, Iterable<BlockPos> positions, CallbackInfo callback) {
+        MultiblockAssemblyCompat.splitPartiallyMovedTanks(level, positions);
     }
 
     @Inject(method = "moveBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/BlockEntity;loadWithComponents(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/core/HolderLookup$Provider;)V"), require = 1)

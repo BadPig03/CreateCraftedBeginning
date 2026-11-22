@@ -48,7 +48,7 @@ public final class AirtightTankSerializationSupport {
         compoundTag.putBoolean(COMPOUND_KEY_UPDATE_CONNECTIVITY, multiblock.isUpdateConnectivity());
         BlockPos lastKnownPos = multiblock.getLastKnownPos();
         if (lastKnownPos == null) {
-            return;
+            lastKnownPos = tank.getBlockPos();
         }
 
         compoundTag.put(COMPOUND_KEY_LAST_KNOWN_POS, NbtUtils.writeBlockPos(lastKnownPos));

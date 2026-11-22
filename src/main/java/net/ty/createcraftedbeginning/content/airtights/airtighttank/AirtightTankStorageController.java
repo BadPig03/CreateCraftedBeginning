@@ -142,6 +142,7 @@ final class AirtightTankStorageController {
         long amount = 0;
         if (!state.isEmpty()) {
             amount = remainingTankCount == 1 ? state.getAmount() : state.getAmount() / remainingTankCount;
+            amount = Math.min(amount, tank.getMaxAmount());
             assignedGas = state.copyWithAmount(amount);
         }
 
