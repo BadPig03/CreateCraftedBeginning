@@ -68,10 +68,15 @@ public final class GasRouteTree implements GasRouteSearch {
                 return null;
             }
 
-            Path path = route();
+            Hop start = reached.get(supplier);
+            Hop end = reached.get(target);
             target = null;
-            alternative = path != null;
-            return path;
+            if (start == null || end == null) {
+                return null;
+            }
+
+            alternative = true;
+            return route(start, end);
         }
 
         if (alternative) {
@@ -131,13 +136,7 @@ public final class GasRouteTree implements GasRouteSearch {
     }
 
     @Nullable
-    private Path route() {
-        Hop start = reached.get(supplier);
-        Hop end = reached.get(target);
-        if (start == null || end == null) {
-            return null;
-        }
-
+    private Path route(Hop start, Hop end) {
         List<Pass> tail = new ArrayList<>();
         Link next = null;
         Hop left = start;
@@ -168,6 +167,10 @@ public final class GasRouteTree implements GasRouteSearch {
         passes.add(new Pass(left.vertex(), entry, next == null ? destination.getFace() : next.exit, next));
         Collections.reverse(tail);
         passes.addAll(tail);
+        if (OutletSideRelief.crossesInlet(demand, passes.getLast().entry, destination.getFace())) {
+            return null;
+        }
+
         return new Path(end.vertex().pos, capacity, null, new GasZoneRoute(level, passes, capacity));
     }
 

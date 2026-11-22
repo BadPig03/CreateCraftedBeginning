@@ -8,9 +8,9 @@ import net.minecraft.world.level.Level;
 import net.ty.createcraftedbeginning.api.gas.GasAction;
 import net.ty.createcraftedbeginning.api.gas.GasPressure;
 import net.ty.createcraftedbeginning.api.gas.GasStack;
-import net.ty.createcraftedbeginning.api.gas.pressure.GasPressureBoundary;
 import net.ty.createcraftedbeginning.api.gasreleasehandlers.GasReleaseCause;
 import net.ty.createcraftedbeginning.gas.atmosphere.AtmosphereStateResolver;
+import net.ty.createcraftedbeginning.gas.network.solver.routing.OutletSideRelief;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseRequest;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseService;
 import net.ty.createcraftedbeginning.gas.release.GasReleaseState;
@@ -19,7 +19,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-final class AirtightRegulatorPumpExhaust implements GasPressureBoundary {
+final class AirtightRegulatorPumpExhaust implements OutletSideRelief {
     private final AirtightRegulatorPumpBlockEntity pump;
     private GasReleaseState releaseState = new GasReleaseState();
 

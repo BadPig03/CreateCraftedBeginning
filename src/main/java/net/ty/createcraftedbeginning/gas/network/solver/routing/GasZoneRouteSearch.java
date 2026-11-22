@@ -75,6 +75,12 @@ final class GasZoneRouteSearch implements GasRouteSearch {
 
         Frame frame = stack.getLast();
         if (frame.vertex.pos.equals(destination.getPos())) {
+            if (OutletSideRelief.crossesInlet(demand, frame.entry, destination.getFace())) {
+                stack.removeLast();
+                visited.remove(frame.vertex);
+                return null;
+            }
+
             List<Pass> passes = new ArrayList<>(stack.size());
             for (Frame part : stack) {
                 Link link = part == frame ? null : part.links.get(part.cursor - 1);
